@@ -76,6 +76,22 @@ class SettingsController extends ChangeNotifier {
   void setSourceControlViewMode(SourceControlViewMode mode) =>
       _apply(_settings.copyWith(sourceControlViewMode: mode));
 
+  void setOfficeWorldOptions({
+    String? theme,
+    bool? showNames,
+    String? bubbles,
+    String? liveliness,
+    String? daylight,
+  }) => _apply(
+    _settings.copyWith(
+      officeTheme: theme,
+      officeShowNames: showNames,
+      officeBubbles: bubbles,
+      officeLiveliness: liveliness,
+      officeDaylight: daylight,
+    ),
+  );
+
   void setAutomationHarness(HarnessKind? id) {
     _apply(
       _settings.copyWith(

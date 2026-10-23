@@ -4653,6 +4653,13 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
     notifyListeners();
   }
 
+  /// Seleciona o workspace e aguarda a árvore de panes ficar disponível.
+  /// Usado por ações que precisam focar uma aba logo após trocar de workspace.
+  Future<void> selectProjectAndWait(String id) async {
+    selectProject(id);
+    await _activateProject(id);
+  }
+
   /// Recarrega o source control do workspace remoto ativo (botão refresh /
   /// pull-to-refresh do painel). No-op se o ativo é local.
   Future<void> refreshRemoteGit() => _refreshRemoteGit();
@@ -5274,41 +5281,20 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
   /// uma aba (acoplar). A sessão **não** é morta — só muda de lugar.
   void moveTabToPane(String srcPaneId, String tabId, String targetPaneId) {
     final projectId = _selectedProjectId;
-    final tree = _activeTree;
-    if (projectId == null || tree == null) return;
-    if (srcPaneId == targetPaneId) return; // já está aqui
-    final src = findLeaf(tree, srcPaneId);
-    final tgt = findLeaf(tree, targetPaneId);
-    if (src == null || tgt == null || !src.tabs.contains(tabId)) return;
-
-    final remaining = src.tabs.where((t) => t != tabId).toList();
-    // Acopla no destino…
-    var t = updateLeaf(
-      tree,
-      targetPaneId,
-      (p) => p.copyWith(tabs: [...p.tabs, tabId], active: tabId),
-    );
-    // …e tira da origem. src != target ⇒ há ≥2 folhas, então removeLeaf é seguro.
-    if (remaining.isEmpty) {
-      t = removeLeaf(t, srcPaneId);
-    } else {
-      t = updateLeaf(
-        t,
+    if (projectId == null || srcPaneId == targetPaneId) return;
+    unawaited(
+      _moveTabAfterDetach(
+        projectId,
         srcPaneId,
-        (p) => p.copyWith(
-          tabs: remaining,
-          active: _activeAfter(src, tabId, remaining),
+        tabId,
+        targetPaneId,
+        (tree, target) => updateLeaf(
+          tree,
+          target.id,
+          (pane) => pane.copyWith(tabs: [...target.tabs, tabId], active: tabId),
         ),
-      );
-    }
-    _setActiveTree(t);
-    _focused[projectId] = targetPaneId;
-    _ensureFocusValid();
-    PerformanceDiagnostics.instance.timeToNextFrame(
-      PerfMetric.terminalDockFrame,
-      tabs: _sessions.length,
+      ),
     );
-    notifyListeners();
   }
 
   /// Move a aba [tabId] (de [srcPaneId]) pra um **novo pane** criado dividindo
@@ -5322,45 +5308,95 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
     required bool before,
   }) {
     final projectId = _selectedProjectId;
-    final tree = _activeTree;
-    if (projectId == null || tree == null) return;
-    final src = findLeaf(tree, srcPaneId);
-    final tgt = findLeaf(tree, targetPaneId);
-    if (src == null || tgt == null || !src.tabs.contains(tabId)) return;
+    if (projectId == null) return;
+    unawaited(
+      _moveTabAfterDetach(projectId, srcPaneId, tabId, targetPaneId, (
+        tree,
+        target,
+      ) {
+        final newLeaf = LeafPane(
+          id: _nid('pane'),
+          tabs: [tabId],
+          active: tabId,
+        );
+        return splitLeaf(
+          tree,
+          target.id,
+          dir,
+          newLeaf,
+          splitId: _nid('sp'),
+          before: before,
+        );
+      }, noOpIfSourceIsTargetAndLastTab: true),
+    );
+  }
 
-    final remaining = src.tabs.where((t) => t != tabId).toList();
-    // Dividir o próprio pane que só tem essa aba contra si mesmo: no-op.
-    if (srcPaneId == targetPaneId && remaining.isEmpty) return;
+  /// Remove a sessão da árvore por um frame antes de montá-la na nova pane.
+  /// `TerminalView` usa GlobalKey para preservar sua identidade ao reorganizar
+  /// splits, mas o Scrollable interno pode descartar o ViewportOffset durante
+  /// o reparent. Reanexar o render object nesse intervalo gera
+  /// ChangeNotifier-after-dispose em TerminalRenderBox.attach. O frame de
+  /// detach deixa o flterm encerrar a view antiga antes de criá-la no destino;
+  /// a sessão e o processo continuam vivos no registro do workspace.
+  Future<void> _moveTabAfterDetach(
+    String projectId,
+    String srcPaneId,
+    String tabId,
+    String targetPaneId,
+    PaneNode Function(PaneNode tree, LeafPane target) finish, {
+    bool noOpIfSourceIsTargetAndLastTab = false,
+  }) async {
+    final tree = _trees[projectId];
+    if (tree == null) return;
+    final source = findLeaf(tree, srcPaneId);
+    final target = findLeaf(tree, targetPaneId);
+    if (source == null || target == null || !source.tabs.contains(tabId)) {
+      return;
+    }
 
-    final newLeaf = LeafPane(id: _nid('pane'), tabs: [tabId], active: tabId);
-    var t = tree;
-    // 1. Tira a aba da origem (se ainda sobra algo nela).
-    if (remaining.isNotEmpty) {
-      t = updateLeaf(
-        t,
+    final remaining = source.tabs.where((id) => id != tabId).toList();
+    if (noOpIfSourceIsTargetAndLastTab &&
+        srcPaneId == targetPaneId &&
+        remaining.isEmpty) {
+      return;
+    }
+    final session = _sessions[tabId];
+    if (session == null) return;
+
+    var detachedTree = tree;
+    if (remaining.isEmpty) {
+      detachedTree = removeLeaf(detachedTree, srcPaneId);
+    } else {
+      detachedTree = updateLeaf(
+        detachedTree,
         srcPaneId,
-        (p) => p.copyWith(
+        (pane) => pane.copyWith(
           tabs: remaining,
-          active: _activeAfter(src, tabId, remaining),
+          active: _activeAfter(source, tabId, remaining),
         ),
       );
     }
-    // 2. Divide o alvo, inserindo o novo pane.
-    t = splitLeaf(
-      t,
-      targetPaneId,
-      dir,
-      newLeaf,
-      splitId: _nid('sp'),
-      before: before,
-    );
-    // 3. Origem ficou vazia → remove (o irmão expande).
-    if (remaining.isEmpty) {
-      t = removeLeaf(t, srcPaneId);
+    _trees[projectId] = detachedTree;
+    _ensureFocusValid(projectId);
+    notifyListeners();
+    await _endOfFrame();
+
+    if (!identical(_sessions[tabId], session)) return;
+    var current = _trees[projectId];
+    if (current == null) return;
+    // Do not duplicate the tab if another action moved it during the detach.
+    if (leaves(current).any((leaf) => leaf.tabs.contains(tabId))) return;
+    var currentTarget = findLeaf(current, targetPaneId);
+    if (currentTarget == null) {
+      final fallback = leaves(current);
+      if (fallback.isEmpty) return;
+      currentTarget = fallback.first;
     }
-    _setActiveTree(t);
-    _focused[projectId] = newLeaf.id;
-    _ensureFocusValid();
+
+    current = finish(current, currentTarget);
+    _trees[projectId] = current;
+    _focused[projectId] = currentTarget.id;
+    _ensureFocusValid(projectId);
     PerformanceDiagnostics.instance.timeToNextFrame(
       PerfMetric.terminalDockFrame,
       tabs: _sessions.length,
@@ -5403,35 +5439,20 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
       return;
     }
 
-    // Cross-pane: insere na posição pedida do destino e tira da origem.
-    final remaining = src.tabs.where((t) => t != tabId).toList();
-    final tgtTabs = [...tgt.tabs];
-    tgtTabs.insert(index.clamp(0, tgtTabs.length), tabId);
-    var t = updateLeaf(
-      tree,
-      targetPaneId,
-      (p) => p.copyWith(tabs: tgtTabs, active: tabId),
+    unawaited(
+      _moveTabAfterDetach(projectId, srcPaneId, tabId, targetPaneId, (
+        tree,
+        target,
+      ) {
+        final tabs = [...target.tabs];
+        tabs.insert(index.clamp(0, tabs.length), tabId);
+        return updateLeaf(
+          tree,
+          target.id,
+          (pane) => pane.copyWith(tabs: tabs, active: tabId),
+        );
+      }),
     );
-    if (remaining.isEmpty) {
-      t = removeLeaf(t, srcPaneId);
-    } else {
-      t = updateLeaf(
-        t,
-        srcPaneId,
-        (p) => p.copyWith(
-          tabs: remaining,
-          active: _activeAfter(src, tabId, remaining),
-        ),
-      );
-    }
-    _setActiveTree(t);
-    _focused[projectId] = targetPaneId;
-    _ensureFocusValid();
-    PerformanceDiagnostics.instance.timeToNextFrame(
-      PerfMetric.terminalDockFrame,
-      tabs: _sessions.length,
-    );
-    notifyListeners();
   }
 
   /// Inclui o restore assíncrono e o primeiro frame com a árvore carregada.
@@ -5500,7 +5521,12 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
   void closeTab(String paneId, String agentId) {
     final projectId = _selectedProjectId;
     if (projectId == null) return;
-    _closeTabIn(projectId, paneId, agentId);
+    // Retire a view da árvore e espere o frame de detach antes de descartar o
+    // controller. O fechamento imediato deixava o TerminalView antigo montado
+    // durante a reconstrução da pane; o flterm podia anexá-lo novamente já
+    // depois de TerminalSession.dispose(), gerando ChangeNotifier used after
+    // being disposed em TerminalRenderBox.attach.
+    _closeTabIn(projectId, paneId, agentId, disposeAfterFrame: true);
   }
 
   /// [closeTab] em um workspace qualquer, não só no selecionado: um processo

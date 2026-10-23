@@ -103,6 +103,7 @@ class _Translations$cockpit$pt_BR extends Translations$cockpit$en {
 	final TranslationsPtBr _root; // ignore: unused_field
 
 	// Translations
+	@override late final _Translations$cockpit$officeWorld$pt_BR officeWorld = _Translations$cockpit$officeWorld$pt_BR._(_root);
 	@override late final _Translations$cockpit$confirmDialog$pt_BR confirmDialog = _Translations$cockpit$confirmDialog$pt_BR._(_root);
 	@override late final _Translations$cockpit$neovim$pt_BR neovim = _Translations$cockpit$neovim$pt_BR._(_root);
 	@override late final _Translations$cockpit$worktreeCreateDialog$pt_BR worktreeCreateDialog = _Translations$cockpit$worktreeCreateDialog$pt_BR._(_root);
@@ -301,6 +302,49 @@ class _Translations$core$menu$pt_BR extends Translations$core$menu$en {
 	@override String get quit => 'Sair';
 	@override String get minimize => 'Minimizar';
 	@override String get zoom => 'Zoom';
+}
+
+// Path: cockpit.officeWorld
+class _Translations$cockpit$officeWorld$pt_BR extends Translations$cockpit$officeWorld$en {
+	_Translations$cockpit$officeWorld$pt_BR._(TranslationsPtBr root) : this._root = root, super.internal(root);
+
+	final TranslationsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get reception => 'Recepção';
+	@override String get cafe => 'Copa';
+	@override String get restrooms => 'Banheiros';
+	@override String get lounge => 'Lounge';
+	@override String get working => 'Trabalhando';
+	@override String get waiting => 'Aguardando';
+	@override String get idle => 'Disponível';
+	@override String get agentProfile => 'Perfil do agente';
+	@override String get project => 'Projeto';
+	@override String get provider => 'Agente';
+	@override String get currentStatus => 'Status atual';
+	@override String get sessionDuration => 'Sessão atual no Cockpit';
+	@override String get workingDirectory => 'Diretório de trabalho';
+	@override String get statsPending => 'O Cockpit ainda não coleta estatísticas de modelo, tokens e ferramentas.';
+	@override String get openTerminal => 'Abrir terminal';
+	@override String get appearance => 'Aparência do escritório';
+	@override String get officeTheme => 'Tema sazonal';
+	@override String get themeAuto => 'Automático';
+	@override String get themeNone => 'Original';
+	@override String get themeChristmas => 'Natal';
+	@override String get themeHalloween => 'Halloween';
+	@override String get showNames => 'Mostrar nomes dos agentes';
+	@override String get bubbles => 'Balões de atividade';
+	@override String get bubblesAll => 'Todos';
+	@override String get bubblesImportant => 'Importantes';
+	@override String get bubblesNone => 'Nenhum';
+	@override String get movement => 'Movimento pelo escritório';
+	@override String get movementCalm => 'Calmo';
+	@override String get movementNormal => 'Normal';
+	@override String get movementLively => 'Agitado';
+	@override String get daylight => 'Ciclo dia/noite';
+	@override String get daylightAuto => 'Automático';
+	@override String get daylightDay => 'Sempre dia';
+	@override String get daylightNight => 'Sempre noite';
 }
 
 // Path: cockpit.confirmDialog
@@ -1015,6 +1059,8 @@ class _Translations$cockpit$topbar$pt_BR extends Translations$cockpit$topbar$en 
 	@override String get toggleFiles => 'Mostrar/ocultar arquivos';
 	@override String get filesUnavailable => 'Arquivos indisponíveis no Cockpit';
 	@override String get hideKeyboard => 'Baixar teclado';
+	@override String get showOffice => 'Mostrar escritório';
+	@override String get showTerminals => 'Mostrar terminais';
 }
 
 // Path: cockpit.tasks
@@ -1983,6 +2029,40 @@ extension on TranslationsPtBr {
 			'common.copyCode' => 'Copiar código',
 			'common.search' => 'Buscar',
 			'common.noResults' => 'Nenhum resultado',
+			'cockpit.officeWorld.reception' => 'Recepção',
+			'cockpit.officeWorld.cafe' => 'Copa',
+			'cockpit.officeWorld.restrooms' => 'Banheiros',
+			'cockpit.officeWorld.lounge' => 'Lounge',
+			'cockpit.officeWorld.working' => 'Trabalhando',
+			'cockpit.officeWorld.waiting' => 'Aguardando',
+			'cockpit.officeWorld.idle' => 'Disponível',
+			'cockpit.officeWorld.agentProfile' => 'Perfil do agente',
+			'cockpit.officeWorld.project' => 'Projeto',
+			'cockpit.officeWorld.provider' => 'Agente',
+			'cockpit.officeWorld.currentStatus' => 'Status atual',
+			'cockpit.officeWorld.sessionDuration' => 'Sessão atual no Cockpit',
+			'cockpit.officeWorld.workingDirectory' => 'Diretório de trabalho',
+			'cockpit.officeWorld.statsPending' => 'O Cockpit ainda não coleta estatísticas de modelo, tokens e ferramentas.',
+			'cockpit.officeWorld.openTerminal' => 'Abrir terminal',
+			'cockpit.officeWorld.appearance' => 'Aparência do escritório',
+			'cockpit.officeWorld.officeTheme' => 'Tema sazonal',
+			'cockpit.officeWorld.themeAuto' => 'Automático',
+			'cockpit.officeWorld.themeNone' => 'Original',
+			'cockpit.officeWorld.themeChristmas' => 'Natal',
+			'cockpit.officeWorld.themeHalloween' => 'Halloween',
+			'cockpit.officeWorld.showNames' => 'Mostrar nomes dos agentes',
+			'cockpit.officeWorld.bubbles' => 'Balões de atividade',
+			'cockpit.officeWorld.bubblesAll' => 'Todos',
+			'cockpit.officeWorld.bubblesImportant' => 'Importantes',
+			'cockpit.officeWorld.bubblesNone' => 'Nenhum',
+			'cockpit.officeWorld.movement' => 'Movimento pelo escritório',
+			'cockpit.officeWorld.movementCalm' => 'Calmo',
+			'cockpit.officeWorld.movementNormal' => 'Normal',
+			'cockpit.officeWorld.movementLively' => 'Agitado',
+			'cockpit.officeWorld.daylight' => 'Ciclo dia/noite',
+			'cockpit.officeWorld.daylightAuto' => 'Automático',
+			'cockpit.officeWorld.daylightDay' => 'Sempre dia',
+			'cockpit.officeWorld.daylightNight' => 'Sempre noite',
 			'cockpit.confirmDialog.unsavedChangesTitle' => 'Alterações não salvas',
 			'cockpit.confirmDialog.unsavedChangesMessage' => ({required Object fileName}) => '“${fileName}” tem alterações não salvas. Salvar antes de fechar?',
 			'cockpit.confirmDialog.dontSave' => 'Não salvar',
@@ -2381,6 +2461,8 @@ extension on TranslationsPtBr {
 			'cockpit.dbMongoView.noDocuments' => 'Nenhum documento nesta coleção.',
 			'cockpit.dbMongoView.noDocumentsMatch' => 'Nenhum documento corresponde a este filtro.',
 			'cockpit.dbMongoView.loadMore' => 'Carregar mais',
+			_ => null,
+		} ?? switch (path) {
 			'cockpit.dbMongoView.edit' => 'Editar',
 			'cockpit.dbMongoView.insert' => 'Inserir',
 			'cockpit.dbConnectionDialog.chooseFileTitle' => 'Escolher banco SQLite',
@@ -2415,8 +2497,6 @@ extension on TranslationsPtBr {
 			'cockpit.sshPrompts.trustHint' => 'Confie apenas se esta fingerprint corresponder ao servidor. Você pode verificar no servidor com:',
 			'cockpit.sshPrompts.trust' => 'Confiar',
 			'cockpit.sshPrompts.sshKeyPassphraseTitle' => 'Senha da chave SSH',
-			_ => null,
-		} ?? switch (path) {
 			'cockpit.sshPrompts.unlockMessage' => ({required Object keyPath, required Object connectionName}) => 'Desbloqueie ${keyPath} para conectar "${connectionName}".',
 			'cockpit.sshPrompts.keptInMemoryHint' => 'Mantida em memória até o Cockpit fechar. Para permitir que agentes usem esta conexão, ative "Salvar senha da chave" na conexão.',
 			'cockpit.sshPrompts.unlock' => 'Desbloquear',
@@ -2469,6 +2549,8 @@ extension on TranslationsPtBr {
 			'cockpit.topbar.toggleFiles' => 'Mostrar/ocultar arquivos',
 			'cockpit.topbar.filesUnavailable' => 'Arquivos indisponíveis no Cockpit',
 			'cockpit.topbar.hideKeyboard' => 'Baixar teclado',
+			'cockpit.topbar.showOffice' => 'Mostrar escritório',
+			'cockpit.topbar.showTerminals' => 'Mostrar terminais',
 			'cockpit.tasks.hotReload' => 'Hot reload',
 			'cockpit.tasks.hotRestart' => 'Hot restart',
 			'cockpit.tasks.toggleDebugPaint' => 'Alternar debug paint',
@@ -2893,6 +2975,8 @@ extension on TranslationsPtBr {
 			'automation.error.process' => ({required Object harness, required Object detail}) => '${harness}: ${detail}',
 			'automation.error.processNoDetail' => ({required Object harness}) => '${harness} não conseguiu gerar uma mensagem de commit.',
 			'automation.error.invalidResponse' => 'A automação devolveu uma mensagem de commit vazia.',
+			_ => null,
+		} ?? switch (path) {
 			'automation.error.busy' => 'Já há uma mensagem de commit sendo gerada.',
 			'automation.error.unknown' => 'A automação não conseguiu gerar uma mensagem de commit.',
 			'automation.error.noWorkspace' => 'Nenhum workspace selecionado.',
@@ -2929,8 +3013,6 @@ extension on TranslationsPtBr {
 			'theme.error.reservedId' => 'Este tema usa o id de um tema nativo. Mude o "id" no arquivo e importe de novo.',
 			'theme.error.notAnObject' => ({required Object field}) => 'Esperava um objeto em "${field}".',
 			'theme.error.missingField' => ({required Object field}) => 'Falta o campo obrigatório "${field}".',
-			_ => null,
-		} ?? switch (path) {
 			'theme.error.badColor' => ({required Object value, required Object field}) => '"${value}" em "${field}" não é uma cor. Use #RGB, #RRGGBB ou #RRGGBBAA.',
 			'theme.error.unknownBase' => ({required Object value}) => 'Tema base "${value}" desconhecido em "extends".',
 			'theme.error.noVariants' => 'O tema não declara nenhum variant. Adicione "dark", "light" ou os dois em "variants".',

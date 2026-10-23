@@ -98,6 +98,42 @@
     "noResults": "Sin resultados"
   },
   "cockpit": {
+    "officeWorld": {
+      "reception": "Recepción",
+      "cafe": "Cocina",
+      "restrooms": "Baños",
+      "lounge": "Sala de descanso",
+      "working": "Trabajando",
+      "waiting": "Esperando",
+      "idle": "Disponible",
+      "agentProfile": "Perfil del agente",
+      "project": "Proyecto",
+      "provider": "Agente",
+      "currentStatus": "Estado actual",
+      "sessionDuration": "Sesión actual en Cockpit",
+      "workingDirectory": "Directorio de trabajo",
+      "statsPending": "Cockpit todavía no recopila estadísticas de modelo, tokens y herramientas.",
+      "openTerminal": "Abrir terminal",
+      "appearance": "Apariencia de la oficina",
+      "officeTheme": "Tema estacional",
+      "themeAuto": "Automático",
+      "themeNone": "Original",
+      "themeChristmas": "Navidad",
+      "themeHalloween": "Halloween",
+      "showNames": "Mostrar nombres de agentes",
+      "bubbles": "Globos de actividad",
+      "bubblesAll": "Todos",
+      "bubblesImportant": "Importantes",
+      "bubblesNone": "Ninguno",
+      "movement": "Movimiento por la oficina",
+      "movementCalm": "Tranquilo",
+      "movementNormal": "Normal",
+      "movementLively": "Animado",
+      "daylight": "Ciclo día/noche",
+      "daylightAuto": "Automático",
+      "daylightDay": "Siempre de día",
+      "daylightNight": "Siempre de noche"
+    },
     "confirmDialog": {
       "unsavedChangesTitle": "Cambios sin guardar",
       "unsavedChangesMessage": "“${fileName}” tiene cambios sin guardar. ¿Guardarlos antes de cerrar?",
@@ -659,7 +695,9 @@
       "collapseSidebar": "Contraer barra lateral",
       "toggleFiles": "Mostrar/ocultar archivos",
       "filesUnavailable": "Archivos no disponibles en Cockpit",
-      "hideKeyboard": "Ocultar teclado"
+      "hideKeyboard": "Ocultar teclado",
+      "showOffice": "Mostrar oficina",
+      "showTerminals": "Mostrar terminales"
     },
     "tasks": {
       "hotReload": "Hot reload",

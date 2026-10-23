@@ -67,6 +67,11 @@ class AppSettings {
     this.automationModelId,
     this.updateCheckFrequency = UpdateCheckFrequency.daily,
     this.lastUpdateCheckTime,
+    this.officeTheme = 'auto',
+    this.officeShowNames = true,
+    this.officeBubbles = 'important',
+    this.officeLiveliness = 'normal',
+    this.officeDaylight = 'auto',
   });
 
   final AppThemeMode themeMode;
@@ -246,6 +251,13 @@ class AppSettings {
   /// Data da última verificação de atualização.
   final DateTime? lastUpdateCheckTime;
 
+  /// Preferências locais do mundo Habblaud, independentes do tema do Cockpit.
+  final String officeTheme;
+  final bool officeShowNames;
+  final String officeBubbles;
+  final String officeLiveliness;
+  final String officeDaylight;
+
   AppSettings copyWith({
     AppThemeMode? themeMode,
     String? interfaceFont,
@@ -293,6 +305,11 @@ class AppSettings {
     bool useDefaultAutomationModel = false,
     UpdateCheckFrequency? updateCheckFrequency,
     DateTime? lastUpdateCheckTime,
+    String? officeTheme,
+    bool? officeShowNames,
+    String? officeBubbles,
+    String? officeLiveliness,
+    String? officeDaylight,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -347,6 +364,11 @@ class AppSettings {
           : (automationModelId ?? this.automationModelId),
       updateCheckFrequency: updateCheckFrequency ?? this.updateCheckFrequency,
       lastUpdateCheckTime: lastUpdateCheckTime ?? this.lastUpdateCheckTime,
+      officeTheme: officeTheme ?? this.officeTheme,
+      officeShowNames: officeShowNames ?? this.officeShowNames,
+      officeBubbles: officeBubbles ?? this.officeBubbles,
+      officeLiveliness: officeLiveliness ?? this.officeLiveliness,
+      officeDaylight: officeDaylight ?? this.officeDaylight,
     );
   }
 
@@ -408,6 +430,11 @@ class AppSettings {
     'updateCheckFrequency': updateCheckFrequency.name,
     if (lastUpdateCheckTime != null)
       'lastUpdateCheckTime': lastUpdateCheckTime!.toIso8601String(),
+    'office.theme': officeTheme,
+    'office.showNames': officeShowNames,
+    'office.bubbles': officeBubbles,
+    'office.liveliness': officeLiveliness,
+    'office.daylight': officeDaylight,
   };
 
   factory AppSettings.fromJson(Map<dynamic, dynamic> json) {
@@ -495,9 +522,34 @@ class AppSettings {
       lastUpdateCheckTime: json['lastUpdateCheckTime'] != null
           ? DateTime.tryParse(json['lastUpdateCheckTime'] as String)
           : null,
+      officeTheme: _officeChoice(json['office.theme'], const {
+        'auto',
+        'none',
+        'christmas',
+        'halloween',
+      }, 'auto'),
+      officeShowNames: json['office.showNames'] as bool? ?? true,
+      officeBubbles: _officeChoice(json['office.bubbles'], const {
+        'all',
+        'important',
+        'none',
+      }, 'important'),
+      officeLiveliness: _officeChoice(json['office.liveliness'], const {
+        'calm',
+        'normal',
+        'lively',
+      }, 'normal'),
+      officeDaylight: _officeChoice(json['office.daylight'], const {
+        'auto',
+        'day',
+        'night',
+      }, 'auto'),
     );
   }
 }
+
+String _officeChoice(Object? value, Set<String> allowed, String fallback) =>
+    value is String && allowed.contains(value) ? value : fallback;
 
 /// Toggles por evento, com migração do antigo master switch `soundEnabled`:
 /// quem o tinha desligado (chave legada `false`) e ainda não tem toggles

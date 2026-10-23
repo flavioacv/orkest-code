@@ -98,6 +98,42 @@
     "noResults": "Nenhum resultado"
   },
   "cockpit": {
+    "officeWorld": {
+      "reception": "Recepção",
+      "cafe": "Copa",
+      "restrooms": "Banheiros",
+      "lounge": "Lounge",
+      "working": "Trabalhando",
+      "waiting": "Aguardando",
+      "idle": "Disponível",
+      "agentProfile": "Perfil do agente",
+      "project": "Projeto",
+      "provider": "Agente",
+      "currentStatus": "Status atual",
+      "sessionDuration": "Sessão atual no Cockpit",
+      "workingDirectory": "Diretório de trabalho",
+      "statsPending": "O Cockpit ainda não coleta estatísticas de modelo, tokens e ferramentas.",
+      "openTerminal": "Abrir terminal",
+      "appearance": "Aparência do escritório",
+      "officeTheme": "Tema sazonal",
+      "themeAuto": "Automático",
+      "themeNone": "Original",
+      "themeChristmas": "Natal",
+      "themeHalloween": "Halloween",
+      "showNames": "Mostrar nomes dos agentes",
+      "bubbles": "Balões de atividade",
+      "bubblesAll": "Todos",
+      "bubblesImportant": "Importantes",
+      "bubblesNone": "Nenhum",
+      "movement": "Movimento pelo escritório",
+      "movementCalm": "Calmo",
+      "movementNormal": "Normal",
+      "movementLively": "Agitado",
+      "daylight": "Ciclo dia/noite",
+      "daylightAuto": "Automático",
+      "daylightDay": "Sempre dia",
+      "daylightNight": "Sempre noite"
+    },
     "confirmDialog": {
       "unsavedChangesTitle": "Alterações não salvas",
       "unsavedChangesMessage": "“${fileName}” tem alterações não salvas. Salvar antes de fechar?",
@@ -659,7 +695,9 @@
       "collapseSidebar": "Recolher barra lateral",
       "toggleFiles": "Mostrar/ocultar arquivos",
       "filesUnavailable": "Arquivos indisponíveis no Cockpit",
-      "hideKeyboard": "Baixar teclado"
+      "hideKeyboard": "Baixar teclado",
+      "showOffice": "Mostrar escritório",
+      "showTerminals": "Mostrar terminais"
     },
     "tasks": {
       "hotReload": "Hot reload",

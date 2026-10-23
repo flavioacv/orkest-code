@@ -373,6 +373,10 @@ class TerminalSession extends PaneItem {
 
   @override
   final String id;
+
+  /// Momento em que esta aba/PTy foi criada nesta execução do Cockpit.
+  /// Não representa a idade histórica da conversa do harness ao restaurar.
+  final DateTime createdAt = DateTime.now();
   @override
   final String projectId;
   @override

@@ -9,6 +9,7 @@ import 'package:cockpit/app/cockpit/ui/actions/workspace_actions.dart';
 import 'package:cockpit/app/cockpit/ui/actions/worktree_actions.dart';
 import 'package:cockpit/app/core/app_intents.dart';
 import 'package:cockpit/app/cockpit/domain/entities/project.dart';
+import 'package:cockpit/app/cockpit/ui/session/terminal_session.dart';
 import 'package:cockpit/app/cockpit/ui/document/document_windows.dart';
 import 'package:cockpit/app/cockpit/domain/entities/remote_host.dart';
 import 'package:cockpit/app/core/domain/entities/app_settings.dart';
@@ -35,6 +36,7 @@ import 'package:cockpit/app/cockpit/ui/widgets/layout_preview_tab.dart';
 import 'package:cockpit/app/cockpit/ui/widgets/remote_disconnected_banner.dart';
 import 'package:cockpit/app/cockpit/ui/widgets/terminal_key_bar.dart';
 import 'package:cockpit/app/cockpit/ui/widgets/widgets.dart';
+import 'package:cockpit/app/cockpit/ui/widgets/office_world_view.dart';
 import 'package:cockpit/app/core/data/diagnostics/performance_diagnostics.dart';
 import 'package:cockpit/app/core/ui/automation_controller.dart';
 import 'package:cockpit/app/core/ui/themes/themes.dart';
@@ -114,6 +116,7 @@ class _CockpitPageState extends State<CockpitPage> {
   /// visibilidade das panes segue `vm.railVisible`/`vm.treeVisible`.
   bool _leftDrawer = false;
   bool _rightDrawer = false;
+  bool _officeView = true;
 
   /// Começo de um arraste de painel: fotografa a largura e zera o acumulado.
   void _beginPanelDrag(double width) => setState(() {
@@ -781,6 +784,9 @@ class _CockpitPageState extends State<CockpitPage> {
                   // (systemTerminal) não. `activeHasFileTree` cobre os dois —
                   // `!isPathless` desabilitava indevidamente o remoto (path='').
                   filesEnabled: shell.hasFileTree,
+                  officeView: _officeView,
+                  onToggleOffice: () =>
+                      setState(() => _officeView = !_officeView),
                 ),
                 // Host remoto fora do ar: faixa com o estado + botão de
                 // reconectar. Não ocupa espaço em workspace local.
@@ -815,7 +821,10 @@ class _CockpitPageState extends State<CockpitPage> {
                         }),
                         onResizeEnd: _endPanelDrag,
                       ),
-                      center: _CenterPanel(centerKey: _centerKey),
+                      center: _CenterPanel(
+                        centerKey: _centerKey,
+                        officeView: _officeView,
+                      ),
                       tree: _TreePanel(
                         handleOnLeft: !swapped,
                         treeWidth: _treeWidth,
@@ -983,9 +992,10 @@ class _RailPanel extends StatelessWidget {
 /// Multiplexador (árvore de splits) do workspace ativo — um por projeto, todos
 /// montados no `IndexedStack` pra preservar estado ao trocar de workspace.
 class _CenterPanel extends StatefulWidget {
-  const _CenterPanel({required this.centerKey});
+  const _CenterPanel({required this.centerKey, required this.officeView});
 
   final GlobalKey centerKey;
+  final bool officeView;
 
   @override
   State<_CenterPanel> createState() => _CenterPanelState();
@@ -996,6 +1006,15 @@ class _CenterPanelState extends State<_CenterPanel> {
   // only its own pane state, so a terminal update does not rebuild every
   // workspace's pane tree.
   final Map<String, Widget> _workspaceWidgets = {};
+  String? _officeTerminalSessionId;
+
+  @override
+  void didUpdateWidget(covariant _CenterPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.officeView && !widget.officeView) {
+      _officeTerminalSessionId = null;
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -1004,52 +1023,194 @@ class _CenterPanelState extends State<_CenterPanel> {
     final projectIds = vm.projects.map((project) => project.id).toList();
     final liveIds = projectIds.toSet();
     _workspaceWidgets.removeWhere((id, _) => !liveIds.contains(id));
-    return KeyedSubtree(
-      key: widget.centerKey,
-      child: vm.selectedProjectId == null
-          ? WelcomeView(
-              hasHosts: vm.remoteHosts.hosts.isNotEmpty,
-              onCreateWorkspace: () => createWorkspace(context),
-              onConnectHost: (anchor) =>
-                  newRemoteWorkspace(context, vm, anchor),
-              onConfigureHost: () => context.pushNamed(
-                RoutePaths.settings,
-                arguments: SettingsTab.remoteHosts,
-              ),
-            )
-          // `TerminalScope` na raiz dos workspaces: TODAS as TerminalViews do
-          // flterm compartilham o mesmo pool de atlas de glifos (chave =
-          // tema/fonte/DPR). Sem o scope cada view cria um pool isolado e o
-          // atlas morre junto com ela — trocar de aba pagava o `_preseed`
-          // (rasterizar o ASCII + compor a textura) a cada remount. Aqui o
-          // atlas sobrevive à troca e é reaproveitado por todos os terminais.
-          : TerminalScope(
-              child: IndexedStack(
-                index: _activeIndex(vm),
-                sizing: StackFit.expand,
-                children: [
-                  // Um multiplexador por projeto — todos montados, só
-                  // o ativo pintado → estado preservado ao trocar.
-                  for (final id in projectIds)
-                    KeyedSubtree(
-                      key: ValueKey(id),
-                      child: ColoredBox(
-                        color: colors.border,
-                        child: _workspaceWidgets.putIfAbsent(
-                          id,
-                          () => _ProjectMultiplexer(projectId: id),
-                        ),
+    final selectedOfficeItem = _officeTerminalSessionId == null
+        ? null
+        : vm.session(_officeTerminalSessionId!);
+    final officeSession = selectedOfficeItem is TerminalSession
+        ? selectedOfficeItem
+        : null;
+    final officeProject = officeSession == null
+        ? null
+        : vm.projects
+              .where((project) => project.id == officeSession.projectId)
+              .firstOrNull;
+    final showTerminalWorkspace = !widget.officeView || officeSession != null;
+
+    final office = widget.officeView
+        ? OfficeWorldView(
+            projects: <String, Project>{
+              for (final root in vm.rootProjects) root.id: root,
+              for (final root in vm.rootProjects)
+                for (final worktree in vm.worktreesOf(root.id))
+                  worktree.id: worktree,
+              for (final remote in vm.remoteWorkspaces) remote.id: remote,
+            }.values.where((project) => !project.isSystemTerminal).toList(),
+            sessions: vm.allSessions.toList(),
+            labels: OfficeWorldLabels(
+              reception: context.t.cockpit.officeWorld.reception,
+              cafe: context.t.cockpit.officeWorld.cafe,
+              restrooms: context.t.cockpit.officeWorld.restrooms,
+              lounge: context.t.cockpit.officeWorld.lounge,
+              working: context.t.cockpit.officeWorld.working,
+              waiting: context.t.cockpit.officeWorld.waiting,
+              idle: context.t.cockpit.officeWorld.idle,
+            ),
+            onOpenSession: (session) {
+              unawaited(() async {
+                await vm.selectProjectAndWait(session.projectId);
+                if (!mounted) return;
+                final pane = vm.leafOfTab(session.projectId, session.id);
+                if (pane != null) vm.selectTab(pane, session.id);
+                setState(() => _officeTerminalSessionId = session.id);
+              }());
+            },
+          )
+        : null;
+
+    final terminalWorkspace = !showTerminalWorkspace
+        ? null
+        : vm.selectedProjectId == null
+        ? WelcomeView(
+            hasHosts: vm.remoteHosts.hosts.isNotEmpty,
+            onCreateWorkspace: () => createWorkspace(context),
+            onConnectHost: (anchor) => newRemoteWorkspace(context, vm, anchor),
+            onConfigureHost: () => context.pushNamed(
+              RoutePaths.settings,
+              arguments: SettingsTab.remoteHosts,
+            ),
+          )
+        // `TerminalScope` na raiz dos workspaces: TODAS as TerminalViews do
+        // flterm compartilham o mesmo pool de atlas de glifos (chave =
+        // tema/fonte/DPR). Sem o scope cada view cria um pool isolado e o
+        // atlas morre junto com ela — trocar de aba pagava o `_preseed`
+        // (rasterizar o ASCII + compor a textura) a cada remount. Aqui o
+        // atlas sobrevive à troca e é reaproveitado por todos os terminais.
+        : TerminalScope(
+            child: IndexedStack(
+              index: _activeIndex(vm),
+              sizing: StackFit.expand,
+              children: [
+                // Um multiplexador por projeto — todos montados, só
+                // o ativo pintado → estado preservado ao trocar.
+                for (final id in projectIds)
+                  KeyedSubtree(
+                    key: ValueKey(id),
+                    child: ColoredBox(
+                      color: colors.border,
+                      child: _workspaceWidgets.putIfAbsent(
+                        id,
+                        () => _ProjectMultiplexer(projectId: id),
                       ),
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
+          );
+
+    final center = Stack(
+      fit: StackFit.expand,
+      children: [
+        if (office != null) Positioned.fill(child: office),
+        if (terminalWorkspace != null)
+          if (widget.officeView)
+            _OfficeTerminalWindow(
+              title: officeSession?.displayTitle ?? 'Terminal',
+              projectName: officeProject?.name ?? '',
+              onClose: () => setState(() => _officeTerminalSessionId = null),
+              child: terminalWorkspace,
+            )
+          else
+            Positioned.fill(child: terminalWorkspace),
+      ],
     );
+
+    return KeyedSubtree(key: widget.centerKey, child: center);
   }
 
   int _activeIndex(CockpitViewModel vm) {
     final index = vm.projects.indexWhere((p) => p.id == vm.selectedProjectId);
     return index < 0 ? 0 : index;
+  }
+}
+
+/// Floating frame over the Office map. Its child is the existing workspace
+/// multiplexer, so the terminal remains the same PTY and controller used by
+/// the regular Cockpit view.
+class _OfficeTerminalWindow extends StatelessWidget {
+  const _OfficeTerminalWindow({
+    required this.title,
+    required this.projectName,
+    required this.onClose,
+    required this.child,
+  });
+
+  final String title;
+  final String projectName;
+  final VoidCallback onClose;
+  final Widget child;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return Positioned.fill(
+      child: ColoredBox(
+        color: const Color(0x66000000),
+        child: Center(
+          child: FractionallySizedBox(
+            widthFactor: 0.78,
+            heightFactor: 0.78,
+            child: DecoratedBox(
+              decoration: BoxDecoration(
+                color: colors.bg,
+                border: Border.all(color: colors.border),
+                borderRadius: BorderRadius.circular(10),
+                boxShadow: const [
+                  BoxShadow(color: Color(0x66000000), blurRadius: 28),
+                ],
+              ),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(10),
+                child: Column(
+                  children: [
+                    SizedBox(
+                      height: 38,
+                      child: Row(
+                        children: [
+                          const SizedBox(width: 14),
+                          Icon(Icons.terminal, size: 16, color: colors.text3),
+                          const SizedBox(width: 8),
+                          Expanded(
+                            child: Text(
+                              projectName.isEmpty
+                                  ? title
+                                  : '$projectName · $title',
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: TextStyle(
+                                color: colors.text,
+                                fontSize: 12,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          ),
+                          IconButton.ghost(
+                            icon: const Icon(Icons.close, size: 16),
+                            onPressed: onClose,
+                          ),
+                          const SizedBox(width: 6),
+                        ],
+                      ),
+                    ),
+                    Divider(height: 1, color: colors.border),
+                    Expanded(child: child),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
   }
 }
 

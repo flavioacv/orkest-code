@@ -6,6 +6,7 @@ import 'package:cockpit/app/core/ui/menu/workspace_menu_bridge.dart';
 import 'package:cockpit/app/core/ui/settings_controller.dart';
 import 'package:cockpit/app/core/ui/widgets/window_controls.dart';
 import 'package:cockpit/app/core/ui/themes/themes.dart';
+import 'package:cockpit/app/cockpit/ui/widgets/office_world_settings_dialog.dart';
 import 'package:cockpit/i18n/strings.g.dart';
 import 'package:cockpit/app/core/ui/widgets/hover_tap.dart';
 import 'package:flutter_modular/flutter_modular.dart';
@@ -23,6 +24,8 @@ class CockpitTopbar extends StatelessWidget {
     required this.treeVisible,
     required this.onToggleRail,
     required this.onToggleTree,
+    required this.officeView,
+    required this.onToggleOffice,
     this.filesEnabled = true,
   });
 
@@ -31,6 +34,8 @@ class CockpitTopbar extends StatelessWidget {
   final bool treeVisible;
   final VoidCallback onToggleRail;
   final VoidCallback onToggleTree;
+  final bool officeView;
+  final VoidCallback onToggleOffice;
 
   /// Habilita o botão de árvore de arquivos. `false` no workspace de sistema
   /// "Cockpit" (sem pasta → sem árvore): o botão fica visível porém inerte.
@@ -71,6 +76,23 @@ class CockpitTopbar extends StatelessWidget {
           style: context.typo.title.copyWith(fontSize: 14, color: colors.text),
         ),
         const Spacer(),
+        if (officeView && !Platform.isLinux) ...[
+          _IconBtn(
+            icon: Icons.palette_outlined,
+            tooltip: context.t.cockpit.officeWorld.appearance,
+            onTap: () => showOfficeWorldSettings(context),
+          ),
+          const SizedBox(width: 8),
+        ],
+        _IconBtn(
+          icon: officeView ? Icons.terminal : Icons.groups_2_outlined,
+          tooltip: officeView
+              ? context.t.cockpit.topbar.showTerminals
+              : context.t.cockpit.topbar.showOffice,
+          active: officeView,
+          onTap: onToggleOffice,
+        ),
+        const SizedBox(width: 8),
         _IconBtn(
           icon: Icons.view_sidebar_outlined,
           tooltip: filesEnabled

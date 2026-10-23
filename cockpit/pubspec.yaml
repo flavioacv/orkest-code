@@ -295,6 +295,9 @@ flutter:
     - assets/harness_icons/
     - assets/sounds/
     - assets/branding/
+    - assets/habblaud_art/
+    - assets/habblaud_art/worlds/
+    - assets/habblaud_world/
     # Plano 58 — pipeline local do preview de markdown (markdown-it +
     # sanitizador + diff de DOM + CSS por variáveis de tema). Sem rede: a
     # webview carrega só estes assets, sob CSP restritiva.

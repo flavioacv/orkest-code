@@ -98,6 +98,42 @@
     "noResults": "No results"
   },
   "cockpit": {
+    "officeWorld": {
+      "reception": "Reception",
+      "cafe": "Café",
+      "restrooms": "Restrooms",
+      "lounge": "Lounge",
+      "working": "Working",
+      "waiting": "Waiting",
+      "idle": "Available",
+      "agentProfile": "Agent profile",
+      "project": "Project",
+      "provider": "Agent",
+      "currentStatus": "Current status",
+      "sessionDuration": "Current Cockpit session",
+      "workingDirectory": "Working directory",
+      "statsPending": "Model, token and tool statistics are not collected by Cockpit yet.",
+      "openTerminal": "Open terminal",
+      "appearance": "Office appearance",
+      "officeTheme": "Seasonal theme",
+      "themeAuto": "Automatic",
+      "themeNone": "Original",
+      "themeChristmas": "Christmas",
+      "themeHalloween": "Halloween",
+      "showNames": "Show agent names",
+      "bubbles": "Activity bubbles",
+      "bubblesAll": "All",
+      "bubblesImportant": "Important",
+      "bubblesNone": "None",
+      "movement": "Office movement",
+      "movementCalm": "Calm",
+      "movementNormal": "Normal",
+      "movementLively": "Lively",
+      "daylight": "Day and night",
+      "daylightAuto": "Automatic",
+      "daylightDay": "Always day",
+      "daylightNight": "Always night"
+    },
     "confirmDialog": {
       "unsavedChangesTitle": "Unsaved changes",
       "unsavedChangesMessage": "“${fileName}” has unsaved changes. Save them before closing?",
@@ -659,7 +695,9 @@
       "collapseSidebar": "Collapse sidebar",
       "toggleFiles": "Show/hide files",
       "filesUnavailable": "Files unavailable in Cockpit",
-      "hideKeyboard": "Hide keyboard"
+      "hideKeyboard": "Hide keyboard",
+      "showOffice": "Show office",
+      "showTerminals": "Show terminals"
     },
     "tasks": {
       "hotReload": "Hot reload",
