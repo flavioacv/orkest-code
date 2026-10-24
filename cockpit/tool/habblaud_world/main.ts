@@ -1,4 +1,7 @@
 import * as art from '../../../../habblaud/client/src/art/index.ts';
+import { PART_KEYS, type AppearanceParts, type PartKey } from '../../../../habblaud/shared/appearance.ts';
+import { SoundBoard } from '../../../../habblaud/client/src/audio/board.ts';
+import { DEFAULT_SOUND_SETTINGS, type SoundSettings } from '../../../../habblaud/client/src/audio/scheduler.ts';
 import { DEFAULT_WORLD_OPTIONS, seasonalThemeFor } from '../../../../habblaud/client/src/world/api.ts';
 import type { WorldOptions } from '../../../../habblaud/client/src/world/api.ts';
 import { Camera, overviewFrame } from '../../../../habblaud/client/src/world/camera.ts';
@@ -7,12 +10,15 @@ import { attachInput } from '../../../../habblaud/client/src/world/input.ts';
 import { Overlay } from '../../../../habblaud/client/src/world/render/overlay.ts';
 import { Renderer } from '../../../../habblaud/client/src/world/render/renderer.ts';
 import { Sim } from '../../../../habblaud/client/src/world/sim/sim.ts';
+import { SoundCues } from '../../../../habblaud/client/src/world/sound-cues.ts';
 import { __HABBLAUD_ASSETS__ } from './assets.ts';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#office')!;
 let options: WorldOptions = { ...DEFAULT_WORLD_OPTIONS };
 const camera = new Camera();
 const sim = new Sim(art, () => options, null);
+const soundBoard = new SoundBoard();
+const soundCues = new SoundCues(sim, camera);
 const renderer = new Renderer(canvas, art, sim, camera);
 const overlay = new Overlay(renderer.ctx, sim, renderer, camera);
 let snapshotRev = 0;
@@ -23,6 +29,15 @@ let lastCols = -1;
 let lastTs = 0;
 let raf = 0;
 let destroyed = false;
+let receivedFirstSnapshot = false;
+let soundEnabled = false;
+const lastAgentStatuses = new Map<string, string>();
+
+function unlockAudio() {
+  if (soundEnabled) void soundBoard.unlock();
+}
+window.addEventListener('pointerdown', unlockAudio, { passive: true });
+window.addEventListener('keydown', unlockAudio);
 
 function loadImage(file: string): Promise<HTMLImageElement | null> {
   return new Promise((resolve) => {
@@ -165,9 +180,24 @@ function loop(ts: number) {
   renderer.frame(now, dt, options, { agent: selectedAgent, room: null, hover: hoveredAgent });
   overlay.draw(now, options, { agent: selectedAgent, room: null, hover: hoveredAgent });
   renderer.pruneHeads();
+  soundCues.update(now, (cue) => soundBoard.play(cue.kind, cue));
 }
 
 window.cockpitHabblaudWorld = {
+  getAppearance(seed: number, look: 'f' | 'm', parts: AppearanceParts = {}) {
+    const appearance = art.fitToOptions({ ...art.appearanceFromSeed(seed, { look }), ...parts });
+    const options = art.editorOptions(appearance);
+    const selectable = Object.fromEntries(PART_KEYS.map((key) => [
+      key,
+      options[key].filter((value) => !art.editorConflict(appearance, key, value)),
+    ])) as Record<PartKey, readonly string[]>;
+    const sprite = art.characterSprite({ appearance, dir: 'down', pose: 'stand', frame: 0 });
+    return {
+      parts: Object.fromEntries(PART_KEYS.map((key) => [key, appearance[key]])),
+      options: selectable,
+      preview: sprite.canvas.toDataURL('image/png'),
+    };
+  },
   update(snapshot: any) {
     const now = Date.now();
     if (snapshot?.options && typeof snapshot.options === 'object') {
@@ -180,6 +210,40 @@ window.cockpitHabblaudWorld = {
         ...(next.daylight === 'auto' || next.daylight === 'day' || next.daylight === 'night' ? { daylight: next.daylight, dayNight: next.daylight !== 'day' } : {}),
         ...(next.theme === 'auto' || next.theme === 'none' || next.theme === 'christmas' || next.theme === 'halloween' ? { theme: next.theme } : {}),
       };
+      soundEnabled = next.sound === true;
+      const rawSounds = next.sounds && typeof next.sounds === 'object' ? next.sounds : {};
+      const volume = typeof rawSounds.volume === 'number' && Number.isFinite(rawSounds.volume)
+        ? Math.max(0, Math.min(1, rawSounds.volume))
+        : DEFAULT_SOUND_SETTINGS.volume;
+      const soundSettings: SoundSettings = {
+        volume,
+        alerts: typeof rawSounds.alerts === 'boolean' ? rawSounds.alerts : DEFAULT_SOUND_SETTINGS.alerts,
+        keys: typeof rawSounds.keys === 'boolean' ? rawSounds.keys : DEFAULT_SOUND_SETTINGS.keys,
+        elevator: typeof rawSounds.elevator === 'boolean' ? rawSounds.elevator : DEFAULT_SOUND_SETTINGS.elevator,
+        social: typeof rawSounds.social === 'boolean' ? rawSounds.social : DEFAULT_SOUND_SETTINGS.social,
+      };
+      soundBoard.configure(soundEnabled, soundSettings);
+    }
+    // As salas nascem prontas no snapshot inicial; em seguida os agentes são
+    // apresentados como novas chegadas pelo elevador, em vez de aparecerem já
+    // sentados nas mesas (comportamento padrão do Habblaud para histórico).
+    if (!receivedFirstSnapshot) {
+      sim.applySnapshot({ ...snapshot, agents: [] }, now);
+      receivedFirstSnapshot = true;
+      for (const agent of Array.isArray(snapshot?.agents) ? snapshot.agents : []) {
+        const id = String(agent?.id ?? '');
+        if (id) lastAgentStatuses.set(id, String(agent?.status ?? ''));
+      }
+    } else {
+      for (const agent of Array.isArray(snapshot?.agents) ? snapshot.agents : []) {
+        const id = String(agent?.id ?? '');
+        const status = String(agent?.status ?? '');
+        const previous = lastAgentStatuses.get(id);
+        if (previous !== undefined && previous !== 'waiting' && status === 'waiting') {
+          soundBoard.play('chime');
+        }
+        if (id) lastAgentStatuses.set(id, status);
+      }
     }
     sim.applySnapshot(snapshot, now);
     renderer.sync(seasonalThemeFor(options.theme, new Date()));
@@ -193,6 +257,8 @@ window.cockpitHabblaudWorld = {
   destroy() {
     destroyed = true;
     cancelAnimationFrame(raf);
+    window.removeEventListener('pointerdown', unlockAudio);
+    window.removeEventListener('keydown', unlockAudio);
     detachInput();
     window.removeEventListener('resize', resize);
   },
@@ -207,6 +273,11 @@ raf = requestAnimationFrame(loop);
 declare global {
   interface Window {
     cockpitHabblaudWorld: {
+      getAppearance(seed: number, look: 'f' | 'm', parts?: Record<string, string>): {
+        parts: Record<string, string>;
+        options: Record<string, readonly string[]>;
+        preview: string;
+      };
       update(snapshot: unknown): void;
       selectAgent(id: string | null): void;
       destroy(): void;

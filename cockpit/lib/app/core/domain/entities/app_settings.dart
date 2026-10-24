@@ -72,6 +72,14 @@ class AppSettings {
     this.officeBubbles = 'important',
     this.officeLiveliness = 'normal',
     this.officeDaylight = 'auto',
+    this.officeSounds = false,
+    this.officeSoundVolume = 60,
+    this.officeSoundAlerts = true,
+    this.officeSoundKeys = true,
+    this.officeSoundElevator = true,
+    this.officeSoundSocial = true,
+    this.officeCharacterParts = const <String, Map<String, String>>{},
+    this.officeAgentNames = const <String, String>{},
   });
 
   final AppThemeMode themeMode;
@@ -258,6 +266,21 @@ class AppSettings {
   final String officeLiveliness;
   final String officeDaylight;
 
+  /// Sons ambientais do mundo Habblaud. Desligado por padrão.
+  final bool officeSounds;
+  final double officeSoundVolume;
+  final bool officeSoundAlerts;
+  final bool officeSoundKeys;
+  final bool officeSoundElevator;
+  final bool officeSoundSocial;
+
+  /// Partes de aparência personalizadas por projeto para os personagens do
+  /// Office (mesmo formato `parts` do Habblaud).
+  final Map<String, Map<String, String>> officeCharacterParts;
+
+  /// Nome dinâmico atribuído a cada sessão Office, estável entre snapshots.
+  final Map<String, String> officeAgentNames;
+
   AppSettings copyWith({
     AppThemeMode? themeMode,
     String? interfaceFont,
@@ -310,6 +333,14 @@ class AppSettings {
     String? officeBubbles,
     String? officeLiveliness,
     String? officeDaylight,
+    bool? officeSounds,
+    double? officeSoundVolume,
+    bool? officeSoundAlerts,
+    bool? officeSoundKeys,
+    bool? officeSoundElevator,
+    bool? officeSoundSocial,
+    Map<String, Map<String, String>>? officeCharacterParts,
+    Map<String, String>? officeAgentNames,
   }) {
     return AppSettings(
       themeMode: themeMode ?? this.themeMode,
@@ -369,6 +400,14 @@ class AppSettings {
       officeBubbles: officeBubbles ?? this.officeBubbles,
       officeLiveliness: officeLiveliness ?? this.officeLiveliness,
       officeDaylight: officeDaylight ?? this.officeDaylight,
+      officeSounds: officeSounds ?? this.officeSounds,
+      officeSoundVolume: officeSoundVolume ?? this.officeSoundVolume,
+      officeSoundAlerts: officeSoundAlerts ?? this.officeSoundAlerts,
+      officeSoundKeys: officeSoundKeys ?? this.officeSoundKeys,
+      officeSoundElevator: officeSoundElevator ?? this.officeSoundElevator,
+      officeSoundSocial: officeSoundSocial ?? this.officeSoundSocial,
+      officeCharacterParts: officeCharacterParts ?? this.officeCharacterParts,
+      officeAgentNames: officeAgentNames ?? this.officeAgentNames,
     );
   }
 
@@ -435,6 +474,15 @@ class AppSettings {
     'office.bubbles': officeBubbles,
     'office.liveliness': officeLiveliness,
     'office.daylight': officeDaylight,
+    'office.sounds': officeSounds,
+    'office.soundVolume': officeSoundVolume,
+    'office.soundAlerts': officeSoundAlerts,
+    'office.soundKeys': officeSoundKeys,
+    'office.soundElevator': officeSoundElevator,
+    'office.soundSocial': officeSoundSocial,
+    if (officeCharacterParts.isNotEmpty)
+      'office.characterParts': officeCharacterParts,
+    if (officeAgentNames.isNotEmpty) 'office.agentNames': officeAgentNames,
   };
 
   factory AppSettings.fromJson(Map<dynamic, dynamic> json) {
@@ -544,12 +592,55 @@ class AppSettings {
         'day',
         'night',
       }, 'auto'),
+      officeSounds: json['office.sounds'] as bool? ?? false,
+      officeSoundVolume:
+          ((json['office.soundVolume'] as num?)?.toDouble() ?? 60).clamp(
+            0,
+            100,
+          ),
+      officeSoundAlerts: json['office.soundAlerts'] as bool? ?? true,
+      officeSoundKeys: json['office.soundKeys'] as bool? ?? true,
+      officeSoundElevator: json['office.soundElevator'] as bool? ?? true,
+      officeSoundSocial: json['office.soundSocial'] as bool? ?? true,
+      officeCharacterParts: _officeParts(json['office.characterParts']),
+      officeAgentNames: _strMap(json['office.agentNames']),
     );
   }
 }
 
 String _officeChoice(Object? value, Set<String> allowed, String fallback) =>
     value is String && allowed.contains(value) ? value : fallback;
+
+Map<String, Map<String, String>> _officeParts(Object? raw) {
+  if (raw is! Map) return const {};
+  const allowed = <String>{
+    'skin',
+    'hair',
+    'hairStyle',
+    'eyes',
+    'top',
+    'topAccent',
+    'topStyle',
+    'bottom',
+    'bottomStyle',
+    'shoes',
+    'accessory',
+    'accessoryColor',
+    'facialHair',
+  };
+  final result = <String, Map<String, String>>{};
+  for (final entry in raw.entries) {
+    if (entry.key is! String || entry.value is! Map) continue;
+    final parts = <String, String>{};
+    for (final part in (entry.value as Map).entries) {
+      if (allowed.contains(part.key) && part.value is String) {
+        parts[part.key as String] = part.value as String;
+      }
+    }
+    if (parts.isNotEmpty) result[entry.key as String] = parts;
+  }
+  return result;
+}
 
 /// Toggles por evento, com migração do antigo master switch `soundEnabled`:
 /// quem o tinha desligado (chave legada `false`) e ainda não tem toggles

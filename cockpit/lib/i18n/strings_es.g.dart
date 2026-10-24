@@ -325,6 +325,26 @@ class _Translations$cockpit$officeWorld$es extends Translations$cockpit$officeWo
 	@override String get sessionDuration => 'Sesión actual en Cockpit';
 	@override String get workingDirectory => 'Directorio de trabajo';
 	@override String get statsPending => 'Cockpit todavía no recopila estadísticas de modelo, tokens y herramientas.';
+	@override String get recentActivity => 'Actividad reciente en esta ejecución';
+	@override String get editAgentName => 'Editar nombre del agente';
+	@override String get agentName => 'Nombre del agente';
+	@override String get workingInTerminal => 'Trabajando en el terminal';
+	@override String get waitingInTerminal => 'Te necesita en el terminal';
+	@override String get waitingBubble => 'Responder en la terminal';
+	@override String get respond => 'Responder';
+	@override String get dismissNotification => 'Descartar aviso';
+	@override String get editAppearance => 'Editar personaje';
+	@override String get randomizeAppearance => 'Sortear';
+	@override String get resetAppearance => 'Volver al sorteo';
+	@override String get skin => 'Piel';
+	@override String get hair => 'Cabello';
+	@override String get beard => 'Barba';
+	@override String get eyes => 'Ojos';
+	@override String get top => 'Parte superior';
+	@override String get bottom => 'Parte inferior';
+	@override String get shoes => 'Zapatos';
+	@override String get accessory => 'Accesorio';
+	@override String get turnCompleted => 'Turno terminado';
 	@override String get openTerminal => 'Abrir terminal';
 	@override String get appearance => 'Apariencia de la oficina';
 	@override String get officeTheme => 'Tema estacional';
@@ -342,6 +362,12 @@ class _Translations$cockpit$officeWorld$es extends Translations$cockpit$officeWo
 	@override String get movementNormal => 'Normal';
 	@override String get movementLively => 'Animado';
 	@override String get daylight => 'Ciclo día/noche';
+	@override String get sounds => 'Sonidos de la oficina';
+	@override String get soundVolume => 'Volumen';
+	@override String get soundAlerts => 'Avisos y tareas completadas';
+	@override String get soundKeys => 'Teclado';
+	@override String get soundElevator => 'Ascensor';
+	@override String get soundSocial => 'Ping-pong y arcade';
 	@override String get daylightAuto => 'Automático';
 	@override String get daylightDay => 'Siempre de día';
 	@override String get daylightNight => 'Siempre de noche';
@@ -2043,6 +2069,26 @@ extension on TranslationsEs {
 			'cockpit.officeWorld.sessionDuration' => 'Sesión actual en Cockpit',
 			'cockpit.officeWorld.workingDirectory' => 'Directorio de trabajo',
 			'cockpit.officeWorld.statsPending' => 'Cockpit todavía no recopila estadísticas de modelo, tokens y herramientas.',
+			'cockpit.officeWorld.recentActivity' => 'Actividad reciente en esta ejecución',
+			'cockpit.officeWorld.editAgentName' => 'Editar nombre del agente',
+			'cockpit.officeWorld.agentName' => 'Nombre del agente',
+			'cockpit.officeWorld.workingInTerminal' => 'Trabajando en el terminal',
+			'cockpit.officeWorld.waitingInTerminal' => 'Te necesita en el terminal',
+			'cockpit.officeWorld.waitingBubble' => 'Responder en la terminal',
+			'cockpit.officeWorld.respond' => 'Responder',
+			'cockpit.officeWorld.dismissNotification' => 'Descartar aviso',
+			'cockpit.officeWorld.editAppearance' => 'Editar personaje',
+			'cockpit.officeWorld.randomizeAppearance' => 'Sortear',
+			'cockpit.officeWorld.resetAppearance' => 'Volver al sorteo',
+			'cockpit.officeWorld.skin' => 'Piel',
+			'cockpit.officeWorld.hair' => 'Cabello',
+			'cockpit.officeWorld.beard' => 'Barba',
+			'cockpit.officeWorld.eyes' => 'Ojos',
+			'cockpit.officeWorld.top' => 'Parte superior',
+			'cockpit.officeWorld.bottom' => 'Parte inferior',
+			'cockpit.officeWorld.shoes' => 'Zapatos',
+			'cockpit.officeWorld.accessory' => 'Accesorio',
+			'cockpit.officeWorld.turnCompleted' => 'Turno terminado',
 			'cockpit.officeWorld.openTerminal' => 'Abrir terminal',
 			'cockpit.officeWorld.appearance' => 'Apariencia de la oficina',
 			'cockpit.officeWorld.officeTheme' => 'Tema estacional',
@@ -2060,6 +2106,12 @@ extension on TranslationsEs {
 			'cockpit.officeWorld.movementNormal' => 'Normal',
 			'cockpit.officeWorld.movementLively' => 'Animado',
 			'cockpit.officeWorld.daylight' => 'Ciclo día/noche',
+			'cockpit.officeWorld.sounds' => 'Sonidos de la oficina',
+			'cockpit.officeWorld.soundVolume' => 'Volumen',
+			'cockpit.officeWorld.soundAlerts' => 'Avisos y tareas completadas',
+			'cockpit.officeWorld.soundKeys' => 'Teclado',
+			'cockpit.officeWorld.soundElevator' => 'Ascensor',
+			'cockpit.officeWorld.soundSocial' => 'Ping-pong y arcade',
 			'cockpit.officeWorld.daylightAuto' => 'Automático',
 			'cockpit.officeWorld.daylightDay' => 'Siempre de día',
 			'cockpit.officeWorld.daylightNight' => 'Siempre de noche',
@@ -2435,6 +2487,8 @@ extension on TranslationsEs {
 			'cockpit.kanbanView.notABoard' => 'Este archivo aún no tiene columnas ## — se abre como markdown.',
 			'cockpit.kanbanView.startBoard' => 'Empezar un tablero',
 			'cockpit.kanbanView.couldNotSave' => 'No se pudo guardar el tablero',
+			_ => null,
+		} ?? switch (path) {
 			'cockpit.kanbanView.unrecognizedBlock' => 'No reconocido por el analizador — se arrastra entero, sin edición en línea.',
 			'cockpit.kanbanView.deleteColumnDialog.title' => ({required Object name}) => '¿Eliminar «${name}»?',
 			'cockpit.kanbanView.deleteColumnDialog.message' => ({required Object count}) => 'Esta columna tiene ${count}. Elige qué pasa con ellas.',
@@ -2461,8 +2515,6 @@ extension on TranslationsEs {
 			'cockpit.dbMongoView.noDocuments' => 'No hay documentos en esta colección.',
 			'cockpit.dbMongoView.noDocumentsMatch' => 'Ningún documento coincide con este filtro.',
 			'cockpit.dbMongoView.loadMore' => 'Cargar más',
-			_ => null,
-		} ?? switch (path) {
 			'cockpit.dbMongoView.edit' => 'Editar',
 			'cockpit.dbMongoView.insert' => 'Insertar',
 			'cockpit.dbConnectionDialog.chooseFileTitle' => 'Elegir base de datos SQLite',
@@ -2949,6 +3001,8 @@ extension on TranslationsEs {
 			'settings.remoteHosts.title' => 'Hosts remotos',
 			'settings.remoteHosts.description' => 'Máquinas a las que accedes por SSH. Añadir un host aquí es lo mismo que hacerlo desde el menú "+" del workspace.',
 			'settings.remoteHosts.empty' => 'Aún no hay hosts remotos.',
+			_ => null,
+		} ?? switch (path) {
 			'settings.remoteHosts.add' => 'Añadir host',
 			'settings.remoteHosts.edit' => 'Editar',
 			'settings.remoteHosts.reconnect' => 'Reconectar',
@@ -2975,8 +3029,6 @@ extension on TranslationsEs {
 			'automation.error.process' => ({required Object harness, required Object detail}) => '${harness}: ${detail}',
 			'automation.error.processNoDetail' => ({required Object harness}) => '${harness} no pudo generar un mensaje de commit.',
 			'automation.error.invalidResponse' => 'La automatización devolvió un mensaje de commit vacío.',
-			_ => null,
-		} ?? switch (path) {
 			'automation.error.busy' => 'Ya se está generando otro mensaje de commit.',
 			'automation.error.unknown' => 'La automatización no pudo generar un mensaje de commit.',
 			'automation.error.noWorkspace' => 'Ningún workspace seleccionado.',

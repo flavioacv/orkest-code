@@ -1007,6 +1007,7 @@ class _CenterPanelState extends State<_CenterPanel> {
   // workspace's pane tree.
   final Map<String, Widget> _workspaceWidgets = {};
   String? _officeTerminalSessionId;
+  final Set<String> _dismissedOfficeWaiting = <String>{};
 
   @override
   void didUpdateWidget(covariant _CenterPanel oldWidget) {
@@ -1029,6 +1030,21 @@ class _CenterPanelState extends State<_CenterPanel> {
     final officeSession = selectedOfficeItem is TerminalSession
         ? selectedOfficeItem
         : null;
+    final waitingSessions = vm.allSessions
+        .whereType<TerminalSession>()
+        .where(
+          (session) =>
+              session.status == TerminalStatus.waiting &&
+              session.activeHarness != null &&
+              !_dismissedOfficeWaiting.contains(session.id),
+        )
+        .toList(growable: false);
+    _dismissedOfficeWaiting.removeWhere(
+      (id) => !vm.allSessions.whereType<TerminalSession>().any(
+        (session) =>
+            session.id == id && session.status == TerminalStatus.waiting,
+      ),
+    );
     final officeProject = officeSession == null
         ? null
         : vm.projects
@@ -1064,6 +1080,8 @@ class _CenterPanelState extends State<_CenterPanel> {
                 setState(() => _officeTerminalSessionId = session.id);
               }());
             },
+            onRenameSession: (session, name) =>
+                vm.setPaneLabel(session.id, name),
           )
         : null;
 
@@ -1111,6 +1129,34 @@ class _CenterPanelState extends State<_CenterPanel> {
       fit: StackFit.expand,
       children: [
         if (office != null) Positioned.fill(child: office),
+        if (office != null && waitingSessions.isNotEmpty)
+          Positioned(
+            right: 16,
+            bottom: 16,
+            width: 360,
+            child: _OfficeWaitingNotifications(
+              sessions: waitingSessions.take(3).toList(growable: false),
+              projectName: (session) =>
+                  vm.projects
+                      .where((project) => project.id == session.projectId)
+                      .firstOrNull
+                      ?.name ??
+                  session.projectId,
+              onRespond: (session) {
+                _dismissedOfficeWaiting.remove(session.id);
+                unawaited(() async {
+                  await vm.selectProjectAndWait(session.projectId);
+                  if (!mounted) return;
+                  final pane = vm.leafOfTab(session.projectId, session.id);
+                  if (pane != null) vm.selectTab(pane, session.id);
+                  setState(() => _officeTerminalSessionId = session.id);
+                }());
+              },
+              onDismiss: (session) => setState(() {
+                _dismissedOfficeWaiting.add(session.id);
+              }),
+            ),
+          ),
         if (terminalWorkspace != null)
           if (widget.officeView)
             _OfficeTerminalWindow(
@@ -1130,6 +1176,86 @@ class _CenterPanelState extends State<_CenterPanel> {
   int _activeIndex(CockpitViewModel vm) {
     final index = vm.projects.indexWhere((p) => p.id == vm.selectedProjectId);
     return index < 0 ? 0 : index;
+  }
+}
+
+class _OfficeWaitingNotifications extends StatelessWidget {
+  const _OfficeWaitingNotifications({
+    required this.sessions,
+    required this.projectName,
+    required this.onRespond,
+    required this.onDismiss,
+  });
+
+  final List<TerminalSession> sessions;
+  final String Function(TerminalSession) projectName;
+  final ValueChanged<TerminalSession> onRespond;
+  final ValueChanged<TerminalSession> onDismiss;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final tr = context.t.cockpit.officeWorld;
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 220),
+      switchInCurve: Curves.easeOutCubic,
+      switchOutCurve: Curves.easeInCubic,
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0.12, 0),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
+        ),
+      ),
+      child: Column(
+        key: ValueKey(sessions.map((session) => session.id).join(',')),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final session in sessions)
+            Padding(
+            padding: const EdgeInsets.only(top: 8),
+            child: Container(
+              decoration: BoxDecoration(
+                color: colors.bg.withValues(alpha: 0.96),
+                border: Border.all(color: const Color(0xFFFFB340), width: 2),
+                borderRadius: BorderRadius.circular(12),
+                boxShadow: const [
+                  BoxShadow(color: Color(0x55000000), blurRadius: 18),
+                ],
+              ),
+              padding: const EdgeInsets.fromLTRB(10, 10, 6, 10),
+              child: Row(
+                children: [
+                  const Text('✋', style: TextStyle(fontSize: 20)),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      '${session.displayTitle} ${tr.waitingInTerminal.toLowerCase()} · ${projectName(session)}',
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(color: colors.text, fontSize: 12),
+                    ),
+                  ),
+                  const SizedBox(width: 6),
+                  PrimaryButton(
+                    onPressed: () => onRespond(session),
+                    child: Text(tr.respond),
+                  ),
+                  IconButton.ghost(
+                    variance: ButtonVariance.ghost,
+                    onPressed: () => onDismiss(session),
+                    icon: const Icon(Icons.close, size: 16),
+                  ),
+                ],
+              ),
+            ),
+            ),
+        ],
+      ),
+    );
   }
 }
 

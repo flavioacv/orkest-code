@@ -20,6 +20,12 @@ Future<void> showOfficeWorldSettings(BuildContext context) {
           String? bubbles,
           String? liveliness,
           String? daylight,
+          bool? sounds,
+          double? soundVolume,
+          bool? soundAlerts,
+          bool? soundKeys,
+          bool? soundElevator,
+          bool? soundSocial,
         }) {
           settings.setOfficeWorldOptions(
             theme: theme,
@@ -27,6 +33,12 @@ Future<void> showOfficeWorldSettings(BuildContext context) {
             bubbles: bubbles,
             liveliness: liveliness,
             daylight: daylight,
+            sounds: sounds,
+            soundVolume: soundVolume,
+            soundAlerts: soundAlerts,
+            soundKeys: soundKeys,
+            soundElevator: soundElevator,
+            soundSocial: soundSocial,
           );
           refresh(() {});
         }
@@ -107,6 +119,67 @@ Future<void> showOfficeWorldSettings(BuildContext context) {
                     ],
                     onSelected: (value) => update(daylight: value),
                   ),
+                  const SizedBox(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          tr.sounds,
+                          style: context.typo.body.copyWith(
+                            color: context.colors.text,
+                          ),
+                        ),
+                      ),
+                      shad.Switch(
+                        value: prefs.officeSounds,
+                        onChanged: (value) => update(sounds: value),
+                      ),
+                    ],
+                  ),
+                  if (prefs.officeSounds) ...[
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: Text(
+                            '${tr.soundVolume}: ${prefs.officeSoundVolume.round()}%',
+                          ),
+                        ),
+                        SizedBox(
+                          width: 190,
+                          child: shad.Slider(
+                            value: shad.SliderValue.single(
+                              prefs.officeSoundVolume,
+                            ),
+                            min: 0,
+                            max: 100,
+                            onChanged: (value) =>
+                                update(soundVolume: value.value),
+                          ),
+                        ),
+                      ],
+                    ),
+                    _OfficeSoundToggle(
+                      label: tr.soundAlerts,
+                      value: prefs.officeSoundAlerts,
+                      onChanged: (v) => update(soundAlerts: v),
+                    ),
+                    _OfficeSoundToggle(
+                      label: tr.soundKeys,
+                      value: prefs.officeSoundKeys,
+                      onChanged: (v) => update(soundKeys: v),
+                    ),
+                    _OfficeSoundToggle(
+                      label: tr.soundElevator,
+                      value: prefs.officeSoundElevator,
+                      onChanged: (v) => update(soundElevator: v),
+                    ),
+                    _OfficeSoundToggle(
+                      label: tr.soundSocial,
+                      value: prefs.officeSoundSocial,
+                      onChanged: (v) => update(soundSocial: v),
+                    ),
+                  ],
                 ],
               ),
             ),
@@ -119,6 +192,34 @@ Future<void> showOfficeWorldSettings(BuildContext context) {
           ],
         );
       },
+    ),
+  );
+}
+
+class _OfficeSoundToggle extends StatelessWidget {
+  const _OfficeSoundToggle({
+    required this.label,
+    required this.value,
+    required this.onChanged,
+  });
+
+  final String label;
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  @override
+  Widget build(BuildContext context) => Padding(
+    padding: const EdgeInsets.only(top: 5),
+    child: Row(
+      children: [
+        Expanded(
+          child: Text(
+            label,
+            style: context.typo.body.copyWith(color: context.colors.text2),
+          ),
+        ),
+        shad.Switch(value: value, onChanged: onChanged),
+      ],
     ),
   );
 }

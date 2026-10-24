@@ -1,6 +1,6 @@
 # SDD: perfil, estatísticas e preferências do escritório Habblaud no Cockpit
 
-**Estado:** perfil básico e preferências visuais implementados; coleta de métricas segue pendente  
+**Estado:** editor de roupa local, perfil básico, renomeação, histórico genérico de estados, chegada animada e sons integrados; métricas detalhadas seguem pendentes
 **Data:** 2026-10-23  
 **Origem consultada:** checkout vizinho `../habblaud`  
 **Integração visual existente:** [`habblaud-office-integration.md`](habblaud-office-integration.md)
@@ -41,6 +41,17 @@ store/snapshot; dados de execução são produzidos pelos coletores de provider 
 hooks do Habblaud. `shared/types.ts` define `Activity`, `TaskItem`, `ShellJob`,
 `AgentStats` e `AgentInfo`.
 
+O editor de personagem do Habblaud está em `client/src/ui/character-editor.ts`
+e `appearance-fields.ts`, com regras puras em
+`client/src/ui/character-model.ts` e `shared/appearance.ts`. Ele edita nome,
+seed e 13 peças de aparência, valida combinações (por exemplo, acessório com
+cabelo) e persiste pelo endpoint de personagem do projeto/sala. O lápis só é
+oferecido a agente principal ao vivo em acesso local. Cockpit já adapta a parte
+do nome via `manualLabel`, que persiste por aba; ainda não tem armazenamento
+local de aparência por workspace nem editor de roupa. A próxima etapa deve
+persistir a aparência no próprio Cockpit, indexada pelo projeto, sem conectar o
+store ou a API do servidor Habblaud.
+
 ### Estatísticas agregadas / gamificação
 
 `client/src/ui/daystats.ts` e `shared/daystats.ts` acumulam tempo por status,
@@ -69,6 +80,14 @@ Idioma, notificações, modo demonstração, conta e controles do Habblaud World
 são preferências/serviços do cliente original, não devem ser copiados como se
 fossem recursos do escritório Cockpit.
 
+Os sons ficam em `client/src/audio/board.ts` e `scheduler.ts`; o componente
+`client/src/ui/sound.ts` liga os cues da simulação (`client/src/world/sound-cues.ts`)
+às preferências e desbloqueia o `AudioContext` no primeiro gesto do usuário.
+Cockpit integrou o mesmo `SoundCues`/`SoundBoard`, com um master switch local
+desligado por padrão e sino ao entrar em `waiting`. A notificação de permissão
+continua genérica: o hook do Cockpit não fornece conteúdo estruturado e a
+resposta acontece no PTY compartilhado do Office.
+
 ## 3. Estado atual no Cockpit
 
 O wrapper `tool/habblaud_world/main.ts` reutiliza `Sim`, `Renderer`, `Overlay`,
@@ -76,14 +95,17 @@ O wrapper `tool/habblaud_world/main.ts` reutiliza `Sim`, `Renderer`, `Overlay`,
 snapshot feito em `HabblaudWorldWebView._snapshot()`.
 
 O snapshot tem rooms e agentes com id, nome, sala, provider aproximado, status,
-início da aba atual, `recent: []` e `tasks: []`. O contrato de simulação ainda
+início da aba atual e `recent` baseado somente nas transições genéricas de
+estado observadas pelo Cockpit; `tasks` permanece vazio. O contrato de simulação ainda
 recebe placeholders numéricos em `stats`, mas eles não são exibidos como dados
 medidos no perfil. `startedAt` usa
 `TerminalSession.createdAt`. As métricas de uso não são coletadas nem exibidas
-como zeros medidos. Provider e nome vêm do harness detectado; todos os agentes
-são `kind: main`. O clique no boneco abre um perfil Flutter, e a ação do perfil
-abre o terminal. As preferências visuais persistem em `AppSettings` e seguem no
-snapshot para as opções do mundo Habblaud.
+como zeros medidos. Provider e nome vêm do harness detectado ou do rótulo manual
+da aba; todos os agentes são `kind: main`. O perfil Flutter permite editar o
+nome pelo mecanismo persistente de rótulo do Cockpit. A ação **Abrir terminal**
+mostra a árvore existente de panes numa janela sobre o mapa, compartilhando o
+mesmo PTY/controller. As preferências visuais persistem em `AppSettings` e
+seguem no snapshot para as opções do mundo Habblaud; sons permanecem opt-in.
 
 Dados disponíveis com confiança no objeto atual `TerminalSession`:
 
@@ -94,6 +116,7 @@ Dados disponíveis com confiança no objeto atual `TerminalSession`:
 | harness/provider | parcial | `activeHarness`; identifica a família, não o modelo executado |
 | estado working/waiting/idle | sim | hooks via `applyClaudeStatus`; `waiting` existe no contrato |
 | momento da última transição de status | adapter | observado na ponte; ainda é estado transitório em memória |
+| histórico genérico de status | sim | últimos 100 eventos working/waiting/idle da execução atual; não é persistido nem inclui atividade interna do harness |
 | início da aba/PTy atual | sim | `TerminalSession.createdAt`; não representa a vida histórica da conversa restaurada |
 | modelo, tokens, custo, chamadas/ferramenta | não | não há contrato no estado da sessão/hook |
 | tarefas/subagentes/atividade | não | sem eventos estruturados conectados ao snapshot |
@@ -122,8 +145,12 @@ Dados disponíveis com confiança no objeto atual `TerminalSession`:
 - Clique simples no personagem seleciona o agente e abre um perfil no Cockpit.
 - O perfil mostra nome/título, projeto, harness/provider, status, duração da
   sessão quando houver início confiável e diretório de trabalho.
-- A ação **Abrir terminal** seleciona projeto/aba e troca para a visão de
-  terminais. O perfil deve poder ser fechado sem mudar de workspace.
+- O perfil edita o nome através do `manualLabel` persistente da sessão; sem um
+  nome manual, o título automático continua vindo do terminal/OSC.
+- O perfil mostra até oito transições genéricas recentes. Isso não deve ser
+  rotulado como histórico completo de mensagens ou ferramentas do agente.
+- A ação **Abrir terminal** seleciona projeto/aba e mostra o multiplexador
+  existente numa janela sobre o mapa; fechar a janela mantém o Office aberto.
 - Clique duplo pode continuar como atalho para abrir diretamente o terminal,
   desde que a distinção entre simples/duplo seja deliberada e não dispare ambos.
 - A seleção deve ser passada ao wrapper (`selectAgent`) para o overlay do
@@ -135,7 +162,7 @@ Dados disponíveis com confiança no objeto atual `TerminalSession`:
 
 | Campo do perfil | Implementação inicial |
 | --- | --- |
-| Nome/título | `session.title` e fallback traduzido para harness |
+| Nome/título | `session.displayTitle` e fallback traduzido para harness; `manualLabel` pode ser editado no perfil |
 | Projeto | `Project.name` |
 | Harness/provider | label de `HarnessCatalog.specs[activeHarness]` |
 | Status | `TerminalStatus`, labels localizados já disponíveis |
@@ -159,13 +186,15 @@ aberto, com opções iniciais:
 - nomes visíveis;
 - balões: importantes/todos/nenhum;
 - movimento: calmo/normal/agitado;
-- ciclo: automático/dia/noite.
+- ciclo: automático/dia/noite;
+- sons ambientais: desligados por padrão, com áudio liberado pelo primeiro gesto
+  dentro do mapa.
 
 Essas preferências mapeiam para `WorldOptions` (`showNames`, `bubbles`,
 `liveliness`, `dayNight`, `daylight`, `theme`) do Habblaud. A implementação
 precisa sanitizar valores, preservar defaults e enviar atualização ao wrapper
-sem recarregar a página. Sons ficam fora da primeira fatia: o wrapper não
-instancia `SoundBoard` e sons/autoplay da WebView têm requisitos próprios.
+sem recarregar a página. A integração usa `SoundCues` e `SoundBoard` originais;
+os eventos respeitam o limite de frequência do Habblaud e sons ficam opt-in.
 
 Persistência usa `AppSettings` e `SettingsController`; as opções são incluídas
 na assinatura do snapshot, persistem ao reabrir o app e não alteram o tema do
@@ -189,14 +218,25 @@ contagem confiável.
 ## 6. Critérios de aceite
 
 - Clique no personagem abre seu próprio perfil e não troca a tela para terminais.
+- O nome editado no perfil persiste como rótulo da aba e aparece sobre o
+  personagem; sem rótulo manual, OSC continua atualizando o título.
 - “Abrir terminal” seleciona a sessão exata, inclusive em projeto com várias
-  abas, worktree ou workspace remoto.
+  abas, worktree ou workspace remoto, dentro da janela sobre o mapa e sem novo PTY.
+- Sessões que o Cockpit marca como `waiting` exibem aviso no Office; **Responder**
+  abre o terminal original da sessão para o usuário tratar o prompt real.
+- Dispensar o aviso não altera a sessão, não envia entrada ao PTY e não aprova
+  permissões implicitamente.
+- O histórico curto, o balão e o sino usam somente transições de status que
+  Cockpit observou. Não prometem o transcript completo do agente.
+- Agentes ativos já existentes entram pelo elevador quando o Office é aberto.
 - Fechar o perfil mantém o estado da câmera/mundo e não recria o WebView.
 - Perfil atualiza status/duração de forma visível sem mostrar início do projeto
   como início do agente.
 - Métricas ausentes não aparecem como zero ou valor fictício.
 - Preferências de tema/apresentação sobrevivem a reinício e podem ser alteradas
   sem recarregar a página/canvas.
+- Os sons do Office permitem ligar/desligar o master, ajustar volume e controlar
+  alertas, teclado, elevador e atividades sociais separadamente.
 - Não há chamadas de rede para Habblaud nem dependência de conta/servidor.
 - Todas as strings de interface têm traduções en/pt-BR/es.
 - Com a visão de terminal ativa, os controles do escritório não interferem nos
@@ -211,6 +251,17 @@ contagem confiável.
 3. Adicionar estatísticas agregadas e metas apenas se Cockpit definir produto de
    gamificação próprio; os rankings/metas online do Habblaud não são portáveis
    para um cliente local sem backend.
+
+O motor Habblaud original já controla chegada, deslocamento, trabalho/digitação,
+espera, ociosidade e saída a partir dos estados genéricos. Eventos finos de
+ferramenta, processo em foreground e subagentes continuam fora do contrato atual
+do Cockpit; qualquer evolução deve vir de eventos neutros dos hooks, não de
+parsing do transcript de um provider.
+
+O editor de personagem local agora reaproveita `editorOptions`, `editorConflict`,
+`fitToOptions`, `characterSprite` e `appearanceFromSeed` do Habblaud. As peças
+selecionadas ficam em `AppSettings.officeCharacterParts`, indexadas pelo ID do
+projeto; não dependem do armazenamento de personagem do servidor Habblaud.
 
 ## 8. Fontes consultadas
 

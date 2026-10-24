@@ -1,6 +1,6 @@
 # Integração do escritório Habblaud no Cockpit
 
-**Estado:** implementação em andamento; arquitetura e ponte estão no código  
+**Estado:** mundo, editor de personagem local, perfil básico, nome editável, linha do tempo genérica, chegada animada e sons ambientais integrados
 **Atualizado:** 2026-10-23  
 **Objetivo:** registrar as decisões e o estado técnico para retomar a integração
 sem precisar redescobrir os contratos.
@@ -19,11 +19,16 @@ os terminais continuam acessíveis pela topbar e pelo clique no personagem.
 | Somente sessões com harness ativo como personagens | Implementado |
 | Atualizar nome e estado working/waiting/idle | Implementado a partir da sessão Cockpit |
 | Entrada e saída animadas | Acopladas ao ciclo de snapshot da simulação Habblaud; validar a duração visual em execução |
-| Clicar no personagem e abrir perfil | Implementado: perfil Cockpit com projeto, harness, status, duração da aba e diretório |
+| Clicar no personagem e abrir perfil | Implementado: perfil Cockpit com nome editável, projeto, harness, status, duração da aba, diretório e histórico de estados observado nesta execução |
 | Abrir terminal correspondente pelo perfil | Implementado: seleciona projeto e aba exata e mostra o multiplexador existente numa janela sobre o mapa |
 | Tema e preferências visuais do mundo | Implementado no Canvas WebView: preferências locais persistentes; não altera tema do editor |
 | Reorganizar panes sem controller/viewport descartado | Fluxo alterado para aguardar um frame entre detach e mount; falta repetir manualmente o gesto no macOS |
-| Dados operacionais completos (tarefas, tokens, ferramentas, subagentes) | Pendente: ainda não fornecidos pela ponte |
+| Notificação genérica de espera | Implementado: estado `waiting` produz balão/atividade e sino; resposta acontece na janela do terminal real |
+| Sons ambientais de teclado/elevador/atividades sociais | Implementado no Canvas Habblaud; opção local desligada por padrão e áudio liberado no primeiro gesto dentro do mundo |
+| Chegada de agentes ao abrir o escritório | Implementado no Canvas: primeiro snapshot constrói as salas sem agentes e o seguinte anima as chegadas pelo elevador; fallback Flutter já animava a entrada |
+| Edição de roupa/peças do personagem | Pendente: o editor do Habblaud persiste aparência por sala no store; Cockpit ainda não possui preferências de aparência por workspace |
+| Linha do tempo detalhada, tarefas, tokens, modelo e ferramentas | Pendente: Cockpit só registra transições genéricas de estado; não lê transcript nem coleta métricas uniformemente entre harnesses |
+| Gamificação social (moedas, jogos, amizades e ranking) | Fora desta integração: depende dos eventos/tarefas e armazenamento social do Habblaud; não deve exibir valores fictícios no Cockpit |
 
 ## 2. Decisão arquitetural
 
@@ -81,7 +86,10 @@ O ponto de montagem fica no `_CenterPanel` de
    o multiplexador normal do workspace; não cria outro PTY nem interpreta o
    protocolo de permissão de um harness específico. Perguntas interativas que
    aparecem no terminal podem ser respondidas ali como no terminal normal.
-5. `Mostrar terminais`/`Mostrar escritório` estão traduzidos nos três locales
+5. O perfil edita o nome através do rótulo persistente da aba do Cockpit; o
+   Habblaud recebe `displayTitle`, que continua acompanhando OSC enquanto não
+   houver rótulo manual. O nome escolhido é específico daquela sessão/aba.
+6. `Mostrar terminais`/`Mostrar escritório` estão traduzidos nos três locales
    Slang (`lib/i18n/*.i18n.json`).
 
 A escolha escritório/terminais é estado de página e não persiste entre boots.
@@ -112,13 +120,14 @@ nas salas. Shells comuns sem harness detectado não aparecem.
 | `id` | `TerminalSession.id` |
 | `kind` | Sempre `main` |
 | `roomId` | `TerminalSession.projectId` |
-| `name` | `session.title`; se vazio, label do harness |
+| `name` | `session.displayTitle` (rótulo manual persistido vence o título dinâmico OSC); fallback do harness |
 | `look` | `f`/`m` determinístico pelo seed de projeto + sessão |
 | `sessionId` | ID da sessão; o bridge de clique usa esse ID |
 | `status` | `working`, `waiting` ou `idle` de `TerminalStatus` |
 | `statusSince` | momento em que o adapter percebeu a última mudança de status |
 | `startedAt` | `TerminalSession.createdAt` (início da aba/PTy atual; ao restaurar não representa a idade da conversa histórica) |
-| `recent`, `tasks` | listas vazias |
+| `recent`, `activity` | mudanças genéricas de estado do Cockpit; até 30 no snapshot, sem texto/transcript do agente |
+| `tasks` | lista vazia: Cockpit ainda não mapeia as tarefas internas dos diferentes harnesses |
 | `stats` | placeholders zero exigidos pelo contrato Habblaud; não são mostrados no perfil como medições |
 
 Contas/providers são sintéticos: Codex → `codex`, Antigravity → `antigravity`;
@@ -137,11 +146,11 @@ muda; `rev` incrementa a cada envio.
 
 O botão de paleta na topbar abre preferências persistidas em `AppSettings`:
 tema (automático/original/Natal/Halloween), etiquetas, balões, ritmo de
-movimento e ciclo dia/noite. O snapshot leva essas opções para `WorldOptions`
-no bundle Habblaud. A seleção do personagem abre o perfil Flutter; a seleção é
+movimento, ciclo dia/noite e sons ambientais. O snapshot leva essas opções para
+o bundle Habblaud. A seleção do personagem abre o perfil Flutter; a seleção é
 refletida no overlay Canvas e removida ao fechar. Linux usa o renderer Flutter
-de fallback: o perfil funciona, mas os controles avançados de aparência não são
-mostrados nessa plataforma.
+de fallback: o perfil funciona, mas sons Habblaud e controles avançados de
+aparência não são mostrados nessa plataforma.
 
 A simulação original cuida de spawn, entrada, pathfinding, poses/direções,
 atividades ociosas, reações, ausência, saída e atualização/demolição de salas.
@@ -149,10 +158,23 @@ O Habblaud usa `MISSING_DEBOUNCE_MS = 3000`: uma ausência transitória não ini
 imediatamente a saída; após o debounce, a simulação muda o modo e planeja o
 caminho de saída. O adapter não apaga o sprite diretamente.
 
-Na carga inicial, o primeiro snapshot posiciona os personagens já existentes;
-agentes que aparecem em snapshots seguintes seguem a chegada normal do mundo.
-Fechar uma sessão ou remover um projeto faz o próximo snapshot omitir agente ou
-sala e deixa a simulação conduzir o restante do ciclo.
+O comportamento inicial foi adaptado para o Cockpit: `main.ts` aplica o
+primeiro snapshot com as salas e sem agentes, e logo depois o snapshot real.
+Assim, as salas aparecem prontas e os agentes existentes são tratados como
+chegadas novas. O comportamento padrão do Habblaud é deliberadamente diferente
+porque o primeiro snapshot costuma ser histórico e deve mostrar todos já nos
+seus lugares. Se o usuário alternar o Office e a instância WebView for recriada,
+as chegadas podem ser animadas novamente.
+
+O histórico do perfil contém até 100 transições `working`/`waiting`/`idle`
+observadas no PTY durante a execução atual do Cockpit. Ele é mantido na sessão
+em memória e não é um transcript do agente. O snapshot envia essas mesmas
+transições como atividades genéricas para os balões do Habblaud. Uma espera
+mostra a atividade “Precisa de você no terminal”; o Cockpit não tenta extrair
+qual botão/operação foi pedido. Os sons ambientais são `SoundCues` e `SoundBoard`
+originais do Habblaud, com as categorias e limites de frequência do projeto;
+uma transição para `waiting` também pode tocar o sino de alerta. Como exige um
+gesto da página, o áudio só fica desbloqueado depois de interagir com o mapa.
 
 `attachInput` liga pan/zoom e reenquadramento à câmera, além de hover e hit-test.
 Clique simples e duplo chamam `officeAgentClicked`; Dart suprime chamadas
@@ -161,12 +183,12 @@ mas ainda não há sincronização de seleção/follow a partir de Flutter.
 
 ### Dados que ainda não chegam ao perfil/mundo
 
-Não são enviados eventos reais do hook sobre atividade recente, comandos shell,
-tarefas, progresso, tokens, erros, subagentes ou uso de conta. O perfil atual
+Não são enviados eventos detalhados do hook sobre comandos shell, tarefas,
+progresso, tokens, erros, subagentes ou uso de conta. O perfil atual
 mostra os campos locais que existem, mas ainda não mostra modelo, tokens,
 chamadas de ferramenta ou custo. A simulação
 continua animando, mas reações que dependem desses eventos podem não acontecer;
-`recent` e `tasks` são vazios. Todos os personagens são `main`, sem
+`recent` contém apenas mudanças working/waiting/idle; `tasks` segue vazio. Todos os personagens são `main`, sem
 representação de subagentes do Cockpit.
 
 Próxima evolução: projetar eventos já observados pelo Cockpit (especialmente
@@ -202,7 +224,7 @@ servidor HTTP como dependência do mapa sem uma decisão explícita.
 | `lib/app/cockpit/ui/widgets/habblaud_world_webview.dart` | WebView, snapshots, polling, carga HTML e bridge de clique |
 | `lib/app/cockpit/ui/widgets/office_world_flutter_view.dart` | Fallback Flutter e sua simulação/render próprios |
 | `lib/app/cockpit/ui/widgets/cockpit_topbar.dart` | Botão escritório/terminais |
-| `tool/habblaud_world/main.ts` | Adapter JS sobre `Sim`, `Renderer`, `Overlay`, `Camera` e input originais |
+| `tool/habblaud_world/main.ts` | Adapter JS sobre `Sim`, `Renderer`, `Overlay`, `Camera`, input e sons originais |
 | `tool/habblaud_world/assets.ts` | Assets Base64 embutidos para o wrapper |
 | `tool/habblaud_world/README.md` | Caminho do checkout de origem e comando esbuild |
 | `assets/habblaud_world/engine.js` | Bundle consumido pelo Flutter |
@@ -251,14 +273,18 @@ flutter analyze --no-pub \
 3. Alternar working/waiting/idle e observar atualização sem reload da página.
 4. Clicar no agente: abrir perfil, usar **Abrir terminal** e confirmar que a
    janela sobre o mapa mostra o terminal da aba selecionada e aceita entrada.
-5. Fechar a janela do terminal: confirmar que o mapa continua no mesmo estado;
+5. Editar o nome no perfil; conferir que ele aparece no personagem e continua
+   após reiniciar o Cockpit. Iniciar um turno e provocar uma espera; conferir a
+   linha do tempo genérica, balão e, com sons ativados, o sino após interagir
+   com o mapa.
+6. Fechar a janela do terminal: confirmar que o mapa continua no mesmo estado;
    alternar para a visão normal de terminais e confirmar que é a mesma sessão.
-6. Fechar terminal/agente: observar debounce e saída animada; conferir também
+7. Fechar terminal/agente: observar debounce e saída animada; conferir também
    quando o processo encerra sem fechar a aba.
-7. Alternar mapa/terminais pela topbar.
-8. Com várias panes, arrastar para acoplar/criar split e redimensionar divisor;
+8. Alternar mapa/terminais pela topbar.
+9. Com várias panes, arrastar para acoplar/criar split e redimensionar divisor;
    conferir que a UI responde e o processo continua vivo.
-9. Remover workspace com agente e observar saída e atualização da sala.
+10. Remover workspace com agente e observar saída e atualização da sala.
 
 No Linux, repetir a verificação funcional no fallback, sem assumir paridade
 visual/animada com o Canvas original.
@@ -298,3 +324,69 @@ visual/animada com o Canvas original.
 5. Ligar seleção/follow visual do Habblaud à seleção de Flutter, se desejado.
 6. Tornar o rebuild do bundle autocontido caso contribuidores não mantenham o
    checkout Habblaud em `../../habblaud`; o runtime distribuído já é autocontido.
+
+## 11. Avisos de sessão aguardando resposta
+
+O `CockpitPage` observa sessões `TerminalSession` com `status == waiting` e
+harness ativo. No modo Office, exibe até três cartões no canto inferior direito
+com o nome da sessão/projeto, **Responder** e dispensar. A entrada é a mesma
+transição genérica que alimenta o status e o histórico do personagem; o cartão
+não procura palavras no transcript e não depende de Claude, Codex ou outro
+provider específico.
+
+**Responder** seleciona o workspace/projeto, a pane e a aba da sessão original,
+e abre o multiplexador de terminal existente sobre o mapa. Não cria PTY, não
+envia teclas e não marca a permissão como aprovada. A resposta acontece no
+prompt real do terminal, preservando o protocolo próprio do CLI e do provider.
+Dispensar oculta o cartão durante o período em que a sessão permanecer em
+`waiting`; a próxima mudança de estado limpa essa dispensa. Fechar o terminal
+flutuante não altera o status nem fecha a sessão.
+
+Esse fluxo cobre prompts de permissão quando os hooks do Cockpit reportam
+`waiting`. Um prompt que não seja detectado pelo harness/hooks não pode ser
+identificado com segurança sem suporte adicional do provider. A implementação
+deliberadamente não finge que conseguiu aprovar um pedido nesses casos.
+
+## 12. Editor de personagem
+
+No renderer Canvas (macOS/Windows), o perfil do agente oferece **Editar
+personagem**. A tela usa o próprio bundle Habblaud para prévia Canvas, paletas, opções por peça, compatibilidade entre
+cabelo/acessórios, ajuste de cores ao trocar o estilo e sorteio de aparência.
+As partes escolhidas ficam em `AppSettings.officeCharacterParts`, por ID de
+projeto. O nome gerado segue o pool determinístico brasileiro do Habblaud,
+associado ao ID de sessão, sem colisões entre personagens ativos e persistido
+em `AppSettings.officeAgentNames`. Um rótulo manual da sessão substitui o nome
+gerado; limpar o rótulo restaura o nome gerado. Roupas são preferência visual
+da sala/projeto. Ao salvar, a próxima atualização de snapshot aplica as partes
+aos personagens visíveis e às sessões futuras daquele projeto.
+O fallback Flutter (Linux) mantém o perfil e a abertura do terminal, mas não
+exibe esse editor enquanto não tiver a mesma API de arte/previsualização.
+
+## 13. Animações, comportamentos e sons
+
+O adapter não redesenha a simulação: ele alimenta `Sim`, `Renderer`, `Overlay` e
+`SoundCues` originais do Habblaud. O estado de `TerminalSession` é traduzido
+para `working`, `waiting` e `idle`, acionando as regras existentes:
+
+- **Chegada:** o primeiro snapshot cria as salas sem personagens; a atualização
+  seguinte introduz as sessões pelo elevador. O personagem caminha na chegada.
+- **Trabalho:** `working` o leva à mesa e aciona a pose de digitação quando está
+  sentado. Pela regra Habblaud, ele corre em trajetos longos quando já está
+  dentro da sala; a primeira chegada continua caminhando.
+- **Espera:** `waiting` aciona a postura/balão de alerta e o sino na transição
+  para esse estado.
+- **Ociosidade:** `idle` libera passeios de copa, lounge e interações sociais;
+  o ritmo segue a preferência de movimento. Depois de muito tempo pode cochilar.
+- **Saída:** quando uma sessão deixa de aparecer no snapshot, a simulação aplica
+  o debounce e toca a animação de saída pelo elevador.
+- **Sons:** a preferência do Office agora tem volume e categorias separadas para
+  alertas, teclado, elevador e atividades sociais. O teclado só toca para quem
+  está sentado digitando em área visível. O navegador libera áudio após gesto do
+  usuário; o master switch começa desligado, como no Habblaud.
+
+O estado genérico não informa qual ferramenta ou comando está rodando. Assim,
+durante `working`, o Office mostra a animação de digitação, mas não consegue
+trocar a tela do monitor ou a atividade para cada evento real de ferramenta.
+Também não há dados genéricos suficientes para modelar subagentes, tokens ou
+modelo efetivo. Para isso, os hooks do Cockpit precisariam emitir eventos
+neutros de atividade; não se deve inferir esses dados pelo texto do terminal.

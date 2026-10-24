@@ -9,6 +9,9 @@ import 'package:cockpit/app/cockpit/ui/widgets/webview_chrome.dart';
 import 'package:cockpit/app/core/domain/entities/harness.dart';
 import 'package:cockpit/app/core/ui/settings_controller.dart';
 import 'package:cockpit/app/cockpit/ui/widgets/office_agent_profile_dialog.dart';
+import 'package:cockpit/app/cockpit/ui/widgets/office_agent_names.dart';
+import 'package:cockpit/app/core/domain/entities/app_settings.dart';
+import 'package:cockpit/i18n/strings.g.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:flutter/widgets.dart';
@@ -22,11 +25,13 @@ class HabblaudWorldWebView extends StatefulWidget {
     required this.projects,
     required this.sessions,
     required this.onOpenSession,
+    required this.onRenameSession,
   });
 
   final List<Project> projects;
   final List<PaneItem> sessions;
   final ValueChanged<TerminalSession> onOpenSession;
+  final void Function(TerminalSession session, String name) onRenameSession;
 
   @override
   State<HabblaudWorldWebView> createState() => _HabblaudWorldWebViewState();
@@ -90,11 +95,14 @@ canvas{display:block;image-rendering:pixelated;outline:none}
               projectIds.contains(session.projectId),
         )
         .toList(growable: false);
+    final identities = _resolveAgentIdentities(sessions, officeSettings);
     final accountCounts = <String, int>{};
     final agents = <Map<String, dynamic>>[];
+    final officeLabels = context.t.cockpit.officeWorld;
 
     for (final session in sessions) {
       final harness = session.activeHarness!;
+      final identity = identities[session.id]!;
       final provider = _providerFor(harness);
       final accountId = 'cockpit-$provider';
       accountCounts.update(accountId, (count) => count + 1, ifAbsent: () => 1);
@@ -104,21 +112,45 @@ canvas{display:block;image-rendering:pixelated;outline:none}
         _statusSince[session.id] = now;
       }
       final seed = _stableSeed('${session.projectId}:${session.id}');
+      final recent = [
+        for (final event in session.officeStatusHistory)
+          _officeStatusActivity(
+            event.status,
+            event.at.millisecondsSinceEpoch,
+            working: officeLabels.workingInTerminal,
+            waiting: officeLabels.waitingInTerminal,
+            idle: officeLabels.turnCompleted,
+          ),
+      ];
+      final observedSince =
+          _statusSince[session.id] ?? session.createdAt.millisecondsSinceEpoch;
+      final latestActivity = recent.isEmpty
+          ? _officeStatusActivity(
+              session.status,
+              observedSince,
+              working: officeLabels.workingInTerminal,
+              waiting: officeLabels.waitingInTerminal,
+              idle: officeLabels.turnCompleted,
+            )
+          : recent.last;
       agents.add({
         'id': session.id,
         'kind': 'main',
         if (provider != 'claude') 'provider': provider,
         'roomId': session.projectId,
-        'name': session.title.trim().isEmpty
-            ? HarnessCatalog.specs[harness]!.label
-            : session.title.trim(),
-        'look': seed.isEven ? 'f' : 'm',
+        'name': identity.name,
+        'look': identity.look,
         'role': 'Cockpit agent',
         'title': session.title,
         'sessionId': session.id,
         'account': accountId,
         'status': _statusFor(session.status),
-        'recent': const <dynamic>[],
+        if (session.status == TerminalStatus.waiting)
+          'waitingFor': officeLabels.waitingBubble,
+        'activity': latestActivity,
+        'recent': recent.isEmpty
+            ? [latestActivity]
+            : recent.skip(recent.length > 30 ? recent.length - 30 : 0).toList(),
         'tasks': const <dynamic>[],
         'startedAt': session.createdAt.millisecondsSinceEpoch,
         'lastEventAt': now,
@@ -132,6 +164,8 @@ canvas{display:block;image-rendering:pixelated;outline:none}
           'subagents': 0,
         },
         'seed': seed,
+        if (officeSettings.officeCharacterParts[session.projectId] != null)
+          'parts': officeSettings.officeCharacterParts[session.projectId],
       });
     }
 
@@ -174,6 +208,14 @@ canvas{display:block;image-rendering:pixelated;outline:none}
         'daylight': officeSettings.officeDaylight,
         'dayNight': officeSettings.officeDaylight != 'day',
         'theme': officeSettings.officeTheme,
+        'sound': officeSettings.officeSounds,
+        'sounds': {
+          'volume': officeSettings.officeSoundVolume / 100,
+          'alerts': officeSettings.officeSoundAlerts,
+          'keys': officeSettings.officeSoundKeys,
+          'elevator': officeSettings.officeSoundElevator,
+          'social': officeSettings.officeSoundSocial,
+        },
       },
       'meta': {
         'demo': false,
@@ -202,6 +244,14 @@ canvas{display:block;image-rendering:pixelated;outline:none}
     context.read<SettingsController>().settings.officeBubbles,
     context.read<SettingsController>().settings.officeLiveliness,
     context.read<SettingsController>().settings.officeDaylight,
+    context.read<SettingsController>().settings.officeSounds,
+    context.read<SettingsController>().settings.officeSoundVolume,
+    context.read<SettingsController>().settings.officeSoundAlerts,
+    context.read<SettingsController>().settings.officeSoundKeys,
+    context.read<SettingsController>().settings.officeSoundElevator,
+    context.read<SettingsController>().settings.officeSoundSocial,
+    context.read<SettingsController>().settings.officeCharacterParts,
+    context.read<SettingsController>().settings.officeAgentNames,
     for (final project in widget.projects)
       [
         project.id,
@@ -209,14 +259,18 @@ canvas{display:block;image-rendering:pixelated;outline:none}
         project.effectiveRoot,
         project.createdAt.millisecondsSinceEpoch,
       ],
-    for (final session in widget.sessions.whereType<TerminalSession>())
+    for (final session in widget.sessions.whereType<TerminalSession>()) ...[
       [
         session.id,
         session.projectId,
-        session.title,
+        session.displayTitle,
         session.activeHarness?.name,
         session.status.name,
+        session.officeStatusHistory.length,
+        if (session.officeStatusHistory.isNotEmpty)
+          session.officeStatusHistory.last.at.millisecondsSinceEpoch,
       ],
+    ],
   ]);
 
   Object? _handleAgentClick(List<dynamic> arguments) {
@@ -255,11 +309,69 @@ canvas{display:block;image-rendering:pixelated;outline:none}
     return null;
   }
 
+  Map<String, OfficeAgentIdentity> _resolveAgentIdentities(
+    List<TerminalSession> sessions,
+    AppSettings settings,
+  ) {
+    final assigned = Map<String, String>.from(settings.officeAgentNames);
+    final resolved = <String, OfficeAgentIdentity>{};
+    final used = <String>{
+      for (final session in sessions)
+        if (session.manualLabel?.trim().isNotEmpty == true)
+          session.manualLabel!.trim().toLowerCase(),
+    };
+    var changed = false;
+    final sorted = [...sessions]..sort((a, b) => a.id.compareTo(b.id));
+    for (final session in sorted) {
+      final manual = session.manualLabel?.trim();
+      if (manual != null && manual.isNotEmpty) {
+        resolved[session.id] = (
+          name: manual,
+          look: officeAgentLookForName(
+            manual,
+            _stableSeed('${session.projectId}:${session.id}').isEven
+                ? 'f'
+                : 'm',
+          ),
+        );
+        continue;
+      }
+      var name = assigned[session.id];
+      if (name == null || used.contains(name.toLowerCase())) {
+        final person = pickOfficeAgentIdentity(session.id, used);
+        name = person.name;
+        assigned[session.id] = name;
+        changed = true;
+      }
+      used.add(name.toLowerCase());
+      resolved[session.id] = (
+        name: name,
+        look: officeAgentLookForName(
+          name,
+          _stableSeed('${session.projectId}:${session.id}').isEven ? 'f' : 'm',
+        ),
+      );
+    }
+    if (changed) {
+      context.read<SettingsController>().setOfficeAgentNames(assigned);
+    }
+    return resolved;
+  }
+
   Future<void> _showAgentProfile(
     BuildContext context, {
     required TerminalSession session,
     required Project project,
   }) async {
+    final settings = context.read<SettingsController>().settings;
+    final identities = _resolveAgentIdentities(
+      widget.sessions
+          .whereType<TerminalSession>()
+          .where((item) => item.activeHarness != null)
+          .toList(),
+      settings,
+    );
+    final agentIdentity = identities[session.id];
     final web = _web;
     await web?.evaluateJavascript(
       source:
@@ -270,7 +382,33 @@ canvas{display:block;image-rendering:pixelated;outline:none}
       context,
       session: session,
       project: project,
+      officeName: agentIdentity?.name,
       onOpenTerminal: () => widget.onOpenSession(session),
+      onRename: (name) => widget.onRenameSession(session, name),
+      initialAppearance: Map<String, String>.from(
+        context
+                .read<SettingsController>()
+                .settings
+                .officeCharacterParts[project.id] ??
+            const <String, String>{},
+      ),
+      loadAppearance: (parts) async {
+        final draft = Map<String, String>.from(parts);
+        final seed =
+            int.tryParse(draft.remove('__seed') ?? '') ??
+            _stableSeed('${session.projectId}:${session.id}');
+        final look = agentIdentity?.look ?? (seed.isEven ? 'f' : 'm');
+        final result = await web?.evaluateJavascript(
+          source:
+              'window.cockpitHabblaudWorld?.getAppearance($seed, ${jsonEncode(look)}, ${jsonEncode(draft)});',
+        );
+        final decoded = result is String ? jsonDecode(result) : result;
+        if (decoded is! Map) throw StateError('Appearance preview unavailable');
+        return decoded.cast<String, dynamic>();
+      },
+      onSaveAppearance: (parts) => context
+          .read<SettingsController>()
+          .setOfficeCharacterParts(project.id, parts),
     );
     if (!mounted) return;
     await _web?.evaluateJavascript(
@@ -339,6 +477,36 @@ String _statusFor(TerminalStatus status) => switch (status) {
   TerminalStatus.working => 'working',
   TerminalStatus.waiting => 'waiting',
   TerminalStatus.idle => 'idle',
+};
+
+Map<String, dynamic> _officeStatusActivity(
+  TerminalStatus status,
+  int at, {
+  required String working,
+  required String waiting,
+  required String idle,
+}) => switch (status) {
+  TerminalStatus.working => {
+    'id': 'cockpit-status-working-$at',
+    'kind': 'run',
+    'icon': '⚙️',
+    'text': working,
+    'at': at,
+  },
+  TerminalStatus.waiting => {
+    'id': 'cockpit-status-waiting-$at',
+    'kind': 'ask',
+    'icon': '✋',
+    'text': waiting,
+    'at': at,
+  },
+  TerminalStatus.idle => {
+    'id': 'cockpit-status-idle-$at',
+    'kind': 'done',
+    'icon': '✅',
+    'text': idle,
+    'at': at,
+  },
 };
 
 String _providerFor(HarnessKind harness) => switch (harness) {

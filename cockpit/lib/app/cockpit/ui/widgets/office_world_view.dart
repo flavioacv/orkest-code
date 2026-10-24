@@ -19,12 +19,14 @@ class OfficeWorldView extends StatelessWidget {
     required this.sessions,
     required this.labels,
     required this.onOpenSession,
+    required this.onRenameSession,
   });
 
   final List<Project> projects;
   final List<PaneItem> sessions;
   final OfficeWorldLabels labels;
   final ValueChanged<TerminalSession> onOpenSession;
+  final void Function(TerminalSession session, String name) onRenameSession;
 
   @override
   Widget build(BuildContext context) {
@@ -34,12 +36,14 @@ class OfficeWorldView extends StatelessWidget {
         sessions: sessions,
         labels: labels,
         onOpenSession: onOpenSession,
+        onRenameSession: onRenameSession,
       );
     }
     return HabblaudWorldWebView(
       projects: projects,
       sessions: sessions,
       onOpenSession: onOpenSession,
+      onRenameSession: onRenameSession,
     );
   }
 }

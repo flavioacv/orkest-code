@@ -26,6 +26,14 @@ import 'package:cockpit/app/core/terminal/xterm/xterm.dart';
 /// [TerminalStatusServer]).
 enum TerminalStatus { idle, working, waiting }
 
+/// A change of high-level state observed by Cockpit for the current PTY.
+class TerminalStatusEvent {
+  const TerminalStatusEvent(this.status, this.at);
+
+  final TerminalStatus status;
+  final DateTime at;
+}
+
 /// Uma aba de terminal: um shell num PTY ([TerminalGateway]) ligado a um
 /// emulador [Terminal] do xterm. O `TerminalView` (na PaneView) renderiza
 /// `terminal`. Mata o PTY no `dispose` (sem órfão).
@@ -233,6 +241,11 @@ class TerminalSession extends PaneItem {
 
   TerminalStatus _status = TerminalStatus.idle;
   TerminalStatus get status => _status;
+  final List<TerminalStatusEvent> _officeStatusHistory = [];
+
+  /// Generic state changes observed during this Cockpit run (not provider transcripts).
+  List<TerminalStatusEvent> get officeStatusHistory =>
+      List.unmodifiable(_officeStatusHistory);
 
   HarnessKind? _activeHarness;
   HarnessKind? get activeHarness => _activeHarness;
@@ -341,15 +354,17 @@ class TerminalSession extends PaneItem {
     if (data == '\x1b' && _status == TerminalStatus.working) {
       _turnActive = false;
       _notifyDebounce?.cancel();
-      _status = TerminalStatus.idle;
-      _lastIdleAt = DateTime.now();
-      notifyListeners();
+      _setStatus(TerminalStatus.idle);
     }
   }
 
   void _setStatus(TerminalStatus next) {
     if (next == _status) return;
     _status = next;
+    _officeStatusHistory.add(TerminalStatusEvent(next, DateTime.now()));
+    if (_officeStatusHistory.length > 100) {
+      _officeStatusHistory.removeRange(0, _officeStatusHistory.length - 100);
+    }
     if (next == TerminalStatus.idle) _lastIdleAt = DateTime.now();
     notifyListeners();
     // Debounce ~50ms antes de notificar: absorve flicker idle→working numa

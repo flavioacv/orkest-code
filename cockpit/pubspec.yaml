@@ -402,11 +402,10 @@ dependency_overrides:
   #
   # Quando sair release do flterm com o refactor + nosso patch de iOS (ou o
   # patch for merjado upstream), trocar por versoes do pub.dev e remover os git.
+  # Snapshot local: corrige listenables descartados durante reparent por GlobalKey.
+  # Origem e patch documentados em packages/flterm/COCKPIT_PATCHES.md.
   flterm:
-    git:
-      url: https://github.com/jacobaraujo7/libghostty.git
-      ref: cockpit-pin-flterm-upstream-2026-10d
-      path: packages/flterm
+    path: packages/flterm
   libghostty:
     git:
       url: https://github.com/jacobaraujo7/libghostty.git

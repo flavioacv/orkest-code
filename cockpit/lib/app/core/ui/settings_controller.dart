@@ -82,6 +82,12 @@ class SettingsController extends ChangeNotifier {
     String? bubbles,
     String? liveliness,
     String? daylight,
+    bool? sounds,
+    double? soundVolume,
+    bool? soundAlerts,
+    bool? soundKeys,
+    bool? soundElevator,
+    bool? soundSocial,
   }) => _apply(
     _settings.copyWith(
       officeTheme: theme,
@@ -89,8 +95,29 @@ class SettingsController extends ChangeNotifier {
       officeBubbles: bubbles,
       officeLiveliness: liveliness,
       officeDaylight: daylight,
+      officeSounds: sounds,
+      officeSoundVolume: soundVolume,
+      officeSoundAlerts: soundAlerts,
+      officeSoundKeys: soundKeys,
+      officeSoundElevator: soundElevator,
+      officeSoundSocial: soundSocial,
     ),
   );
+
+  void setOfficeCharacterParts(String projectId, Map<String, String> parts) {
+    final all = Map<String, Map<String, String>>.from(
+      _settings.officeCharacterParts,
+    );
+    if (parts.isEmpty) {
+      all.remove(projectId);
+    } else {
+      all[projectId] = Map<String, String>.unmodifiable(parts);
+    }
+    _apply(_settings.copyWith(officeCharacterParts: all));
+  }
+
+  void setOfficeAgentNames(Map<String, String> names) =>
+      _apply(_settings.copyWith(officeAgentNames: names));
 
   void setAutomationHarness(HarnessKind? id) {
     _apply(

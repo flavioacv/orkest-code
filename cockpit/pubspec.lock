@@ -431,10 +431,8 @@ packages:
     dependency: "direct main"
     description:
       path: "packages/flterm"
-      ref: cockpit-pin-flterm-upstream-2026-10d
-      resolved-ref: a342abbec8f744714bf6c38fb5516acf19114486
-      url: "https://github.com/jacobaraujo7/libghostty.git"
-    source: git
+      relative: true
+    source: path
     version: "0.0.5"
   flutter:
     dependency: "direct main"

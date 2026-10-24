@@ -9819,10 +9819,10 @@
     if (s === "es" || s.startsWith("es-")) return "es";
     return void 0;
   }
-  function serverLocale(env, intl) {
-    const own = normalizeLocale(env.HABBLAUD_LANG);
+  function serverLocale(env2, intl) {
+    const own = normalizeLocale(env2.HABBLAUD_LANG);
     if (own) return own;
-    for (const v of [env.LC_ALL, env.LC_MESSAGES, env.LANG, intl]) {
+    for (const v of [env2.LC_ALL, env2.LC_MESSAGES, env2.LANG, intl]) {
       const n = normalizeLocale(v);
       if (n && n !== "en") return n;
     }
@@ -9842,15 +9842,15 @@
       }
       return "pt-BR";
     }
-    const env = g.process?.env ?? {};
-    if (env.VITEST) return normalizeLocale(env.HABBLAUD_LANG_TEST) ?? "pt-BR";
+    const env2 = g.process?.env ?? {};
+    if (env2.VITEST) return normalizeLocale(env2.HABBLAUD_LANG_TEST) ?? "pt-BR";
     let intl;
     try {
       intl = Intl.DateTimeFormat().resolvedOptions().locale;
     } catch {
       intl = void 0;
     }
-    return serverLocale(env, intl);
+    return serverLocale(env2, intl);
   }
   var current = detect();
   function tr(src, args) {
@@ -13367,8 +13367,8 @@
     b.set(x + 3, y + 1, shade(color, -0.08));
     b.set(x + 3, y + 2, shade(color, -0.15));
   }
-  function papers(b, x, y, w = 6, h = 4, tone = "light") {
-    const on = tone === "onLight";
+  function papers(b, x, y, w = 6, h = 4, tone2 = "light") {
+    const on = tone2 === "onLight";
     b.hline(x + 1, x + w, y + h, on ? SURFACE_SHADOW_LIGHT : SURFACE_SHADOW);
     if (on) b.vline(x + w, y, y + h - 1, SURFACE_SHADOW_LIGHT);
     b.rect(x + 1, y - 1, w, h, on ? "#c4bfb2" : "#dedad0");
@@ -13377,8 +13377,8 @@
     if (on) b.vline(x + w - 1, y, y + h - 1, "#cfcabd");
     for (let i = 1; i < h - 1; i++) b.hline(x + 1, x + 1 + Math.max(1, w - 3 - i % 2), y + i, on ? "#93a0b4" : "#b9c2d0");
   }
-  function keyboard(b, x, y, w = 10, tone = "light") {
-    const pal = tone === "dark" ? { base: "#3d4250", key: "#5a6070", edge: "#2a2e38", sh: SURFACE_SHADOW } : tone === "onLight" ? { base: "#b9c0cc", key: "#e4e8ee", edge: "#7d8696", sh: SURFACE_SHADOW_LIGHT } : { base: "#d9dce2", key: "#f4f5f7", edge: "#a9aeb8", sh: SURFACE_SHADOW };
+  function keyboard(b, x, y, w = 10, tone2 = "light") {
+    const pal = tone2 === "dark" ? { base: "#3d4250", key: "#5a6070", edge: "#2a2e38", sh: SURFACE_SHADOW } : tone2 === "onLight" ? { base: "#b9c0cc", key: "#e4e8ee", edge: "#7d8696", sh: SURFACE_SHADOW_LIGHT } : { base: "#d9dce2", key: "#f4f5f7", edge: "#a9aeb8", sh: SURFACE_SHADOW };
     b.hline(x + 1, x + w, y + 3, pal.sh);
     b.rect(x, y, w, 3, pal.base);
     for (let i = 0; i < w - 1; i += 2) {
@@ -13386,14 +13386,14 @@
       b.set(x + i, y + 1, pal.key);
     }
     b.hline(x, x + w - 1, y + 2, pal.edge);
-    if (tone === "onLight") {
+    if (tone2 === "onLight") {
       b.vline(x, y, y + 2, "#a3abb8");
       b.vline(x + w - 1, y, y + 2, pal.edge);
     }
   }
-  function mouse(b, x, y, tone = "light") {
-    const on = tone === "onLight";
-    const dark = tone === "dark";
+  function mouse(b, x, y, tone2 = "light") {
+    const on = tone2 === "onLight";
+    const dark = tone2 === "dark";
     b.hline(x + 1, x + 2, y + 2, on ? SURFACE_SHADOW_LIGHT : SURFACE_SHADOW);
     if (on) b.set(x + 2, y + 1, SURFACE_SHADOW_LIGHT);
     b.rect(x, y, 2, 2, dark ? "#3d4250" : on ? "#c3c9d3" : "#eceef1");
@@ -13462,8 +13462,8 @@
       }
     }
   }
-  function monitorBack(b, x, y, w = 16, h = 10, tone = "light") {
-    const p = tone === "mid" ? { hi: "#b4bcc8", lt: "#a3abb8", base: "#8f98a6", dk: "#747d8c", line: "#454c5a", stand: "#6b7383", foot: "#596170" } : { hi: "#e6eaf0", lt: "#d8dee6", base: "#c9d0da", dk: "#aab3c0", line: "#5b6577", stand: "#9aa3b0", foot: "#7d8696" };
+  function monitorBack(b, x, y, w = 16, h = 10, tone2 = "light") {
+    const p = tone2 === "mid" ? { hi: "#b4bcc8", lt: "#a3abb8", base: "#8f98a6", dk: "#747d8c", line: "#454c5a", stand: "#6b7383", foot: "#596170" } : { hi: "#e6eaf0", lt: "#d8dee6", base: "#c9d0da", dk: "#aab3c0", line: "#5b6577", stand: "#9aa3b0", foot: "#7d8696" };
     const cx = x + Math.floor(w / 2);
     b.hline(x + 2, x + w - 1, y + h + 3, SURFACE_SHADOW_LIGHT);
     b.rect(cx - 4, y + h + 1, 8, 2, p.foot);
@@ -13488,8 +13488,8 @@
     b.hline(cx - 3, cx + 2, y + 4, p.hi);
     b.hline(cx - 3, cx + 2, y + 4 + Math.max(2, h - 6) - 1, p.dk);
     b.vline(cx + 2, y + 5, y + 4 + Math.max(2, h - 6) - 1, p.dk);
-    b.set(cx - 1, y + 5, tone === "mid" ? "#cfd5de" : "#f6f8fb");
-    b.set(cx, y + 5, tone === "mid" ? "#cfd5de" : "#f6f8fb");
+    b.set(cx - 1, y + 5, tone2 === "mid" ? "#cfd5de" : "#f6f8fb");
+    b.set(cx, y + 5, tone2 === "mid" ? "#cfd5de" : "#f6f8fb");
     b.vline(cx + 2, y + h, y + h + 2, p.line);
   }
   function pencilCup(b, x, y) {
@@ -14298,7 +14298,7 @@
     b.hline(0, 31, 7, m.edge.dk);
     b.set(0, 6, m.edge.lt);
   }
-  function deskTop(s, seed, tone) {
+  function deskTop(s, seed, tone2) {
     const b = s.buf;
     const r = rngOf(seed, 11);
     const v = seed % 6;
@@ -14310,8 +14310,8 @@
         screen = monitorFront(b, 2, -17, 16, 11);
         screen2 = monitorFront(b, 18, -16, 13, 10);
         staticScreen(b, screen2, "sheet", seed);
-        keyboard(b, 6, -1, 11, tone);
-        mouse(b, 20, 0, tone);
+        keyboard(b, 6, -1, 11, tone2);
+        mouse(b, 20, 0, tone2);
         mug(b, 26, -2, mugC);
         break;
       }
@@ -14323,8 +14323,8 @@
         staticScreen(b, screen2, "ide", seed);
         b.rect(21, -3, 11, 2, "#c9ced6");
         b.hline(21, 31, -2, "#9aa1ad");
-        b.hline(22, 31, -1, tone === "onLight" ? "rgba(40,46,70,0.3)" : "rgba(60,40,40,0.2)");
-        keyboard(b, 8, -1, 10, tone);
+        b.hline(22, 31, -1, tone2 === "onLight" ? "rgba(40,46,70,0.3)" : "rgba(60,40,40,0.2)");
+        keyboard(b, 8, -1, 10, tone2);
         smallSucculent(b, 1, -3);
         break;
       }
@@ -14332,10 +14332,10 @@
         screen = monitorFront(b, 8, -17, 16, 11);
         b.rect(22, -15, 2, 2, "#f7d154");
         b.rect(9, -15, 2, 2, "#ff9fb2");
-        keyboard(b, 11, -1, 10, tone);
-        mouse(b, 23, 0, tone);
+        keyboard(b, 11, -1, 10, tone2);
+        mouse(b, 23, 0, tone2);
         photoFrame(b, 2, -5);
-        papers(b, 24, -4, 6, 4, tone);
+        papers(b, 24, -4, 6, 4, tone2);
         mug(b, 3, 0, mugC);
         break;
       }
@@ -14343,15 +14343,15 @@
         screen = monitorFront(b, 4, -17, 15, 11);
         screen2 = monitorFront(b, 19, -17, 12, 10);
         staticScreen(b, screen2, "chart", seed);
-        keyboard(b, 7, -1, 11, tone);
-        mouse(b, 21, 0, tone);
-        papers(b, 1, -2, 5, 4, tone);
+        keyboard(b, 7, -1, 11, tone2);
+        mouse(b, 21, 0, tone2);
+        papers(b, 1, -2, 5, 4, tone2);
         break;
       }
       case 5: {
         screen = monitorFront(b, 8, -17, 16, 11);
-        keyboard(b, 11, -1, 10, tone);
-        mouse(b, 23, 0, tone);
+        keyboard(b, 11, -1, 10, tone2);
+        mouse(b, 23, 0, tone2);
         b.hline(2, 6, -4, "#3a3f4b");
         b.set(1, -3, "#3a3f4b");
         b.set(7, -3, "#3a3f4b");
@@ -14363,10 +14363,10 @@
       }
       default: {
         screen = monitorFront(b, 8, -17, 16, 11);
-        keyboard(b, 11, -1, 10, tone);
-        mouse(b, 23, 0, tone);
+        keyboard(b, 11, -1, 10, tone2);
+        mouse(b, 23, 0, tone2);
         mug(b, 3, -2, mugC);
-        papers(b, 25, -4, 6, 4, tone);
+        papers(b, 25, -4, 6, 4, tone2);
         smallSucculent(b, 26, 2);
         break;
       }
@@ -14395,7 +14395,7 @@
     const r = rngOf(seed, 12);
     const v = seed % 4;
     const mugC = pick(r, MUG_COLORS);
-    const tone = itemTone(variant);
+    const tone2 = itemTone(variant);
     const plastic = variant === "dark" ? "mid" : "light";
     if (v === 1) {
       monitorBack(b, 2, -7, 15, 10, plastic);
@@ -14403,7 +14403,7 @@
     } else {
       monitorBack(b, 8, -7, 16, 10, plastic);
       if (v === 2) smallSucculent(b, 26, 0);
-      else papers(b, 25, -1, 6, 4, tone);
+      else papers(b, 25, -1, 6, 4, tone2);
       if (v === 3) photoFrame(b, 2, -3);
       else mug(b, 2, 0, mugC);
     }
@@ -16191,9 +16191,9 @@
           const off = row % 2 ? 4 : 0;
           for (let bx = -8; bx < TILE; bx += 8) {
             const x0 = bx + off;
-            const tone = [brick.lt, brick.base, brick.base, brick.dk][Math.floor(r() * 4)];
+            const tone2 = [brick.lt, brick.base, brick.base, brick.dk][Math.floor(r() * 4)];
             for (let x = Math.max(0, x0); x < Math.min(TILE, x0 + 7); x++) {
-              for (let yy = y; yy < Math.min(fy + fh, y + 3); yy++) b.set(x, yy, yy === y ? shade(tone, 0.03) : tone);
+              for (let yy = y; yy < Math.min(fy + fh, y + 3); yy++) b.set(x, yy, yy === y ? shade(tone2, 0.03) : tone2);
             }
             if (x0 + 7 >= 0 && x0 + 7 < TILE) b.vline(x0 + 7, y, Math.min(fy + fh - 1, y + 2), mortar);
           }
@@ -16540,6 +16540,220 @@
     }
   }
   var CHARACTER_SHEET = { w: CHAR_W, h: CHAR_H };
+
+  // ../../habblaud/client/src/audio/scheduler.ts
+  var CATEGORY_OF = {
+    chime: "alerts",
+    pop: "alerts",
+    keys: "keys",
+    elevator: "elevator",
+    pingpong: "social",
+    table: "social",
+    arcade: "social"
+  };
+  var MIN_GAP_MS = {
+    chime: 1200,
+    pop: 1200,
+    keys: 600,
+    elevator: 1500,
+    pingpong: 200,
+    table: 200,
+    arcade: 450
+  };
+  var CHANNEL = {
+    chime: "alerts",
+    pop: "alerts",
+    keys: "keys",
+    elevator: "elevator",
+    pingpong: "pingpong",
+    table: "pingpong",
+    arcade: "arcade"
+  };
+  var MAX_PER_SECOND = 7;
+  var DEFAULT_SOUND_SETTINGS = { volume: 0.6, alerts: true, keys: true, elevator: true, social: true };
+  function masterGain(volume) {
+    const v = Math.min(1, Math.max(0, volume));
+    return v * v;
+  }
+  var SoundScheduler = class {
+    enabled = false;
+    settings = { ...DEFAULT_SOUND_SETTINGS };
+    last = /* @__PURE__ */ new Map();
+    recent = [];
+    configure(enabled, settings) {
+      this.enabled = enabled;
+      this.settings = settings;
+    }
+    /** O som está liberado pela preferência (geral, categoria e volume)? */
+    allowed(kind) {
+      return this.enabled && this.settings.volume > 0 && this.settings[CATEGORY_OF[kind]];
+    }
+    /**
+     * Ganho final (0–1) para tocar `kind` agora, ou null se não deve tocar. Com a aba oculta só o
+     * sino de "precisa de você" toca. `gain` é a proximidade sugerida pelo mundo.
+     */
+    decide(kind, now, opts = {}) {
+      if (!this.allowed(kind)) return null;
+      if (opts.hidden && kind !== "chime") return null;
+      const ch = CHANNEL[kind];
+      const prev = this.last.get(ch);
+      if (prev !== void 0 && now - prev < MIN_GAP_MS[kind]) return null;
+      while (this.recent.length && now - this.recent[0] >= 1e3) this.recent.shift();
+      if (kind !== "chime" && this.recent.length >= MAX_PER_SECOND) return null;
+      const g = masterGain(this.settings.volume) * Math.min(1, Math.max(0, opts.gain ?? 1));
+      if (g <= 5e-4) return null;
+      this.last.set(ch, now);
+      this.recent.push(now);
+      return g;
+    }
+  };
+
+  // ../../habblaud/client/src/audio/synth.ts
+  function env(g, t2, peak, attack, decay) {
+    g.gain.setValueAtTime(1e-4, t2);
+    g.gain.exponentialRampToValueAtTime(Math.max(2e-4, peak), t2 + attack);
+    g.gain.exponentialRampToValueAtTime(1e-4, t2 + attack + decay);
+  }
+  function tone(ac, out, type, freq, t2, peak, attack, decay, toFreq) {
+    const o = ac.createOscillator();
+    const g = ac.createGain();
+    o.type = type;
+    o.frequency.setValueAtTime(freq, t2);
+    if (toFreq) o.frequency.exponentialRampToValueAtTime(toFreq, t2 + Math.min(decay, 0.08));
+    env(g, t2, peak, attack, decay);
+    o.connect(g).connect(out);
+    o.start(t2);
+    o.stop(t2 + attack + decay + 0.05);
+  }
+  function makeNoise(ac) {
+    try {
+      const len = Math.floor(ac.sampleRate * 0.06);
+      const buf = ac.createBuffer(1, len, ac.sampleRate);
+      const d = buf.getChannelData(0);
+      for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+      return buf;
+    } catch {
+      return null;
+    }
+  }
+  function playVoice(ac, dest, kind, t2, o) {
+    let out = dest;
+    if (o.pan && typeof ac.createStereoPanner === "function") {
+      const p = ac.createStereoPanner();
+      p.pan.value = Math.max(-1, Math.min(1, o.pan));
+      p.connect(dest);
+      out = p;
+    }
+    const g = o.gain;
+    switch (kind) {
+      case "chime":
+        tone(ac, out, "sine", 880, t2, 0.16 * g, 0.012, 1.1);
+        tone(ac, out, "sine", 1318.5, t2, 0.08 * g, 0.012, 1.1);
+        tone(ac, out, "sine", 1174.7, t2 + 0.14, 0.1 * g, 0.012, 1.1);
+        return;
+      case "pop":
+        tone(ac, out, "triangle", 740, t2, 0.14 * g, 8e-3, 0.15, 330);
+        return;
+      case "elevator":
+        tone(ac, out, "sine", 784, t2, 0.11 * g, 4e-3, 1.5);
+        tone(ac, out, "sine", 1568, t2, 0.025 * g, 4e-3, 0.7);
+        tone(ac, out, "sine", 2164, t2, 0.012 * g, 4e-3, 0.25);
+        return;
+      case "keys":
+        keys(ac, out, t2, o);
+        return;
+      case "pingpong":
+        tone(ac, out, "sine", 1250, t2, 0.09 * g, 2e-3, 0.06, 880);
+        return;
+      case "table":
+        tone(ac, out, "sine", 760, t2, 0.06 * g, 2e-3, 0.045, 520);
+        return;
+      case "arcade": {
+        const lp = ac.createBiquadFilter();
+        lp.type = "lowpass";
+        lp.frequency.value = 2600;
+        lp.connect(out);
+        const scale = [1046.5, 1318.5, 1568, 1760, 2093];
+        for (let i = 0; i < 3; i++) {
+          const f = scale[Math.floor(o.rng() * scale.length)];
+          tone(ac, lp, "square", f, t2 + i * 0.055, 0.03 * g, 3e-3, 0.05);
+        }
+        return;
+      }
+    }
+  }
+  function keys(ac, out, t2, o) {
+    if (!o.noise) return;
+    const n = Math.max(1, Math.min(8, o.count ?? 4));
+    let at = t2;
+    for (let i = 0; i < n; i++) {
+      const src = ac.createBufferSource();
+      src.buffer = o.noise;
+      const bp = ac.createBiquadFilter();
+      bp.type = "bandpass";
+      bp.frequency.value = 1900 + o.rng() * 1500;
+      bp.Q.value = 1.4;
+      const g = ac.createGain();
+      env(g, at, 0.08 * o.gain * (0.6 + o.rng() * 0.4), 15e-4, 0.022 + o.rng() * 0.012);
+      src.connect(bp).connect(g).connect(out);
+      src.start(at, o.rng() * 0.02, 0.04);
+      at += 0.06 + o.rng() * 0.08 + (o.rng() < 0.15 ? 0.12 : 0);
+    }
+  }
+
+  // ../../habblaud/client/src/audio/board.ts
+  var SoundBoard = class {
+    scheduler = new SoundScheduler();
+    ac = null;
+    out = null;
+    noise = null;
+    enabled = false;
+    configure(enabled, settings) {
+      this.enabled = enabled;
+      this.scheduler.configure(enabled, settings);
+    }
+    /**
+     * Precisa ser chamado a partir de um gesto do usuário (clique/tecla) para o navegador liberar o
+     * áudio. Resolve quando o áudio está pronto (ou não pôde ser liberado).
+     */
+    unlock() {
+      if (!this.enabled) return Promise.resolve();
+      try {
+        if (!this.ac) {
+          const Ctor = window.AudioContext ?? window.webkitAudioContext;
+          if (!Ctor) return Promise.resolve();
+          const ac = new Ctor();
+          const comp = ac.createDynamicsCompressor();
+          comp.threshold.value = -18;
+          comp.knee.value = 12;
+          comp.ratio.value = 6;
+          comp.connect(ac.destination);
+          this.ac = ac;
+          this.out = comp;
+          this.noise = makeNoise(ac);
+        }
+        if (this.ac.state === "suspended") return this.ac.resume().catch(() => void 0);
+      } catch {
+        this.ac = null;
+        this.out = null;
+      }
+      return Promise.resolve();
+    }
+    /** Toca `kind` se a preferência e os limites deixarem. Devolve se tocou. */
+    play(kind, opts = {}) {
+      const ac = this.ac;
+      if (!ac || !this.out || ac.state !== "running") return false;
+      const hidden = typeof document !== "undefined" && document.hidden;
+      const gain = this.scheduler.decide(kind, performance.now(), { hidden, gain: opts.gain });
+      if (gain === null) return false;
+      try {
+        playVoice(ac, this.out, kind, ac.currentTime + 0.01, { gain, pan: opts.pan, count: opts.count, rng: Math.random, noise: this.noise });
+        return true;
+      } catch {
+        return false;
+      }
+    }
+  };
 
   // ../../habblaud/client/src/world/api.ts
   function seasonalThemeFor(theme, date) {
@@ -17871,17 +18085,17 @@
       this.place(x, y, w, h);
     }
     // =================================================================== balões
-    takeBubble(ch, head, icon, text, tone, prio, alpha, changedAt) {
+    takeBubble(ch, head, icon, text, tone2, prio, alpha, changedAt) {
       let b = this.bubblePool[this.nb];
       if (!b) {
-        b = { type: "bubble", ch, head, icon, text, tone, prio, alpha, chip: false, extraLift: 0, changedAt, x: 0, y: 0, w: 0, h: 0, fitted: "", lifted: false };
+        b = { type: "bubble", ch, head, icon, text, tone: tone2, prio, alpha, chip: false, extraLift: 0, changedAt, x: 0, y: 0, w: 0, h: 0, fitted: "", lifted: false };
         this.bubblePool[this.nb] = b;
       } else {
         b.ch = ch;
         b.head = head;
         b.icon = icon;
         b.text = text;
-        b.tone = tone;
+        b.tone = tone2;
         b.prio = prio;
         b.alpha = alpha;
         b.chip = false;
@@ -17998,11 +18212,11 @@
       const { ctx } = this;
       const { x, y, w, h } = b;
       const headX = this.sx(b.head.x);
-      const tone = b.tone;
-      const bg = tone === "alert" ? "#ffcf4a" : tone === "deliver" ? "#e2f0ff" : tone === "shell" ? "#1d2433" : tone === "say" ? "#ffffff" : "#fffdf8";
-      const border = tone === "alert" ? "#c58f10" : tone === "deliver" ? "#7aa7d9" : tone === "shell" ? "#4b5d7e" : tone === "say" ? "rgba(40,48,66,0.38)" : "rgba(40,48,66,0.22)";
-      const fg = tone === "alert" ? "#3b2a00" : tone === "deliver" ? "#17324f" : tone === "shell" ? "#b9f6b4" : tone === "say" ? "#1d2330" : "#232a36";
-      const pulse = tone === "alert" ? 1 + Math.sin(now / 160) * 0.035 : 1;
+      const tone2 = b.tone;
+      const bg = tone2 === "alert" ? "#ffcf4a" : tone2 === "deliver" ? "#e2f0ff" : tone2 === "shell" ? "#1d2433" : tone2 === "say" ? "#ffffff" : "#fffdf8";
+      const border = tone2 === "alert" ? "#c58f10" : tone2 === "deliver" ? "#7aa7d9" : tone2 === "shell" ? "#4b5d7e" : tone2 === "say" ? "rgba(40,48,66,0.38)" : "rgba(40,48,66,0.22)";
+      const fg = tone2 === "alert" ? "#3b2a00" : tone2 === "deliver" ? "#17324f" : tone2 === "shell" ? "#b9f6b4" : tone2 === "say" ? "#1d2330" : "#232a36";
+      const pulse = tone2 === "alert" ? 1 + Math.sin(now / 160) * 0.035 : 1;
       ctx.save();
       ctx.globalAlpha = b.alpha;
       if (b.lifted) {
@@ -18044,9 +18258,9 @@
       ctx.stroke();
       ctx.fillStyle = bg;
       ctx.fillRect(tailX - 4, y + h - 2, 8, 2);
-      ctx.font = tone === "say" && !b.chip ? SAY_FONT : BUBBLE_FONT;
+      ctx.font = tone2 === "say" && !b.chip ? SAY_FONT : BUBBLE_FONT;
       ctx.fillStyle = fg;
-      if (tone === "say" && !b.chip && b.fitted) {
+      if (tone2 === "say" && !b.chip && b.fitted) {
         ctx.textAlign = "center";
         ctx.fillText(b.fitted, x + w / 2, y + h / 2 + 1);
         ctx.textAlign = "left";
@@ -26196,6 +26410,105 @@
     }
   };
 
+  // ../../habblaud/client/src/world/sound-cues.ts
+  var KEYS_TICK_MS = 160;
+  var PINGPONG_PERIOD = 1100;
+  var SoundCues = class {
+    constructor(sim2, camera2, rng = Math.random) {
+      this.sim = sim2;
+      this.camera = camera2;
+      this.rng = rng;
+    }
+    sim;
+    camera;
+    rng;
+    doors = [];
+    keysAt = 0;
+    nextKeysAt = 0;
+    nextArcadeAt = 0;
+    rally = /* @__PURE__ */ new Map();
+    update(now, emit) {
+      const a = this.camera.screenToWorld(0, 0);
+      const b = this.camera.screenToWorld(this.camera.viewW, this.camera.viewH);
+      const view = { x0: a.x, y0: a.y, x1: b.x, y1: b.y };
+      const near = Math.max(0.45, Math.min(1, 0.25 + this.camera.zoom * 0.25));
+      this.elevators(view, emit);
+      this.keys(now, view, near, emit);
+      this.social(now, view, near, emit);
+    }
+    pan(x, v) {
+      const half = Math.max(1, (v.x1 - v.x0) / 2);
+      return Math.max(-0.7, Math.min(0.7, (x - (v.x0 + v.x1) / 2) / half * 0.7));
+    }
+    inView(x, y, v, m = 16) {
+      return x > v.x0 - m && x < v.x1 + m && y > v.y0 - m && y < v.y1 + m;
+    }
+    /** "Ding" quando a porta começa a abrir; fora da tela, mais baixo (ainda avisa que alguém chegou). */
+    elevators(view, emit) {
+      this.sim.elevators.forEach((e, i) => {
+        const prev = this.doors[i];
+        this.doors[i] = e.door;
+        if (prev === void 0 || prev > 0.01 || e.door <= 0.01) return;
+        const spot = this.sim.spots.get(e.spotId);
+        if (!spot) return;
+        emit({ kind: "elevator", gain: this.inView(spot.x, spot.y, view, 24) ? 1 : 0.5, pan: this.pan(spot.x, view) });
+      });
+    }
+    /** Rajadas de teclas, mais frequentes quanto mais gente digita na tela. */
+    keys(now, view, near, emit) {
+      if (now - this.keysAt < KEYS_TICK_MS) return;
+      this.keysAt = now;
+      let n = 0;
+      let sx = 0;
+      for (const ch of this.sim.chars.values()) {
+        if (!typing(ch) || !this.inView(ch.x, ch.y, view)) continue;
+        n++;
+        sx += ch.x;
+      }
+      if (!n || now < this.nextKeysAt) return;
+      if (this.rng() > Math.min(0.8, 0.3 + 0.12 * n)) return;
+      this.nextKeysAt = now + (700 + this.rng() * 1500) / Math.sqrt(Math.min(n, 6));
+      emit({ kind: "keys", gain: near * Math.min(1, 0.6 + 0.1 * n), pan: this.pan(sx / n, view), count: 2 + Math.floor(this.rng() * 5) });
+    }
+    /** Pingue-pongue (raquetadas e quiques no ritmo da bolinha desenhada) e o fliperama. */
+    social(now, view, near, emit) {
+      const alive = /* @__PURE__ */ new Set();
+      for (const g of this.sim.social.gatherings) {
+        if (g.phase !== "run") continue;
+        if (g.kind !== "pingpong" && g.kind !== "arcade") continue;
+        let x = 0;
+        let y = 0;
+        let k = 0;
+        for (const m of g.members) {
+          if (m.role !== "player" || m.left) continue;
+          const ch = this.sim.chars.get(m.id);
+          if (!ch) continue;
+          x += ch.x;
+          y += ch.y;
+          k++;
+        }
+        if (!k) continue;
+        x /= k;
+        y /= k;
+        if (!this.inView(x, y, view, 24)) continue;
+        if (g.kind === "pingpong") {
+          alive.add(g.id);
+          const seg = Math.floor((now - g.startAt) % (PINGPONG_PERIOD * 2) / (PINGPONG_PERIOD / 2));
+          const prev = this.rally.get(g.id);
+          this.rally.set(g.id, seg);
+          if (prev !== void 0 && prev !== seg) emit({ kind: seg % 2 === 0 ? "pingpong" : "table", gain: near, pan: this.pan(x, view) });
+        } else if (now >= this.nextArcadeAt) {
+          this.nextArcadeAt = now + 500 + this.rng() * 900;
+          emit({ kind: "arcade", gain: near * 0.8, pan: this.pan(x, view) });
+        }
+      }
+      for (const id of this.rally.keys()) if (!alive.has(id)) this.rally.delete(id);
+    }
+  };
+  function typing(ch) {
+    return ch.mode === "work" && ch.seated && ch.pose === "type" && !ch.leaving && !ch.inside && ch.alpha > 0.5;
+  }
+
   // tool/habblaud_world/assets.ts
   var __HABBLAUD_ASSETS__ = { "manifest.json": "ewogICJ2ZXJzaW9uIjogMSwKICAiYnJhbmQiOiB7CiAgICAibWFyayI6IHsKICAgICAgImZpbGUiOiAiYnJhbmQvbG9nby1tYXJrLnBuZyIsCiAgICAgICJ3IjogMzIsCiAgICAgICJoIjogMzIKICAgIH0sCiAgICAibWFya0xhcmdlIjogewogICAgICAiZmlsZSI6ICJicmFuZC9sb2dvLW1hcmtANHgucG5nIiwKICAgICAgInciOiAxMjgsCiAgICAgICJoIjogMTI4CiAgICB9LAogICAgInNpZ25hZ2UiOiB7CiAgICAgICJmaWxlIjogImJyYW5kL3NpZ25hZ2UucG5nIiwKICAgICAgInciOiA2NCwKICAgICAgImgiOiAxNgogICAgfSwKICAgICJzaWduYWdlTGFyZ2UiOiB7CiAgICAgICJmaWxlIjogImJyYW5kL3NpZ25hZ2VANHgucG5nIiwKICAgICAgInciOiAyNTYsCiAgICAgICJoIjogNjQKICAgIH0sCiAgICAiZmF2aWNvbjE2IjogImJyYW5kL2Zhdmljb24tMTYucG5nIiwKICAgICJmYXZpY29uMzIiOiAiYnJhbmQvZmF2aWNvbi0zMi5wbmciLAogICAgImFwcGxlVG91Y2giOiAiYnJhbmQvYXBwbGUtdG91Y2gtaWNvbi5wbmciLAogICAgImljb24xOTIiOiAiYnJhbmQvaWNvbi0xOTIucG5nIiwKICAgICJpY29uNTEyIjogImJyYW5kL2ljb24tNTEyLnBuZyIsCiAgICAibWFya0RldGFpbGVkIjogewogICAgICAiZmlsZSI6ICJicmFuZC9sb2dvLWRldGFpbGVkLnBuZyIsCiAgICAgICJ3IjogNzgsCiAgICAgICJoIjogODYKICAgIH0KICB9LAogICJpbGx1c3RyYXRpb25zIjogewogICAgImVtcHR5T2ZmaWNlIjogewogICAgICAiZmlsZSI6ICJpbGx1c3RyYXRpb25zL2VtcHR5LW9mZmljZS5wbmciLAogICAgICAidyI6IDk2MCwKICAgICAgImgiOiA1NDAsCiAgICAgICJzY2FsZSI6IDIKICAgIH0KICB9LAogICJ3YWxsQXJ0IjogWwogICAgewogICAgICAiaWQiOiAicGFpbnRpbmctbW91bnRhaW5zIiwKICAgICAgImtpbmQiOiAicGFpbnRpbmciLAogICAgICAiZmlsZSI6ICJhcnQvcGFpbnRpbmctbW91bnRhaW5zLnBuZyIsCiAgICAgICJ3IjogMjYsCiAgICAgICJoIjogMTYsCiAgICAgICJ0aWxlcyI6IDIsCiAgICAgICJ0aXRsZSI6ICJNb250YW5oYXMgYW8gYW1hbmhlY2VyIiwKICAgICAgImZyYW1lZCI6IHsKICAgICAgICAiZmlsZSI6ICJhcnQvZnJhbWVkL3BhaW50aW5nLW1vdW50YWlucy5wbmciLAogICAgICAgICJ3IjogMzIsCiAgICAgICAgImgiOiAyMgogICAgICB9CiAgICB9LAogICAgewogICAgICAiaWQiOiAicGFpbnRpbmctYmVhY2giLAogICAgICAia2luZCI6ICJwYWludGluZyIsCiAgICAgICJmaWxlIjogImFydC9wYWludGluZy1iZWFjaC5wbmciLAogICAgICAidyI6IDI2LAogICAgICAiaCI6IDE2LAogICAgICAidGlsZXMiOiAyLAogICAgICAidGl0bGUiOiAiUHJhaWEgdHJvcGljYWwiLAogICAgICAiZnJhbWVkIjogewogICAgICAgICJmaWxlIjogImFydC9mcmFtZWQvcGFpbnRpbmctYmVhY2gucG5nIiwKICAgICAgICAidyI6IDMyLAogICAgICAgICJoIjogMjIKICAgICAgfQogICAgfSwKICAgIHsKICAgICAgImlkIjogInBhaW50aW5nLWNpdHktbmlnaHQiLAogICAgICAia2luZCI6ICJwYWludGluZyIsCiAgICAgICJmaWxlIjogImFydC9wYWludGluZy1jaXR5LW5pZ2h0LnBuZyIsCiAgICAgICJ3IjogMjYsCiAgICAgICJoIjogMTYsCiAgICAgICJ0aWxlcyI6IDIsCiAgICAgICJ0aXRsZSI6ICJDaWRhZGUgw6Agbm9pdGUiLAogICAgICAiZnJhbWVkIjogewogICAgICAgICJmaWxlIjogImFydC9mcmFtZWQvcGFpbnRpbmctY2l0eS1uaWdodC5wbmciLAogICAgICAgICJ3IjogMzIsCiAgICAgICAgImgiOiAyMgogICAgICB9CiAgICB9LAogICAgewogICAgICAiaWQiOiAicGFpbnRpbmctYWJzdHJhY3QiLAogICAgICAia2luZCI6ICJwYWludGluZyIsCiAgICAgICJmaWxlIjogImFydC9wYWludGluZy1hYnN0cmFjdC5wbmciLAogICAgICAidyI6IDI2LAogICAgICAiaCI6IDE2LAogICAgICAidGlsZXMiOiAyLAogICAgICAidGl0bGUiOiAiRm9ybWFzIGUgY29yZXMiLAogICAgICAiZnJhbWVkIjogewogICAgICAgICJmaWxlIjogImFydC9mcmFtZWQvcGFpbnRpbmctYWJzdHJhY3QucG5nIiwKICAgICAgICAidyI6IDMyLAogICAgICAgICJoIjogMjIKICAgICAgfQogICAgfSwKICAgIHsKICAgICAgImlkIjogInBhaW50aW5nLWNhdCIsCiAgICAgICJraW5kIjogInBhaW50aW5nIiwKICAgICAgImZpbGUiOiAiYXJ0L3BhaW50aW5nLWNhdC5wbmciLAogICAgICAidyI6IDI2LAogICAgICAiaCI6IDE2LAogICAgICAidGlsZXMiOiAyLAogICAgICAidGl0bGUiOiAiUmV0cmF0byBkZSBnYXRvIiwKICAgICAgImZyYW1lZCI6IHsKICAgICAgICAiZmlsZSI6ICJhcnQvZnJhbWVkL3BhaW50aW5nLWNhdC5wbmciLAogICAgICAgICJ3IjogMzIsCiAgICAgICAgImgiOiAyMgogICAgICB9CiAgICB9LAogICAgewogICAgICAiaWQiOiAicGFpbnRpbmctd2F2ZSIsCiAgICAgICJraW5kIjogInBhaW50aW5nIiwKICAgICAgImZpbGUiOiAiYXJ0L3BhaW50aW5nLXdhdmUucG5nIiwKICAgICAgInciOiAyNiwKICAgICAgImgiOiAxNiwKICAgICAgInRpbGVzIjogMiwKICAgICAgInRpdGxlIjogIkEgZ3JhbmRlIG9uZGEiLAogICAgICAiZnJhbWVkIjogewogICAgICAgICJmaWxlIjogImFydC9mcmFtZWQvcGFpbnRpbmctd2F2ZS5wbmciLAogICAgICAgICJ3IjogMzIsCiAgICAgICAgImgiOiAyMgogICAgICB9CiAgICB9LAogICAgewogICAgICAiaWQiOiAicGFpbnRpbmctc3VuZmxvd2VycyIsCiAgICAgICJraW5kIjogInBhaW50aW5nIiwKICAgICAgImZpbGUiOiAiYXJ0L3BhaW50aW5nLXN1bmZsb3dlcnMucG5nIiwKICAgICAgInciOiAyNiwKICAgICAgImgiOiAxNiwKICAgICAgInRpbGVzIjogMiwKICAgICAgInRpdGxlIjogIkdpcmFzc8OzaXMiLAogICAgICAiZnJhbWVkIjogewogICAgICAgICJmaWxlIjogImFydC9mcmFtZWQvcGFpbnRpbmctc3VuZmxvd2Vycy5wbmciLAogICAgICAgICJ3IjogMzIsCiAgICAgICAgImgiOiAyMgogICAgICB9CiAgICB9LAogICAgewogICAgICAiaWQiOiAicGFpbnRpbmctcmlvIiwKICAgICAgImtpbmQiOiAicGFpbnRpbmciLAogICAgICAiZmlsZSI6ICJhcnQvcGFpbnRpbmctcmlvLnBuZyIsCiAgICAgICJ3IjogMjYsCiAgICAgICJoIjogMTYsCiAgICAgICJ0aWxlcyI6IDIsCiAgICAgICJ0aXRsZSI6ICJQw6NvIGRlIEHDp8O6Y2FyIiwKICAgICAgImZyYW1lZCI6IHsKICAgICAgICAiZmlsZSI6ICJhcnQvZnJhbWVkL3BhaW50aW5nLXJpby5wbmciLAogICAgICAgICJ3IjogMzIsCiAgICAgICAgImgiOiAyMgogICAgICB9CiAgICB9LAogICAgewogICAgICAiaWQiOiAicGFpbnRpbmctd2lkZS1mb3Jlc3QtbGFrZSIsCiAgICAgICJraW5kIjogInBhaW50aW5nIiwKICAgICAgImZpbGUiOiAiYXJ0L3BhaW50aW5nLXdpZGUtZm9yZXN0LWxha2UucG5nIiwKICAgICAgInciOiA1OCwKICAgICAgImgiOiAyNCwKICAgICAgInRpbGVzIjogNCwKICAgICAgInRpdGxlIjogIkxhZ28gbmEgZmxvcmVzdGEiLAogICAgICAiZnJhbWVkIjogewogICAgICAgICJmaWxlIjogImFydC9mcmFtZWQvcGFpbnRpbmctd2lkZS1mb3Jlc3QtbGFrZS5wbmciLAogICAgICAgICJ3IjogNjQsCiAgICAgICAgImgiOiAzMAogICAgICB9CiAgICB9LAogICAgewogICAgICAiaWQiOiAicGFpbnRpbmctd2lkZS1jb2xvci1maWVsZHMiLAogICAgICAia2luZCI6ICJwYWludGluZyIsCiAgICAgICJmaWxlIjogImFydC9wYWludGluZy13aWRlLWNvbG9yLWZpZWxkcy5wbmciLAogICAgICAidyI6IDU4LAogICAgICAiaCI6IDI0LAogICAgICAidGlsZXMiOiA0LAogICAgICAidGl0bGUiOiAiQ2FtcG9zIGRlIGNvciIsCiAgICAgICJmcmFtZWQiOiB7CiAgICAgICAgImZpbGUiOiAiYXJ0L2ZyYW1lZC9wYWludGluZy13aWRlLWNvbG9yLWZpZWxkcy5wbmciLAogICAgICAgICJ3IjogNjQsCiAgICAgICAgImgiOiAzMAogICAgICB9CiAgICB9LAogICAgewogICAgICAiaWQiOiAicGFpbnRpbmctd2lkZS1hdXJvcmEiLAogICAgICAia2luZCI6ICJwYWludGluZyIsCiAgICAgICJmaWxlIjogImFydC9wYWludGluZy13aWRlLWF1cm9yYS5wbmciLAogICAgICAidyI6IDU4LAogICAgICAiaCI6IDI0LAogICAgICAidGlsZXMiOiA0LAogICAgICAidGl0bGUiOiAiQXVyb3JhIGJvcmVhbCIsCiAgICAgICJmcmFtZWQiOiB7CiAgICAgICAgImZpbGUiOiAiYXJ0L2ZyYW1lZC9wYWludGluZy13aWRlLWF1cm9yYS5wbmciLAogICAgICAgICJ3IjogNjQsCiAgICAgICAgImgiOiAzMAogICAgICB9CiAgICB9LAogICAgewogICAgICAiaWQiOiAicG9zdGVyLWNvZmZlZSIsCiAgICAgICJraW5kIjogInBvc3RlciIsCiAgICAgICJmaWxlIjogImFydC9wb3N0ZXItY29mZmVlLnBuZyIsCiAgICAgICJ3IjogMTIsCiAgICAgICJoIjogMTYsCiAgICAgICJ0aWxlcyI6IDEsCiAgICAgICJ0aXRsZSI6ICJDYWbDqSIsCiAgICAgICJ2YXJpYW50IjogImNvZmZlZSIKICAgIH0sCiAgICB7CiAgICAgICJpZCI6ICJwb3N0ZXItcm9ja2V0IiwKICAgICAgImtpbmQiOiAicG9zdGVyIiwKICAgICAgImZpbGUiOiAiYXJ0L3Bvc3Rlci1yb2NrZXQucG5nIiwKICAgICAgInciOiAxMiwKICAgICAgImgiOiAxNiwKICAgICAgInRpbGVzIjogMSwKICAgICAgInRpdGxlIjogIkZvZ3VldGUiLAogICAgICAidmFyaWFudCI6ICJyb2NrZXQiCiAgICB9LAogICAgewogICAgICAiaWQiOiAicG9zdGVyLWNvZGUiLAogICAgICAia2luZCI6ICJwb3N0ZXIiLAogICAgICAiZmlsZSI6ICJhcnQvcG9zdGVyLWNvZGUucG5nIiwKICAgICAgInciOiAxMiwKICAgICAgImgiOiAxNiwKICAgICAgInRpbGVzIjogMSwKICAgICAgInRpdGxlIjogIkPDs2RpZ28iLAogICAgICAidmFyaWFudCI6ICJjb2RlIgogICAgfSwKICAgIHsKICAgICAgImlkIjogInBvc3Rlci1jYXQiLAogICAgICAia2luZCI6ICJwb3N0ZXIiLAogICAgICAiZmlsZSI6ICJhcnQvcG9zdGVyLWNhdC5wbmciLAogICAgICAidyI6IDEyLAogICAgICAiaCI6IDE2LAogICAgICAidGlsZXMiOiAxLAogICAgICAidGl0bGUiOiAiR2F0byIsCiAgICAgICJ2YXJpYW50IjogImNhdCIKICAgIH0sCiAgICB7CiAgICAgICJpZCI6ICJwb3N0ZXItYnVnIiwKICAgICAgImtpbmQiOiAicG9zdGVyIiwKICAgICAgImZpbGUiOiAiYXJ0L3Bvc3Rlci1idWcucG5nIiwKICAgICAgInciOiAxMiwKICAgICAgImgiOiAxNiwKICAgICAgInRpbGVzIjogMSwKICAgICAgInRpdGxlIjogIlNlbSBidWdzIiwKICAgICAgInZhcmlhbnQiOiAiYnVnIgogICAgfSwKICAgIHsKICAgICAgImlkIjogInBvc3Rlci1zaGlwLWl0IiwKICAgICAgImtpbmQiOiAicG9zdGVyIiwKICAgICAgImZpbGUiOiAiYXJ0L3Bvc3Rlci1zaGlwLWl0LnBuZyIsCiAgICAgICJ3IjogMTIsCiAgICAgICJoIjogMTYsCiAgICAgICJ0aWxlcyI6IDEsCiAgICAgICJ0aXRsZSI6ICJTaGlwIGl0ISIsCiAgICAgICJ2YXJpYW50IjogInNoaXBfaXQiCiAgICB9CiAgXSwKICAib2ciOiAib2ctaW1hZ2UucG5nIgp9Cg==", "art/painting-mountains.png": "iVBORw0KGgoAAAANSUhEUgAAABoAAAAQCAYAAAAI0W+oAAABdUlEQVR42mP8e6XhPwMUvLl0jYHaQERPi4GBgYGBBZsgOiDWASJ6WnC16GYxvlwW9p8aLiYEGLmKl/y/b7yJgYGBgcH5XA1cYq9RCwM1HcDIVbzk/6fuKAaDsis4NRFjqXDECoa3KyLw+wjGUWLUQ5G80KUDd8C9/5fg8he6dFDU4XIksn4WfK5EN+De/0tQcdKDklGn5NJ/dIOQfQdzFcwXfKXLGHCFAC5w7Xw0JNUhJwJkCz91R2HVyFe6DKecbqkuVnEW5MiGWSjP0A6VjsJqiDyaHJurPoO6wT8UtTcvMDGoG/xjuHmBCXc+UjzrB2cjLGVgeMhQCReDGUB0HDE56/7nMChn+HGhk4HDoBwuIeYryZAhI4NTY9P003D2jwudcDayL3BaxMDAwCBXOwFFQYaMDMOMJ09wWvhq83Os4jDznidrMkjOvY4/eTMwMOC1hIGBgaEu0xSrmkcXkKPhOgMTutdJBYQcAjMbIzDxxQslAABO+JIuWMskDwAAAABJRU5ErkJggg==", "art/painting-beach.png": "iVBORw0KGgoAAAANSUhEUgAAABoAAAAQCAYAAAAI0W+oAAABNElEQVR42q2Vv07DQAzGP18jlZbMiIWBl0BCYqwY+zgd+ggtFQ+CujB27XsAEgvqA6BWJWeG5C6+S+5PEJ7s5M4/+7OcULE6M/7NKPCcoYamYtaxtwAYzBVAbGMAKPqO335fAQDeJl91ndTWI/0+O87H1r94PbX3fOkMpM/ep4dsiA9Tf4XEJexa4Sdb7G5s/PJwcoqQsJSEUZCBrB4/O4BYt75Mx/nYmY8jnYRQMzUS0/uYHLKr9yEW5HfCzTow1XISt886m8NuQcENW86uGQDWm623cJyxiP658HkFAJv1FkoDSreX6tj4HN54LZNTsCj62d85WS7L56QMWtHwj5MEMUYgVElopQjUdCqhfpwNGtKpAUiY9DvSpYApqFZkZyq7o/P+Pus3YcB9RTBGKMun6P1flvGJxa/84ZQAAAAASUVORK5CYII=", "art/painting-city-night.png": "iVBORw0KGgoAAAANSUhEUgAAABoAAAAQCAYAAAAI0W+oAAABuklEQVR42r2Tu0vDUBjFf7mJBSl1kSJdu/ig4ORzUBAV/wAHdXDQwQcOgqCLb110Fh+Lg4h/hBRFEXzURSg+Fh0dOhYXtTcOadqbJrcWBw+Em9zvfufknHwxiI3blEMuB6ZZuP986QEg1HThreckkKdSzrv3QkvuXgpcEYDPx+6SJtshVUWU1QoUMk1FxNAQB5x1V1Uwv2/8Gp1CoDpyEao/8+2J3kUAZOYG0udeRyI8RHWii4/baVjbLnatzGv1Q/VnNM1uFZ6f01lkcpPvsX6H/PAUmQAekljkJJiC7/0JIjtPhNt2ycYbEa8pZLwFsZZSiOe0os/prOPi5DKwLkTNCOG2XSrCwLC2pLqwDk+9xebe4tRZkwdaEhlv8eUPFGJLt3YA0JCIBPcvLHvHOzvTWFZMjk75RCqFVelB8ZqCq3tEiSstcUl8HqHIzlORNGDVIXF3Xf4lt9YxqB20+QcYMhm3SwdBdkrv/7p4oiWoWl0q9mVuIBZFjk4hjvaczfeMfxj+iq/VDbh7Qy4sO1G5Im50R3sY9B3b4q1O7+g9Uz7/aLvPkQf5foO+4+BvFIv+KqKFK6b0/wD3Iqhmbt1lmAAAAABJRU5ErkJggg==", "art/painting-abstract.png": "iVBORw0KGgoAAAANSUhEUgAAABoAAAAQCAYAAAAI0W+oAAAA20lEQVR42mP8/PbqfwY0wJKuw0AM+DPrCoSBYgITAwPDPwy1LAyUgP/YBP9hVcrEQCdAko/4DgahCmjUMLy70UI9i/gPBTP8//8faxAJadQwcNfYMjAwMDA8jnHHaQZRQYdpCbJWhBGyS3aSbxH/oWA8spjacVk2sInhz8wrDIzQ1Ptfow5D/lLXehS+5Sdr8hMDLFYYGRmxxhEjI2k+IiroGNFMxWfJCf4S8ix6e72RaFfjsoTofPT2eiODsGY9PKn//4/qK3wWkFwyIPvs6eb1JKc6uiVvulkEAJ8OPVztcmbHAAAAAElFTkSuQmCC", "art/painting-cat.png": "iVBORw0KGgoAAAANSUhEUgAAABoAAAAQCAYAAAAI0W+oAAABtElEQVR42qWUv24TQRCHv907Ih0orUtkVylQeIWkdYGAewKaAxokSynTEEWOaECUSa6In8AFILmFKj0RBdVZLumRJduzm+K8G/v+5RA/6XR7s7vzzczunDq7/mo1CieDResQHWiWIvyrHgQBq+UCAIXCYtEoQud8UzrQ+VvnARhjWwGKsmu/BpuDNKoEAwhUDhz8Ogfg05PkLhitGNxcAvB5/3Vp72aVAMKioUnxaUyaRQAkvTnE/a2AmhTWRbCp6XjSbH/6FrHGA6t8lUKpKiFAN+6TZhFJb07Sm5NmEd11Rm2k76stQJpFtVmlWbSVTWtQUe9+nvtx0pvTGc3ojGYc//jt4YObS8Sa/wNNxxOGR4cl+59XjwEYHh16oFhTC6wEuUZ99v453bjPdDyhG/fpjGZ+TWc025p7cfISY2z+VJxzbUZLEX82TYfuYO7aty6dwSJGECN5rzRcbzfnIG5f69KJCLLOaPMaP/zyxq9x42K2Ii1AxdruXlwBcPzxu7cND/YYHuz5bze3e3FVCwFQH66/2SLo72JBWPGTbKOVCI92dko9Gd7XrG5zHXhVW6ptX7dRdcGyLkumdgAAAABJRU5ErkJggg==", "art/painting-wave.png": "iVBORw0KGgoAAAANSUhEUgAAABoAAAAQCAYAAAAI0W+oAAACTUlEQVR42p2Uz0sUYRjHP+/OYjRRm+sllQ5piodIcQ+yXqQ9JEQRipcS/wERIUGEmIWFXVlkYYMQb56C9TJkJ0EDYQ+5eBDcKIjox0E0OlSMxkbi7Nthdl53drZw+8LLMM/zvM93vs+PET8/v5BUILGphkDz2ap9jSBQe7n6aOEuguEeguEenm7+9vhqIaVESul7d4/wKKoEas2dDnFAI2sWPQlnxno5+fbe8QvhSf4vBKsD6xEYaRPsY1LGw7oqzgpx9GlVVpMAXOh/7AsMDQ4xG2tXqmTZxv7xsbEeac2diICmTml3gdLuAmhNvrK5ePL8DUIIEOWzEQVbulWp3HKpvtjHSs1esoOT7++Yjp1Dj8R5NHrjdCJFuT6haxdlxPxyTmY29wE8pdH75hxVQOvkGnupDpCAoHFICBhpk9lYO9Z2QdldRXrfHHokjrWV/38SQGvuchQZqRyhwSHlsLbyTn/sY6VKj8Q5fDnegIoAiDLBcA+ybCN+WW+lHol7J2wgypelO767eiTO4caEtx8ygLgSRX595SMKtnTTOrmGtV1AiGt3K1vqTFhpJ+mJz5pFz7RlzSLTt85z6fYzAI5eLwFw8eYkAIcbE1yNf/DksLbyjqLaxPWQ2dxnNtaOkTYJDUSV/WBxmLapdQ4Wh5WtbWrdP4DzyznfersKXNKZsV7c8oYGoljbBc/zTH+Gy+MZReSOdz0lAEYqhypzZcf8I9akPshDJK6PSvfrXJR2kjxIrLKSGCFrFjHSJvfv9QOwkhihdniqF/tv+AN77vZyVhhklAAAAABJRU5ErkJggg==", "art/painting-sunflowers.png": "iVBORw0KGgoAAAANSUhEUgAAABoAAAAQCAYAAAAI0W+oAAABp0lEQVR42rWUzUoCURzFf3ecRa2SxKSURFrVA7QrCoReoMAXkInAVm1cRESLNi2iIJReQLFN+3bteoBaRRha9IlCYQv1thjveMcZzYjO6n7855zz/7gjJpaLkmEgAWEvH45SAExtFhgWIrJUlFL43XTIgbmFXQCuL3ccER0DBTsGTV8RQLShemyTJkuzLsGsFQZgP/9ix2o1kUbXoGMYMFWQElR7JQJwsXbjMVKpN8haYfbzL4zE1wFo3OcQ7S6Xzmf2HuhQznX3CrGxUdf+dqsGpIhmCvSadwnp0LOp1Bse0l5RW6T7bTRTcPrTlhJDCAx+iZmDoLNWvVPZ6xVQMIRwZ6RNL9FMgepxSnP+4RAn4pAsTXpK7Je5Pmem36Ei1YdAd3943fQ4j42NekoKP/RodnHXIb8rPwKQiHfvr5pvzJsh3545/fF7sIN6okb3/DPse7/yujdUb38chq9yjq9yjr/C+CtBW8rh/3Vqsxfc6Bt4/9ZiNTLhOjt7emY6FOj7zXbtxCuUbln8B04DeW9G6ZbF7XvLfpjj/Z2qmIEPezzgiAB8A3wEl2LlCHiMAAAAAElFTkSuQmCC", "art/painting-rio.png": "iVBORw0KGgoAAAANSUhEUgAAABoAAAAQCAYAAAAI0W+oAAABYklEQVR42mP8X6X/n4EOgImBTgDFor9v5FEkRW6/INtgdLNY0AVgfPH3JxkYGBgYPP+zM2x5K0GxZSg+Yv7HzMD8j5lBf/VruNjpOw8ZfIRfwOWY/zEzoOtB1otLnAVdIwMDA8MLl3t4XYrLMmT2X6a/KOIYiUFnLfZ48RR9ysDAwMDwNVKY4WukMGpcvjvGIPLxGFwNNsewfH2vj+4faABjWvb1vT4DwzQom0GGQf7/dAYGZgYIRnPQmlteKHoZvwQ3wPOR+b6dEKscEUH34/lPDAs5JNmhzkaOeQhlqo5IAMiW4cxHP57/xLBE4YYmwhKY4X+x+x4jH8kzTYdzHmhcZ3igcR2rLxRuaBKVpE/feQhnh6htQ8TRS0Fzhh/hTxiKFimQZzhaojVVQc2X/MLWkDhiCNxFUlmnfaCepEx7I7QJYhFz2m6iLLKwwPTdiRPXGTRW1+E0HCXVEWvRkCm9ARLufnJwiUBJAAAAAElFTkSuQmCC", "art/painting-wide-forest-lake.png": "iVBORw0KGgoAAAANSUhEUgAAADoAAAAYCAYAAACr3+4VAAAD5klEQVR42uWXTWgTQRTH/7suqbEVFLXY2FqsUjVJJdBaQRA8CLUoKH6Ri9WD9CCUCGIVDyIeCioqRfAgBUEPFlFRqdSCFxE8iEK0MVGhkdrYD2uhYNvYanc8bHZ2Z3d2dmNVLD4I2cy8mfd+7715O5E+XltHkBNJkmAWQkhe4046hBCq62VtPnq8dbpNs33F/IPnEM9pqwNmXaegmPf2Au20j9UP3ph1DoAGyoMSRVmk52W9VUe0xqsNN3+UktI+/A8iG+iS9mHCwRmzhUyaPaD+2Cq+4xLRPiJAifwbJJyAm7kUeXkAkGTI5SV08FTfY2bBmbIts7NeJRn+I5WYvDsGSQltIABwvPWep7UzgVbjn9hyiiz7o5wFu4o0O6GAAWqGPX/1MI41XskLOvauCwDQurrOE+SvwpqrLdU7apvv6DoJANhe14IHFw9SUAVEBSStJ52N7WQye+vuHuzbddu2mW5gb682F1gy3wYsgnYDMQfQeox4cOlkFBXBdgoJgELSKlZCGwiIinD9FAAg2VcBADjWeAUPO7cCALbVP0KqdxQdXSexva7F0UkzsFUuZcPc8dOLUp4CoAOafUgno4yO7jutojf9ltIlKgAgXD9FlYNlaWaDYFmafutSEWzPC1hVv9HnhUWFQiCnkgSA8sWfUegfY+YTnT7I4VLDViJDK1W7GeUgDWUWjhct49mI6HhWO/hV1W3oH/4qBB8c+Y7BkVFhBrtfHqIw2t7FdK73SzGAYsY/4Ts0FNCugLpoGWWVEo/mQg65b6Y7lU5GMZ4tQlV1G52zgrtJOhlFoR8WML4YQc9w3q1G/1FEUIlOHwBVaIQX1UL/GNLJKDZuukPHLq/dwd2jKXWfPj97ujvv5qUfKXOZqokMA6smMlAgyaDlS1TXja0H3gwjkqbUfbRO1ji+TkSQnkqUqFDf9EMOBSCHSw1YmlERXE5J32DG980cpP5OjRW8sAUs/r6fu3ZiqMn5IqJD5VgKlAyyVhQluJ65rPojxnM2bh+zysqSKduYW5ZbJ2sYSCdxgraCa0dMkxWbffjw5IetQm2gZrDsK5kuEME6BaBnwIf9+27OqApEsFo6p/H8xgkDSpLtx1CS2WYk6lo8qYpc4BoGgMiaMsxzc/I3yMTwEYD4GJ/9EaMauV2XyWYcTGSq1p0D5DlCo5HKgPC3pwy+7XO00x0/CgBYusBneceyx4f6LjqjAFDbcA7PrzfbGlPtgfOeQK3l5gQc95pxdRrdr5u5kIOjU9oRc2mqXFAnqW1wz+pvL01Bt+0Z8HGzxwNVvP6BBVH/KuTEUBPGs0XMDalnwOf5D7e1If0Ekfnj1gHO7r8AAAAASUVORK5CYII=", "art/painting-wide-color-fields.png": "iVBORw0KGgoAAAANSUhEUgAAADoAAAAYCAYAAACr3+4VAAACyElEQVR42sVYO28UMRD+xrt31VWgiD4VR3URSYcIBSgNUv4BRIIeGsR/gCughyb5BUgUoKQgiC6HFImIUKUGKSCEtoAj66HYx9mOH/u6Y6TT2ree9Xzjz54ZEz+5ywAAQYBk/WmKzIaW74p+LoP+WtZgBsii/x9FQLW1AGmCkKyDL/qGJNMDJNMD92zM2W9eUnxbfebtGKSAKYCYKyYCq2O8T9KPVv1BdFU3ZBFgAUQMxOeo6aNsSFRgJiMAJHLiVR/0VudI3aagTLpbgNWV5O8EyXSyIKC2PemjqwlKtDyEGqhHFZRi6+rUoSkrxuUgDy+91YaOvm0E9hWwvNObGX6PkIJLACk4CEz9T9Ut/VeGl9bcyEEuvbG+Hn3dsK7W8nbP+cnjDw8zI9P2JtLg/k4nQAUD+9cfeccMN/f0yVPG5fXnXp0v+w/muEcbSAgkABy/ulkL5PwPozkKpVwLZFfOiH1UBABJer+tXHx8CABYWrCDY8E6GEk6KNFxEqPOV1X6L8fu+G07wi1xSvgASbIbJVuEStlVru8Mg2QNxnExsWqAucKyw0LkdLySh4tRpf13snUGyFB+6080ZJXDSPDsp/ZNWX//NGj0ldu7WkysHTpcWVeFhYhPxyutT9GZ7OLz61tOkHXlZOssTNcK2ZwQBPr984htxnNENQAaTIqojJnDzb1gZsMRYXjtmUFXdufTNVkgJYP+fP/ExWRdpFq1TtMXY5123DyxL/ep+Syoe2H7XQV+0qyQzds/7txoDrAIF2oxUDiZGgImP9i4VtWutCs5yOG0xBYqqF2ppunR+e8ET90IzWOLVZc5u0ngwI1Cx7sojkDWek+t6dS6UB3vqhdNkLY5Bv3V/LmmM0a5PfRetNlOXEc8lQV1IxBSwuyako1ClrILJtNgta06JwWXbS8jiOyOyO0or09z+ZUDF65wQ25H/AOpn0BSpu0kIQAAAABJRU5ErkJggg==", "art/painting-wide-aurora.png": "iVBORw0KGgoAAAANSUhEUgAAADoAAAAYCAYAAACr3+4VAAAEHUlEQVR42tWWQUhcRxjHf/N2a7pu9mAhm3Q1pYXSQnW32KTZJscKmksTcgw0ECSHEpTEU2gotAVpjxoMwUIpgZbklBZzqsLSY9kqEaN7aE8h6jYKxYOu9qBvcjDzOm/ezPNtbKD9QNw3833f/H/f983bFS1t3ZJnJoQHgJS+WiL9xwnibLDnMgAjixedPmYOFWOaymH677w9g5Q+QniBNvVZCI+rHd+xl4kDrxyTerDNpPRjgZXw0aV+zFzq2RWvQ48u9QOQ+v14BNRlSSAD0CSOSWF1wWa83mEfHw/PGmue5QJNCgkgrpXmpClMSp+hL4cY/eJGYlBbd12gtpE24/Su6qAqz9DR27E6xiq3Qs+ey3Hk85FwRYQXO0LmAa5qq5EWwmP7rd+cwtSejx+Jd0GOVW4Ff3T+FAXVRaVbCgjhBYLSLYXwXrGOKNafG1ZKn5cOdAR5XbnU+anik9Co2nIGcKZpsOJaaS64ozdXP6NZk/OF0LN595LkHMgPB0J18J35I6SKTxjIDyceUROQ2rndJpkH6pZEpBKmi20m3gUh5wukinXnvjpLjbbnuIVKX3ovEc10ebDnsr3CCcCU6FTQyTCkq3Ne7VwAq6B8KRFC7BbMryK8MiJ75CP5cuYwAJdyg1YBNlgVY4u7UbkJQPZE+JvLld/0N/1cxZPv/IgQgkz2DH9vrYR0bW5MIIRASomX+oC0Lvjb9bFIsku5QQbyw9a9pJA24ebb1AWpd9vMu+kovILU99LTC+O83/VJ0y+htuwsU9UqJ7tKXMzdDSCv9AzsOuTcnfPwEndbFcX039yYACCTPROJaT14lq3G/Wdvb/HPHZ1eGKe3XGat0Z0IcnphPPR8e/08AFd67nLP72eqWuWbk7WYLu844ZSvrds229yYoPXg2aD4a43uAFLZVuM+4s2u3Z+AU9UqgLO7bdlZ52HrjS0Afl14CEBvuRysAWxzyjny9/x+6r8cj4zyXpCqowC1R38Gn7veKNjfvgrUZmuN7mBEe8vl2C7rPmqkTdvmVFAwVVi9KLaC6NdE+QMsrzwO9tsPvxbyX155HLqje4LGwSTxBazAuuWymUhhctlMbN7O118N3T8pZQjWCpo5dCgEalZnP6YXRh9lE9Rl9dVFCvmj1j3VUfUVonTbIAFEaz4vpZShIPVfrbkOe9FWX10EiJyvYJRGszkqzgpqVsFcU0n1kfn54dILBe0rtiOEiJxzutQR8VU+tr3Yn4D6/NvW9aSmkAdztaah3nu305pDShnJZ2vM6VIHdyoz3KnMcP7DY5H9tNmhvmI7k/PLiQU+mKs9F5gtz37sq+8neVT/i+sX+qx3NG12Q4f8NwD2YzbBrvVPP+7l6x+m3LlGJ2cl/0G7fqEvNKoKQl9vxjz+B+bqbDP2FKyaGXVHch3hAAAAAElFTkSuQmCC", "art/poster-coffee.png": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAAQCAYAAAAiYZ4HAAAAsElEQVR42mPUNnL9z0ACYGFgYGDYF3MPuyzjPwaG/0xwrtMSJQYmFEl0gKQYxQa4JOM/BrEChG2v+lUwbGLBZvqrCUpQFhOGHIoNYoV3GBgYGLDbgq5BrPAOQ6CWEIrk+mvvGMQK70BsRHESkgJsQKzgHtyZTITCHeEfBuI0oAOCGuABgM0PeJ3EiGYDultxibEgxzKKgv9McFORncSELZGhxP5/JriBDAwMDIykJm8A2jI8vjzvvr8AAAAASUVORK5CYII=", "art/poster-rocket.png": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAAQCAYAAAAiYZ4HAAAA10lEQVR42mPUNnL9z0ACYGFgYGB48uIrUYplJLgZmGAcRkZGuMTLu3sZXt7diyIGA3AN////hyuGgRd39mB3EjJ4pa2HJiKK3QYGBgaGyxyvGRgYGBhMzbsYTM27sPqDiZBHYYbA/apt5PofOZTQFej+EEUJJRQ/dL98yiD25QaKhm4eDYZScWncToJ5+pW2Hpzd/fIppgaY4I6HvxgW8Wgw7Hj4C8U5OP3wdsNzFAXCAZLYY5pYgKEB2UQUp0CTCQt6Ovr//z+DSKAUkkIsSUNanItoJwEAso9Bdemnc80AAAAASUVORK5CYII=", "art/poster-code.png": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAAQCAYAAAAiYZ4HAAAA50lEQVR42pWSvw7BQBzHP20abWJQnfsGTQxWhhpYhJk+hgfxAiZLmQkSUwesEp5AIjEhBoOlZ/AnbdGcu+Hufvf7/vn97hSnWBX8MTSAwrkklbzJL1GjAYGI7V/zQ0Eg6Iy8VPZu0wdAcYpVcTzsYpej+Th2btYauLrH1lo+FABylsl+UQegwjAGsC0TrhFLru6xZopdnsh1Kbj55LImwFvlzZ4gUZMMdnnCpRdy6YVfFbVvsk5/9tOSKvvCwc3/D+Aa7UiXjDbBaZCOMBI1uJnW06QCoZCoQVUe66/kZ1wD2OZX0t/7Dh6FP1kjAHY7AAAAAElFTkSuQmCC", "art/poster-cat.png": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAAQCAYAAAAiYZ4HAAAAsklEQVR42pWSOQ7CMBBFny039EgUESegsEKZFuUicC5Ogmhpkc8QpUCiT4OSFGEsx3YK/8rzlxlv6nRuJwpgANz9CWrDMeE1e70sAS+ggTEf+kPLomqrvNlrUQDA1GlAOAmZUDzsj5i6I+ZCrCZ8vl0yQbj+0a8DOXNO0+E+B9cwuMaLYS0eTSEMwO+tMfXIzr58Z8DX4rG36JYEoTE7QTrk3kL4JLBliFFw6OVDqdLvPQMz9jqxhaKuWAAAAABJRU5ErkJggg==", "art/poster-bug.png": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAAQCAYAAAAiYZ4HAAABE0lEQVR42pWSu0rEQBSGv1kCO2yRvSCkEdMIW6QQk0LExiatxfa2PoJPYOVr+CI2Ir6DzUKaYWHZJGxI5bEwmUyIKfZ0Z/7vXOeoKE6FE8wD+Hx/sw9KqR4g0uW7vX9k4ootXPsBtR/8m8Bz4Raa5QaAqvF1YWwlz4VnueFHweoiBGCfG6r5XzVdmC7AhQHCpysAVmFI1nRQ+wFcp90MLZy8PNh+s0PN+ULb7EB/6LOmFYCP1y+SzXqw1skYfPd8g75cDDQbsN9ue7BrrdZbazUPyIBks0a3g34frGYtilMpSyM7hewUciyMTJdapkstx6J7L0sjUZyKraALQ+0HtpKbefBxreOub+yevDFhzNSp5/0L/Vp2aRpVRfsAAAAASUVORK5CYII=", "art/poster-ship-it.png": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAAQCAYAAAAiYZ4HAAAA/0lEQVR42pWSsU4CQRCGvxlIDDGxJRor2zOBXEdhpWfiC1jyAtaEUFBZ8QDa2VhCbTSRjsJKQ+EjaLQkVlY7FOvuwXERmGQz8+/O7uw//0iSZsYWVgU4HNxvlPzRbfsLwZyBSu7NKSaOx2YfgEaoEBLAJ6k6H4tDBS6m13/nbRRATHELTMzluOir4aVgr6NZjNPLvRUeugjehj+lZAOHWEEFHhp9aPrN1vsEgBnwcnxCyIkVxucH7NTv/m1p5JikmVVE7FdZu5I0MwU4ffpeK9quSc7h+eqL2tF0A607y10q2tltvXyWspv9qIX4X0YczsSUzx7Ls1QUsQzLtuM9B3snYrknGMGDAAAAAElFTkSuQmCC", "art/framed/painting-mountains.png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAWCAYAAAChWZ5EAAACB0lEQVR42sWWP0gbURzHP4lFMjmoFQJHxYJERePDYkFKhyKOuhoiuLjY7okEYqGt0EYpdNPFVTJJaWfnDsX0OKKSwYgSEEq7OGXKdYjv5f68M9c2mO9093u/+30/v9+7O17EGH1h00U9APj2LtEV87nNShMA4PzkvHsTkHq+/Exd/7JOO242mJwA4OObzzwde+gH0CV7FRZsMDmhcoNq+QD+t2uv0V3GWoCR4yUunnwBYL6UV/Gjma1QAEENhJ4AwECqiMiWXbG/hRlIFfldTIWarA+gL3MAwONI0hU3tycR2TLzpTxV21Lr5vakK09ky1AqA3nt8wCrrAYDBMk7lapt3cY7+Bk6u5YGzrjs4mYnraYl87wTC2rg9McK9PfoAY5mttR+y4JV26JqW8rUOfKbnTR9mQO15tVUZsoXSwjgqid4C+RLJkGGeX+7ktYWH/as9S5MkxANV27FjJIQDSpmtBnop/07IEFGjnNq3C0YuCSnAHsXpn2GXuliPoD4/hkxsUHdLBATGyo+tBhn3TCAQ02JQ97ufld3dbPgGHcj0LjtBOpmgUebn9T9Xq3GumGwV6v5cocW4wD8/HrtAr8EYqIFdb02Tnz/LByATjpzp16/nNXmXJmtPy24AaK6zv9V7QB1te/coOa+3+N54IPjBwFAbplXnXDx1g0CkIeE+1Sk24fSP/mFsiTzAFGBAAAAAElFTkSuQmCC", "art/framed/painting-beach.png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAWCAYAAAChWZ5EAAABmElEQVR42sWWv07DMBDGv3MrQaEzQqJFAgkmVImdBQZG3oUBVqSOlIqXYENdQEKCgYGVN2CASh0KmSnQoTmG1I7t2E5bKnLTnRPl+/n+OKba1j6jQCsDQO/lsRDx+vZBAgAAUb9bXAakrV3V5vhp8qwz7hu32GnsAgDEXySY49BTAAzmEUCs4mAGXLbxtQIAeK28J/uilFn3XfZztKD8xZthfgl84gCw+b1qPHtbiiYWl7ELQkwibpstHi7FFE1oi5w+1FV8vTc04HSIvFLMBCDFzw97GeFQduya+1IfLIEuTuPGJa2Bu5Vo4h2GxJ0A9s55PM5MSVmI07XM5LMJOnUJpHir3QHh2Zrp9ICh4OzbR5Dj7X4gA+1WByIGRJyKJrH02SsuYl2UAqehJwPNs3U0P49VvFy9NOvlgIgFKdFYzHEKGCUMAjB60mkMlcJk46kBbPPBlIxSscpKLMiA8AGV/f+ykcqE9PNgXCC6n5sBRslbDh+cDiPXqtWLTK/4mtcAeBqczOUmcDf4mK0J5SXhP42KvpT+Ar83pTF9t9b4AAAAAElFTkSuQmCC", "art/framed/painting-city-night.png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAWCAYAAAChWZ5EAAACOklEQVR42sWWz2sTQRTHP5mNAQkRFFOMeDFg+oMFT21RsCVSxT9BPfTgRauCgmAp1Nqql3oO1V568FDwT7CUgo1obUQQYhpBWk8pkoOH0EvsTj1sNtndzGwSCubB8mZ25r3vd9737bChM+fSB3TRwgAjlwa7Ar6ezdkEAH7t/OxeBRz7WDwevNuywDDq4+qPywBEBt571y0J1JR17XfGqRPfOdlzGgDRkqJlNR6XOeAA1cKoL+jABnODu72uAkozDFdgSAOo2Ot4NxEFCdGWUE4SQ4BlEelda9pSLYwqTyjSU4j0FJhpryRBFRDR6xw1R9j7fBfmXjYWnj7Wcoz0rjHwcL4+L+YryNUX7N+6agMtrSBN4NtqAAFLgiHYf32bWGaL6PAClWQ/YjuHTA4i5nIuwEdaMsV8BQC5vN6yuB4JxLGbRIcX2vt+rt3QLrlPHV5a8S6eH2vdA+E7i9rkMtm4tMTYdH3slD8/dAGAPjOmjp+caa8JK/f7A0nI8Ykm8ENfRO2a2M7Bhy8IXxW0IH4Z2iEQy2w1wBReZ+bmp2Dy889IkVETkH8W2cva+juerD6ZrPnCuw5LeEpTAfn2a1MDyovS+6VOL2vzHpl90ogrb0AijhyfQLx5Zb/cLSMnZ+h70NPhTdiB/Z19Dps79W6vgzuAvnnYr08go90yxr0ren3jtSoM2blIqHMENqE8+9sXACTiTYHKnihvNIMl4kpgJYFUKaPOXDqEJqUO7gHnJ+F/WqjbP6X/APlFv3E4s4tAAAAAAElFTkSuQmCC", "art/framed/painting-abstract.png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAWCAYAAAChWZ5EAAABGklEQVR42mOUUXX8zzCAgIWBgYHBztZ0QCw/dPg0xAEMDAwMD+7fGbgQgIGda5oxFaTrEGXQn1lXIAyUCGViYGD4h6HW2C6ZQURMCtMBFAGsKekfQW1MDAMMyA4BvoNBqAIaNQzvbrTQ3gH8h4IZ/v//jzWohTRqGLhrbBkYGBgYHse4E2UeyVGAaTmyMQjjZJfspL4D+A8Fk2QUMY4Y/Inwz8wrDIzQXPZfow5D/lLXehS+5Sdr6idCWKwzMjJiTQOMjOSHAMlRwIhmGz7LT/CXUNcBb683Eq2WGMvJKgfeXm9kENash2fJ//9RQ4FYiykqCZFD4unm9RTlggHPhoOrHDC2SybDCDP80t3JxDsA1kigJ2Ac6EYpAC/zR5bP3HyVAAAAAElFTkSuQmCC", "art/framed/painting-cat.png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAWCAYAAAChWZ5EAAAB+klEQVR42sWWMW/TQBSAP5+DkCt1yZAJUCJUOiCY2VLYMqBS/wFYXFiQLDp2AaFILCDGth6apSORypKtgj/QgYoBFkdh6x+IRHp3DM4diZ24DhbNkyzf3Xt377v3fM/n3Fh7qFmiVAB+Hj9aivM7mycJAMCv05PlRcDIp9uvEDi2r9AIUUG4gpGUCy9+zXW5GP0GwMFBoxE4VI9Cmg9uZgGM00kRrkjeIgFTShdynBY9Xje9fgZA4GSMAFwnAQm/7wHw4W7wd45wCM8OAPh4b5tZaxZKQZ5hWvy3PlHsARA0huC3pkD/6RsoAtLv9vLH779AamVBLttULu6sVADU/RZR7BE0hgSNIVHsUR9HYFER+cosfRR7c6MQxd7U7ksDpOXltz3bDhpDap0Btc6A3a8/LFR4doDU6v8A9Ls92jsbmfHzZ7cAaO9sWBCpVSGQSwFMAXr8epO636Lf7VH3W9Q6A2tT6wymdE/ebKGUTh50+QiMpLS5z/vYDIQ5nqVToNBIJZFKJmc95xganXFu5pVOgZQSOY7A5HFb+fzc2ph2OjpSlgBI5251/xCA3fdf7Fi7uU67uW77Rre6f1jI+dxKOCkXUlIZ/1wMxDsL9XRmf3LudddN/qpzKmJlkSKUBpqlW7S0TwFUj8KMQfUqLyTmknCV4iz7UvoHL0LNZpXwwE4AAAAASUVORK5CYII=", "art/framed/painting-wave.png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAWCAYAAAChWZ5EAAACzUlEQVR42sWW30tTYRjHP+/OMFrgcInhtJtisYtg4hBzoUOhrgozdlNSf4CI0EAkOIPBBiaCURdddhPpzaw7QYWBBYqIoBERZSiVXUi/ZjRQPDtdHM/ZOWeb+QPcAy/nfd/nPe/zfb/Pj/cV9b52lTKKE6Cttaksxl+9XtAAAKytrpSPAV2mnt41+iqKZaFAKpgz6w4ijdceUF3jBcBRapFAsjTJ48Pp8eP0+Hmc3rLo7KKqKqqqFozt8wUM2DcBkKrOG3MjqWWj/yidJRoJsPPjgwZYiILN7eP/usD8g25YOCTDsDyYAmWbpHy7JOAjxYDdOICrYaBAP5xep7+jjpHUMtFIADWnoPz6dCgAjmLGhUMyWnZpiOzSEEgVlnXRSMDoP3zxFiEEiNzRADhPXzAo12k3/K5sA+AOhfmSOMfOz/f0dZzAFYxx7+bFfIaIXHEg+rxNZwEwklqmtmeC4fS6MY5GArgaBvJMaCkCuy7fnO5G+f1xb4Nmo+oeDMiDKfo76sjMzxVEvqthAFcwRmZ2RttEHK7wSFW+0kGYvB9BTo7iDoUNFjKzM5r/lW2yiwkNTDDG5nT3/q2qDhA5nB4/ak4pzUA0EgCpgsz8nNHcoTDZxUSefiC7mKDyynNtY5shceZy8XTz+KntmeBUU7w0A0bK7Ua8fmKzO/Tozy4mGEkt09d+ksqrzwD48+YJgAYO2Jy6w9mYfsesWIK5KADzKe2Vzzyn1wF5MMVwugV3c4tG59YG3t5J/i6YT2m95NyhMCyNFwdQzKB+Yl0XjQSQB1PI8+BubtHctPv19mr/eHsn9x0eot7Xrra1NrG2usI7b4uh6O+oK1kBAeTkaN5dNlrzIa+5UmdIl5qlcaprvHz++svKgPk08nw+4G7FXzIW7zJStfN6I503LjEW78IVjFmrpKlgHZiB7xvfju0hUpQB/ZFwnCLK/Sj9ByLSKzI3chuBAAAAAElFTkSuQmCC", "art/framed/painting-sunflowers.png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAWCAYAAAChWZ5EAAACCElEQVR42sWWv0tbURTHP/fFoU6KVqUmGkRaiDpLFyuW7F0q5B8IT1ri5CKhFEmLSwdRkITQPRCX7sXBsUPHCgUpSbWikqJQiIPJ6/B6X+7LzUtuqpgznXvfOef7PT/uu1dEHi859FD6AL5/et4T8Ccv9l0CAD+/7veuAlIWPq6YeTmAcNVf2wkAxlcLxqDvZtMsPp0AwFI/iKBpEA11ZmGDmWcbPnCpq+tA4u0q4IgA/Dqc7LjB48WYRwRg3R4BYDN3oSXhWE2gogMB6SyJyLUEB/i8fKgFOb6qsm6PsJm74EHUbWO1nEXU/UmJThVoZygzVbOVEhno962P1i6BBOFUQUvKiIAqavbHV1UNrJmMC97wDacKXv/rjoMl/Eys2xyh6Q+Dni5nQ1ZLrZgHJoRZBZRTRjhV4GQnoWT6xwOcikK8+EhrVatKCbpoQbNxvBjzDZ+a7da3G80/MtCvtQb+cwZi/858vBjjR+kUgKlo4/uXmwrzfcMtZ8Lr/20IHB689XR5xHxZK+AmgNpcdGN8XcpyXcre6V1g3WWwutP9zR7Ygszgq0CnvbMaL8dGm/bOeT/8OtDnzeWuOYFkzaZcac987+xc2ytXaoH2SWzyoZwZgXwoR7Jmc/TbDTg9FAoMLG3a/rCGQi3BNQKZubSyesikQQ8nDXudId2ZgHwk3KeIXj9K/wITb6ZKMZrSlgAAAABJRU5ErkJggg==", "art/framed/painting-rio.png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAWCAYAAAChWZ5EAAAB0UlEQVR42sVWS0sCURT+dATbRYySgaCLUqPAlVm0iKCNUTsl/A+tgpYV1MJF28h9yyxoEUIQtQjMcC3js7QHWlZDC0EXoy3m0bx0BgnnwDDnnnvP/b7zmDvX5Jxa7sJAsQDA/YHXEPCFnTxLAADK2bJxGeBlifkYCuhh0YQ5nx0AYIbB0pMA8+mSjG3F+sAg8r16lkC+kB+P0w8AgFDXissvxz+QeNbOANEhQHQI+BMNwZYpVbFG1oU5okMofMS+WnZFBuSTAFBfeewbWS8SYp0xM6p7azbh7Ll63UP2NwBAM0qiGSWlvfKdgu0nJazpFZhqBpq0Xx4/V0ClY5P2A8ecDidc3ThAgH1kRM8Kq7Kwn9QJiCV4c6UAb9XauKsV2MYE+x6ZsHJhijsOyOSrCHjZxgt7kkoSekogBm7V2hKbOzf9B84TZdSzpfsccJnjgl7xUaj4KAUwD65HMqWqoIc9Se0eeB8LorXxiq0T92Cgsl4LTErPlVFyEQAQoy/UCVgam8ARN3CcSpyzKufPzO1eXz4v1zJDRCMDhN2kK7Xz81w21hOCLZ2m4EvsKtbmIvv6/4Z6JZ2mVO1aYAN/BUO7D8TobWMJ8JeEYYrJ6EvpL+tmlNfBpugcAAAAAElFTkSuQmCC", "art/framed/painting-wide-forest-lake.png": "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAeCAYAAACc7RhZAAAEf0lEQVR42uWZX2gcVRTGfzMuG6cbQcFGsyYGtprW3UQWWgIKPghCGxSUqmV9qO2D+FCIqYixFOqDSsEGlVDwofRJHwxFi5XWNOBLERSiwmI2G1vIhpA1TWwLC026dmtmfJid/3f+mVIse2DZmXvv3Hu+73zn3jO7Utfjz2q0sCUAfv5wa0uCf+rIRZ0AgLmZudZVgGGZzIp5LUmSY6CmabHa/cZommaOjfJsnHGi54w17euPfy8zsG2zlwD7IJGjIjBux+xj/ciyzx2FDL953H6I2tx9gQrwAxsUlaBxUZ53jwlzOMoacfxxENDZtdgimd9jXsliqiT9E9Ymeu4uMw8ByvBjYkCSpn+CgEv/k5JCEAgHLr8UkB9NgyQj93Sabe8v/uB44IPu5+5O1UsyysFebp5e9SegbXe7ELTd7H0bIUMt/umUYv6RO8KDcqSXj5j3PwUAPh5+iffGvgVg9MQB3n3z81hkDF+cBGBs685I4I22uCTY159dqHn6z04eBuCFnUeB/RGOQU0FSfaQAHDq9Cvs2f21ZwJj4VcX9L705vs8RASREQbQTqxbmSLQlXKBTHbcBA/w3af7I9YBkgyaSt9gw4y+YSlllXMTu3h+8DyzCzXOTh5uMuu0pSvXPUS4yfiMvtCIBrUZwO0+VMoFBwmQsdIrl0adWYpWCAGUJpImCQDnJnaZ16MnDpDtrgAZx6KZ7HgkIgDeVkqo6t/m/QPtKaFzogjbpQ0w/dsbpJRVj/+yjWO1VDWVrc4sQTYoBQSTlBczTdDWvffaImOtrm+m/dtPmkQY5iZk+dotlq/VAlPBDlKfu8PsW7jaAXQ4/As893Np0EI2QYC+wQZlV2FYOn8vci58EcPZSrnAWr2d/u0nPcqIapVygZSCC7DYrGBUBbWBtb+FpoAIbGkiCaiBi4uikFJWqZQLPP3MN2bb8SdeFM4xNHvGvP7px5djb5rZ7opOgg2oWqo6SFBLVciFbILudAhnXDc7yCAbmj3D2M0dvsdeEPhIUtdU1Jkl5Fwaua/LIiFUAUGgbZuInEtvvAZvgjdqguG2Xz1EFi+Jd+4bK0P+BZYBtomlLVGlHud12FEZJiz51JtlvpL3yTGfyPmpwpD7GDsc4O2W77WItpOx6aHjkQjpefAv5i/IIDUJEQQ4kIB60QBsKaBeVK02l81dTnrbTr3Gls4Gc5eT7N3zlaffD7yIDD9FmISo6yAdMoHOX/jHq2xXGiSiv2GJd1HD+vOfCPS4rju/rZtNPs7fTrtx5SBoSYfPSl4PZLQ9wP3ikLeUYGey/8ljIN8TGrGg+yhW/GPRd53p4jsAPHx/0lUjNDwq5r/uAfUiDLx+jKniiKN96stDDOwbjQbCFXk/IoTyFoFX15n+fUQIfrnWcJ5kEVQcmgJTX4yIJ1LXA1Xgl6/FDaSCsdltMX+usKK9XGs0o63GmjMR2wuD4ZAUuK25vTLEWr3dURGKNtyg49tPFQ4CjuZuRffql7fu5M85wFrz2zCBr7n4MzsIMP4saCWTWv3P0X8B35oa7jFIUToAAAAASUVORK5CYII=", "art/framed/painting-wide-color-fields.png": "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAeCAYAAACc7RhZAAADQ0lEQVR42uVZvU8UQRT/vd3lqrORIIZoQ6LhjCEQoSOiBkNjcv8BIfEPwMbY2nsF9NKgvdFYcIEYMHRgcpUQTIiJhR8hFmYrZOdZ7O7tzNzs98Fh7iWXnb2dmZ3fb96b97F07cZ9Rh+LAwDfDj/0JfjrNx/4BADAr+9f+1cDQrny+rnfsAgQrF51ERz1le8DqVam/QYzQHShQL8bG8Ht8Ul/+coTGUMIXgcnWCUlvNfEPdmFe7Ibvwpm/3dWEs4tXw3vUzQAJIEMAeo7bKXspvbc9T4Zx1ftO+oCz4MEADYnEaCreJLqp4kMWNcgAK7YSxxeHZg6F3OwMoHIPBt1moQotsPu3z24J3s9JsBk80lqr4O1Sh5+BYbbOQc5qbuZR91ZWnQAvjXcVLpO/JxPsVtg9NVABOgxwQO3gXngVMDyf/LYfATo4LOQoYMfWu/o0hpuYuLHvHF3R9cGOv4bXG0BAPZ3nviv8Mofmju7X8wEXDqc645dMbB992ns89bVJmr1TZU7j4G1ldgxtZllHGwv9eAMKCBJ4EPZfzungB+bXelJUGShh0Ie5wJ/FiQ5WVUaAASp92Vl8Jlv30MXJRewWAUpSAVrdTlok9+XVSqrjRwei83+dLyebAImoILMixUlXL3oVo4U66EoNZhwTAuSF6ZrhOhiYnfcmAzc2kQm+z5aPAVEWvyfjFmUOQQtjn7yvS6zH1+kznXr0Ybi03O7uLgok0qcAceNydKneiQb+Pz+YSz4vHK0eJqu9hmiV0sjzskCim3KAVwFyja1fX6tvpkYyR1sL4FtQm1mWVN7zra1adGqRRBaH8cEhG1SFlom/CSPox1PmKfystHGeLQgHeCiQFYZ8qVfBXfYvELA5bWtDIgoKjAE7d8L9woT1HZrch4REkXxniw1J4kjoUggZKyySO1MxMWQ6ZrUmMqlxMo4Sp4nlxewUdwHGscy+5UfTqkAnWHVzNEXacq35Zxazsvl/nH5ug7e9I5qZSq4TqsaJlWTEwusJg8Qo/IizQRsEDxCVM5mrcBAfmFRByK3ZdI8cLudqEFEZoKCdbTL7IH8CQix4jwAZXORCgFvaiP4X2QL9e6bQPixoJ+E+v3j6D9mVl+mG7A0NAAAAABJRU5ErkJggg==", "art/framed/painting-wide-aurora.png": "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAeCAYAAACc7RhZAAAEwUlEQVR42uVZXWhcRRT+5mabutnuQ2nd6GZTtNAEmmwlarJWaKEGEp9afCxYKKVQKQlJHy2CPgR9DJISIkgIKO1TLelTG1wEC4ZNltb8LIIUEvOzmo2Sh2Q3gtk7PqTnZmbuzL13U0VhDwzMnTnnzPm+OWfu3F2WOHGOo4olBABnz7RXJfjvH03vEgAAiwtPqzcDSLI/Ljh9xiwAAOf2nvLPHZ7OejuvAwAGly+bF1R8kI0q5EPVLzdnwbkNxiwnNuozZqE/MeoL+l75Go7G4gAAS5wg0OoYtXJzFjtNU0bHQ+lhAMCNxjHJF9kDcNkPpYedpltXJzQu6gQFr4plAmwSxqxAJPQnRo1E7DRNOQ0AbNiSLdnrCDPJfsC7CNA54dxG/yd9FTkVd9QvsJ2mKdhNWReBXlkpxsa57buGmGWqfysIoMGPB11BlZuzgYjwIkFMX3Gn1SDVTBHtbzSO+YJGy73gJSAGG6qNSyURqo3Lc8k8WDK/bxI4t3HgYMLxa/JF69ckf5Pi1PnU7TIAIwmWqZ4oqFBt3GnisxSggQi1tsn2wMGE00ioT2+FofSwtDb5MgHXZY4XcO1rUJSe2ID0fKvwkW/KEwk9sQFXMEHs1TWdTJmLoyaZN87TWkSSZahsZ5OOBCBAF1wQEOL7XbsjAQATmBoA5bmXXOBNO23l3nNIILA252CM7RJpZ8CslExK4sQ5fvZMOxYXnmLmp7/wQrgeAHA12qsNTEcC2ejsPk/fAgBEOuRPDpN/VV/VM5HKT34DxhjCkfP4c3tNiqu0NQ7GGDjnsGreQsORdRyNxbG0siFngAjky80h1yJXo73oiQ1o54KC1wFST3cTePVsEf2WDDgIvDy3ri+B6fkRtLd+UPFl4nDkCSYyGZxuPYXL0TsO+L7Onl2FqHmnLViBs4PIUvVLW+MAgHDkvMum7tAFbBfvP3ubMP9DcHp+BF2pFDaKbYHAT8+PSM9jmxcBAH2dd3DXvoKJTAZfnM55ZEXZCJp0ddmhk9LWOOoOXXA2ZaPY5oAn2S7eB+qO68+AwvovAICJTAYAjNlwOPLEGMRmcRsAMDk/CwDoSqWcMQDYwdvG0rlrX0H+uzddJeEHnjIAAHKLvzr91lfjWv3Ei8f1ZwBJVyr1DOje2EaxzUl1mtdJNBKWdKg09lLuB4cIIvLaZMsuASkg2vHISJRYbmKcpS137AAQjzVidW1Jm/qeGRBE/IhQdQFIRHiRJ+pFI2FPvy2vvCzVN+ccDfXHHB0dAWIGSDeG1bUlqXlJUPCibjQS9gREuqQn6uYLy1pdAsu5uzz8dt91CNK7kvrkQByLxxr39dkpEuZHgknyhWXX+mKM6u431B/TEud7FSbWRPaony8sS2zT+IPZlX/1p6vuZAMYYxj9dlIaf/dUwhUfxUJz+/oW0BGipplIEC2mEvF4Jlcx2Ndfa9H64Jy7/HHhqivGcjudxe10FhffecOzDEImsA9mV9CdbMDDudXAgT+eye0LsM7P88inXz3EYv4P3LzUXdkZoO6eCP6fAPY8YgKiG//w/S589vVE5b8K/9cgTXLzUrcWnDiukmKaC/SDyP9Z/FK6Yn/iRej3Qh7VItqrMP1ZUE3Cqv3P0b8BQLQ6oqDLgQAAAAAASUVORK5CYII=", "brand/logo-mark.png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAYAAABzenr0AAACFUlEQVR4nGNgoDJgtpP/n37U9j+znfx/bHyaAphlkh0mcEvR+eh6WKjtiE2HvzMELHrCUMRrzlASLsTAcIGBgWnRSYYNDDJY1cMdwOeQQJUg+rqDgYGB4Qmcf/XYK6i4DgM3EwMDgwPDfwYGBoZPBxYwMjAwMDDCLD+yvochZ94WariBgYGBgUF7bgXCEckdKHJTknwYbAJLGD4dWMDICLN8IIBNYAkkCvpP32S4e/k2XS1X1lVlYGBgYGCkVtyTCxhhDEFJw/91SX50sbRp3iaG98/PMzIwoGXD6HgfhvsPnjOUztiLVWN3hjMDAwMDRfKKCpIMTfM2wcVwlgMH+lhR+A5Fv6kqDwNMuBxAL4AzBP5cO40mYkBVeYIOcJmDXQO15PE6IFBTAK8mSuWRASMDAwNDjaPY/4Iyb6I1UQNM6NrK0LL/FSMLssBAgNGCCGcueJTSh8KXm1NEkvzQL4heb/2MwpcjUZ7igsj4eT0uKaLkh2dBpNRJXNvlXjkjQTVkFkReDMFVqXhVrG2bTVKhhlIQ3Tw4C285cOHdR6IMNRDixyoOKwfU7dOwF0TIAFs+3l0VxPB8YTvD58o1DPrS7AwXn/5kYGBggLN520MYJOMrGUpn7CW6HCCrZwSzcHZdFwMDAwNDalMZg740O8M9Mswiq0EC8zkyuPj0JwMvkfqJcgCx+ZhS/SiJkCIbSQSwRAgAoBP6AS4UPEkAAAAASUVORK5CYII=", "brand/logo-mark@4x.png": "iVBORw0KGgoAAAANSUhEUgAAAIAAAACACAYAAADDPmHLAAAD0klEQVR4nO3cX2hPYRzH8W1I0vzZhVo0/5KETC7c+DNxhZahXLiYZpMLF1oztjS1ZIzGhQvZLHZNtKyUZP6ktAuTppYMa1pNEUsSmgsXPOdn5+n0/J7fzvl93q+7r/PnOfh4zrPjnG9uDpxM2jB/7N+6sqnI2N5WN2jUvx6+y03n8a7y0nkyJA8BEEcAxKX1fqLAds/ufPTNqEvXTzPq4D3d9XjXNQEzgDgCII4AiJs80ReQdMF79o6OIaOuzl9r1DV7CswT9JplXsdTo76VM8/p+myYAcQRAHEEQJx1DTCjZN+YbR9lX+8Ef2Xof7uNq+/JiOX8K4x6evCfbElO6N/Pl+6roc8JmAHEEQBxBEBcyv0heM9/fPOcsf1Q+23Pl5Rdll85Fmn/vv2nnca7WLHdqNeV1Rh1cE3ADCCOAIgjAOJybfd8ZJfgmoAZQBwBEEcAxKX8X8D5nn6jfv3iVcYuBum3eOWS0O3MAOIIgDgCIC7lOQC0MAOIIwDiCIA463dlswtXG2uEhopSf1cDZ43tnUb9afgZ7wRifARAHAEQF/nbwL3l5jtnb94OG/WRS/fcrsji7MHNodvVxl+4oNCog2sAG2YAcQRAHAEQ570/QHfLFKfjS6p/ML5HzADiCIA4AiCOAIgjAOIIgDgCIM77c4CfL3scz1DM+B4xA4gjAOIIgDjva4AtbcW+h2B8B8wA4giAOAIgLu1rgLJls9J9Ssb3iBlAHAEQRwDEpXw3dnzTHONbwMO12zJ3NUi7C81dRn3y/gi9gvEXARBHAMRZnwME7yHILswA4giAOAIgjh5BWYYeQYiEAIgjAOLoEZTw8ekRBCcEQBwBEOf9u4DByhan44vaqhM9Pj2CEGsEQBwBEEcAxBEAcQRAHAEQ5/05wIeuUafjixI+Pj2CEGsEQBwBEOd9DbBm+ITvIWI9Pj2CEGsEQBwBEEePoCwbPypmAHEEQBwBEJe4HkGLzozZd5pAA0etn1tmFD2CEIoAiCMA4hLYI2irUe2qr5qg6/jjxqlWo47fn1c4ZgBxBEAcARAXuUdQ/4PLxvZM9wfo/fjZ6/ldFRfM9Hp+W3+ApRsPGDU9ghCKAIgjAOK8vxOY7u/j79bvNOrha01GPVp33ahXzZ1q1M/ffw8dz7Z/ftNuoy4srzPq4BqI/gCINQIgjgCI874GyDTbPby1oTn0+KrG2tDzDThcWxwxA4gjAOIIgDjva4BMfx9v+zk/qpTnABGPpz8AYo0AiCMA4ryvAeL+fbxvcf/9MwOIIwDiCIC4yO8EIll4JxChCIA4AiDuNzak/RJhqCQWAAAAAElFTkSuQmCC", "brand/signage.png": "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAQCAYAAACm53kpAAABW0lEQVR4nGNkYGBgkFF1/M8wAsGT2/sZWWRUHf/LqeoPtFsGCvxnYWBgYPjw5tlAO2TAANNAO2CgAVEBcGr3FLx8Quph4MIEfpziuOTIAaSYNShSgHTYuQGzm4VSA5Bj28w1h6A4cuwYFHxkYGBgYBCVUsYwF5u6CxP44Wx0PrkpCCUA5s/tZUhMLsaqEFeyVtT2hLPvX90O9ywuceTYfrrKCMVDyIBYdQwMEM+jq8cF0P2IEgBbth/AqRHdQ9jYyABbrOITRwf4PEGJueh+RAmAtWs2k2TBqd1TcAYMJYCUGCUVoPuRojJAUdsTp6eRs4yitic8AJHzqnTYOQZRKWW4GCxPS4edw+ppUsWJAYwyqo7/+QRF8Sp6/ewuSgpA5r9+dhdFraiUMlYxXGrRxUlRS4w4PvDp/WviAmC4gk/vXw+OdsBAAhYGBgaGH19xVzHDHTAyMIzs7jAAo/CkGWDgGHgAAAAASUVORK5CYII=", "brand/signage@4x.png": "iVBORw0KGgoAAAANSUhEUgAAAQAAAABACAYAAAD1Xam+AAACfElEQVR4nO3dPWsUURgG0F1JrVik0SCIbGWhWNinsPAP2IutheDvECzSir1opZDCItYWYmMVxCamieAHCHaxk8yNYbjMzM7sPud0d5i9+7JhHu7HzGQ+K2wtto/LY8B6ONjfm59snxurEGB8AgCCCQAItlHO+a8sboxVCzC8xvVuBADBBAAEEwAQbKM88OPb4Rh1ACMwAoBgAgCCCQAIJgAgmACAYAIAggkACHbqPoCxvX+702jfvvNwqZ/vaujv//j0QqN989HPQfsv9f1962bov0/fjAAgmACAYAIAgk1uDYBxXb73odH++uLWSJWwDEYAEEwAQDABAMHi1wDKffs2Xe9L6Lv/tn37Utu+9Oala1X9tem7vq777LWfr61/1RgBQDABAMEEAASrXgN4/uxJo33/wePeivmf2jl0ravX71ad/+XTbqPdNmcfuv9y375Nua8/9L3qU6+vVM75u9Y/tK7XoxEABBMAEEwAQLDqNYA3u+8GKONsXefQfZ9fq+999WX339WqP0sw9d+36/VoBADBBAAEEwAQrHoN4NXL10PUcaa+52DlfQVDrzGkWbV99FXX9Xo0AoBgAgCCCQAIFvc+gHLOP/ScvvZZhrK+tjWQ2ufVyzl52X9bf23P0w/9TsFV739qjAAgmACAYAIAgs23FtvHJw+cv7g5Vi2z2Ww2Ozr83GjX3gdQ+/ny/Fpl/333V5pa/6tW79T6X7Zf348abSMACCYAIJgAgGCTWwMAhmMNAPhHAEAwAQDBBAAEEwAQTABAMAEAwU69D+DP7+X+LzZgPEYAEEwAQDABAMHm5YHy2QBgfRzs7zWueSMACCYAIJgAgGB/ASHcrDeJZPMSAAAAAElFTkSuQmCC", "brand/logo-detailed.png": "iVBORw0KGgoAAAANSUhEUgAAAE4AAABWCAYAAABhL6DrAAAFS0lEQVR42u2cYWgbZRjH/7cG5gZudNpIKiYdZRSswZRawZLWOhaUzlWyfVRYN1o/isVSbHEtFsmgVOaHfbLptoJ+cy1mLiiTbs1KC5ulk1ChyFxTcMFUW1RkDrvFD+ld37vcXe4ud0lzef6f8r7v9X/Jj+d93+e9pwmHMlRFqyfNth/FEpxeD0c5gGHhVLR60l1n3YjcfICOlj0AgHA/0nrhOewIreusGwCy4AAACy1y8wFS0TVDEcfZNeKc7VUCnPXEXnS+k0a4fxVsfyq6BqNTlrP7VHW2VwEA1hN7sbmUyEyzeg82lxLCmJHos+1U5UFIo4qFxo9FkInCcLRMpyoPLdy/Cn49A4BLX3DCVGWjUDpl+b/VEnWcXacoH3W8UtE1UbR1tOwRAX0US3AVrR7Nu6tt1zg+2vgo46GxYndYrZGWc43b19aZLlVw/zy+LkC7/Fw16pudmYEXKgEAS3MpAMCJLahocSt+5r9uXOI0R9y+ts707NRoSUddw1uNePf3h3jqmcd4qbpW9pof7t/FH7/twudP78bi1wuy1/iDvbLwODVo/mAvKmtcJQ2w/dZFvN5wUHbsu8V7iL58SnZsYyUJloMUniMXNI+3rrQXvFvYnqpb4qcqANXP5w/2YnZqFLNTo/AHkWbh7bI1NBlQ7DQFgER8GYn4cta4x1uHyhoX/MFeAMDs1KhoDeTsDg0A6sc/lO3np6naZ03El2WnLcdCO9bzKUjKunLuAwGeQ26ApDGPO3d7GXfjPxMNDar1HhJvDiR9InAGxZXy0aqo4PgXla6G9ODpDmFg+ELEtJuwvmZ7W+0vZbKRXORUD/kA4H2lNe8bx+djlnlb7a/knRMcAHzfdUfUPhL2ZfUp9R8J+0zxttrfiLcI3Nsn38S9lWSmwYS74/km5qr/JG35/s2fbguvm19tFF+q29tq/9zeB2tcoiWAdlVKRwgcgSNwJAJH4IosTf8CweY1gE/SztVvhrfV/vq9c4KTy6CVsupc2XY+3lb76/V2GD2rWXkOLAV/h9YnDlY+zSg1f1VwWec/E2WldyH8ga3ncR+95qSHmTr0yfUUJ0Tc+31HiYgGfTZyVTxVN35ZJypG1riJr+aJht41DsiuOZCypVhzED0BJolET4CtzuPeODlk2k2+nfjYMm+r/aXemo5cVB7Mozy44BITb0wOZfUp9Tcmh0zxNupfsPKgkqqOPrndCEvaCv1rV/+Gad55+OdbHlQSbQ4GReAIHIEjcASOROAsP3KxYnMmt0IO5daRW+n1zse/aOVBuexcKWPPlcnn423En8qDO9CfyoNmg6PyoLqoPGhAVB40ICoPUgJc5ASY6qoGNgeA6qpaRHVVA5LWVYtSHgyEJk39UNcGjhfsvWs6cllRYguEJuE71mYquEBoMguerb49GAhN4sRAt+nTqNZ7CIHQWBa8opcHzSyxFfpHE6wqDxb8FwvvXLlhrzyuELo2cBxzMwsYvhDBxcNP4NT0v4prUXw+prpOxedjgsfg6Y6CHOyLGnFZEbj+p+y6xy/M3cN9mL6/Ihq7HBpDRbkdubRERk/T9m8dSaH1NNXBd2C/bk/bRFx9sxOYXoXvwH4crq4R+l98drfoOrUx3qPsD/lSMFrHyhocC+bHXx9qHtvRu6qV3x6UAzM2OCK0xwZHcH78jGFotvz2oFRqYIxAs2V5UA1M93Af3gtk7n1+/IwhaLYsD+aKJq3rXTHfe1HKg/nsrFqirxDvfUemI3JwtEIryq765cQ3Bbsx+xOz7C4qldoY7zE3s2D5+52bEbdFNQeQcoqvOfwPAoME5cX3caMAAAAASUVORK5CYII=" };
 
@@ -26204,6 +26517,8 @@
   var options = { ...DEFAULT_WORLD_OPTIONS };
   var camera = new Camera();
   var sim = new Sim(art_exports, () => options, null);
+  var soundBoard = new SoundBoard();
+  var soundCues = new SoundCues(sim, camera);
   var renderer = new Renderer(canvas2, art_exports, sim, camera);
   var overlay = new Overlay(renderer.ctx, sim, renderer, camera);
   var selectedAgent = null;
@@ -26213,6 +26528,14 @@
   var lastTs = 0;
   var raf = 0;
   var destroyed = false;
+  var receivedFirstSnapshot = false;
+  var soundEnabled = false;
+  var lastAgentStatuses = /* @__PURE__ */ new Map();
+  function unlockAudio() {
+    if (soundEnabled) void soundBoard.unlock();
+  }
+  window.addEventListener("pointerdown", unlockAudio, { passive: true });
+  window.addEventListener("keydown", unlockAudio);
   function loadImage(file) {
     return new Promise((resolve) => {
       const image = new Image();
@@ -26355,8 +26678,23 @@
     renderer.frame(now, dt, options, { agent: selectedAgent, room: null, hover: hoveredAgent });
     overlay.draw(now, options, { agent: selectedAgent, room: null, hover: hoveredAgent });
     renderer.pruneHeads();
+    soundCues.update(now, (cue) => soundBoard.play(cue.kind, cue));
   }
   window.cockpitHabblaudWorld = {
+    getAppearance(seed, look, parts = {}) {
+      const appearance = fitToOptions({ ...appearanceFromSeed2(seed, { look }), ...parts });
+      const options2 = editorOptions(appearance);
+      const selectable = Object.fromEntries(PART_KEYS.map((key) => [
+        key,
+        options2[key].filter((value) => !editorConflict(appearance, key, value))
+      ]));
+      const sprite2 = characterSprite({ appearance, dir: "down", pose: "stand", frame: 0 });
+      return {
+        parts: Object.fromEntries(PART_KEYS.map((key) => [key, appearance[key]])),
+        options: selectable,
+        preview: sprite2.canvas.toDataURL("image/png")
+      };
+    },
     update(snapshot) {
       const now = Date.now();
       if (snapshot?.options && typeof snapshot.options === "object") {
@@ -26369,6 +26707,35 @@
           ...next.daylight === "auto" || next.daylight === "day" || next.daylight === "night" ? { daylight: next.daylight, dayNight: next.daylight !== "day" } : {},
           ...next.theme === "auto" || next.theme === "none" || next.theme === "christmas" || next.theme === "halloween" ? { theme: next.theme } : {}
         };
+        soundEnabled = next.sound === true;
+        const rawSounds = next.sounds && typeof next.sounds === "object" ? next.sounds : {};
+        const volume = typeof rawSounds.volume === "number" && Number.isFinite(rawSounds.volume) ? Math.max(0, Math.min(1, rawSounds.volume)) : DEFAULT_SOUND_SETTINGS.volume;
+        const soundSettings = {
+          volume,
+          alerts: typeof rawSounds.alerts === "boolean" ? rawSounds.alerts : DEFAULT_SOUND_SETTINGS.alerts,
+          keys: typeof rawSounds.keys === "boolean" ? rawSounds.keys : DEFAULT_SOUND_SETTINGS.keys,
+          elevator: typeof rawSounds.elevator === "boolean" ? rawSounds.elevator : DEFAULT_SOUND_SETTINGS.elevator,
+          social: typeof rawSounds.social === "boolean" ? rawSounds.social : DEFAULT_SOUND_SETTINGS.social
+        };
+        soundBoard.configure(soundEnabled, soundSettings);
+      }
+      if (!receivedFirstSnapshot) {
+        sim.applySnapshot({ ...snapshot, agents: [] }, now);
+        receivedFirstSnapshot = true;
+        for (const agent of Array.isArray(snapshot?.agents) ? snapshot.agents : []) {
+          const id = String(agent?.id ?? "");
+          if (id) lastAgentStatuses.set(id, String(agent?.status ?? ""));
+        }
+      } else {
+        for (const agent of Array.isArray(snapshot?.agents) ? snapshot.agents : []) {
+          const id = String(agent?.id ?? "");
+          const status = String(agent?.status ?? "");
+          const previous = lastAgentStatuses.get(id);
+          if (previous !== void 0 && previous !== "waiting" && status === "waiting") {
+            soundBoard.play("chime");
+          }
+          if (id) lastAgentStatuses.set(id, status);
+        }
       }
       sim.applySnapshot(snapshot, now);
       renderer.sync(seasonalThemeFor(options.theme, /* @__PURE__ */ new Date()));
@@ -26384,6 +26751,8 @@
     destroy() {
       destroyed = true;
       cancelAnimationFrame(raf);
+      window.removeEventListener("pointerdown", unlockAudio);
+      window.removeEventListener("keydown", unlockAudio);
       detachInput();
       window.removeEventListener("resize", resize);
     }

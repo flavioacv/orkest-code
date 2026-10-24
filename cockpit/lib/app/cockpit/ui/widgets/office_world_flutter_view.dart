@@ -18,12 +18,14 @@ class OfficeWorldFlutterView extends StatefulWidget {
     required this.sessions,
     required this.labels,
     required this.onOpenSession,
+    required this.onRenameSession,
   });
 
   final List<Project> projects;
   final List<PaneItem> sessions;
   final OfficeWorldLabels labels;
   final ValueChanged<TerminalSession> onOpenSession;
+  final void Function(TerminalSession session, String name) onRenameSession;
 
   @override
   State<OfficeWorldFlutterView> createState() => _OfficeWorldViewState();
@@ -384,6 +386,10 @@ class _OfficeWorldViewState extends State<OfficeWorldFlutterView> {
                                   project: project,
                                   onOpenTerminal: () =>
                                       widget.onOpenSession(selectedSession),
+                                  onRename: (name) => widget.onRenameSession(
+                                    selectedSession,
+                                    name,
+                                  ),
                                 ),
                               );
                             }
@@ -1258,7 +1264,7 @@ class _WorldPainter extends CustomPainter {
         TerminalStatus.waiting => labels.waiting,
         TerminalStatus.idle => labels.idle,
       };
-      final sessionTitle = actor.session.title.trim();
+      final sessionTitle = actor.session.displayTitle.trim();
       final title = sessionTitle.isEmpty ? status : '$sessionTitle · $status';
       _badge(
         canvas,
