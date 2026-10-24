@@ -14,6 +14,7 @@ import 'package:cockpit/app/core/domain/entities/app_settings.dart';
 import 'package:cockpit/app/core/ui/themes/themes.dart';
 import 'package:cockpit/i18n/strings.g.dart';
 import 'package:flutter/services.dart';
+import 'package:flutter/scheduler.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
@@ -58,6 +59,7 @@ class _HabblaudWorldWebViewState extends State<HabblaudWorldWebView> {
   String _agentQuery = '';
   final TextEditingController _agentSearch = TextEditingController();
   final Map<String, Future<_OfficePortrait?>> _portraitCache = {};
+  final Map<String, String> _portraitSignatures = {};
   final Map<String, TerminalStatus> _lastStatuses = {};
   final Map<String, int> _statusSince = {};
 
@@ -221,8 +223,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
               .length,
         },
         'seed': seed,
-        if (officeSettings.officeCharacterParts[session.projectId] != null)
-          'parts': officeSettings.officeCharacterParts[session.projectId],
+        'parts': _appearanceFor(session),
       });
 
       final sessionSubagents = session.officeSubagents;
@@ -373,8 +374,20 @@ canvas{display:block;image-rendering:pixelated;outline:none}
   }
 
   Future<void> _pushSnapshot() async {
+    if (!mounted) return;
+    if (SchedulerBinding.instance.schedulerPhase ==
+        SchedulerPhase.persistentCallbacks) {
+      WidgetsBinding.instance.addPostFrameCallback(
+        (_) => unawaited(_pushSnapshot()),
+      );
+      return;
+    }
     final web = _web;
     if (!_loaded || web == null) return;
+    context.read<SettingsController>().migrateOfficeCharacterParts({
+      for (final session in _officeSessions)
+        session.projectId: _legacyAppearanceOwner(session),
+    });
     // Refresh the rendered PTY screen before computing the signature. A
     // harness may have started before Office was opened, so its current
     // activity cannot depend only on receiving a new output chunk.
@@ -551,6 +564,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
       project: project,
       officeName: agentIdentity?.name,
       portraitBytes: portrait?.body,
+      loadPortrait: () async => (await _portraitFor(session, project))?.body,
       onOpenTerminal: () => widget.onOpenSession(session),
       onFollowAgent: (follow) {
         if (web != null) {
@@ -576,13 +590,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
         _portraitCache.remove(session.id);
         widget.onRenameSession(session, name);
       },
-      initialAppearance: Map<String, String>.from(
-        context
-                .read<SettingsController>()
-                .settings
-                .officeCharacterParts[project.id] ??
-            const <String, String>{},
-      ),
+      initialAppearance: Map<String, String>.from(_appearanceFor(session)),
       loadAppearance: (parts) async {
         final draft = Map<String, String>.from(parts);
         final seed =
@@ -598,15 +606,15 @@ canvas{display:block;image-rendering:pixelated;outline:none}
         return decoded.cast<String, dynamic>();
       },
       onSaveAppearance: (parts) {
-        for (final candidate in widget.sessions.whereType<TerminalSession>()) {
-          if (candidate.projectId == project.id) {
-            _portraitCache.remove(candidate.id);
-          }
-        }
-        context.read<SettingsController>().setOfficeCharacterParts(
-          project.id,
-          parts,
+        _portraitCache.remove(session.id);
+        context.read<SettingsController>().setOfficeAgentCharacterParts(
+          projectId: project.id,
+          sessionId: session.id,
+          legacyOwnerSessionId: _legacyAppearanceOwner(session),
+          parts: parts,
         );
+        if (mounted) setState(() {});
+        unawaited(_pushSnapshot());
       },
     );
     if (!mounted) return;
@@ -732,11 +740,36 @@ canvas{display:block;image-rendering:pixelated;outline:none}
     return session.displayTitle;
   }
 
+  String _legacyAppearanceOwner(TerminalSession session) {
+    final candidates =
+        _officeSessions
+            .where((candidate) => candidate.projectId == session.projectId)
+            .toList()
+          ..sort((a, b) {
+            final byDate = a.createdAt.compareTo(b.createdAt);
+            return byDate != 0 ? byDate : a.id.compareTo(b.id);
+          });
+    return candidates.isEmpty ? session.id : candidates.first.id;
+  }
+
+  Map<String, String> _appearanceFor(TerminalSession session) =>
+      context.read<SettingsController>().settings.officeCharacterPartsForAgent(
+        projectId: session.projectId,
+        sessionId: session.id,
+        legacyOwnerSessionId: _legacyAppearanceOwner(session),
+      );
+
   Future<_OfficePortrait?> _portraitFor(
     TerminalSession session,
     Project project,
   ) {
     if (!_loaded) return Future.value(null);
+    final parts = Map<String, String>.from(_appearanceFor(session));
+    final cacheKey = jsonEncode([session.id, _agentName(session), parts]);
+    if (_portraitSignatures[session.id] != cacheKey) {
+      _portraitSignatures[session.id] = cacheKey;
+      _portraitCache.remove(session.id);
+    }
     return _portraitCache.putIfAbsent(session.id, () async {
       final web = _web;
       if (web == null) return null;
@@ -744,13 +777,6 @@ canvas{display:block;image-rendering:pixelated;outline:none}
       final look = officeAgentLookForName(
         name,
         _stableSeed('${session.projectId}:${session.id}').isEven ? 'f' : 'm',
-      );
-      final parts = Map<String, String>.from(
-        context
-                .read<SettingsController>()
-                .settings
-                .officeCharacterParts[project.id] ??
-            const {},
       );
       final result = await web.evaluateJavascript(
         source:

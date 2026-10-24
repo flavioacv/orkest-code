@@ -21,6 +21,7 @@ Future<void> showOfficeAgentProfile(
   required ValueChanged<String> onRename,
   String? officeName,
   Uint8List? portraitBytes,
+  Future<Uint8List?> Function()? loadPortrait,
   OfficeAppearanceLoader? loadAppearance,
   Map<String, String> initialAppearance = const <String, String>{},
   ValueChanged<Map<String, String>>? onSaveAppearance,
@@ -36,6 +37,7 @@ Future<void> showOfficeAgentProfile(
     onRename: onRename,
     officeName: officeName,
     portraitBytes: portraitBytes,
+    loadPortrait: loadPortrait,
     loadAppearance: loadAppearance,
     initialAppearance: initialAppearance,
     onSaveAppearance: onSaveAppearance,
@@ -52,6 +54,7 @@ class _OfficeAgentProfileDialog extends StatefulWidget {
     required this.onRename,
     this.officeName,
     this.portraitBytes,
+    this.loadPortrait,
     this.loadAppearance,
     this.initialAppearance = const <String, String>{},
     this.onSaveAppearance,
@@ -65,6 +68,7 @@ class _OfficeAgentProfileDialog extends StatefulWidget {
   final ValueChanged<String> onRename;
   final String? officeName;
   final Uint8List? portraitBytes;
+  final Future<Uint8List?> Function()? loadPortrait;
   final OfficeAppearanceLoader? loadAppearance;
   final Map<String, String> initialAppearance;
   final ValueChanged<Map<String, String>>? onSaveAppearance;
@@ -77,6 +81,11 @@ class _OfficeAgentProfileDialog extends StatefulWidget {
 class _OfficeAgentProfileDialogState extends State<_OfficeAgentProfileDialog> {
   Timer? _clock;
   bool _following = false;
+  late Uint8List? _portraitBytes = widget.portraitBytes;
+  late Map<String, String> _appearanceParts = Map<String, String>.from(
+    widget.initialAppearance,
+  );
+  int _portraitGeneration = 0;
 
   @override
   void initState() {
@@ -126,19 +135,40 @@ class _OfficeAgentProfileDialogState extends State<_OfficeAgentProfileDialog> {
     );
     controller.dispose();
     final trimmed = name?.trim();
-    if (trimmed != null && trimmed.isNotEmpty) widget.onRename(trimmed);
+    if (trimmed != null && trimmed.isNotEmpty) {
+      widget.onRename(trimmed);
+      await _refreshPortrait();
+    }
+  }
+
+  Future<void> _refreshPortrait() async {
+    final load = widget.loadPortrait;
+    if (load == null) return;
+    final generation = ++_portraitGeneration;
+    final portrait = await load();
+    if (!mounted || generation != _portraitGeneration || portrait == null) {
+      return;
+    }
+    setState(() => _portraitBytes = portrait);
   }
 
   Future<void> _editAppearance() async {
     final load = widget.loadAppearance;
     final save = widget.onSaveAppearance;
     if (load == null || save == null) return;
+    Map<String, String>? savedParts;
     await showOfficeCharacterEditor(
       context,
       load: load,
-      initialParts: widget.initialAppearance,
-      onSave: save,
+      initialParts: _appearanceParts,
+      onSave: (parts) {
+        save(parts);
+        savedParts = Map<String, String>.from(parts);
+      },
     );
+    if (!mounted || savedParts == null) return;
+    setState(() => _appearanceParts = savedParts!);
+    await _refreshPortrait();
   }
 
   @override
@@ -189,7 +219,7 @@ class _OfficeAgentProfileDialogState extends State<_OfficeAgentProfileDialog> {
               Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  if (widget.portraitBytes != null) ...[
+                  if (_portraitBytes != null) ...[
                     Container(
                       width: 120,
                       height: 165,
@@ -201,9 +231,10 @@ class _OfficeAgentProfileDialogState extends State<_OfficeAgentProfileDialog> {
                       ),
                       clipBehavior: Clip.antiAlias,
                       child: Image.memory(
-                        widget.portraitBytes!,
+                        _portraitBytes!,
                         fit: BoxFit.cover,
-                        filterQuality: FilterQuality.none,scale: 0.2,
+                        filterQuality: FilterQuality.none,
+                        scale: 0.2,
                       ),
                     ),
                     const SizedBox(width: 12),

@@ -128,6 +128,7 @@ class _OfficeCharacterEditorDialogState
                             Uri.parse(preview).data!.contentAsBytes(),
                             gaplessPlayback: true,
                             filterQuality: FilterQuality.none,
+                            scale: 0.2,
                           ),
                         ),
                       const SizedBox(width: 14),

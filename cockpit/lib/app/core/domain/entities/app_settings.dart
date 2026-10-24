@@ -274,9 +274,40 @@ class AppSettings {
   final bool officeSoundElevator;
   final bool officeSoundSocial;
 
-  /// Partes de aparência personalizadas por projeto para os personagens do
-  /// Office (mesmo formato `parts` do Habblaud).
+  /// Aparência por agente, com chave `projectId:sessionId`. Chaves antigas
+  /// contendo apenas projectId são herdadas só pela sessão mais antiga da sala.
   final Map<String, Map<String, String>> officeCharacterParts;
+
+  Map<String, String> officeCharacterPartsForAgent({
+    required String projectId,
+    required String sessionId,
+    required String legacyOwnerSessionId,
+  }) =>
+      officeCharacterParts['$projectId:$sessionId'] ??
+      (sessionId == legacyOwnerSessionId
+          ? officeCharacterParts[projectId]
+          : null) ??
+      const <String, String>{};
+
+  AppSettings withOfficeCharacterPartsForAgent({
+    required String projectId,
+    required String sessionId,
+    required String legacyOwnerSessionId,
+    required Map<String, String> parts,
+  }) {
+    final all = Map<String, Map<String, String>>.from(officeCharacterParts);
+    final legacy = all.remove(projectId);
+    if (legacy != null) {
+      all.putIfAbsent('$projectId:$legacyOwnerSessionId', () => legacy);
+    }
+    final key = '$projectId:$sessionId';
+    if (parts.isEmpty) {
+      all.remove(key);
+    } else {
+      all[key] = Map<String, String>.unmodifiable(parts);
+    }
+    return copyWith(officeCharacterParts: all);
+  }
 
   /// Nome dinâmico atribuído a cada sessão Office, estável entre snapshots.
   final Map<String, String> officeAgentNames;

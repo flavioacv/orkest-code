@@ -104,20 +104,40 @@ class SettingsController extends ChangeNotifier {
     ),
   );
 
-  void setOfficeCharacterParts(String projectId, Map<String, String> parts) {
-    final all = Map<String, Map<String, String>>.from(
-      _settings.officeCharacterParts,
-    );
-    if (parts.isEmpty) {
-      all.remove(projectId);
-    } else {
-      all[projectId] = Map<String, String>.unmodifiable(parts);
-    }
-    _apply(_settings.copyWith(officeCharacterParts: all));
-  }
+  void setOfficeAgentCharacterParts({
+    required String projectId,
+    required String sessionId,
+    required String legacyOwnerSessionId,
+    required Map<String, String> parts,
+  }) => _apply(
+    _settings.withOfficeCharacterPartsForAgent(
+      projectId: projectId,
+      sessionId: sessionId,
+      legacyOwnerSessionId: legacyOwnerSessionId,
+      parts: parts,
+    ),
+  );
 
   void setOfficeAgentNames(Map<String, String> names) =>
       _apply(_settings.copyWith(officeAgentNames: names));
+
+  void migrateOfficeCharacterParts(Map<String, String> legacyOwners) {
+    var next = _settings;
+    for (final entry in legacyOwners.entries) {
+      if (!next.officeCharacterParts.containsKey(entry.key)) continue;
+      next = next.withOfficeCharacterPartsForAgent(
+        projectId: entry.key,
+        sessionId: entry.value,
+        legacyOwnerSessionId: entry.value,
+        parts: next.officeCharacterPartsForAgent(
+          projectId: entry.key,
+          sessionId: entry.value,
+          legacyOwnerSessionId: entry.value,
+        ),
+      );
+    }
+    if (!identical(next, _settings)) _apply(next);
+  }
 
   void setAutomationHarness(HarnessKind? id) {
     _apply(

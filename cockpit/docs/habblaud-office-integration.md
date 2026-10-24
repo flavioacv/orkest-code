@@ -32,6 +32,23 @@ os terminais continuam acessíveis pela topbar e pelo clique no personagem.
 
 ## 2. Decisão arquitetural
 
+### Aparência individual dos agentes (24/10/2026)
+
+As peças do personagem são persistidas em `office.characterParts` pela chave
+`projectId:sessionId`. Duas sessões na mesma sala têm aparência independente.
+A configuração antiga, que usava somente `projectId`, migra uma única vez para
+a sessão mais antiga presente na sala; os demais agentes usam a própria aparência
+gerada. Editar ou restaurar um agente não altera seus colegas.
+
+O cache de retratos considera o agente, nome e peças atuais. Depois de salvar
+uma edição, o perfil recarrega a imagem e guarda as peças salvas para a próxima
+abertura do editor, sem exigir que o usuário feche o perfil. A lista, o histórico
+e o snapshot do mapa consultam a mesma preferência individual.
+
+Regressões cobertas por `app_settings_office_appearance_test.dart` e
+`office_agent_profile_appearance_test.dart`: isolamento, persistência, migração,
+restauração individual e atualização do retrato com o perfil aberto.
+
 O Habblaud separa simulação, renderer, câmera e input. O Cockpit instancia esses
 módulos diretamente, sem iniciar o cliente de produto nem a conexão dele com
 store/rede. Assim, o Cockpit mantém autoridade sobre projetos, sessões e status,
