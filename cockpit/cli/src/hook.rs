@@ -70,7 +70,15 @@ fn try_run(harness: String) -> Option<()> {
     }
 
     let event = str_field(&decoded, "hook_event_name");
-    let status = status_for(&event, &decoded)?; // evento que não nos interessa
+    let is_subagent = matches!(event.as_str(), "SubagentStart" | "SubagentStop");
+    let status = if is_subagent {
+        if str_field(&decoded, "agent_id").trim().is_empty() {
+            return None;
+        }
+        "subagent"
+    } else {
+        status_for(&event, &decoded)? // evento que não nos interessa
+    };
 
     let mut payload = json!({
         "paneId": pane_id,
@@ -94,6 +102,36 @@ fn try_run(harness: String) -> Option<()> {
     let turn = str_field(&decoded, "turn_id");
     if !turn.is_empty() {
         payload["tid"] = json!(turn);
+    }
+    // O perfil do Office só precisa do nome da ferramenta para descrever a
+    // atividade. Argumentos/entrada/saída podem conter prompts ou segredos e
+    // nunca são enviados pelo hook.
+    if event == "PreToolUse" || event == "PostToolUse" {
+        let tool = str_field(&decoded, "tool_name");
+        let safe: String = tool.chars().filter(|c| !c.is_control()).take(80).collect();
+        if !safe.is_empty() {
+            payload["tool"] = json!(safe);
+        }
+    }
+    if is_subagent {
+        let id: String = str_field(&decoded, "agent_id")
+            .trim()
+            .chars()
+            .filter(|c| !c.is_control())
+            .take(120)
+            .collect();
+        let kind: String = str_field(&decoded, "agent_type")
+            .trim()
+            .chars()
+            .filter(|c| !c.is_control())
+            .take(80)
+            .collect();
+        if !id.is_empty() {
+            payload["sub"] = json!(id);
+            if !kind.is_empty() {
+                payload["subType"] = json!(kind);
+            }
+        }
     }
     // Token só importa no TCP (loopback é acessível por qualquer processo
     // local); no UDS a permissão do socket já protege.
@@ -142,9 +180,9 @@ fn str_field(v: &Value, key: &str) -> String {
 /// - O desvio de `PreToolUse` bloqueante é do Claude (ferramenta que trava
 ///   esperando resposta sem emitir `Notification`). No Codex é inerte: aquelas
 ///   ferramentas não existem lá, e a aprovação tem evento próprio.
-/// - `SubagentStart`/`SubagentStop` e `PreCompact`/`PostCompact` (Codex) são
-///   ignorados de propósito: subagente e compactação não devem mexer no
-///   indicador da aba, que representa a sessão principal.
+/// - `SubagentStart`/`SubagentStop` são encaminhados separadamente como
+///   eventos de personagem; não devem mexer no indicador da aba principal.
+/// - `PreCompact`/`PostCompact` (Codex) não afetam o indicador da aba.
 pub fn status_for(event: &str, json: &Value) -> Option<&'static str> {
     match event {
         "UserPromptSubmit" | "PostToolUse" => Some("working"),

@@ -2989,9 +2989,14 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
         paneId: s.paneId,
         status: s.status,
         event: s.event,
+        toolName: s.toolName,
         sessionId: s.sid,
         transcriptPath: s.transcriptPath,
         harness: s.harness,
+        subagentId: s.subagentId,
+        subagentType: s.subagentType,
+        subagentOutcome: s.subagentOutcome,
+        subagentParentId: s.subagentParentId,
       ),
     );
 
@@ -5812,6 +5817,7 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
     String? replay,
     String? startupCommand,
     String? manualLabel,
+    Iterable<OfficeSubagent> restoredOfficeSubagents = const <OfficeSubagent>[],
     // Plano 50: `null` = o padrão efetivo (o que o `+` abre hoje). A fatia 3
     // (dropdown do `+`) passa um perfil específico sem mexer no padrão global.
     TerminalProfile? profile,
@@ -5864,6 +5870,7 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
       startupCommand: startupCommand,
       // Detecção do harness interativo ativo (ícone da aba).
       monitor: _harnessMonitor,
+      restoredOfficeSubagents: restoredOfficeSubagents,
       // Injeta no env da PTY: roteamento (id da tab) + transporte (socket/porta).
       // O `cockpit-hook` do claude herda e reporta status de turno de volta.
       // `COCKPIT_TAB_ID` é o nome correto (o que a CLI endereça é uma tab);
@@ -6017,6 +6024,28 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
   void _onClaudeStatus(ClaudeStatusUpdate u) {
     final s = _sessions[u.paneId];
     if (s is! TerminalSession) return;
+    if (u.activityKind != null &&
+        u.activityPhase != null &&
+        u.activitySummary != null) {
+      s.applyOfficeActivity(
+        kind: u.activityKind!,
+        phase: u.activityPhase!,
+        summary: u.activitySummary!,
+      );
+    }
+    if (u.event == 'SubagentStart' || u.event == 'SubagentStop') {
+      final id = u.subagentId?.trim();
+      if (id == null || id.isEmpty) return;
+      s.applySubagentEvent(
+        id: id,
+        type: u.subagentType,
+        outcome: u.subagentOutcome,
+        parentSubagentId: u.subagentParentId,
+        started: u.event == 'SubagentStart',
+      );
+      _scheduleSave(s.projectId);
+      return; // ciclo do subagente nunca altera o status do terminal pai.
+    }
     if (kDebugMode) {
       debugPrint(
         '[status] ${DateTime.now().toIso8601String().substring(11, 23)} '
@@ -6024,21 +6053,27 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
       );
     }
     final hadSid = s.claudeSessionId;
-    s.applyClaudeStatus(
-      status: switch (u.status) {
-        'working' => TerminalStatus.working,
-        'waiting' => TerminalStatus.waiting,
-        _ => TerminalStatus.idle,
-      },
-      // `UserPromptSubmit` marca o INÍCIO de um turno novo — o único `working`
-      // que sempre vale, mesmo logo após um `idle` (ex.: mensagem enfileirada).
-      // Os demais `working` (Pre/PostToolUse) são atividade mid-turn e podem ser
-      // descartados se chegarem fora de ordem depois do fim do turno.
-      isTurnStart: u.event == 'UserPromptSubmit',
-      sessionId: u.sessionId,
-      transcriptPath: u.transcriptPath,
-      harness: AgentHarness.fromWire(u.harness),
-    );
+    if (u.status.isNotEmpty &&
+        u.status != 'activity' &&
+        u.activityKind != 'needs_input') {
+      s.applyClaudeStatus(
+        status: switch (u.status) {
+          'working' => TerminalStatus.working,
+          'waiting' => TerminalStatus.waiting,
+          _ => TerminalStatus.idle,
+        },
+        // `UserPromptSubmit` marca o INÍCIO de um turno novo — o único `working`
+        // que sempre vale, mesmo logo após um `idle` (ex.: mensagem enfileirada).
+        // Os demais `working` (Pre/PostToolUse) são atividade mid-turn e podem ser
+        // descartados se chegarem fora de ordem depois do fim do turno.
+        isTurnStart: u.event == 'UserPromptSubmit',
+        event: u.event,
+        toolName: u.toolName,
+        sessionId: u.sessionId,
+        transcriptPath: u.transcriptPath,
+        harness: AgentHarness.fromWire(u.harness),
+      );
+    }
     // O session-id do agente chega assíncrono pelo hook (não numa mutação de
     // layout), então persiste o layout quando ele MUDA — senão `claude_sid`
     // nunca chega ao disco e o restore não consegue retomar a sessão.
@@ -6443,6 +6478,40 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
         // cwd vivo salvo (OSC 7, absoluto) vence o `sub` — restaura onde o
         // usuário parou, mesmo fora do projeto.
         final termCwd = desc['cwd'] as String? ?? cwdOf();
+        final restoredSubagents = <OfficeSubagent>[];
+        final savedSubagents = desc['office_subagents'];
+        if (savedSubagents is List) {
+          final staleBefore = DateTime.now().subtract(const Duration(days: 1));
+          for (final rawAgent in savedSubagents) {
+            if (rawAgent is! Map) continue;
+            final agentId = rawAgent['id'];
+            final startedAt = DateTime.tryParse('${rawAgent['startedAt']}');
+            if (agentId is! String || agentId.isEmpty || startedAt == null) {
+              continue;
+            }
+            final finishedAt = DateTime.tryParse('${rawAgent['finishedAt']}');
+            // Um agente sem evento de saída pode ter terminado enquanto o
+            // Cockpit estava fechado. Descarta sessões ativas antigas para não
+            // ressuscitar personagens indefinidamente.
+            if (finishedAt == null && startedAt.isBefore(staleBefore)) continue;
+            if (finishedAt != null &&
+                finishedAt.isBefore(
+                  DateTime.now().subtract(const Duration(seconds: 45)),
+                )) {
+              continue;
+            }
+            restoredSubagents.add(
+              OfficeSubagent(
+                id: agentId,
+                type: rawAgent['type'] as String?,
+                startedAt: startedAt,
+                finishedAt: finishedAt,
+                outcome: rawAgent['outcome'] as String?,
+                parentSubagentId: rawAgent['parentSubagentId'] as String?,
+              ),
+            );
+          }
+        }
         _buildTerminal(
           id,
           project.id,
@@ -6455,6 +6524,7 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
           // Re-arma a trava ANTES de o shell subir e re-emitir OSC-title: o nome
           // manual continua vencendo o título dinâmico após o reinício.
           manualLabel: desc['label'] as String?,
+          restoredOfficeSubagents: restoredSubagents,
           engine: _enumByName(
             TerminalEngine.values,
             desc['engine'],
@@ -6778,6 +6848,19 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
         // usuário pode ter dado `cd` pra fora do projeto). `sub` segue como
         // fallback pra abas que nunca emitiram OSC 7.
         if (s.currentDirectory != null) 'cwd': s.currentDirectory,
+        'office_subagents': [
+          for (final agent in s.officeSubagents)
+            <String, dynamic>{
+              'id': agent.id,
+              if (agent.type != null) 'type': agent.type,
+              'startedAt': agent.startedAt.toIso8601String(),
+              if (agent.finishedAt != null)
+                'finishedAt': agent.finishedAt!.toIso8601String(),
+              if (agent.outcome != null) 'outcome': agent.outcome,
+              if (agent.parentSubagentId != null)
+                'parentSubagentId': agent.parentSubagentId,
+            },
+        ],
         // Se um agente rodava nesta aba, guarda o session-id (capturado pelo
         // hook) pra reatar a sessão no restore. `harness` diz de quem é o id —
         // sem ele o restore assumiria Claude e o `codex` daria "No conversation

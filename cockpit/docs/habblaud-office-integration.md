@@ -15,11 +15,11 @@ os terminais continuam acessíveis pela topbar e pelo clique no personagem.
 | Requisito | Estado |
 | --- | --- |
 | Mostrar mapa pixel art no painel central | Implementado: Canvas 2D original em plataformas com WebView; fallback Flutter no Linux |
-| Projetos/workspaces como salas | Implementado: raízes, worktrees e workspaces remotos |
+| Projetos/workspaces com sessões de harness ativas como salas | Implementado: uma sala compartilhada por projeto/worktree; quando a última sessão some, o Sim mantém a sala para apagar a luz, animar a saída e desmontá-la |
 | Somente sessões com harness ativo como personagens | Implementado |
-| Atualizar nome e estado working/waiting/idle | Implementado a partir da sessão Cockpit |
+| Atualizar nome, estado e atividade observada | Estado working/waiting/idle e eventos UserPromptSubmit, Pre/PostToolUse, Notification, PermissionRequest e Stop vêm dos hooks compatíveis; sem prompt ou argumentos da ferramenta |
 | Entrada e saída animadas | Acopladas ao ciclo de snapshot da simulação Habblaud; validar a duração visual em execução |
-| Clicar no personagem e abrir perfil | Implementado: perfil Cockpit com nome editável, projeto, harness, status, duração da aba, diretório e histórico de estados observado nesta execução |
+| Clicar no personagem e abrir perfil | Implementado: perfil Cockpit com nome editável, projeto, harness, status, duração da aba, diretório e histórico de estados observado nesta execução; seguir/centralizar controlam a câmera Canvas |
 | Abrir terminal correspondente pelo perfil | Implementado: seleciona projeto e aba exata e mostra o multiplexador existente numa janela sobre o mapa |
 | Tema e preferências visuais do mundo | Implementado no Canvas WebView: preferências locais persistentes; não altera tema do editor |
 | Reorganizar panes sem controller/viewport descartado | Fluxo alterado para aguardar um frame entre detach e mount; falta repetir manualmente o gesto no macOS |
@@ -166,10 +166,13 @@ porque o primeiro snapshot costuma ser histórico e deve mostrar todos já nos
 seus lugares. Se o usuário alternar o Office e a instância WebView for recriada,
 as chegadas podem ser animadas novamente.
 
-O histórico do perfil contém até 100 transições `working`/`waiting`/`idle`
-observadas no PTY durante a execução atual do Cockpit. Ele é mantido na sessão
-em memória e não é um transcript do agente. O snapshot envia essas mesmas
-transições como atividades genéricas para os balões do Habblaud. Uma espera
+O histórico do perfil contém até 200 eventos de hook observados na sessão atual
+do Cockpit, mantidos em memória. O adapter mapeia eventos para categorias do
+Habblaud e usa apenas o nome da ferramenta (máximo 80 caracteres) para
+`PreToolUse`/`PostToolUse`; nunca encaminha argumentos, prompt, resposta ou
+saída. Helpers antigos continuam enviando só a mudança genérica de status. O
+snapshot envia as atividades recentes para os balões e o histórico do Habblaud.
+Uma espera
 mostra a atividade “Precisa de você no terminal”; o Cockpit não tenta extrair
 qual botão/operação foi pedido. Os sons ambientais são `SoundCues` e `SoundBoard`
 originais do Habblaud, com as categorias e limites de frequência do projeto;
@@ -178,22 +181,30 @@ gesto da página, o áudio só fica desbloqueado depois de interagir com o mapa.
 
 `attachInput` liga pan/zoom e reenquadramento à câmera, além de hover e hit-test.
 Clique simples e duplo chamam `officeAgentClicked`; Dart suprime chamadas
-duplicadas para o mesmo agente dentro de 350 ms. `selectAgent` existe no JS,
-mas ainda não há sincronização de seleção/follow a partir de Flutter.
+duplicadas para o mesmo agente dentro de 350 ms. `selectAgent` atualiza o
+destaque e o perfil Flutter usa `focusAgent` e `setFollowAgent` para
+centralizar/seguir o personagem. A interação manual com o mapa interrompe o
+acompanhamento, como no Habblaud.
 
 ### Dados que ainda não chegam ao perfil/mundo
 
-Não são enviados eventos detalhados do hook sobre comandos shell, tarefas,
-progresso, tokens, erros, subagentes ou uso de conta. O perfil atual
-mostra os campos locais que existem, mas ainda não mostra modelo, tokens,
-chamadas de ferramenta ou custo. A simulação
-continua animando, mas reações que dependem desses eventos podem não acontecer;
-`recent` contém apenas mudanças working/waiting/idle; `tasks` segue vazio. Todos os personagens são `main`, sem
-representação de subagentes do Cockpit.
+O hook transporta nomes de ferramentas e eventos de início/fim de subagentes
+para Claude Code e Codex. Ainda não há coleta genérica de tarefas, progresso,
+tokens, erros ou uso de conta; `tasks` segue vazio e modelo/custo não são
+inferidos.
 
-Próxima evolução: projetar eventos já observados pelo Cockpit (especialmente
-hooks/monitor de harness) nos campos de `AgentInfo`. O snapshot deve continuar
-sendo a única entrada de status para o Habblaud; não criar uma segunda fonte de
+### MCP e criação de agentes
+
+No checkout analisado não há servidor MCP de agentes nem uma API MCP que
+represente subagentes criados por qualquer harness. O Cockpit oferece a CLI
+`cockpit` para operar abas e sessões, mas `new-tab` cria uma aba de terminal;
+não é uma API de spawn de subagentes. O caminho de ciclo de vida no Office usa
+`cockpit-hook` → socket local (ou encaminhamento do sidecar remoto). Claude e
+Codex implementam os eventos nativos; para outro harness, um adaptador precisa
+emitir o mesmo contrato neutro. Não inferir filhos de processos ou chamadas MCP.
+
+O snapshot continua sendo a única entrada de estado para o Habblaud; novas
+integrações devem alimentar esse mesmo modelo, sem criar uma segunda fonte de
 verdade.
 
 ## 6. Assets e licenças
@@ -384,9 +395,43 @@ para `working`, `waiting` e `idle`, acionando as regras existentes:
   está sentado digitando em área visível. O navegador libera áudio após gesto do
   usuário; o master switch começa desligado, como no Habblaud.
 
-O estado genérico não informa qual ferramenta ou comando está rodando. Assim,
-durante `working`, o Office mostra a animação de digitação, mas não consegue
-trocar a tela do monitor ou a atividade para cada evento real de ferramenta.
-Também não há dados genéricos suficientes para modelar subagentes, tokens ou
-modelo efetivo. Para isso, os hooks do Cockpit precisariam emitir eventos
-neutros de atividade; não se deve inferir esses dados pelo texto do terminal.
+O estado genérico não informa qual comando está rodando. Assim, a atividade de
+ferramenta depende de hooks instalados e não lê texto do terminal. Tokens e
+modelo efetivo continuam indisponíveis para harnesses genéricos.
+
+## 14. Subagentes
+
+Claude Code e Codex CLI registram `SubagentStart` e `SubagentStop` no helper
+`cockpit hook`. Um adapter de qualquer outro harness também pode reportar o
+ciclo por `cockpit agent start <id> [--type <role>]` e
+`cockpit agent stop <id> [--outcome success|error|interrupted]`. O payload leva
+somente `agent_id`, `agent_type` e o estado de saída opcional (com limite de
+tamanho); prompts, transcripts e conteúdo dos resultados não são enviados. O
+evento percorre o mesmo socket local ou o protocolo remoto de `turn.status`.
+No cliente, o evento é roteado à sessão/aba pai e salvo no descritor da aba:
+`SubagentStart` cria um personagem `kind: sub` na sala do pai e
+`SubagentStop` marca-o como concluído. O simulador original faz a entrega ao
+personagem principal e a saída; o registro concluído permanece por até 45 s
+para permitir a animação. A vida do subagente não muda o status do terminal pai.
+
+O nome e a aparência do personagem são determinísticos a partir do ID reportado
+pelo evento. O tipo do subagente aparece como papel. Eventos de conclusão ficam
+por 45 s para a animação, enquanto um agente ativo restaurado há mais de 24 h é
+descartado como estado obsoleto. A CLI usa a aba atual como pai; `--tab-id`
+escolhe explicitamente a aba e `--parent-agent-id` permite relacionar um filho
+a outro subagente. Se o pai não estiver na sala, o ator é ligado à sessão
+principal. Agentes que não emitirem o contrato não geram personagens
+automaticamente. O CLI pode relatar falha/interrupção; esses personagens saem
+sem a animação de entrega. Hooks nativos omitem o resultado quando não há um
+status confiável, mantendo a animação padrão de conclusão.
+
+### Interação com o terminal no Office
+
+O perfil do agente e o botão **Responder** das notificações abrem uma janela
+que espelha as últimas linhas do buffer da sessão e envia texto/teclas ao PTY
+existente por `TerminalSession`. Ela não monta outra `TerminalView`, não cria
+uma segunda sessão e não interpreta o protocolo de aprovação de um provider.
+Assim, o usuário vê a mesma pergunta/opções do terminal e responde com texto,
+Enter, setas, Tab, Esc ou Ctrl+C. Se a aba for fechada, a janela deixa de
+receber entrada. Esta interação continua genérica para qualquer processo que
+rode no PTY do Cockpit.

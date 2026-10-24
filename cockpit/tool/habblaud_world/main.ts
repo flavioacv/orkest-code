@@ -126,6 +126,17 @@ function overview(animate: boolean) {
   }
 }
 
+function focusAgent(id: string, follow = false) {
+  const person = sim.person(id);
+  if (!person) return;
+  userMoved = true;
+  camera.stop();
+  const zoom = Math.max(camera.zoom, camera.snapZoom(3));
+  const center = camera.centerFor(person.x, person.y - 12, zoom);
+  camera.animateTo(center.x, center.y, zoom, Date.now(), 420);
+  camera.follow = follow ? id : null;
+}
+
 function pick(sx: number, sy: number): { type: 'agent'; id: string } | { type: 'room'; id: string } | null {
   const point = camera.screenToWorld(sx, sy);
   let best: string | null = null;
@@ -176,7 +187,15 @@ function loop(ts: number) {
     updateBounds();
     if (sim.initialized && !userMoved) overview(true);
   }
-  camera.update(now, null, dt);
+  const followed = camera.follow ? sim.person(camera.follow) : undefined;
+  if (camera.follow && !followed) camera.follow = null;
+  camera.update(
+    now,
+    followed
+      ? camera.centerFor(followed.x, followed.y - 12, camera.zoom)
+      : null,
+    dt,
+  );
   renderer.frame(now, dt, options, { agent: selectedAgent, room: null, hover: hoveredAgent });
   overlay.draw(now, options, { agent: selectedAgent, room: null, hover: hoveredAgent });
   renderer.pruneHeads();
@@ -254,6 +273,14 @@ window.cockpitHabblaudWorld = {
     }
   },
   selectAgent(id: string | null) { selectedAgent = id; },
+  focusAgent(id: string, follow = false) { focusAgent(id, follow); },
+  setFollowAgent(id: string, follow: boolean) {
+    if (!follow) {
+      if (camera.follow === id) camera.follow = null;
+      return;
+    }
+    focusAgent(id, true);
+  },
   destroy() {
     destroyed = true;
     cancelAnimationFrame(raf);
@@ -280,6 +307,8 @@ declare global {
       };
       update(snapshot: unknown): void;
       selectAgent(id: string | null): void;
+      focusAgent(id: string, follow?: boolean): void;
+      setFollowAgent(id: string, follow: boolean): void;
       destroy(): void;
     };
     flutter_inappwebview?: { callHandler(name: string, ...args: unknown[]): Promise<unknown> };

@@ -11,6 +11,12 @@ shows flags, output shape and the mistakes to avoid.
 - `cockpit send-key [--tab-id <id>] <Key>...` — press key(s): `Enter`, `Tab`,
   `Escape`, `Space`, `BSpace`, `Up`/`Down`/`Left`/`Right`, `Home`/`End`,
   `PageUp`/`PageDown`, `Delete`, and `C-<letter>` (e.g. `C-c` = Ctrl+C).
+- `cockpit agent start <agent-id> [--type <role>] [--tab-id <parent-tab>]` and
+  `cockpit agent stop <agent-id> [--type <role>] [--outcome success|error|interrupted] [--tab-id <parent-tab>]` — report a child-agent lifecycle to the Office. The ID must be stable across both calls. Inside a Cockpit terminal, the current tab is the parent by
+  default. Wrappers for other harnesses can call these around spawn/join; no
+  prompt or transcript is transmitted. This reports a child the harness created;
+  it does not spawn or control that child.
+- `cockpit activity <kind> --summary <text> [--phase started|updated|completed|failed|interrupted] [--tab-id <id>]` — report one bounded event to the Office timeline. Kinds include `prompt`, `thinking`, `read`, `search`, `edit`, `write`, `command`, `wait`, `test`, `web`, `plan`, `delegate`, `needs_input`, `respond`, `done`, `error`, and `other`. The summary is limited to 160 characters. This sends only the supplied summary and tab ID; it does not read PTY output, prompts, files, or transcripts. `needs_input` moves the character to the waiting state and raises the Office notification; only use it when a user response is actually required. `respond` records an answer sent through the PTY. The notification's Respond button opens the existing PTY interaction.
 - `cockpit new-tab [--cwd <dir>] [--title <name>] [--split h|v]` — open a new
   **terminal tab** in the app and print its id (`t12`). `--cwd` defaults to
   your current directory; `--title` sets the stable tab label (so `send`/

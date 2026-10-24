@@ -3,7 +3,9 @@
 Como o Cockpit sabe que um agente numa aba está trabalhando, terminou o turno ou
 precisa de uma ação do usuário (spinner, badge, chime, notificação do SO).
 
-Suportados hoje: **Claude Code** e **Codex CLI** (0.147+).
+O status do turno usa hooks nativos de **Claude Code** e **Codex CLI** (0.147+).
+O ciclo de subagente também pode ser reportado por qualquer integração via
+`cockpit agent start/stop`.
 
 ## Como funciona
 
@@ -42,7 +44,9 @@ reescrever a lista (hooks do usuário, de plugins ou do iTerm2 sobrevivem).
 | `PermissionRequest` | — | ✓ | `waiting` |
 | `Stop` | ✓ | ✓ | `idle` |
 | `SessionStart` / `SessionEnd` | ✓ | ✓ | `idle` |
-| `SubagentStart` / `SubagentStop`, `PreCompact` / `PostCompact` | — | ✓ | **ignorados**: não são o turno da aba |
+| `SubagentStart` / `SubagentStop` | ✓ | ✓ | evento do personagem filho; não altera o status da aba pai |
+| `PreCompact` / `PostCompact` | — | ✓ | ignorados: não são o turno da aba |
+| `cockpit agent start/stop` | integração | integração | evento neutro; `stop --outcome error|interrupted` sinaliza saída sem entrega |
 
 Duas assimetrias que importam:
 
@@ -57,6 +61,13 @@ Duas assimetrias que importam:
 O envelope é praticamente o mesmo nos dois (`hook_event_name`, `session_id`,
 `transcript_path`, `cwd`, `tool_name`, `tool_input`, `permission_mode`). O Codex
 manda um `turn_id` a mais, que o helper repassa como `tid`.
+
+Para início/fim de subagente, os hooks enviam `agent_id` e `agent_type`. O helper
+repassa somente esses identificadores; não envia transcript nem conteúdo da
+tarefa. Integrações que conheçam a hierarquia podem informar `--parent-agent-id`
+em `cockpit agent start/stop`; o campo `subParent` segue pelo protocolo local ou
+remoto e relaciona o ator ao pai no mapa. Ver também
+[integração do Office](habblaud-office-integration.md#14-subagentes).
 
 ## Retomar a sessão (quem é o dono do session-id)
 

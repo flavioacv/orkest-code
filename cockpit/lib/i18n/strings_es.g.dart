@@ -322,10 +322,25 @@ class _Translations$cockpit$officeWorld$es extends Translations$cockpit$officeWo
 	@override String get project => 'Proyecto';
 	@override String get provider => 'Agente';
 	@override String get currentStatus => 'Estado actual';
+	@override String get followAgent => 'Seguir personaje';
+	@override String get stopFollowingAgent => 'Dejar de seguir';
+	@override String get centerAgent => 'Centrar personaje';
 	@override String get sessionDuration => 'Sesión actual en Cockpit';
 	@override String get workingDirectory => 'Directorio de trabajo';
 	@override String get statsPending => 'Cockpit todavía no recopila estadísticas de modelo, tokens y herramientas.';
 	@override String get recentActivity => 'Actividad reciente en esta ejecución';
+	@override String get promptReceived => 'Recibió una solicitud';
+	@override String get readingFile => 'Leyendo archivo';
+	@override String get searchingCode => 'Buscando en el código';
+	@override String get editingFile => 'Editando archivo';
+	@override String get writingFile => 'Escribiendo archivo';
+	@override String get runningCommand => 'Comando en terminal';
+	@override String get runningTests => 'Ejecutando pruebas';
+	@override String get browsingWeb => 'Buscando en la web';
+	@override String get organizingTasks => 'Organizando tareas';
+	@override String get callingSubagents => 'Llamando subagentes';
+	@override String get toolCompleted => 'Herramienta completada';
+	@override String get usingTool => 'Usando herramienta';
 	@override String get editAgentName => 'Editar nombre del agente';
 	@override String get agentName => 'Nombre del agente';
 	@override String get workingInTerminal => 'Trabajando en el terminal';
@@ -345,7 +360,13 @@ class _Translations$cockpit$officeWorld$es extends Translations$cockpit$officeWo
 	@override String get shoes => 'Zapatos';
 	@override String get accessory => 'Accesorio';
 	@override String get turnCompleted => 'Turno terminado';
+	@override String get subagentFailed => 'El subagente falló';
+	@override String get subagentInterrupted => 'Subagente interrumpido';
 	@override String get openTerminal => 'Abrir terminal';
+	@override String get interactInOffice => 'Interactuar en Office';
+	@override String get liveTerminal => 'Terminal en vivo';
+	@override String get terminalInputPlaceholder => 'Escribe en la terminal…';
+	@override String get terminalOfficeHint => 'La entrada se envía a la sesión original. Usa las opciones de respuesta que el agente muestre en esta terminal.';
 	@override String get appearance => 'Apariencia de la oficina';
 	@override String get officeTheme => 'Tema estacional';
 	@override String get themeAuto => 'Automático';
@@ -2066,10 +2087,25 @@ extension on TranslationsEs {
 			'cockpit.officeWorld.project' => 'Proyecto',
 			'cockpit.officeWorld.provider' => 'Agente',
 			'cockpit.officeWorld.currentStatus' => 'Estado actual',
+			'cockpit.officeWorld.followAgent' => 'Seguir personaje',
+			'cockpit.officeWorld.stopFollowingAgent' => 'Dejar de seguir',
+			'cockpit.officeWorld.centerAgent' => 'Centrar personaje',
 			'cockpit.officeWorld.sessionDuration' => 'Sesión actual en Cockpit',
 			'cockpit.officeWorld.workingDirectory' => 'Directorio de trabajo',
 			'cockpit.officeWorld.statsPending' => 'Cockpit todavía no recopila estadísticas de modelo, tokens y herramientas.',
 			'cockpit.officeWorld.recentActivity' => 'Actividad reciente en esta ejecución',
+			'cockpit.officeWorld.promptReceived' => 'Recibió una solicitud',
+			'cockpit.officeWorld.readingFile' => 'Leyendo archivo',
+			'cockpit.officeWorld.searchingCode' => 'Buscando en el código',
+			'cockpit.officeWorld.editingFile' => 'Editando archivo',
+			'cockpit.officeWorld.writingFile' => 'Escribiendo archivo',
+			'cockpit.officeWorld.runningCommand' => 'Comando en terminal',
+			'cockpit.officeWorld.runningTests' => 'Ejecutando pruebas',
+			'cockpit.officeWorld.browsingWeb' => 'Buscando en la web',
+			'cockpit.officeWorld.organizingTasks' => 'Organizando tareas',
+			'cockpit.officeWorld.callingSubagents' => 'Llamando subagentes',
+			'cockpit.officeWorld.toolCompleted' => 'Herramienta completada',
+			'cockpit.officeWorld.usingTool' => 'Usando herramienta',
 			'cockpit.officeWorld.editAgentName' => 'Editar nombre del agente',
 			'cockpit.officeWorld.agentName' => 'Nombre del agente',
 			'cockpit.officeWorld.workingInTerminal' => 'Trabajando en el terminal',
@@ -2089,7 +2125,13 @@ extension on TranslationsEs {
 			'cockpit.officeWorld.shoes' => 'Zapatos',
 			'cockpit.officeWorld.accessory' => 'Accesorio',
 			'cockpit.officeWorld.turnCompleted' => 'Turno terminado',
+			'cockpit.officeWorld.subagentFailed' => 'El subagente falló',
+			'cockpit.officeWorld.subagentInterrupted' => 'Subagente interrumpido',
 			'cockpit.officeWorld.openTerminal' => 'Abrir terminal',
+			'cockpit.officeWorld.interactInOffice' => 'Interactuar en Office',
+			'cockpit.officeWorld.liveTerminal' => 'Terminal en vivo',
+			'cockpit.officeWorld.terminalInputPlaceholder' => 'Escribe en la terminal…',
+			'cockpit.officeWorld.terminalOfficeHint' => 'La entrada se envía a la sesión original. Usa las opciones de respuesta que el agente muestre en esta terminal.',
 			'cockpit.officeWorld.appearance' => 'Apariencia de la oficina',
 			'cockpit.officeWorld.officeTheme' => 'Tema estacional',
 			'cockpit.officeWorld.themeAuto' => 'Automático',
@@ -2466,6 +2508,8 @@ extension on TranslationsEs {
 			'cockpit.kanbanView.columnOptions' => 'Opciones de la columna',
 			'cockpit.kanbanView.renameColumn' => 'Renombrar columna',
 			'cockpit.kanbanView.moveColumnLeft' => 'Mover a la izquierda',
+			_ => null,
+		} ?? switch (path) {
 			'cockpit.kanbanView.moveColumnRight' => 'Mover a la derecha',
 			'cockpit.kanbanView.deleteColumn' => 'Eliminar columna',
 			'cockpit.kanbanView.newCardHere' => 'Nueva tarjeta aquí',
@@ -2487,8 +2531,6 @@ extension on TranslationsEs {
 			'cockpit.kanbanView.notABoard' => 'Este archivo aún no tiene columnas ## — se abre como markdown.',
 			'cockpit.kanbanView.startBoard' => 'Empezar un tablero',
 			'cockpit.kanbanView.couldNotSave' => 'No se pudo guardar el tablero',
-			_ => null,
-		} ?? switch (path) {
 			'cockpit.kanbanView.unrecognizedBlock' => 'No reconocido por el analizador — se arrastra entero, sin edición en línea.',
 			'cockpit.kanbanView.deleteColumnDialog.title' => ({required Object name}) => '¿Eliminar «${name}»?',
 			'cockpit.kanbanView.deleteColumnDialog.message' => ({required Object count}) => 'Esta columna tiene ${count}. Elige qué pasa con ellas.',
@@ -2980,6 +3022,8 @@ extension on TranslationsEs {
 			'settings.page.automations.sectionCommitMessages' => 'Mensajes de commit',
 			'settings.page.automations.harness' => 'Harness',
 			'settings.page.automations.harnessDiscovering' => 'Buscando harnesses de línea de comandos instalados…',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.automations.harnessNoneFound' => 'No se encontró ningún harness compatible en el PATH.',
 			'settings.page.automations.harnessConfiguredUnavailable' => ({required Object harness}) => '${harness} está configurado, pero no disponible.',
 			'settings.page.automations.harnessChoose' => 'Elige la CLI usada para generar mensajes de commit.',
@@ -3001,8 +3045,6 @@ extension on TranslationsEs {
 			'settings.remoteHosts.title' => 'Hosts remotos',
 			'settings.remoteHosts.description' => 'Máquinas a las que accedes por SSH. Añadir un host aquí es lo mismo que hacerlo desde el menú "+" del workspace.',
 			'settings.remoteHosts.empty' => 'Aún no hay hosts remotos.',
-			_ => null,
-		} ?? switch (path) {
 			'settings.remoteHosts.add' => 'Añadir host',
 			'settings.remoteHosts.edit' => 'Editar',
 			'settings.remoteHosts.reconnect' => 'Reconectar',

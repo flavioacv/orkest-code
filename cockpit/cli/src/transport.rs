@@ -250,6 +250,26 @@ no socket found in ~/.cockpit). Is the app running?",
     }
 }
 
+/// Envia um evento de ciclo de vida sem esperar resposta. Ao contrário de
+/// [request], não marca o envelope como comando: o socket e o sidecar o
+/// encaminham pelo fluxo de status de turno, local ou remoto.
+pub fn notify(mut event: Value) -> Result<(), String> {
+    if !transport_configured() {
+        return Err("no Cockpit app to talk to (is the app running?)".to_string());
+    }
+    if let Ok(tok) = std::env::var("COCKPIT_STATUS_TOKEN") {
+        event["tok"] = json!(tok);
+    } else if let Some((_, Some(tok))) = endpoint_from_file() {
+        event["tok"] = json!(tok);
+    }
+    let mut conn = connect()?.ok_or_else(|| "no Cockpit status socket".to_string())?;
+    let mut payload = event.to_string();
+    payload.push('\n');
+    conn.write_all(payload.as_bytes())
+        .and_then(|_| conn.flush())
+        .map_err(|e| format!("could not send event to Cockpit: {e}"))
+}
+
 /// `resp["ok"] == true`. Emite no **stderr** o aviso que a resposta trouxer.
 ///
 /// Aviso vai pro stderr de propósito: o stdout dos comandos de banco é uma

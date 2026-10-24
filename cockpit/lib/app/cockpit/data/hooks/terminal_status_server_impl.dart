@@ -196,6 +196,9 @@ class TerminalStatusServerImpl implements TerminalStatusServer {
       if (paneId.isEmpty || status.isEmpty) return (null, null);
       final sid = (decoded['sid'] ?? '').toString();
       final tx = (decoded['tx'] ?? '').toString();
+      final activityKind = (decoded['activityKind'] ?? '').toString();
+      final activityPhase = (decoded['activityPhase'] ?? '').toString();
+      final activitySummary = (decoded['activitySummary'] ?? '').toString();
       final ev = (decoded['ev'] ?? '').toString();
       final hn = (decoded['hn'] ?? '').toString();
       _onUpdate?.call(
@@ -203,9 +206,17 @@ class TerminalStatusServerImpl implements TerminalStatusServer {
           paneId: paneId,
           status: status,
           event: ev.isEmpty ? null : ev,
+          toolName: (decoded['tool'] as String?)?.trim(),
           sessionId: sid.isEmpty ? null : sid,
           transcriptPath: tx.isEmpty ? null : tx,
           harness: hn.isEmpty ? null : hn,
+          subagentId: (decoded['sub'] as String?)?.trim(),
+          subagentType: (decoded['subType'] as String?)?.trim(),
+          subagentOutcome: (decoded['subOutcome'] as String?)?.trim(),
+          subagentParentId: (decoded['subParent'] as String?)?.trim(),
+          activityKind: activityKind.isEmpty ? null : activityKind,
+          activityPhase: activityPhase.isEmpty ? null : activityPhase,
+          activitySummary: activitySummary.isEmpty ? null : activitySummary,
         ),
       );
       return (null, null);

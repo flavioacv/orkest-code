@@ -41,7 +41,11 @@ Future<void> main() async {
     if (decoded is! Map) return;
 
     final event = (decoded['hook_event_name'] ?? '').toString();
-    final status = _statusFor(event, decoded);
+    final isSubagent = event == 'SubagentStart' || event == 'SubagentStop';
+    final subagentId = _safeHookValue(decoded['agent_id'], 120);
+    final status = isSubagent
+        ? (subagentId == null ? null : 'subagent')
+        : _statusFor(event, decoded);
     if (status == null) return; // evento que não nos interessa
 
     final payload = jsonEncode(<String, dynamic>{
@@ -53,8 +57,14 @@ Future<void> main() async {
       // eterno. Cada hook é um processo separado abrindo seu próprio socket, sem
       // ordem garantida entre eles.
       'ev': event,
+      if (event == 'PreToolUse' || event == 'PostToolUse')
+        'tool': _safeToolName(decoded['tool_name']),
       'sid': (decoded['session_id'] ?? '').toString(),
       'tx': (decoded['transcript_path'] ?? '').toString(),
+      if (isSubagent) 'sub': subagentId,
+      if (isSubagent)
+        if (_safeHookValue(decoded['agent_type'], 80) case final String type)
+          'subType': type,
       // Token só importa no TCP (loopback é acessível por qualquer processo
       // local); no UDS a permissão do socket já protege.
       if (env['COCKPIT_STATUS_TOKEN'] != null)
@@ -74,6 +84,22 @@ Future<void> main() async {
   } catch (_) {
     // Silencioso de propósito: não atrapalhar o turno do claude.
   }
+}
+
+String? _safeHookValue(Object? value, int maxLength) {
+  final safe = (value ?? '')
+      .toString()
+      .replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '')
+      .trim();
+  if (safe.isEmpty) return null;
+  return safe.length > maxLength ? safe.substring(0, maxLength) : safe;
+}
+
+String? _safeToolName(Object? value) {
+  final raw = value?.toString() ?? '';
+  final safe = raw.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '').trim();
+  if (safe.isEmpty) return null;
+  return safe.length > 80 ? safe.substring(0, 80) : safe;
 }
 
 /// Mapeia o evento de hook do Claude Code num status de turno, ou `null` se o

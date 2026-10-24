@@ -1073,9 +1073,14 @@ class TurnStatusReceiver {
         paneId: paneId,
         status: status,
         event: json['ev'] as String?,
+        toolName: json['tool'] as String?,
         sid: json['sid'] as String?,
         transcriptPath: json['tx'] as String?,
         harness: json['hn'] as String?,
+        subagentId: json['sub'] as String?,
+        subagentType: json['subType'] as String?,
+        subagentOutcome: json['subOutcome'] as String?,
+        subagentParentId: json['subParent'] as String?,
       ),
     );
   }

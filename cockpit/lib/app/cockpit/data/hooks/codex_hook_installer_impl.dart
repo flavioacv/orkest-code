@@ -40,10 +40,9 @@ class CodexHookInstallerImpl extends HookInstallerBase {
   static const String _tomlBegin = '# >>> cockpit hooks (auto-gerado)';
   static const String _tomlEnd = '# <<< cockpit hooks';
 
-  /// Eventos instrumentados, com o rótulo snake_case que o Codex usa na chave de
-  /// trust. Deliberadamente **fora**: `SubagentStart`/`SubagentStop` e
-  /// `PreCompact`/`PostCompact` — subagente e compactação não são o turno da
-  /// aba.
+  /// Eventos instrumentados, com o rótulo snake_case que o Codex usa na chave
+  /// de trust. Subagentes são eventos de personagem e não alteram o status da
+  /// aba principal; compactação permanece fora.
   static const Map<String, String> _events = <String, String>{
     'UserPromptSubmit': 'user_prompt_submit',
     'PreToolUse': 'pre_tool_use',
@@ -52,6 +51,8 @@ class CodexHookInstallerImpl extends HookInstallerBase {
     'Stop': 'stop',
     'SessionStart': 'session_start',
     'SessionEnd': 'session_end',
+    'SubagentStart': 'subagent_start',
+    'SubagentStop': 'subagent_stop',
   };
 
   /// Timeout que o Codex aplica quando o handler não declara um. `SessionEnd`

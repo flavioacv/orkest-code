@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:collection';
 import 'dart:convert';
 
 import 'package:cockpit/app/cockpit/domain/contracts/terminal_gateway.dart';
@@ -26,12 +27,46 @@ import 'package:cockpit/app/core/terminal/xterm/xterm.dart';
 /// [TerminalStatusServer]).
 enum TerminalStatus { idle, working, waiting }
 
-/// A change of high-level state observed by Cockpit for the current PTY.
+/// A bounded hook event or state change observed for the current PTY.
 class TerminalStatusEvent {
-  const TerminalStatusEvent(this.status, this.at);
+  const TerminalStatusEvent(
+    this.status,
+    this.at, {
+    this.event,
+    this.toolName,
+    this.activityKind,
+    this.activityPhase,
+    this.activitySummary,
+    this.sequence = 0,
+  });
 
   final TerminalStatus status;
   final DateTime at;
+  final String? event;
+  final String? toolName;
+  final String? activityKind;
+  final String? activityPhase;
+  final String? activitySummary;
+  final int sequence;
+}
+
+/// Ciclo de vida efêmero de um subagente observado pelos hooks do harness.
+class OfficeSubagent {
+  const OfficeSubagent({
+    required this.id,
+    required this.type,
+    required this.startedAt,
+    this.finishedAt,
+    this.outcome,
+    this.parentSubagentId,
+  });
+
+  final String id;
+  final String? type;
+  final DateTime startedAt;
+  final DateTime? finishedAt;
+  final String? outcome;
+  final String? parentSubagentId;
 }
 
 /// Uma aba de terminal: um shell num PTY ([TerminalGateway]) ligado a um
@@ -52,6 +87,7 @@ class TerminalSession extends PaneItem {
     String? startupCommand,
     TerminalEngine engine = TerminalEngine.xterm,
     this._monitor,
+    Iterable<OfficeSubagent> restoredOfficeSubagents = const [],
   }) : _scrollback = scrollbackStore,
        _redactor = SecretRedactor(redactSecrets),
        _title = title ?? 'New terminal' {
@@ -64,6 +100,9 @@ class TerminalSession extends PaneItem {
         ShiftEnterInputHandler(_kitty),
         defaultInputHandler,
       ]),
+    );
+    _officeSubagents.addEntries(
+      restoredOfficeSubagents.map((agent) => MapEntry(agent.id, agent)),
     );
     if (PerformanceDiagnostics.instance.enabled) {
       _firstOutputClock = Stopwatch()..start();
@@ -116,6 +155,7 @@ class TerminalSession extends PaneItem {
         }
         _kitty.feed(batch); // observa push/pop do kitty antes de renderizar.
         terminal.write(batch);
+        _observeTerminalActivity();
         _record(batch); // grava o scrollback pra replay no próximo boot.
         _trackCwd(batch); // rastreia o cwd vivo (OSC 7) pra restaurar nele.
         // Saída do PTY costuma coincidir com spawn/troca de processo em
@@ -146,13 +186,7 @@ class TerminalSession extends PaneItem {
           },
         );
     terminal.onOutput = (data) {
-      final text = utf8.decode(data, allowMalformed: true);
-      _maybeInterrupt(text);
-      _gateway.write(data);
-      // Enter (e equivalentes) = comando submetido → processo pode nascer já.
-      if (text.contains('\r') || text.contains('\n')) {
-        _kickHarnessMonitor(burst: true);
-      }
+      _writeInput(data);
     };
     terminal.onResize = (columns, rows) {
       _viewportColumns = columns;
@@ -242,10 +276,112 @@ class TerminalSession extends PaneItem {
   TerminalStatus _status = TerminalStatus.idle;
   TerminalStatus get status => _status;
   final List<TerminalStatusEvent> _officeStatusHistory = [];
+  int _officeEventSequence = 0;
 
-  /// Generic state changes observed during this Cockpit run (not provider transcripts).
+  /// Generic hook events and state changes observed during this Cockpit run.
+  /// This is a bounded activity summary, not a provider transcript.
   List<TerminalStatusEvent> get officeStatusHistory =>
       List.unmodifiable(_officeStatusHistory);
+
+  /// Most recent generic prompt/permission event, if this session is waiting.
+  int get latestWaitingEventSequence {
+    for (final event in _officeStatusHistory.reversed) {
+      if (event.activityKind == 'needs_input' ||
+          (event.status == TerminalStatus.waiting && event.event != null)) {
+        return event.sequence;
+      }
+    }
+    return -1;
+  }
+
+  String? get officeWaitingSummary {
+    for (final event in _officeStatusHistory.reversed) {
+      if (event.activityKind == 'needs_input' &&
+          event.activitySummary != null) {
+        return event.activitySummary;
+      }
+      if (event.status == TerminalStatus.waiting && event.event != null) {
+        return 'Precisa de uma resposta no terminal';
+      }
+    }
+    return null;
+  }
+
+  final Map<String, OfficeSubagent> _officeSubagents = {};
+  List<OfficeSubagent> get officeSubagents {
+    final expiry = DateTime.now().subtract(const Duration(seconds: 45));
+    _officeSubagents.removeWhere(
+      (_, agent) => agent.finishedAt?.isBefore(expiry) ?? false,
+    );
+    return List.unmodifiable(_officeSubagents.values);
+  }
+
+  /// Registra eventos sem tocar no status do terminal principal. A retenção
+  /// curta após a conclusão permite ao simulador executar a entrega e a saída.
+  void applySubagentEvent({
+    required String id,
+    required String? type,
+    String? outcome,
+    String? parentSubagentId,
+    required bool started,
+  }) {
+    final safeId = id.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '').trim();
+    if (safeId.isEmpty) return;
+    final rawType = type?.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '').trim();
+    final safeType = rawType == null || rawType.length <= 80
+        ? rawType
+        : rawType.substring(0, 80);
+    final rawParentId = parentSubagentId
+        ?.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '')
+        .trim();
+    final safeParentId = rawParentId == null || rawParentId.length <= 120
+        ? rawParentId
+        : rawParentId.substring(0, 120);
+    final safeOutcome = switch (outcome) {
+      'success' || 'error' || 'interrupted' => outcome,
+      _ => null,
+    };
+    final previous = _officeSubagents[safeId];
+    if (started) {
+      if (previous?.finishedAt != null) return; // descarta start reordenado.
+      _officeSubagents[safeId] = OfficeSubagent(
+        id: safeId,
+        type: safeType == null || safeType.isEmpty ? previous?.type : safeType,
+        startedAt: previous?.startedAt ?? DateTime.now(),
+        parentSubagentId: safeParentId == null || safeParentId.isEmpty
+            ? previous?.parentSubagentId
+            : safeParentId,
+      );
+    } else if (previous == null) {
+      // Cria tombstone curto: hooks são processos independentes e o Stop pode
+      // chegar antes do Start. Assim um Start atrasado não ressuscita o ator.
+      final now = DateTime.now();
+      _officeSubagents[safeId] = OfficeSubagent(
+        id: safeId,
+        type: safeType == null || safeType.isEmpty ? null : safeType,
+        startedAt: now,
+        finishedAt: now,
+        outcome: safeOutcome,
+        parentSubagentId: safeParentId,
+      );
+    } else if (previous.finishedAt == null) {
+      _officeSubagents[safeId] = OfficeSubagent(
+        id: safeId,
+        type: safeType == null || safeType.isEmpty ? previous.type : safeType,
+        startedAt: previous.startedAt,
+        finishedAt: DateTime.now(),
+        outcome: safeOutcome,
+        parentSubagentId: safeParentId == null || safeParentId.isEmpty
+            ? previous.parentSubagentId
+            : safeParentId,
+      );
+    }
+    final expiry = DateTime.now().subtract(const Duration(seconds: 45));
+    _officeSubagents.removeWhere(
+      (_, agent) => agent.finishedAt?.isBefore(expiry) ?? false,
+    );
+    notifyListeners();
+  }
 
   HarnessKind? _activeHarness;
   HarnessKind? get activeHarness => _activeHarness;
@@ -296,6 +432,10 @@ class TerminalSession extends PaneItem {
   /// fica girando pra sempre).
   bool _turnActive = false;
   DateTime? _lastIdleAt;
+  final Set<int> _observedOfficeActivityFingerprints = <int>{};
+  final Queue<int> _observedOfficeActivityOrder = Queue<int>();
+  DateTime? _lastOfficeActivityScanAt;
+  bool _officeAgentActivityObserved = false;
 
   /// Janela em que um `working` mid-turn órfão (sem turno ativo) pós-`idle` é
   /// tratado como reordenação. Generosa (a real reordenação chega em ms); turnos
@@ -310,6 +450,8 @@ class TerminalSession extends PaneItem {
   void applyClaudeStatus({
     required TerminalStatus status,
     bool isTurnStart = false,
+    String? event,
+    String? toolName,
     String? sessionId,
     String? transcriptPath,
     AgentHarness? harness,
@@ -327,6 +469,7 @@ class TerminalSession extends PaneItem {
     // Ciclo de vida do turno a partir da semântica do evento.
     if (isTurnStart) _turnActive = true;
     if (status == TerminalStatus.idle) _turnActive = false;
+    if (status == TerminalStatus.waiting) _turnActive = false;
 
     // Guard anti-spinner-eterno: descarta um `working` mid-turn que chega SEM
     // turno ativo e logo após um `idle` — é o Pre/PostToolUse do turno que
@@ -339,7 +482,209 @@ class TerminalSession extends PaneItem {
       return;
     }
 
-    _setStatus(status);
+    _setStatus(
+      status,
+      event: event,
+      toolName: toolName,
+      forceTurnFinished: status == TerminalStatus.waiting && event != null,
+    );
+  }
+
+  /// Adds a provider-neutral activity event without inspecting PTY output.
+  /// The Cockpit CLI and future adapters can report the same bounded contract.
+  void applyOfficeActivity({
+    required String kind,
+    required String phase,
+    required String summary,
+  }) {
+    final safeKind = kind.trim().toLowerCase();
+    final safePhase = phase.trim().toLowerCase();
+    final safeSummary = summary
+        .replaceAll(RegExp(r'[\x00-\x1F\x7F]'), ' ')
+        .replaceAll(RegExp(r'\s+'), ' ')
+        .trim();
+    if (safeKind.isEmpty || safePhase.isEmpty || safeSummary.isEmpty) return;
+    if (safeKind == 'prompt' || safeKind == 'respond') {
+      _turnActive = true;
+    } else if (safeKind == 'done' || safeKind == 'error') {
+      _turnActive = false;
+    }
+    _officeAgentActivityObserved = true;
+    _officeStatusHistory.add(
+      TerminalStatusEvent(
+        _status,
+        DateTime.now(),
+        event: 'OfficeActivity',
+        activityKind: safeKind,
+        activityPhase: safePhase,
+        activitySummary: safeSummary.substring(
+          0,
+          safeSummary.length > 160 ? 160 : safeSummary.length,
+        ),
+        sequence: _officeEventSequence++,
+      ),
+    );
+    if (_officeStatusHistory.length > 200) {
+      _officeStatusHistory.removeRange(0, _officeStatusHistory.length - 200);
+    }
+    switch (safeKind) {
+      case 'needs_input':
+        _setStatus(
+          TerminalStatus.waiting,
+          recordHistory: false,
+          forceNotify: true,
+          forceTurnFinished: true,
+        );
+      case 'done' || 'error':
+        _setStatus(
+          TerminalStatus.idle,
+          recordHistory: false,
+          forceNotify: true,
+        );
+      default:
+        _setStatus(
+          TerminalStatus.working,
+          recordHistory: false,
+          forceNotify: true,
+        );
+    }
+  }
+
+  /// A submitted line is a harness-neutral signal that work was requested. The
+  /// input itself is never inspected or retained.
+  void _observeGenericPromptSubmission({required bool responding}) {
+    if (!responding && !_officeAgentActivityObserved) return;
+    applyOfficeActivity(
+      kind: responding ? 'respond' : 'prompt',
+      phase: 'started',
+      summary: responding
+          ? 'Resposta enviada pelo terminal'
+          : 'Pedido enviado pelo terminal',
+    );
+  }
+
+  /// Maps visible TUI status/action rows to Office categories. This reads the
+  /// already-rendered terminal buffer after ANSI/control processing; raw PTY
+  /// chunks and full line contents are neither persisted nor forwarded. The
+  /// recognizer intentionally returns fixed labels, never a command or path.
+  void _observeTerminalActivity() {
+    final now = DateTime.now();
+    final lastScan = _lastOfficeActivityScanAt;
+    if (lastScan != null &&
+        now.difference(lastScan) < const Duration(seconds: 1)) {
+      return;
+    }
+    _lastOfficeActivityScanAt = now;
+    for (final raw in terminal.plainLines(limit: 80)) {
+      final line = raw.trim();
+      if (line.isEmpty) continue;
+      final observation = _mapOfficeActivityLine(line);
+      if (observation == null) continue;
+      _officeAgentActivityObserved = true;
+      final (kind, summary, phase, fingerprint) = observation;
+      if (_status == TerminalStatus.waiting && kind != 'needs_input') continue;
+      if (!_observedOfficeActivityFingerprints.add(fingerprint)) continue;
+      _observedOfficeActivityOrder.addLast(fingerprint);
+      if (_observedOfficeActivityOrder.length > 256) {
+        _observedOfficeActivityFingerprints.remove(
+          _observedOfficeActivityOrder.removeFirst(),
+        );
+      }
+      applyOfficeActivity(kind: kind, phase: phase, summary: summary);
+    }
+  }
+
+  (String, String, String, int)? _mapOfficeActivityLine(String line) {
+    // Common agent TUIs show this while a turn is active. It is an observed
+    // state marker, not a harness identity or an inference from silence.
+    if (line.toLowerCase().contains('esc to interrupt') &&
+        RegExp(r'\bworking\s*\(', caseSensitive: false).hasMatch(line)) {
+      return (
+        'thinking',
+        'Processando solicitação',
+        'updated',
+        Object.hash('working', 'active'),
+      );
+    }
+    if (RegExp(
+      r'^(permission required|approval required|waiting for (your )?(approval|permission|input)|allow this command|approve this command|do you want to (run|allow|proceed)|would you like to (allow|proceed)|select an option|choose an option)\b',
+      caseSensitive: false,
+    ).hasMatch(line.trim())) {
+      return (
+        'needs_input',
+        'Precisa de uma resposta no terminal',
+        'updated',
+        Object.hash('needs_input', line.toLowerCase()),
+      );
+    }
+
+    // Action rows are rendered in the agent TUI. Match only row-like prefixes
+    // so ordinary project output mentioning “read” or “run” is not classified.
+    final row = line.replaceFirst(RegExp(r'^[•*└├─\s]+'), '').trim();
+    if (row.isEmpty) return null;
+    final lower = row.toLowerCase();
+    if (RegExp(
+      r'^(worked for\s+\d|concluiu em\s+\d)',
+      caseSensitive: false,
+    ).hasMatch(row)) {
+      return (
+        'done',
+        'Turno concluído',
+        'completed',
+        Object.hash('done', lower),
+      );
+    }
+    String? kind;
+    String? summary;
+    if (RegExp(r'^(edited|editing|editando)\b').hasMatch(lower)) {
+      kind = 'edit';
+      summary = 'Editando arquivo';
+    } else if (RegExp(
+      r'^(wrote|writing|escrevendo|escreveu)\b',
+    ).hasMatch(lower)) {
+      kind = 'write';
+      summary = 'Escrevendo arquivo';
+    } else if (RegExp(r'^opened\b').hasMatch(lower)) {
+      final opensWebResource = RegExp(r'\bhttps?://').hasMatch(lower);
+      kind = opensWebResource ? 'web' : 'read';
+      summary = opensWebResource ? 'Abrindo página web' : 'Abrindo arquivo';
+    } else if (RegExp(r'^(read|reading|lendo|leu)\b').hasMatch(lower)) {
+      kind = 'read';
+      summary = 'Lendo arquivo';
+    } else if (RegExp(
+      r'^(explored|searching|searched|buscando|pesquisando)\b',
+    ).hasMatch(lower)) {
+      kind = 'search';
+      summary = 'Buscando no código';
+    } else if (RegExp(r'^(browsing|searched) the web\b').hasMatch(lower)) {
+      kind = 'web';
+      summary = 'Pesquisando na web';
+    } else if (RegExp(
+      r'^(running tests|ran .*test|rodando testes|executando testes)\b',
+    ).hasMatch(lower)) {
+      kind = 'test';
+      summary = 'Rodando testes';
+    } else if (RegExp(
+      r'^(ran|running|executing|executando|comando no terminal)\b',
+    ).hasMatch(lower)) {
+      kind = 'command';
+      summary = 'Executando comando';
+    } else if (RegExp(r'^(thinking|pensando)\b').hasMatch(lower)) {
+      kind = 'thinking';
+      summary = 'Pensando';
+    } else if (RegExp(
+      r'^(calling subagents|chamando subagentes)\b',
+    ).hasMatch(lower)) {
+      kind = 'delegate';
+      summary = 'Chamando subagentes';
+    } else if (RegExp(
+      r'^(organizing tasks|organizando tarefas)\b',
+    ).hasMatch(lower)) {
+      kind = 'plan';
+      summary = 'Organizando tarefas';
+    }
+    if (kind == null || summary == null) return null;
+    return (kind, summary, 'updated', Object.hash(kind, lower));
   }
 
   /// Detecta o **interrupt** do harness na entrada do usuário. O Claude Code
@@ -358,15 +703,43 @@ class TerminalSession extends PaneItem {
     }
   }
 
-  void _setStatus(TerminalStatus next) {
-    if (next == _status) return;
-    _status = next;
-    _officeStatusHistory.add(TerminalStatusEvent(next, DateTime.now()));
-    if (_officeStatusHistory.length > 100) {
-      _officeStatusHistory.removeRange(0, _officeStatusHistory.length - 100);
+  void _setStatus(
+    TerminalStatus next, {
+    String? event,
+    String? toolName,
+    bool recordHistory = true,
+    bool forceNotify = false,
+    bool forceTurnFinished = false,
+  }) {
+    final changed = next != _status;
+    if (!changed && event == null && !forceNotify) return;
+    if (changed) _status = next;
+    final lifecycleOnly = event == 'SessionStart' || event == 'SessionEnd';
+    final safeToolName = toolName
+        ?.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '')
+        .trim();
+    if (!lifecycleOnly && recordHistory) {
+      _officeStatusHistory.add(
+        TerminalStatusEvent(
+          next,
+          DateTime.now(),
+          event: event,
+          toolName: safeToolName == null || safeToolName.isEmpty
+              ? null
+              : safeToolName.substring(
+                  0,
+                  safeToolName.length > 80 ? 80 : safeToolName.length,
+                ),
+          sequence: _officeEventSequence++,
+        ),
+      );
+      if (_officeStatusHistory.length > 200) {
+        _officeStatusHistory.removeRange(0, _officeStatusHistory.length - 200);
+      }
     }
-    if (next == TerminalStatus.idle) _lastIdleAt = DateTime.now();
+    if (changed && next == TerminalStatus.idle) _lastIdleAt = DateTime.now();
     notifyListeners();
+    if (!changed && !forceTurnFinished) return;
     // Debounce ~50ms antes de notificar: absorve flicker idle→working numa
     // repintura de TUI (mesma técnica do iTerm2). Só notifica em idle/waiting.
     _notifyDebounce?.cancel();
@@ -459,11 +832,25 @@ class TerminalSession extends PaneItem {
 
   /// Insere [text] diretamente no PTY como se o usuário tivesse digitado/colado
   /// (ex.: caminho de arquivo arrastado até o terminal).
-  void insertText(String text) => _gateway.write(utf8.encode(text));
+  void insertText(String text) => _writeInput(utf8.encode(text));
 
   /// Envia bytes CRUS ao PTY (sequências de controle: ESC, setas, F-keys,
   /// Ctrl+C...). Usado pela barra de teclas do mobile — plano 60, Wave F.
-  void sendKeys(List<int> bytes) => _gateway.write(bytes);
+  void sendKeys(List<int> bytes) => _writeInput(bytes);
+
+  void _writeInput(List<int> bytes) {
+    final text = utf8.decode(bytes, allowMalformed: true);
+    _maybeInterrupt(text);
+    _gateway.write(bytes);
+    // Newline submission is a harness-neutral signal that a request/command
+    // was sent. It does not inspect or classify the submitted text.
+    if (text.contains('\r') || text.contains('\n')) {
+      _observeGenericPromptSubmission(
+        responding: _status == TerminalStatus.waiting,
+      );
+      _kickHarnessMonitor(burst: true);
+    }
+  }
 
   /// Copia a seleção do terminal pro clipboard. No-op sem seleção.
   ///

@@ -507,6 +507,15 @@ class Translations$cockpit$officeWorld$en {
 	/// en: 'Current status'
 	String get currentStatus => 'Current status';
 
+	/// en: 'Follow character'
+	String get followAgent => 'Follow character';
+
+	/// en: 'Stop following'
+	String get stopFollowingAgent => 'Stop following';
+
+	/// en: 'Center character'
+	String get centerAgent => 'Center character';
+
 	/// en: 'Current Cockpit session'
 	String get sessionDuration => 'Current Cockpit session';
 
@@ -518,6 +527,42 @@ class Translations$cockpit$officeWorld$en {
 
 	/// en: 'Recent activity in this run'
 	String get recentActivity => 'Recent activity in this run';
+
+	/// en: 'Received a request'
+	String get promptReceived => 'Received a request';
+
+	/// en: 'Reading a file'
+	String get readingFile => 'Reading a file';
+
+	/// en: 'Searching the code'
+	String get searchingCode => 'Searching the code';
+
+	/// en: 'Editing a file'
+	String get editingFile => 'Editing a file';
+
+	/// en: 'Writing a file'
+	String get writingFile => 'Writing a file';
+
+	/// en: 'Terminal command'
+	String get runningCommand => 'Terminal command';
+
+	/// en: 'Running tests'
+	String get runningTests => 'Running tests';
+
+	/// en: 'Searching the web'
+	String get browsingWeb => 'Searching the web';
+
+	/// en: 'Organizing tasks'
+	String get organizingTasks => 'Organizing tasks';
+
+	/// en: 'Calling subagents'
+	String get callingSubagents => 'Calling subagents';
+
+	/// en: 'Tool completed'
+	String get toolCompleted => 'Tool completed';
+
+	/// en: 'Using tool'
+	String get usingTool => 'Using tool';
 
 	/// en: 'Edit agent name'
 	String get editAgentName => 'Edit agent name';
@@ -576,8 +621,26 @@ class Translations$cockpit$officeWorld$en {
 	/// en: 'Turn completed'
 	String get turnCompleted => 'Turn completed';
 
+	/// en: 'Subagent failed'
+	String get subagentFailed => 'Subagent failed';
+
+	/// en: 'Subagent interrupted'
+	String get subagentInterrupted => 'Subagent interrupted';
+
 	/// en: 'Open terminal'
 	String get openTerminal => 'Open terminal';
+
+	/// en: 'Interact in Office'
+	String get interactInOffice => 'Interact in Office';
+
+	/// en: 'Live terminal'
+	String get liveTerminal => 'Live terminal';
+
+	/// en: 'Type into the terminal…'
+	String get terminalInputPlaceholder => 'Type into the terminal…';
+
+	/// en: 'Input goes to the original session. Use the response options shown by the agent in this terminal.'
+	String get terminalOfficeHint => 'Input goes to the original session. Use the response options shown by the agent in this terminal.';
 
 	/// en: 'Office appearance'
 	String get appearance => 'Office appearance';
@@ -4251,10 +4314,25 @@ extension on Translations {
 			'cockpit.officeWorld.project' => 'Project',
 			'cockpit.officeWorld.provider' => 'Agent',
 			'cockpit.officeWorld.currentStatus' => 'Current status',
+			'cockpit.officeWorld.followAgent' => 'Follow character',
+			'cockpit.officeWorld.stopFollowingAgent' => 'Stop following',
+			'cockpit.officeWorld.centerAgent' => 'Center character',
 			'cockpit.officeWorld.sessionDuration' => 'Current Cockpit session',
 			'cockpit.officeWorld.workingDirectory' => 'Working directory',
 			'cockpit.officeWorld.statsPending' => 'Model, token and tool statistics are not collected by Cockpit yet.',
 			'cockpit.officeWorld.recentActivity' => 'Recent activity in this run',
+			'cockpit.officeWorld.promptReceived' => 'Received a request',
+			'cockpit.officeWorld.readingFile' => 'Reading a file',
+			'cockpit.officeWorld.searchingCode' => 'Searching the code',
+			'cockpit.officeWorld.editingFile' => 'Editing a file',
+			'cockpit.officeWorld.writingFile' => 'Writing a file',
+			'cockpit.officeWorld.runningCommand' => 'Terminal command',
+			'cockpit.officeWorld.runningTests' => 'Running tests',
+			'cockpit.officeWorld.browsingWeb' => 'Searching the web',
+			'cockpit.officeWorld.organizingTasks' => 'Organizing tasks',
+			'cockpit.officeWorld.callingSubagents' => 'Calling subagents',
+			'cockpit.officeWorld.toolCompleted' => 'Tool completed',
+			'cockpit.officeWorld.usingTool' => 'Using tool',
 			'cockpit.officeWorld.editAgentName' => 'Edit agent name',
 			'cockpit.officeWorld.agentName' => 'Agent name',
 			'cockpit.officeWorld.workingInTerminal' => 'Working in terminal',
@@ -4274,7 +4352,13 @@ extension on Translations {
 			'cockpit.officeWorld.shoes' => 'Shoes',
 			'cockpit.officeWorld.accessory' => 'Accessory',
 			'cockpit.officeWorld.turnCompleted' => 'Turn completed',
+			'cockpit.officeWorld.subagentFailed' => 'Subagent failed',
+			'cockpit.officeWorld.subagentInterrupted' => 'Subagent interrupted',
 			'cockpit.officeWorld.openTerminal' => 'Open terminal',
+			'cockpit.officeWorld.interactInOffice' => 'Interact in Office',
+			'cockpit.officeWorld.liveTerminal' => 'Live terminal',
+			'cockpit.officeWorld.terminalInputPlaceholder' => 'Type into the terminal…',
+			'cockpit.officeWorld.terminalOfficeHint' => 'Input goes to the original session. Use the response options shown by the agent in this terminal.',
 			'cockpit.officeWorld.appearance' => 'Office appearance',
 			'cockpit.officeWorld.officeTheme' => 'Seasonal theme',
 			'cockpit.officeWorld.themeAuto' => 'Automatic',
@@ -4651,6 +4735,8 @@ extension on Translations {
 			'cockpit.kanbanView.columnOptions' => 'Column options',
 			'cockpit.kanbanView.renameColumn' => 'Rename column',
 			'cockpit.kanbanView.moveColumnLeft' => 'Move left',
+			_ => null,
+		} ?? switch (path) {
 			'cockpit.kanbanView.moveColumnRight' => 'Move right',
 			'cockpit.kanbanView.deleteColumn' => 'Delete column',
 			'cockpit.kanbanView.newCardHere' => 'New card here',
@@ -4672,8 +4758,6 @@ extension on Translations {
 			'cockpit.kanbanView.notABoard' => 'This file has no ## columns yet — it opens as markdown.',
 			'cockpit.kanbanView.startBoard' => 'Start a board',
 			'cockpit.kanbanView.couldNotSave' => 'Could not save the board',
-			_ => null,
-		} ?? switch (path) {
 			'cockpit.kanbanView.unrecognizedBlock' => 'Not recognized by the parser — drags whole, no inline editing.',
 			'cockpit.kanbanView.deleteColumnDialog.title' => ({required Object name}) => 'Delete “${name}”?',
 			'cockpit.kanbanView.deleteColumnDialog.message' => ({required Object count}) => 'This column has ${count}. Choose what happens to them.',
@@ -5165,6 +5249,8 @@ extension on Translations {
 			'settings.page.automations.sectionCommitMessages' => 'Commit messages',
 			'settings.page.automations.harness' => 'Harness',
 			'settings.page.automations.harnessDiscovering' => 'Looking for installed command-line harnesses…',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.automations.harnessNoneFound' => 'No supported harness was found on PATH.',
 			'settings.page.automations.harnessConfiguredUnavailable' => ({required Object harness}) => '${harness} is configured but unavailable.',
 			'settings.page.automations.harnessChoose' => 'Choose the CLI used to generate commit messages.',
@@ -5186,8 +5272,6 @@ extension on Translations {
 			'settings.remoteHosts.title' => 'Remote hosts',
 			'settings.remoteHosts.description' => 'Machines you reach over SSH. Adding a host here is the same as adding one from the workspace "+" menu.',
 			'settings.remoteHosts.empty' => 'No remote hosts yet.',
-			_ => null,
-		} ?? switch (path) {
 			'settings.remoteHosts.add' => 'Add host',
 			'settings.remoteHosts.edit' => 'Edit',
 			'settings.remoteHosts.reconnect' => 'Reconnect',

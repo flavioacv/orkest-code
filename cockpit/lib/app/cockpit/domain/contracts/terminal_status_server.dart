@@ -6,15 +6,24 @@ class ClaudeStatusUpdate {
     required this.paneId,
     required this.status,
     this.event,
+    this.toolName,
     this.sessionId,
     this.transcriptPath,
     this.harness,
+    this.subagentId,
+    this.subagentType,
+    this.subagentOutcome,
+    this.subagentParentId,
+    this.activityKind,
+    this.activityPhase,
+    this.activitySummary,
   });
 
   /// Id da aba (vem do env `COCKPIT_PANE_ID` injetado na PTV — roteamento).
   final String paneId;
 
-  /// `working` | `waiting` | `idle` (wire string).
+  /// `working` | `waiting` | `idle`; `subagent` é um evento de ciclo de vida
+  /// e não representa o status do terminal pai.
   final String status;
 
   /// Nome cru do evento de hook do Claude Code (`UserPromptSubmit`, `PreToolUse`,
@@ -22,6 +31,9 @@ class ClaudeStatusUpdate {
   /// turno de atividade mid-turn e descartar `working` reordenado. `null` em
   /// helpers antigos (pré-`ev`).
   final String? event;
+
+  /// Identificador da ferramenta, sem os argumentos nem a saída do agente.
+  final String? toolName;
 
   /// session_id do agente (persistido pra retomar a sessão no restore da aba).
   final String? sessionId;
@@ -33,6 +45,25 @@ class ClaudeStatusUpdate {
   /// instalador grava no comando do hook; `null` em helpers antigos (que só
   /// existiam para o Claude — ver [AgentHarness.fromWire]).
   final String? harness;
+
+  /// Identidade opaca do subagente enviada pelos hooks que a expõem. O
+  /// payload não inclui prompts nem resultados.
+  final String? subagentId;
+
+  /// Tipo/papel declarado pelo harness (ex.: `explorer`).
+  final String? subagentType;
+
+  /// Resultado opcional informado por adapters genéricos (`success`, `error`,
+  /// `interrupted`). Hooks nativos podem omiti-lo quando não o conhecem.
+  final String? subagentOutcome;
+
+  /// ID do subagente pai para filhos aninhados; ausente significa sessão raiz.
+  final String? subagentParentId;
+
+  /// Provider-neutral Office activity reported by `cockpit activity`.
+  final String? activityKind;
+  final String? activityPhase;
+  final String? activitySummary;
 }
 
 /// Harness que roda numa aba de terminal. O Cockpit precisa distinguir para

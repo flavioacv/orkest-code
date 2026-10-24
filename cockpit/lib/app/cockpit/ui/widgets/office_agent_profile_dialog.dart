@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:cockpit/app/cockpit/domain/entities/project.dart';
 import 'package:cockpit/app/cockpit/ui/session/terminal_session.dart';
 import 'package:cockpit/app/cockpit/ui/widgets/office_character_editor_dialog.dart';
+import 'package:cockpit/app/cockpit/ui/widgets/office_terminal_interaction_dialog.dart';
 import 'package:cockpit/app/core/domain/entities/harness.dart';
 import 'package:cockpit/app/core/ui/themes/themes.dart';
 import 'package:cockpit/i18n/strings.g.dart';
@@ -14,6 +15,8 @@ Future<void> showOfficeAgentProfile(
   required TerminalSession session,
   required Project project,
   required VoidCallback onOpenTerminal,
+  ValueChanged<bool>? onFollowAgent,
+  VoidCallback? onCenterAgent,
   required ValueChanged<String> onRename,
   String? officeName,
   OfficeAppearanceLoader? loadAppearance,
@@ -26,6 +29,8 @@ Future<void> showOfficeAgentProfile(
     session: session,
     project: project,
     onOpenTerminal: onOpenTerminal,
+    onFollowAgent: onFollowAgent,
+    onCenterAgent: onCenterAgent,
     onRename: onRename,
     officeName: officeName,
     loadAppearance: loadAppearance,
@@ -39,6 +44,8 @@ class _OfficeAgentProfileDialog extends StatefulWidget {
     required this.session,
     required this.project,
     required this.onOpenTerminal,
+    this.onFollowAgent,
+    this.onCenterAgent,
     required this.onRename,
     this.officeName,
     this.loadAppearance,
@@ -49,6 +56,8 @@ class _OfficeAgentProfileDialog extends StatefulWidget {
   final TerminalSession session;
   final Project project;
   final VoidCallback onOpenTerminal;
+  final ValueChanged<bool>? onFollowAgent;
+  final VoidCallback? onCenterAgent;
   final ValueChanged<String> onRename;
   final String? officeName;
   final OfficeAppearanceLoader? loadAppearance;
@@ -62,6 +71,7 @@ class _OfficeAgentProfileDialog extends StatefulWidget {
 
 class _OfficeAgentProfileDialogState extends State<_OfficeAgentProfileDialog> {
   Timer? _clock;
+  bool _following = false;
 
   @override
   void initState() {
@@ -225,17 +235,8 @@ class _OfficeAgentProfileDialogState extends State<_OfficeAgentProfileDialog> {
                   8,
                 ))
                   _TimelineRow(
-                    icon: switch (event.status) {
-                      TerminalStatus.working => '⚙️',
-                      TerminalStatus.waiting => '✋',
-                      TerminalStatus.idle => '✅',
-                    },
-                    text: _statusEventLabel(
-                      event.status,
-                      working: tr.workingInTerminal,
-                      waiting: tr.waitingInTerminal,
-                      idle: tr.turnCompleted,
-                    ),
+                    icon: _eventIcon(event),
+                    text: _officeEventLabel(event),
                     time: _formatClock(event.at),
                   ),
               const SizedBox(height: 8),
@@ -251,12 +252,29 @@ class _OfficeAgentProfileDialogState extends State<_OfficeAgentProfileDialog> {
         ),
       ),
       actions: [
+        if (widget.onFollowAgent case final onFollowAgent?)
+          shad.OutlineButton(
+            onPressed: () {
+              setState(() => _following = !_following);
+              onFollowAgent(_following);
+            },
+            child: Text(_following ? tr.stopFollowingAgent : tr.followAgent),
+          ),
+        if (widget.onCenterAgent case final onCenterAgent?)
+          shad.OutlineButton(
+            onPressed: onCenterAgent,
+            child: Text(tr.centerAgent),
+          ),
         if (widget.loadAppearance != null && widget.onSaveAppearance != null)
           shad.OutlineButton(
             onPressed: _editAppearance,
             child: Text(tr.editAppearance),
           ),
         shad.OutlineButton(onPressed: _editName, child: Text(tr.editAgentName)),
+        shad.OutlineButton(
+          onPressed: () => showOfficeTerminalInteraction(context, session),
+          child: Text(tr.interactInOffice),
+        ),
         shad.PrimaryButton(
           onPressed: () {
             Navigator.of(context).pop();
@@ -267,6 +285,91 @@ class _OfficeAgentProfileDialogState extends State<_OfficeAgentProfileDialog> {
       ],
     );
   }
+
+  String _officeEventLabel(TerminalStatusEvent event) {
+    final tr = context.t.cockpit.officeWorld;
+    if (event.event == 'OfficeActivity' && event.activitySummary != null) {
+      return event.activitySummary!;
+    }
+    final tool = event.toolName;
+    final label = switch (event.event) {
+      'UserPromptSubmit' => tr.promptReceived,
+      'PreToolUse' => switch (tool?.toLowerCase()) {
+        'read' || 'notebookread' => tr.readingFile,
+        'glob' || 'grep' || 'search' => tr.searchingCode,
+        'edit' || 'multiedit' => tr.editingFile,
+        'write' => tr.writingFile,
+        'bash' || 'shell' => tr.runningCommand,
+        'websearch' || 'webfetch' => tr.browsingWeb,
+        'task' || 'agent' => tr.callingSubagents,
+        'todowrite' || 'update_plan' => tr.organizingTasks,
+        'askuserquestion' || 'exitplanmode' => tr.waitingInTerminal,
+        _ => tr.usingTool,
+      },
+      'PostToolUse' => tr.toolCompleted,
+      'PermissionRequest' => tr.waitingInTerminal,
+      'Notification' when event.status == TerminalStatus.waiting =>
+        tr.waitingInTerminal,
+      'Stop' => tr.turnCompleted,
+      _ => _statusEventLabel(
+        event.status,
+        working: tr.workingInTerminal,
+        waiting: tr.waitingInTerminal,
+        idle: tr.turnCompleted,
+      ),
+    };
+    if (tool == null ||
+        tool.isEmpty ||
+        (event.event != 'PreToolUse' && event.event != 'PostToolUse')) {
+      return label;
+    }
+    return '$label: $tool';
+  }
+
+  String _eventIcon(TerminalStatusEvent event) =>
+      event.event == 'OfficeActivity'
+      ? switch (event.activityKind) {
+          'prompt' => '📨',
+          'thinking' => '💭',
+          'read' => '📖',
+          'search' => '🔎',
+          'edit' => '✏️',
+          'write' => '📝',
+          'command' => '💻',
+          'wait' => '⏳',
+          'test' => '🧪',
+          'web' => '🌐',
+          'plan' => '🗒️',
+          'delegate' => '👥',
+          'needs_input' => '✋',
+          'done' => '✅',
+          'error' => '⚠️',
+          _ => '⚙️',
+        }
+      : switch (event.event) {
+          'UserPromptSubmit' => '📨',
+          'PreToolUse' => switch (event.toolName?.toLowerCase()) {
+            'read' || 'notebookread' => '📖',
+            'glob' || 'grep' || 'search' => '🔎',
+            'edit' || 'multiedit' => '✏️',
+            'write' => '📝',
+            'bash' || 'shell' => '💻',
+            'websearch' || 'webfetch' => '🌐',
+            'task' || 'agent' => '👥',
+            'todowrite' || 'update_plan' => '🗒️',
+            'askuserquestion' || 'exitplanmode' => '✋',
+            _ => '⚙️',
+          },
+          'PostToolUse' => '✅',
+          'PermissionRequest' => '✋',
+          'Notification' when event.status == TerminalStatus.waiting => '✋',
+          'Stop' => '✅',
+          _ => switch (event.status) {
+            TerminalStatus.working => '⚙️',
+            TerminalStatus.waiting => '✋',
+            TerminalStatus.idle => '✅',
+          },
+        };
 }
 
 class _ProfileValue extends StatelessWidget {

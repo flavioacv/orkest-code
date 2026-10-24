@@ -91,17 +91,22 @@ canvas{display:block;image-rendering:pixelated;outline:none}
         .whereType<TerminalSession>()
         .where(
           (session) =>
-              session.activeHarness != null &&
-              projectIds.contains(session.projectId),
+              projectIds.contains(session.projectId) &&
+              (session.officeStatusHistory.isNotEmpty ||
+                  session.status != TerminalStatus.idle ||
+                  session.officeSubagents.isNotEmpty),
         )
         .toList(growable: false);
     final identities = _resolveAgentIdentities(sessions, officeSettings);
     final accountCounts = <String, int>{};
     final agents = <Map<String, dynamic>>[];
+    final usedOfficeNames = <String>{
+      for (final identity in identities.values) identity.name.toLowerCase(),
+    };
     final officeLabels = context.t.cockpit.officeWorld;
 
     for (final session in sessions) {
-      final harness = session.activeHarness!;
+      final harness = session.activeHarness;
       final identity = identities[session.id]!;
       final provider = _providerFor(harness);
       final accountId = 'cockpit-$provider';
@@ -117,9 +122,27 @@ canvas{display:block;image-rendering:pixelated;outline:none}
           _officeStatusActivity(
             event.status,
             event.at.millisecondsSinceEpoch,
+            sequence: event.sequence,
+            hookEvent: event.event,
+            toolName: event.toolName,
+            activityKind: event.activityKind,
+            activityPhase: event.activityPhase,
+            activitySummary: event.activitySummary,
             working: officeLabels.workingInTerminal,
             waiting: officeLabels.waitingInTerminal,
             idle: officeLabels.turnCompleted,
+            prompt: officeLabels.promptReceived,
+            reading: officeLabels.readingFile,
+            searching: officeLabels.searchingCode,
+            editing: officeLabels.editingFile,
+            writing: officeLabels.writingFile,
+            command: officeLabels.runningCommand,
+            tests: officeLabels.runningTests,
+            web: officeLabels.browsingWeb,
+            planning: officeLabels.organizingTasks,
+            delegate: officeLabels.callingSubagents,
+            toolComplete: officeLabels.toolCompleted,
+            usingTool: officeLabels.usingTool,
           ),
       ];
       final observedSince =
@@ -131,6 +154,18 @@ canvas{display:block;image-rendering:pixelated;outline:none}
               working: officeLabels.workingInTerminal,
               waiting: officeLabels.waitingInTerminal,
               idle: officeLabels.turnCompleted,
+              prompt: officeLabels.promptReceived,
+              reading: officeLabels.readingFile,
+              searching: officeLabels.searchingCode,
+              editing: officeLabels.editingFile,
+              writing: officeLabels.writingFile,
+              command: officeLabels.runningCommand,
+              tests: officeLabels.runningTests,
+              web: officeLabels.browsingWeb,
+              planning: officeLabels.organizingTasks,
+              delegate: officeLabels.callingSubagents,
+              toolComplete: officeLabels.toolCompleted,
+              usingTool: officeLabels.usingTool,
             )
           : recent.last;
       agents.add({
@@ -146,7 +181,8 @@ canvas{display:block;image-rendering:pixelated;outline:none}
         'account': accountId,
         'status': _statusFor(session.status),
         if (session.status == TerminalStatus.waiting)
-          'waitingFor': officeLabels.waitingBubble,
+          'waitingFor':
+              session.officeWaitingSummary ?? officeLabels.waitingBubble,
         'activity': latestActivity,
         'recent': recent.isEmpty
             ? [latestActivity]
@@ -155,29 +191,119 @@ canvas{display:block;image-rendering:pixelated;outline:none}
         'startedAt': session.createdAt.millisecondsSinceEpoch,
         'lastEventAt': now,
         'statusSince': _statusSince[session.id] ?? now,
-        // O contrato Habblaud exige AgentStats. São placeholders internos para
-        // simulação; o perfil Cockpit não os apresenta como medições.
-        'stats': const {
+        // O contrato Habblaud exige AgentStats. Só a contagem de subagentes é
+        // observada; tokens e chamadas permanecem sem medição.
+        'stats': {
           'toolCalls': 0,
           'tokensIn': 0,
           'tokensOut': 0,
-          'subagents': 0,
+          'subagents': session.officeSubagents
+              .where((agent) => agent.finishedAt == null)
+              .length,
         },
         'seed': seed,
         if (officeSettings.officeCharacterParts[session.projectId] != null)
           'parts': officeSettings.officeCharacterParts[session.projectId],
       });
+
+      final sessionSubagents = session.officeSubagents;
+      final subagentIds = sessionSubagents.map((agent) => agent.id).toSet();
+      for (final subagent in sessionSubagents) {
+        final childId = '${session.id}:sub:${subagent.id}';
+        final nestedParent = subagent.parentSubagentId;
+        final nestedParentId =
+            nestedParent == null || !subagentIds.contains(nestedParent)
+            ? null
+            : '${session.id}:sub:$nestedParent';
+        final identity = pickOfficeAgentIdentity(childId, usedOfficeNames);
+        usedOfficeNames.add(identity.name.toLowerCase());
+        final startedAt = subagent.startedAt.millisecondsSinceEpoch;
+        final finishedAt = subagent.finishedAt?.millisecondsSinceEpoch;
+        final outcome = subagent.outcome;
+        final isDone =
+            finishedAt != null && (outcome == null || outcome == 'success');
+        final failed = finishedAt != null && outcome == 'error';
+        final interrupted = finishedAt != null && outcome == 'interrupted';
+        final activityAt = finishedAt ?? startedAt;
+        final role = subagent.type?.trim();
+        agents.add({
+          'id': childId,
+          'kind': 'sub',
+          if (provider != 'claude') 'provider': provider,
+          'parentId': nestedParentId ?? session.id,
+          'roomId': session.projectId,
+          'name': identity.name,
+          'look': identity.look,
+          'role': role == null || role.isEmpty ? 'Subagente' : role,
+          'title': role,
+          'sessionId': childId,
+          'account': accountId,
+          'status': finishedAt == null
+              ? 'working'
+              : isDone
+              ? 'done'
+              : 'offline',
+          'activity': {
+            'id': '$childId:${finishedAt == null ? 'started' : outcome}',
+            'kind': finishedAt == null
+                ? 'think'
+                : isDone
+                ? 'done'
+                : 'error',
+            'icon': finishedAt == null
+                ? '👥'
+                : isDone
+                ? '✅'
+                : failed
+                ? '🌧️'
+                : interrupted
+                ? '🛑'
+                : '⚠️',
+            'text': finishedAt == null
+                ? officeLabels.callingSubagents
+                : isDone
+                ? officeLabels.turnCompleted
+                : failed
+                ? officeLabels.subagentFailed
+                : officeLabels.subagentInterrupted,
+            if (finishedAt != null && !isDone) 'error': true,
+            'at': activityAt,
+          },
+          'recent': const <dynamic>[],
+          'tasks': const <dynamic>[],
+          'startedAt': startedAt,
+          'lastEventAt': activityAt,
+          'statusSince': isDone ? finishedAt : startedAt,
+          'stats': const {
+            'toolCalls': 0,
+            'tokensIn': 0,
+            'tokensOut': 0,
+            'subagents': 0,
+          },
+          'seed': _stableSeed(childId),
+        });
+      }
     }
 
+    // O prédio representa sessões de agentes em execução, não apenas projetos
+    // cadastrados no Cockpit. Quando a última sessão some do snapshot, o Sim
+    // Habblaud mantém a sala enquanto o personagem apaga a luz e sai; depois a
+    // desmonta com a animação original.
+    final occupiedProjects = projects
+        .where(
+          (project) =>
+              sessions.any((session) => session.projectId == project.id),
+        )
+        .toList(growable: false);
     final rooms = [
-      for (var slot = 0; slot < projects.length; slot++)
+      for (var slot = 0; slot < occupiedProjects.length; slot++)
         {
-          'id': projects[slot].id,
-          'name': projects[slot].name,
-          'path': projects[slot].effectiveRoot,
+          'id': occupiedProjects[slot].id,
+          'name': occupiedProjects[slot].name,
+          'path': occupiedProjects[slot].effectiveRoot,
           'slot': slot,
-          'seed': _stableSeed(projects[slot].id),
-          'createdAt': projects[slot].createdAt.millisecondsSinceEpoch,
+          'seed': _stableSeed(occupiedProjects[slot].id),
+          'createdAt': occupiedProjects[slot].createdAt.millisecondsSinceEpoch,
         },
     ];
     final accounts = [
@@ -269,6 +395,21 @@ canvas{display:block;image-rendering:pixelated;outline:none}
         session.officeStatusHistory.length,
         if (session.officeStatusHistory.isNotEmpty)
           session.officeStatusHistory.last.at.millisecondsSinceEpoch,
+        if (session.officeStatusHistory.isNotEmpty)
+          session.officeStatusHistory.last.event,
+        if (session.officeStatusHistory.isNotEmpty)
+          session.officeStatusHistory.last.toolName,
+        if (session.officeStatusHistory.isNotEmpty)
+          session.officeStatusHistory.last.sequence,
+        for (final subagent in session.officeSubagents)
+          [
+            subagent.id,
+            subagent.type,
+            subagent.startedAt.millisecondsSinceEpoch,
+            subagent.finishedAt?.millisecondsSinceEpoch,
+            subagent.outcome,
+            subagent.parentSubagentId,
+          ],
       ],
     ],
   ]);
@@ -365,10 +506,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
   }) async {
     final settings = context.read<SettingsController>().settings;
     final identities = _resolveAgentIdentities(
-      widget.sessions
-          .whereType<TerminalSession>()
-          .where((item) => item.activeHarness != null)
-          .toList(),
+      widget.sessions.whereType<TerminalSession>().toList(),
       settings,
     );
     final agentIdentity = identities[session.id];
@@ -384,6 +522,26 @@ canvas{display:block;image-rendering:pixelated;outline:none}
       project: project,
       officeName: agentIdentity?.name,
       onOpenTerminal: () => widget.onOpenSession(session),
+      onFollowAgent: (follow) {
+        if (web != null) {
+          unawaited(
+            web.evaluateJavascript(
+              source:
+                  'window.cockpitHabblaudWorld?.setFollowAgent(${jsonEncode(session.id)}, $follow);',
+            ),
+          );
+        }
+      },
+      onCenterAgent: () {
+        if (web != null) {
+          unawaited(
+            web.evaluateJavascript(
+              source:
+                  'window.cockpitHabblaudWorld?.focusAgent(${jsonEncode(session.id)}, false);',
+            ),
+          );
+        }
+      },
       onRename: (name) => widget.onRenameSession(session, name),
       initialAppearance: Map<String, String>.from(
         context
@@ -485,31 +643,112 @@ Map<String, dynamic> _officeStatusActivity(
   required String working,
   required String waiting,
   required String idle,
-}) => switch (status) {
-  TerminalStatus.working => {
-    'id': 'cockpit-status-working-$at',
-    'kind': 'run',
-    'icon': '⚙️',
-    'text': working,
+  required String prompt,
+  required String reading,
+  required String searching,
+  required String editing,
+  required String writing,
+  required String command,
+  required String tests,
+  required String web,
+  required String planning,
+  required String delegate,
+  required String toolComplete,
+  required String usingTool,
+  String? hookEvent,
+  String? toolName,
+  String? activityKind,
+  String? activityPhase,
+  String? activitySummary,
+  int sequence = 0,
+}) {
+  if (activityKind != null && activitySummary != null) {
+    final icon = switch (activityKind) {
+      'prompt' => '📨',
+      'respond' => '💬',
+      'thinking' => '💭',
+      'read' => '📖',
+      'search' => '🔎',
+      'edit' => '✏️',
+      'write' => '📝',
+      'command' => '💻',
+      'wait' => '⏳',
+      'test' => '🧪',
+      'web' => '🌐',
+      'plan' => '🗒️',
+      'delegate' => '👥',
+      'needs_input' => '✋',
+      'done' => '✅',
+      'error' => '⚠️',
+      _ => '⚙️',
+    };
+    final text = activityPhase == null || activityPhase == 'started'
+        ? activitySummary
+        : '$activitySummary · $activityPhase';
+    return {
+      'id': 'cockpit-activity-$at-$sequence',
+      'kind': switch (activityKind) {
+        'thinking' => 'think',
+        'command' => 'run',
+        'needs_input' => 'ask',
+        'respond' => 'respond',
+        _ => activityKind,
+      },
+      'icon': icon,
+      'text': text.length > 72 ? '${text.substring(0, 71)}…' : text,
+      'at': at,
+    };
+  }
+  final tool = toolName?.trim();
+  final toolLower = tool?.toLowerCase() ?? '';
+  final (kind, icon, label) = switch (hookEvent) {
+    'UserPromptSubmit' => ('prompt', '📨', prompt),
+    'PreToolUse' => switch (toolLower) {
+      'read' || 'notebookread' => ('read', '📖', reading),
+      'glob' || 'grep' || 'search' => ('search', '🔎', searching),
+      'edit' || 'multiedit' => ('edit', '✏️', editing),
+      'write' => ('write', '📝', writing),
+      'bash' || 'shell' => ('run', '💻', command),
+      _ when toolLower.contains('test') => ('test', '🧪', tests),
+      'websearch' || 'webfetch' => ('web', '🌐', web),
+      'task' || 'agent' => ('delegate', '👥', delegate),
+      'todowrite' || 'update_plan' => ('plan', '🗒️', planning),
+      'askuserquestion' || 'exitplanmode' => ('ask', '✋', waiting),
+      _ when toolLower.startsWith('mcp__') => ('mcp', '🔌', usingTool),
+      _ => ('other', '⚙️', usingTool),
+    },
+    'PostToolUse' => ('run', '✅', toolComplete),
+    'PermissionRequest' => ('ask', '✋', waiting),
+    'Notification' when status == TerminalStatus.waiting => (
+      'ask',
+      '✋',
+      waiting,
+    ),
+    'Stop' => ('done', '✅', idle),
+    _ => switch (status) {
+      TerminalStatus.working => ('run', '⚙️', working),
+      TerminalStatus.waiting => ('ask', '✋', waiting),
+      TerminalStatus.idle => ('done', '✅', idle),
+    },
+  };
+  final text =
+      tool != null &&
+          tool.isNotEmpty &&
+          (hookEvent == 'PreToolUse' || hookEvent == 'PostToolUse')
+      ? '$label: $tool'
+      : label;
+  return {
+    'id': 'cockpit-${hookEvent ?? status.name}-$at-$sequence',
+    'kind': kind,
+    'icon': icon,
+    'text': text.length > 46 ? '${text.substring(0, 45)}…' : text,
+    if (tool != null && tool.isNotEmpty) 'tool': tool,
     'at': at,
-  },
-  TerminalStatus.waiting => {
-    'id': 'cockpit-status-waiting-$at',
-    'kind': 'ask',
-    'icon': '✋',
-    'text': waiting,
-    'at': at,
-  },
-  TerminalStatus.idle => {
-    'id': 'cockpit-status-idle-$at',
-    'kind': 'done',
-    'icon': '✅',
-    'text': idle,
-    'at': at,
-  },
-};
+  };
+}
 
-String _providerFor(HarnessKind harness) => switch (harness) {
+String _providerFor(HarnessKind? harness) => switch (harness) {
+  null => 'cockpit',
   HarnessKind.codex => 'codex',
   HarnessKind.antigravity => 'antigravity',
   HarnessKind.claudeCode ||

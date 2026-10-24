@@ -37,6 +37,7 @@ import 'package:cockpit/app/cockpit/ui/widgets/remote_disconnected_banner.dart';
 import 'package:cockpit/app/cockpit/ui/widgets/terminal_key_bar.dart';
 import 'package:cockpit/app/cockpit/ui/widgets/widgets.dart';
 import 'package:cockpit/app/cockpit/ui/widgets/office_world_view.dart';
+import 'package:cockpit/app/cockpit/ui/widgets/office_terminal_interaction_dialog.dart';
 import 'package:cockpit/app/core/data/diagnostics/performance_diagnostics.dart';
 import 'package:cockpit/app/core/ui/automation_controller.dart';
 import 'package:cockpit/app/core/ui/themes/themes.dart';
@@ -1007,7 +1008,7 @@ class _CenterPanelState extends State<_CenterPanel> {
   // workspace's pane tree.
   final Map<String, Widget> _workspaceWidgets = {};
   String? _officeTerminalSessionId;
-  final Set<String> _dismissedOfficeWaiting = <String>{};
+  final Map<String, int> _dismissedOfficeWaiting = <String, int>{};
 
   @override
   void didUpdateWidget(covariant _CenterPanel oldWidget) {
@@ -1035,14 +1036,13 @@ class _CenterPanelState extends State<_CenterPanel> {
         .where(
           (session) =>
               session.status == TerminalStatus.waiting &&
-              session.activeHarness != null &&
-              !_dismissedOfficeWaiting.contains(session.id),
+              session.latestWaitingEventSequence >
+                  (_dismissedOfficeWaiting[session.id] ?? -1),
         )
         .toList(growable: false);
     _dismissedOfficeWaiting.removeWhere(
-      (id) => !vm.allSessions.whereType<TerminalSession>().any(
-        (session) =>
-            session.id == id && session.status == TerminalStatus.waiting,
+      (id, _) => !vm.allSessions.whereType<TerminalSession>().any(
+        (session) => session.id == id,
       ),
     );
     final officeProject = officeSession == null
@@ -1143,17 +1143,13 @@ class _CenterPanelState extends State<_CenterPanel> {
                       ?.name ??
                   session.projectId,
               onRespond: (session) {
-                _dismissedOfficeWaiting.remove(session.id);
-                unawaited(() async {
-                  await vm.selectProjectAndWait(session.projectId);
-                  if (!mounted) return;
-                  final pane = vm.leafOfTab(session.projectId, session.id);
-                  if (pane != null) vm.selectTab(pane, session.id);
-                  setState(() => _officeTerminalSessionId = session.id);
-                }());
+                _dismissedOfficeWaiting[session.id] =
+                    session.latestWaitingEventSequence;
+                unawaited(showOfficeTerminalInteraction(context, session));
               },
               onDismiss: (session) => setState(() {
-                _dismissedOfficeWaiting.add(session.id);
+                _dismissedOfficeWaiting[session.id] =
+                    session.latestWaitingEventSequence;
               }),
             ),
           ),
@@ -1216,42 +1212,42 @@ class _OfficeWaitingNotifications extends StatelessWidget {
         children: [
           for (final session in sessions)
             Padding(
-            padding: const EdgeInsets.only(top: 8),
-            child: Container(
-              decoration: BoxDecoration(
-                color: colors.bg.withValues(alpha: 0.96),
-                border: Border.all(color: const Color(0xFFFFB340), width: 2),
-                borderRadius: BorderRadius.circular(12),
-                boxShadow: const [
-                  BoxShadow(color: Color(0x55000000), blurRadius: 18),
-                ],
-              ),
-              padding: const EdgeInsets.fromLTRB(10, 10, 6, 10),
-              child: Row(
-                children: [
-                  const Text('✋', style: TextStyle(fontSize: 20)),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      '${session.displayTitle} ${tr.waitingInTerminal.toLowerCase()} · ${projectName(session)}',
-                      maxLines: 2,
-                      overflow: TextOverflow.ellipsis,
-                      style: TextStyle(color: colors.text, fontSize: 12),
+              padding: const EdgeInsets.only(top: 8),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: colors.bg.withValues(alpha: 0.96),
+                  border: Border.all(color: const Color(0xFFFFB340), width: 2),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: const [
+                    BoxShadow(color: Color(0x55000000), blurRadius: 18),
+                  ],
+                ),
+                padding: const EdgeInsets.fromLTRB(10, 10, 6, 10),
+                child: Row(
+                  children: [
+                    const Text('✋', style: TextStyle(fontSize: 20)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${session.displayTitle}: ${session.officeWaitingSummary ?? tr.waitingInTerminal.toLowerCase()} · ${projectName(session)}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: colors.text, fontSize: 12),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 6),
-                  PrimaryButton(
-                    onPressed: () => onRespond(session),
-                    child: Text(tr.respond),
-                  ),
-                  IconButton.ghost(
-                    variance: ButtonVariance.ghost,
-                    onPressed: () => onDismiss(session),
-                    icon: const Icon(Icons.close, size: 16),
-                  ),
-                ],
+                    const SizedBox(width: 6),
+                    PrimaryButton(
+                      onPressed: () => onRespond(session),
+                      child: Text(tr.respond),
+                    ),
+                    IconButton.ghost(
+                      variance: ButtonVariance.ghost,
+                      onPressed: () => onDismiss(session),
+                      icon: const Icon(Icons.close, size: 16),
+                    ),
+                  ],
+                ),
               ),
-            ),
             ),
         ],
       ),

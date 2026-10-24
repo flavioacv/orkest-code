@@ -10,6 +10,12 @@ are legacy aliases of `list-tabs`/`read-tab`.
 USAGE:
   cockpit send      [--tab-id <id>] [--enter] <text>   type text (--enter submits)
   cockpit send-key  [--tab-id <id>] <Key>...   press named key(s)
+  cockpit agent start <id> [--type <role>] [--tab-id <parent-tab>]
+                                               report a child entering Office
+  cockpit agent stop  <id> [--type <role>] [--outcome <result>] [--tab-id <parent-tab>]
+                                               report it finishing and leaving
+  cockpit activity <kind> --summary <text> [--phase <phase>] [--tab-id <id>]
+                                               report provider-neutral Office activity
   cockpit open      [--tab-id <id>] <file>     open the file in the app's viewer
   cockpit <file>                               shortcut for `open` (e.g. cockpit .zprofile)
   cockpit read-tab  [<label|tab-id>]           read a tab's rendered output (alias: read-pane)

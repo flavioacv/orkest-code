@@ -472,32 +472,47 @@ class TurnStatus extends RemoteMessage {
     required this.paneId,
     required this.status,
     this.event,
+    this.toolName,
     this.sid,
     this.transcriptPath,
     this.harness,
+    this.subagentId,
+    this.subagentType,
+    this.subagentOutcome,
+    this.subagentParentId,
   });
   static const kType = 'turn.status';
 
   /// Aba dona (o `COCKPIT_PANE_ID` que o cliente injetou e o host reportou).
   final String paneId;
 
-  /// `working` | `idle` | `waiting`.
+  /// `working` | `idle` | `waiting`; `subagent` acompanha eventos de filhos.
   final String status;
 
   /// Evento cru do harness (ex.: `UserPromptSubmit`, `Stop`) — a UI usa pra
   /// saber se é início de turno.
   final String? event;
+  final String? toolName;
   final String? sid;
   final String? transcriptPath;
   final String? harness;
+  final String? subagentId;
+  final String? subagentType;
+  final String? subagentOutcome;
+  final String? subagentParentId;
 
   factory TurnStatus.fromJson(Map<String, Object?> j) => TurnStatus(
     paneId: j['pane'] as String,
     status: j['st'] as String,
     event: j['ev'] as String?,
+    toolName: j['tool'] as String?,
     sid: j['sid'] as String?,
     transcriptPath: j['tx'] as String?,
     harness: j['hn'] as String?,
+    subagentId: j['sub'] as String?,
+    subagentType: j['subType'] as String?,
+    subagentOutcome: j['subOutcome'] as String?,
+    subagentParentId: j['subParent'] as String?,
   );
 
   @override
@@ -508,9 +523,14 @@ class TurnStatus extends RemoteMessage {
     'pane': paneId,
     'st': status,
     if (event != null) 'ev': event,
+    if (toolName != null) 'tool': toolName,
     if (sid != null) 'sid': sid,
     if (transcriptPath != null) 'tx': transcriptPath,
     if (harness != null) 'hn': harness,
+    if (subagentId != null) 'sub': subagentId,
+    if (subagentType != null) 'subType': subagentType,
+    if (subagentOutcome != null) 'subOutcome': subagentOutcome,
+    if (subagentParentId != null) 'subParent': subagentParentId,
   };
 }
 

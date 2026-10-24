@@ -25,7 +25,7 @@ sealed class CockpitTerminalController {
   void write(String data);
   void restore(String data);
   void paste(String text);
-  List<String> plainLines();
+  List<String> plainLines({int? limit});
 
   /// Texto atualmente selecionado, ou vazio se não há seleção.
   ///
@@ -69,9 +69,12 @@ final class XtermTerminalController implements CockpitTerminalController {
   void paste(String text) => terminal.paste(text);
 
   @override
-  List<String> plainLines() {
+  List<String> plainLines({int? limit}) {
     final lines = terminal.buffer.lines;
-    return [for (var i = 0; i < lines.length; i++) lines[i].getText()];
+    final start = limit == null || lines.length <= limit
+        ? 0
+        : lines.length - limit;
+    return [for (var i = start; i < lines.length; i++) lines[i].getText()];
   }
 
   /// A seleção do xterm pertence ao controller da view (`CockpitTerminal`), que
@@ -264,14 +267,18 @@ final class GhosttyTerminalController implements CockpitTerminalController {
   void paste(String text) => controller.paste(text);
 
   @override
-  List<String> plainLines() {
+  List<String> plainLines({int? limit}) {
     final formatter = controller.createFormatter(
       format: FormatterFormat.plain,
       unwrap: false,
       trim: false,
     );
     try {
-      return const LineSplitter().convert(formatter.format());
+      final lines = const LineSplitter().convert(formatter.format());
+      final start = limit == null || lines.length <= limit
+          ? 0
+          : lines.length - limit;
+      return lines.skip(start).toList(growable: false);
     } finally {
       formatter.dispose();
     }

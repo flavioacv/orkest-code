@@ -8,23 +8,34 @@ import 'remote_connection.dart';
 
 /// Status de turno de um agente numa PTY do host (plano 60, Wave G), tipo
 /// neutro pro cliente — não expõe a mensagem do protocolo. [paneId] é o
-/// `COCKPIT_PANE_ID` da aba (roteamento); [status] é `working`/`idle`/`waiting`.
+/// `COCKPIT_PANE_ID` da aba (roteamento); [status] é `working`/`idle`/`waiting`
+/// ou `subagent` para ciclo de vida de um filho.
 class RemoteTurnStatus {
   const RemoteTurnStatus({
     required this.paneId,
     required this.status,
     this.event,
+    this.toolName,
     this.sid,
     this.transcriptPath,
     this.harness,
+    this.subagentId,
+    this.subagentType,
+    this.subagentOutcome,
+    this.subagentParentId,
   });
 
   final String paneId;
   final String status;
   final String? event;
+  final String? toolName;
   final String? sid;
   final String? transcriptPath;
   final String? harness;
+  final String? subagentId;
+  final String? subagentType;
+  final String? subagentOutcome;
+  final String? subagentParentId;
 }
 
 /// Um comando da CLI do host à espera de resposta deste cliente.
@@ -82,9 +93,14 @@ class RemoteTerminalService implements TerminalService {
           paneId: m.paneId,
           status: m.status,
           event: m.event,
+          toolName: m.toolName,
           sid: m.sid,
           transcriptPath: m.transcriptPath,
           harness: m.harness,
+          subagentId: m.subagentId,
+          subagentType: m.subagentType,
+          subagentOutcome: m.subagentOutcome,
+          subagentParentId: m.subagentParentId,
         ),
       );
 

@@ -14,6 +14,8 @@
 //! um protocolo só, uma assinatura só. Ver `hook.rs`.
 
 mod commands;
+mod agent;
+mod activity;
 mod flags;
 mod hook;
 mod keys;
@@ -52,6 +54,8 @@ fn main() {
         // entries antigos que não passam a flag). Silencioso por contrato: não
         // escreve no stdout e nunca falha barulhento.
         "hook" => hook::run(args),
+        "agent" => agent::agent(args),
+        "activity" => activity::activity(args),
         "send" => commands::send(args),
         "send-key" | "send-keys" => commands::send_key(args),
         "open" => commands::open(args),

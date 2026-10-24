@@ -37,6 +37,8 @@ class ClaudeHookInstallerImpl extends HookInstallerBase {
     'Stop',
     'SessionStart',
     'SessionEnd',
+    'SubagentStart',
+    'SubagentStop',
   ];
 
   @override

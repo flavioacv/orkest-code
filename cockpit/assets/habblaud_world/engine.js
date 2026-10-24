@@ -18124,6 +18124,10 @@
       }
       if (!act || ch.leaving) return null;
       const age = now - ch.activityChangedAt;
+      // Completion is a momentary celebration, not the agent's permanent
+      // idle description. Selected/hovered agents still retain the event in
+      // their profile timeline, but the "turn completed" bubble expires.
+      if (act.kind === "done" && age >= RECENT_MS) return null;
       if (selected) return this.takeBubble(ch, head, act.icon, act.text, "info", 80, 1, ch.activityChangedAt);
       if (hovered) return this.takeBubble(ch, head, act.icon, act.text, "info", 75, 1, ch.activityChangedAt);
       if (opts.bubbles === "all" && ch.mode === "work") return this.takeBubble(ch, head, act.icon, act.text, "info", age < RECENT_MS ? 50 : 30, 1, ch.activityChangedAt);
@@ -26617,6 +26621,16 @@
       camera.clamp();
     }
   }
+  function focusAgent(id, follow = false) {
+    const person = sim.person(id);
+    if (!person) return;
+    userMoved = true;
+    camera.stop();
+    const zoom = Math.max(camera.zoom, camera.snapZoom(3));
+    const center = camera.centerFor(person.x, person.y - 12, zoom);
+    camera.animateTo(center.x, center.y, zoom, Date.now(), 420);
+    camera.follow = follow ? id : null;
+  }
   function pick3(sx, sy) {
     const point = camera.screenToWorld(sx, sy);
     let best = null;
@@ -26674,7 +26688,13 @@
       updateBounds();
       if (sim.initialized && !userMoved) overview(true);
     }
-    camera.update(now, null, dt);
+    const followed = camera.follow ? sim.person(camera.follow) : void 0;
+    if (camera.follow && !followed) camera.follow = null;
+    camera.update(
+      now,
+      followed ? camera.centerFor(followed.x, followed.y - 12, camera.zoom) : null,
+      dt
+    );
     renderer.frame(now, dt, options, { agent: selectedAgent, room: null, hover: hoveredAgent });
     overlay.draw(now, options, { agent: selectedAgent, room: null, hover: hoveredAgent });
     renderer.pruneHeads();
@@ -26747,6 +26767,16 @@
     },
     selectAgent(id) {
       selectedAgent = id;
+    },
+    focusAgent(id, follow = false) {
+      focusAgent(id, follow);
+    },
+    setFollowAgent(id, follow) {
+      if (!follow) {
+        if (camera.follow === id) camera.follow = null;
+        return;
+      }
+      focusAgent(id, true);
     },
     destroy() {
       destroyed = true;

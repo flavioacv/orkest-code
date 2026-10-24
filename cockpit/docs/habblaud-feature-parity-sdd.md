@@ -1,6 +1,6 @@
 # SDD: perfil, estatísticas e preferências do escritório Habblaud no Cockpit
 
-**Estado:** editor de roupa local, perfil básico, renomeação, histórico genérico de estados, chegada animada e sons integrados; métricas detalhadas seguem pendentes
+**Estado:** editor de roupa local, perfil, interação com o PTY no Office, persistência e hierarquia explícita de subagentes, renomeação, estados, chegada/saída, sons e câmera integrados; eventos detalhados e métricas uniformes seguem pendentes
 **Data:** 2026-10-23  
 **Origem consultada:** checkout vizinho `../habblaud`  
 **Integração visual existente:** [`habblaud-office-integration.md`](habblaud-office-integration.md)
@@ -252,11 +252,63 @@ contagem confiável.
    gamificação próprio; os rankings/metas online do Habblaud não são portáveis
    para um cliente local sem backend.
 
+### Regras de sala e integração multiagente
+
+- Uma sala representa um projeto/worktree que tem ao menos uma sessão com
+  harness ativo no snapshot. Claude Code e Codex no mesmo projeto compartilham
+  a sala; cada sessão mantém id e personagem próprios.
+- Quando uma sessão sai do snapshot, o adapter não remove o sprite nem a sala
+  diretamente. O Habblaud aplica o debounce, faz a personagem ir ao elevador,
+  apaga a luz quando ela é a última ocupante e desmonta a sala após a saída.
+- O checkout Cockpit não contém um servidor MCP de agentes. A CLI opera abas,
+  mas não oferece uma API de spawn de subagentes.
+- Claude Code e Codex reportam subagentes pelos hooks nativos; outros harnesses
+  podem chamar `cockpit agent start/stop` no adapter/wrapper. Não inferir filhos
+  de processos ou chamadas MCP. Toda integração usa o snapshot Office como
+  entrada única para a simulação.
+- Aprovação estruturada continua fora deste contrato: `waiting` isolado abre o
+  terminal real. Botões Aprovar/Recusar no Office só entram quando a sessão
+  fornecer uma solicitação identificada, opções válidas e um canal de resposta
+  roteado para aquela mesma sessão.
+
+### Entrega aplicada nesta rodada
+
+- O perfil Flutter agora oferece **Seguir personagem**, **Parar de seguir** e
+  **Centralizar personagem** no renderer Canvas, pela API aditiva do wrapper.
+- O snapshot deixa de listar salas sem sessão de harness ativa. Ao fechar a
+  última sessão, a sala fica ausente do próximo snapshot e o motor Habblaud
+  executa sua sequência original de saída, luz e desmontagem.
+- A ponte de câmeras é opcional no perfil, pois o renderer Flutter de fallback
+  ainda não oferece o mesmo controle.
+- O evento local/remoto de status agora transporta `tool_name` somente para
+  `PreToolUse`/`PostToolUse`. O adapter converte os eventos disponíveis em
+  atividades Habblaud (pedido, leitura/busca/edição/escrita/comando, espera e
+  conclusão) e o perfil mostra as últimas atividades observadas.
+- O resumo mantém no máximo 200 eventos por sessão, com nome da ferramenta
+  limitado e sem `tool_input`, prompt, resposta ou saída do comando.
+- Claude Code e Codex CLI usam o mesmo formato opcional no socket e no protocolo
+  remoto. Helpers anteriores, que não enviam `tool`, continuam compatíveis.
+
 O motor Habblaud original já controla chegada, deslocamento, trabalho/digitação,
 espera, ociosidade e saída a partir dos estados genéricos. Eventos finos de
-ferramenta, processo em foreground e subagentes continuam fora do contrato atual
-do Cockpit; qualquer evolução deve vir de eventos neutros dos hooks, não de
-parsing do transcript de um provider.
+ferramenta e processo em foreground continuam limitados pelo contrato atual do
+Cockpit; qualquer evolução deve vir de eventos neutros dos hooks, não de parsing
+do transcript de um provider.
+
+Os hooks de ciclo de subagentes passam por `cockpit hook`; integrações genéricas
+podem usar `cockpit agent start/stop`, com `--parent-agent-id` opcional para
+hierarquia. Ambos usam o transporte local/remoto de status. Eventos conhecidos
+são persistidos no layout da aba; encerramentos ficam por 45 s para a animação,
+e agentes ativos com mais de 24 h são descartados na restauração. Conclusão
+bem-sucedida ativa entrega e saída no simulador; `--outcome error|interrupted`
+encerra sem entrega. Isso não afeta o status do terminal pai. O contrato não
+varre transcripts para descobrir subagentes que já existiam antes de seus
+eventos serem observados.
+
+O Office oferece um espelho das linhas visíveis do PTY e encaminha texto/teclas
+à sessão original. Isso permite responder a prompts arbitrários sem integração
+de aprovação por provider; não oferece botões semânticos Aprovar/Recusar, porque
+o significado das opções varia entre agentes.
 
 O editor de personagem local agora reaproveita `editorOptions`, `editorConflict`,
 `fitToOptions`, `characterSprite` e `appearanceFromSeed` do Habblaud. As peças
