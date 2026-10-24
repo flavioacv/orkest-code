@@ -221,6 +221,18 @@ class TerminalSession extends PaneItem {
         if (_activeHarness != newHarness) {
           _activeHarness = newHarness;
           notifyListeners();
+          final submittedAt = _pendingAgentPromptAt;
+          if (newHarness != null &&
+              submittedAt != null &&
+              DateTime.now().difference(submittedAt) <=
+                  const Duration(seconds: 30)) {
+            _pendingAgentPromptAt = null;
+            applyOfficeActivity(
+              kind: 'prompt',
+              phase: 'started',
+              summary: 'Pedido enviado pelo terminal',
+            );
+          }
         }
       },
     );
@@ -449,6 +461,7 @@ class TerminalSession extends PaneItem {
   final Set<int> _observedOfficeActivityFingerprints = <int>{};
   final Queue<int> _observedOfficeActivityOrder = Queue<int>();
   DateTime? _lastOfficeActivityScanAt;
+  DateTime? _pendingAgentPromptAt;
   bool _officeAgentActivityObserved = false;
   bool _officePermissionPromptVisible = false;
 
@@ -519,6 +532,7 @@ class TerminalSession extends PaneItem {
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
     if (safeKind.isEmpty || safePhase.isEmpty || safeSummary.isEmpty) return;
+    _pendingAgentPromptAt = null;
     if (safeKind == 'prompt' || safeKind == 'respond') {
       _turnActive = true;
     } else if (safeKind == 'done' || safeKind == 'error') {
@@ -568,7 +582,18 @@ class TerminalSession extends PaneItem {
   /// A submitted line is a harness-neutral signal that work was requested. The
   /// input itself is never inspected or retained.
   void _observeGenericPromptSubmission({required bool responding}) {
-    if (!responding && !_officeAgentActivityObserved) return;
+    // A terminal already identified as an agent is enough evidence for its
+    // first prompt. Previously that prompt was discarded until later output
+    // happened to match one of the activity patterns.
+    if (!responding &&
+        !_officeAgentActivityObserved &&
+        _activeHarness == null) {
+      // The monitor may identify a newly started harness just after Enter.
+      // Keep only the submission time, never the prompt contents, so this
+      // startup race does not hide the initial Office transition.
+      _pendingAgentPromptAt = DateTime.now();
+      return;
+    }
     if (responding) _officePermissionPromptVisible = false;
     applyOfficeActivity(
       kind: responding ? 'respond' : 'prompt',
@@ -610,7 +635,18 @@ class TerminalSession extends PaneItem {
         summary: 'Precisa de uma resposta no terminal',
       );
     } else if (!hasVisiblePermissionPrompt) {
+      final promptWasVisible = _officePermissionPromptVisible;
       _officePermissionPromptVisible = false;
+      // Generic PTYs may not send a structured permission-result event. When
+      // a visible approval prompt disappears, treat it as answered and resume
+      // the turn; a completion marker found below can settle it to idle.
+      if (promptWasVisible && _status == TerminalStatus.waiting) {
+        applyOfficeActivity(
+          kind: 'respond',
+          phase: 'observed',
+          summary: 'Resposta recebida no terminal',
+        );
+      }
     }
 
     for (final raw in terminal.plainLines(limit: 80)) {
@@ -684,7 +720,7 @@ class TerminalSession extends PaneItem {
     // Action rows are rendered in the agent TUI. Match only row-like prefixes
     // so ordinary project output mentioning “read” or “run” is not classified.
     final marker = RegExp(
-      r'^(?:🔴|🟢|🟡|✅|❌|⚠️|ℹ️|•|\*|└|├|─|›|❯|>)+\s*',
+      r'^(?:🔴|🟢|🟡|✅|❌|⚠️|ℹ️|●|⏺|○|◦|•|\*|└|├|─|›|❯|>)+\s*',
     ).firstMatch(line);
     final row = marker == null
         ? line.trim()
@@ -692,7 +728,7 @@ class TerminalSession extends PaneItem {
     if (row.isEmpty) return null;
     final lower = row.toLowerCase();
     if (RegExp(
-      r'^(worked for\s+\d|concluiu em\s+\d)',
+      r'^(worked for\s+\d|concluiu em\s+\d|turn completed\b|task completed\b|turn finished\b|task finished\b|turno conclu[ií]do\b|tarefa conclu[ií]da\b)',
       caseSensitive: false,
     ).hasMatch(row)) {
       return (
@@ -970,7 +1006,10 @@ class TerminalSession extends PaneItem {
 
   /// Cola do clipboard no terminal, com suporte a **imagem**.
   ///
-  /// Se há uma imagem no clipboard, manda o byte de Ctrl+V (`\x16`) pro harness
+  /// No macOS, consulta texto primeiro: apps de ditado podem simular Cmd+V e
+  /// restaurar o clipboard logo depois. Consultar a imagem antes acrescentava
+  /// uma chamada assíncrona e podia perder essa janela curta. Se há uma imagem
+  /// no clipboard, manda o byte de Ctrl+V (`\x16`) pro harness
   /// em primeiro plano (claude/codex/pi) — todos eles, ao receber `\x16`, leem a
   /// imagem do clipboard e a anexam (claude mostra `[Image #1]`, o pi grava num
   /// `.png` temporário). Sem imagem, faz o paste de texto normal (respeitando o
@@ -980,6 +1019,13 @@ class TerminalSession extends PaneItem {
   /// imagem) e, no macOS, o caminho de IME engole o Ctrl+V cru (vira `pageDown`),
   /// então o `\x16` nunca era gerado e a imagem nunca chegava ao harness.
   Future<void> pasteFromClipboard() async {
+    if (defaultTargetPlatform == TargetPlatform.macOS) {
+      final text = await Pasteboard.text;
+      if (text != null && text.isNotEmpty) {
+        terminal.paste(text);
+        return;
+      }
+    }
     final image = await Pasteboard.image;
     if (image != null && image.isNotEmpty) {
       _gateway.write(const [

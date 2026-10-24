@@ -486,6 +486,33 @@ class Translations$cockpit$officeWorld$en {
 	/// en: 'Lounge'
 	String get lounge => 'Lounge';
 
+	/// en: 'Office agents'
+	String get rosterTitle => 'Office agents';
+
+	/// en: 'Search agents or projects'
+	String get rosterSearch => 'Search agents or projects';
+
+	/// en: 'No active agents found'
+	String get rosterEmpty => 'No active agents found';
+
+	/// en: 'Activity'
+	String get activityFeed => 'Activity';
+
+	/// en: 'Observed activity will appear here.'
+	String get activityEmpty => 'Observed activity will appear here.';
+
+	/// en: 'Collapse agent list'
+	String get collapseRoster => 'Collapse agent list';
+
+	/// en: 'Collapse activity feed'
+	String get collapseFeed => 'Collapse activity feed';
+
+	/// en: 'Agents'
+	String get reopenRoster => 'Agents';
+
+	/// en: 'Activity'
+	String get reopenFeed => 'Activity';
+
 	/// en: 'Working'
 	String get working => 'Working';
 
@@ -4316,6 +4343,15 @@ extension on Translations {
 			'cockpit.officeWorld.cafe' => 'Café',
 			'cockpit.officeWorld.restrooms' => 'Restrooms',
 			'cockpit.officeWorld.lounge' => 'Lounge',
+			'cockpit.officeWorld.rosterTitle' => 'Office agents',
+			'cockpit.officeWorld.rosterSearch' => 'Search agents or projects',
+			'cockpit.officeWorld.rosterEmpty' => 'No active agents found',
+			'cockpit.officeWorld.activityFeed' => 'Activity',
+			'cockpit.officeWorld.activityEmpty' => 'Observed activity will appear here.',
+			'cockpit.officeWorld.collapseRoster' => 'Collapse agent list',
+			'cockpit.officeWorld.collapseFeed' => 'Collapse activity feed',
+			'cockpit.officeWorld.reopenRoster' => 'Agents',
+			'cockpit.officeWorld.reopenFeed' => 'Activity',
 			'cockpit.officeWorld.working' => 'Working',
 			'cockpit.officeWorld.waiting' => 'Waiting',
 			'cockpit.officeWorld.idle' => 'Available',
@@ -4735,6 +4771,8 @@ extension on Translations {
 			'cockpit.kanbanView.listView' => 'List',
 			'cockpit.kanbanView.refresh' => 'Refresh from disk',
 			'cockpit.kanbanView.manageLabels' => 'Labels',
+			_ => null,
+		} ?? switch (path) {
 			'cockpit.kanbanView.labelsTitle' => 'Labels in this board',
 			'cockpit.kanbanView.labelNamePlaceholder' => 'label name',
 			'cockpit.kanbanView.labelUsage' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 card', other: '${n} cards', ), 
@@ -4747,8 +4785,6 @@ extension on Translations {
 			'cockpit.kanbanView.columnOptions' => 'Column options',
 			'cockpit.kanbanView.renameColumn' => 'Rename column',
 			'cockpit.kanbanView.moveColumnLeft' => 'Move left',
-			_ => null,
-		} ?? switch (path) {
 			'cockpit.kanbanView.moveColumnRight' => 'Move right',
 			'cockpit.kanbanView.deleteColumn' => 'Delete column',
 			'cockpit.kanbanView.newCardHere' => 'New card here',
@@ -5249,6 +5285,8 @@ extension on Translations {
 			'settings.page.languages.sectionFormatting' => 'FORMATTING',
 			'settings.page.languages.formatOnSaveTitle' => 'Format on save',
 			'settings.page.languages.formatOnSaveDesc' => 'Format the file automatically when you save (⌘S).',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.languages.sectionLanguageServers' => 'LANGUAGE SERVERS',
 			'settings.page.languages.footerNote' => 'Errors and formatting use each language\'s language server. Cockpit does not install servers — it uses what is already on your machine. ● responds · ○ not found or invalid command (install the server or adjust the command).',
 			'settings.page.languages.serverCommandLabel' => 'Language server command',
@@ -5261,8 +5299,6 @@ extension on Translations {
 			'settings.page.automations.sectionCommitMessages' => 'Commit messages',
 			'settings.page.automations.harness' => 'Harness',
 			'settings.page.automations.harnessDiscovering' => 'Looking for installed command-line harnesses…',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.automations.harnessNoneFound' => 'No supported harness was found on PATH.',
 			'settings.page.automations.harnessConfiguredUnavailable' => ({required Object harness}) => '${harness} is configured but unavailable.',
 			'settings.page.automations.harnessChoose' => 'Choose the CLI used to generate commit messages.',

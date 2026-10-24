@@ -315,6 +315,15 @@ class _Translations$cockpit$officeWorld$es extends Translations$cockpit$officeWo
 	@override String get cafe => 'Cocina';
 	@override String get restrooms => 'Baños';
 	@override String get lounge => 'Sala de descanso';
+	@override String get rosterTitle => 'Agentes de la oficina';
+	@override String get rosterSearch => 'Buscar agentes o proyectos';
+	@override String get rosterEmpty => 'No se encontraron agentes activos';
+	@override String get activityFeed => 'Actividad';
+	@override String get activityEmpty => 'La actividad observada aparecerá aquí.';
+	@override String get collapseRoster => 'Contraer lista de agentes';
+	@override String get collapseFeed => 'Contraer actividad';
+	@override String get reopenRoster => 'Agentes';
+	@override String get reopenFeed => 'Actividad';
 	@override String get working => 'Trabajando';
 	@override String get waiting => 'Esperando';
 	@override String get idle => 'Disponible';
@@ -2083,6 +2092,15 @@ extension on TranslationsEs {
 			'cockpit.officeWorld.cafe' => 'Cocina',
 			'cockpit.officeWorld.restrooms' => 'Baños',
 			'cockpit.officeWorld.lounge' => 'Sala de descanso',
+			'cockpit.officeWorld.rosterTitle' => 'Agentes de la oficina',
+			'cockpit.officeWorld.rosterSearch' => 'Buscar agentes o proyectos',
+			'cockpit.officeWorld.rosterEmpty' => 'No se encontraron agentes activos',
+			'cockpit.officeWorld.activityFeed' => 'Actividad',
+			'cockpit.officeWorld.activityEmpty' => 'La actividad observada aparecerá aquí.',
+			'cockpit.officeWorld.collapseRoster' => 'Contraer lista de agentes',
+			'cockpit.officeWorld.collapseFeed' => 'Contraer actividad',
+			'cockpit.officeWorld.reopenRoster' => 'Agentes',
+			'cockpit.officeWorld.reopenFeed' => 'Actividad',
 			'cockpit.officeWorld.working' => 'Trabajando',
 			'cockpit.officeWorld.waiting' => 'Esperando',
 			'cockpit.officeWorld.idle' => 'Disponible',
@@ -2502,6 +2520,8 @@ extension on TranslationsEs {
 			'cockpit.kanbanView.listView' => 'Lista',
 			'cockpit.kanbanView.refresh' => 'Actualizar desde el disco',
 			'cockpit.kanbanView.manageLabels' => 'Etiquetas',
+			_ => null,
+		} ?? switch (path) {
 			'cockpit.kanbanView.labelsTitle' => 'Etiquetas de este tablero',
 			'cockpit.kanbanView.labelNamePlaceholder' => 'nombre de la etiqueta',
 			'cockpit.kanbanView.labelUsage' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 tarjeta', other: '${n} tarjetas', ), 
@@ -2514,8 +2534,6 @@ extension on TranslationsEs {
 			'cockpit.kanbanView.columnOptions' => 'Opciones de la columna',
 			'cockpit.kanbanView.renameColumn' => 'Renombrar columna',
 			'cockpit.kanbanView.moveColumnLeft' => 'Mover a la izquierda',
-			_ => null,
-		} ?? switch (path) {
 			'cockpit.kanbanView.moveColumnRight' => 'Mover a la derecha',
 			'cockpit.kanbanView.deleteColumn' => 'Eliminar columna',
 			'cockpit.kanbanView.newCardHere' => 'Nueva tarjeta aquí',
@@ -3016,6 +3034,8 @@ extension on TranslationsEs {
 			'settings.page.languages.sectionFormatting' => 'FORMATO',
 			'settings.page.languages.formatOnSaveTitle' => 'Formatear al guardar',
 			'settings.page.languages.formatOnSaveDesc' => 'Formatea el archivo automáticamente al guardar (⌘S).',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.languages.sectionLanguageServers' => 'SERVIDORES DE LENGUAJE',
 			'settings.page.languages.footerNote' => 'Los errores y el formato usan el language server de cada lenguaje. Cockpit no instala servidores — usa lo que ya está en tu máquina. ● responde · ○ no encontrado o comando inválido (instala el servidor o ajusta el comando).',
 			'settings.page.languages.serverCommandLabel' => 'Comando del language server',
@@ -3028,8 +3048,6 @@ extension on TranslationsEs {
 			'settings.page.automations.sectionCommitMessages' => 'Mensajes de commit',
 			'settings.page.automations.harness' => 'Harness',
 			'settings.page.automations.harnessDiscovering' => 'Buscando harnesses de línea de comandos instalados…',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.automations.harnessNoneFound' => 'No se encontró ningún harness compatible en el PATH.',
 			'settings.page.automations.harnessConfiguredUnavailable' => ({required Object harness}) => '${harness} está configurado, pero no disponible.',
 			'settings.page.automations.harnessChoose' => 'Elige la CLI usada para generar mensajes de commit.',

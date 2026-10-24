@@ -11,11 +11,14 @@ import 'package:cockpit/app/core/ui/settings_controller.dart';
 import 'package:cockpit/app/cockpit/ui/widgets/office_agent_profile_dialog.dart';
 import 'package:cockpit/app/cockpit/ui/widgets/office_agent_names.dart';
 import 'package:cockpit/app/core/domain/entities/app_settings.dart';
+import 'package:cockpit/app/core/ui/themes/themes.dart';
 import 'package:cockpit/i18n/strings.g.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_modular/flutter_modular.dart';
-import 'package:flutter/widgets.dart';
+import 'package:flutter/material.dart';
 import 'package:flutter_inappwebview/flutter_inappwebview.dart';
+
+typedef _OfficePortrait = ({Uint8List body, Uint8List face});
 
 /// Runs Habblaud's original simulation and Canvas 2D renderer in the local
 /// WebView, feeding it snapshots synthesized from Cockpit projects/sessions.
@@ -46,9 +49,15 @@ class _HabblaudWorldWebViewState extends State<HabblaudWorldWebView> {
   bool _loaded = false;
   int _revision = 0;
   Timer? _snapshotTimer;
+  Timer? _panelRefreshTimer;
   String? _lastSnapshotSignature;
   String? _lastOpenedAgent;
   int _lastOpenedAt = 0;
+  bool _sidebarVisible = true;
+  bool _activityVisible = true;
+  String _agentQuery = '';
+  final TextEditingController _agentSearch = TextEditingController();
+  final Map<String, Future<_OfficePortrait?>> _portraitCache = {};
   final Map<String, TerminalStatus> _lastStatuses = {};
   final Map<String, int> _statusSince = {};
 
@@ -60,6 +69,9 @@ class _HabblaudWorldWebViewState extends State<HabblaudWorldWebView> {
       const Duration(milliseconds: 250),
       (_) => unawaited(_pushSnapshot()),
     );
+    _panelRefreshTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      if (mounted) setState(() {});
+    });
   }
 
   @override
@@ -335,6 +347,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
       'agents': agents,
       'accounts': accounts,
       'options': {
+        'locale': _officeLocale,
         'showNames': officeSettings.officeShowNames,
         'bubbles': officeSettings.officeBubbles,
         'liveliness': officeSettings.officeLiveliness,
@@ -379,6 +392,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
 
   String _snapshotSignature() => jsonEncode([
     context.read<SettingsController>().settings.officeTheme,
+    _officeLocale,
     context.read<SettingsController>().settings.officeShowNames,
     context.read<SettingsController>().settings.officeBubbles,
     context.read<SettingsController>().settings.officeLiveliness,
@@ -524,6 +538,8 @@ canvas{display:block;image-rendering:pixelated;outline:none}
     );
     final agentIdentity = identities[session.id];
     final web = _web;
+    final portrait = await _portraitFor(session, project);
+    if (!mounted || !context.mounted) return;
     await web?.evaluateJavascript(
       source:
           'window.cockpitHabblaudWorld?.selectAgent(${jsonEncode(session.id)});',
@@ -534,6 +550,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
       session: session,
       project: project,
       officeName: agentIdentity?.name,
+      portraitBytes: portrait?.body,
       onOpenTerminal: () => widget.onOpenSession(session),
       onFollowAgent: (follow) {
         if (web != null) {
@@ -555,7 +572,10 @@ canvas{display:block;image-rendering:pixelated;outline:none}
           );
         }
       },
-      onRename: (name) => widget.onRenameSession(session, name),
+      onRename: (name) {
+        _portraitCache.remove(session.id);
+        widget.onRenameSession(session, name);
+      },
       initialAppearance: Map<String, String>.from(
         context
                 .read<SettingsController>()
@@ -577,9 +597,17 @@ canvas{display:block;image-rendering:pixelated;outline:none}
         if (decoded is! Map) throw StateError('Appearance preview unavailable');
         return decoded.cast<String, dynamic>();
       },
-      onSaveAppearance: (parts) => context
-          .read<SettingsController>()
-          .setOfficeCharacterParts(project.id, parts),
+      onSaveAppearance: (parts) {
+        for (final candidate in widget.sessions.whereType<TerminalSession>()) {
+          if (candidate.projectId == project.id) {
+            _portraitCache.remove(candidate.id);
+          }
+        }
+        context.read<SettingsController>().setOfficeCharacterParts(
+          project.id,
+          parts,
+        );
+      },
     );
     if (!mounted) return;
     await _web?.evaluateJavascript(
@@ -590,6 +618,8 @@ canvas{display:block;image-rendering:pixelated;outline:none}
   @override
   void dispose() {
     _snapshotTimer?.cancel();
+    _panelRefreshTimer?.cancel();
+    _agentSearch.dispose();
     _web = null;
     super.dispose();
   }
@@ -600,54 +630,680 @@ canvas{display:block;image-rendering:pixelated;outline:none}
       future: _htmlFuture,
       builder: (context, snapshot) {
         final html = snapshot.data;
+        final labels = context.t.cockpit.officeWorld;
         if (html == null) return const SizedBox.expand();
-        return WebViewCover(
-          loaded: _loaded,
-          child: WebViewEnvironmentGate(
-            builder: (context, environment) => UnzoomedNativeView(
-              builder: (context, contentZoom) => InAppWebView(
-                key: const ValueKey('cockpit-habblaud-world'),
-                webViewEnvironment: environment,
-                initialData: InAppWebViewInitialData(
-                  data: html,
-                  baseUrl: WebUri(_baseUrl),
-                  mimeType: 'text/html',
-                  encoding: 'utf-8',
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            WebViewCover(
+              loaded: _loaded,
+              child: WebViewEnvironmentGate(
+                builder: (context, environment) => UnzoomedNativeView(
+                  builder: (context, contentZoom) => InAppWebView(
+                    key: const ValueKey('cockpit-habblaud-world'),
+                    webViewEnvironment: environment,
+                    initialData: InAppWebViewInitialData(
+                      data: html,
+                      baseUrl: WebUri(_baseUrl),
+                      mimeType: 'text/html',
+                      encoding: 'utf-8',
+                    ),
+                    initialUserScripts: kWebViewUserScripts,
+                    initialSettings: InAppWebViewSettings(
+                      javaScriptEnabled: true,
+                      isInspectable: true,
+                      underPageBackgroundColor: webViewBackground(context),
+                      pageZoom: contentZoom,
+                      supportZoom: false,
+                    ),
+                    onWebViewCreated: (web) {
+                      _web = web;
+                      web.addJavaScriptHandler(
+                        handlerName: 'officeAgentClicked',
+                        callback: _handleAgentClick,
+                      );
+                      WebViewPointerRelay.register(web, context, contentZoom);
+                    },
+                    onLoadStop: (web, _) {
+                      if (!mounted) return;
+                      setState(() => _loaded = true);
+                      unawaited(_pushSnapshot());
+                    },
+                  ),
                 ),
-                initialUserScripts: kWebViewUserScripts,
-                initialSettings: InAppWebViewSettings(
-                  javaScriptEnabled: true,
-                  isInspectable: true,
-                  underPageBackgroundColor: webViewBackground(context),
-                  pageZoom: contentZoom,
-                  supportZoom: false,
-                ),
-                onWebViewCreated: (web) {
-                  _web = web;
-                  web.addJavaScriptHandler(
-                    handlerName: 'officeAgentClicked',
-                    callback: _handleAgentClick,
-                  );
-                  WebViewPointerRelay.register(web, context, contentZoom);
-                },
-                onLoadStop: (web, _) {
-                  if (!mounted) return;
-                  setState(() => _loaded = true);
-                  unawaited(_pushSnapshot());
-                },
               ),
             ),
-          ),
+            if (_sidebarVisible) _buildAgentSidebar(context),
+            if (_activityVisible) _buildActivityFeed(context),
+            if (!_sidebarVisible || !_activityVisible)
+              Positioned(
+                left: _sidebarVisible ? 12 : 16,
+                bottom: _activityVisible ? 12 : 16,
+                child: Row(
+                  children: [
+                    if (!_sidebarVisible)
+                      _panelToggle(
+                        context,
+                        '☷',
+                        labels.reopenRoster,
+                        () => setState(() => _sidebarVisible = true),
+                      ),
+                    if (!_activityVisible && !_sidebarVisible)
+                      const SizedBox(width: 8),
+                    if (!_activityVisible)
+                      _panelToggle(
+                        context,
+                        '☰',
+                        labels.reopenFeed,
+                        () => setState(() => _activityVisible = true),
+                      ),
+                  ],
+                ),
+              ),
+          ],
         );
       },
     );
   }
+
+  List<TerminalSession> get _officeSessions {
+    final projectIds = widget.projects
+        .where((project) => !project.isSystemTerminal)
+        .map((project) => project.id)
+        .toSet();
+    return widget.sessions
+        .whereType<TerminalSession>()
+        .where(
+          (session) =>
+              projectIds.contains(session.projectId) &&
+              session.hasOfficeAgentPresence,
+        )
+        .toList(growable: false);
+  }
+
+  String _agentName(TerminalSession session) {
+    final manual = session.manualLabel?.trim();
+    if (manual != null && manual.isNotEmpty) return manual;
+    final saved = context
+        .read<SettingsController>()
+        .settings
+        .officeAgentNames[session.id];
+    if (saved != null && saved.isNotEmpty) return saved;
+    return session.displayTitle;
+  }
+
+  Future<_OfficePortrait?> _portraitFor(
+    TerminalSession session,
+    Project project,
+  ) {
+    if (!_loaded) return Future.value(null);
+    return _portraitCache.putIfAbsent(session.id, () async {
+      final web = _web;
+      if (web == null) return null;
+      final name = _agentName(session);
+      final look = officeAgentLookForName(
+        name,
+        _stableSeed('${session.projectId}:${session.id}').isEven ? 'f' : 'm',
+      );
+      final parts = Map<String, String>.from(
+        context
+                .read<SettingsController>()
+                .settings
+                .officeCharacterParts[project.id] ??
+            const {},
+      );
+      final result = await web.evaluateJavascript(
+        source:
+            'window.cockpitHabblaudWorld?.getAppearance(${_stableSeed('${session.projectId}:${session.id}')}, ${jsonEncode(look)}, ${jsonEncode(parts)});',
+      );
+      final decoded = result is String ? jsonDecode(result) : result;
+      if (decoded is! Map ||
+          decoded['preview'] is! String ||
+          decoded['avatar'] is! String) {
+        return null;
+      }
+      final body = _decodeImageDataUrl(decoded['preview'] as String);
+      final face = _decodeImageDataUrl(decoded['avatar'] as String);
+      if (body == null || face == null) return null;
+      return (body: body, face: face);
+    });
+  }
+
+  Uint8List? _decodeImageDataUrl(String value) {
+    final comma = value.indexOf(',');
+    if (comma < 0) return null;
+    return base64Decode(value.substring(comma + 1));
+  }
+
+  Widget _buildAgentSidebar(BuildContext context) {
+    final colors = context.colors;
+    final labels = context.t.cockpit.officeWorld;
+    final query = _agentQuery.trim().toLowerCase();
+    final sessions = _officeSessions.where((session) {
+      if (query.isEmpty) return true;
+      final project = widget.projects
+          .where((item) => item.id == session.projectId)
+          .firstOrNull;
+      return '${_agentName(session)} ${project?.name ?? ''} ${session.activeHarness?.name ?? ''}'
+          .toLowerCase()
+          .contains(query);
+    }).toList();
+    final projectGroups = <Project, List<TerminalSession>>{};
+    for (final session in sessions) {
+      final project = widget.projects
+          .where((item) => item.id == session.projectId)
+          .firstOrNull;
+      if (project != null) {
+        projectGroups.putIfAbsent(project, () => []).add(session);
+      }
+    }
+    return Positioned(
+      left: 14,
+      top: 14,
+      bottom: _activityVisible ? 188 : 14,
+      width: 292,
+      child: _officePanel(
+        colors,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _panelHeader(
+              context,
+              labels.rosterTitle,
+              labels.collapseRoster,
+              () => setState(() => _sidebarVisible = false),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 4, 12, 10),
+              child: TextField(
+                controller: _agentSearch,
+                onChanged: (value) => setState(() => _agentQuery = value),
+                style: TextStyle(color: colors.text, fontSize: 13),
+                decoration: InputDecoration(
+                  isDense: true,
+                  hintText: labels.rosterSearch,
+                  hintStyle: TextStyle(color: colors.text3),
+                  filled: true,
+                  fillColor: colors.panel3,
+                  prefixIcon: const Icon(Icons.search, size: 17),
+                  prefixIconColor: colors.text3,
+                  enabledBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(9),
+                    borderSide: BorderSide(color: colors.border),
+                  ),
+                  focusedBorder: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(9),
+                    borderSide: BorderSide(color: colors.accent),
+                  ),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(9),
+                  ),
+                  contentPadding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 9,
+                  ),
+                ),
+              ),
+            ),
+            Expanded(
+              child: sessions.isEmpty
+                  ? Center(
+                      child: Padding(
+                        padding: const EdgeInsets.all(16),
+                        child: Text(
+                          labels.rosterEmpty,
+                          textAlign: TextAlign.center,
+                          style: TextStyle(color: colors.text2, fontSize: 12),
+                        ),
+                      ),
+                    )
+                  : ListView(
+                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
+                      children: [
+                        for (final entry in projectGroups.entries) ...[
+                          Padding(
+                            padding: const EdgeInsets.fromLTRB(8, 9, 8, 5),
+                            child: Row(
+                              children: [
+                                Expanded(
+                                  child: Text(
+                                    entry.key.name,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: colors.text,
+                                      fontWeight: FontWeight.w700,
+                                      fontSize: 13,
+                                    ),
+                                  ),
+                                ),
+                                _smallCount(entry.value.length, colors),
+                              ],
+                            ),
+                          ),
+                          for (final session in entry.value)
+                            _agentRow(context, session, entry.key),
+                        ],
+                      ],
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _agentRow(
+    BuildContext context,
+    TerminalSession session,
+    Project project,
+  ) {
+    final colors = context.colors;
+    final icon = switch (session.status) {
+      TerminalStatus.working => '💻',
+      TerminalStatus.waiting => '✋',
+      TerminalStatus.idle => '🚶',
+    };
+    final harness = session.activeHarness?.name ?? 'Cockpit';
+    final title = session.title.trim();
+    final description = title.isEmpty || title == 'New terminal'
+        ? harness
+        : title;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 6),
+      child: Material(
+        color: colors.panel2,
+        borderRadius: BorderRadius.circular(10),
+        child: InkWell(
+          borderRadius: BorderRadius.circular(10),
+          onTap: () => unawaited(
+            _showAgentProfile(context, session: session, project: project),
+          ),
+          child: Padding(
+            padding: const EdgeInsets.all(10),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                FutureBuilder<_OfficePortrait?>(
+                  future: _portraitFor(session, project),
+                  builder: (context, snapshot) => _agentPortrait(
+                    snapshot.data?.face,
+                    colors,
+                    size: 38,
+                    fallback: icon,
+                    fit: BoxFit.cover,
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        _agentName(session),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: colors.text,
+                          fontWeight: FontWeight.w600,
+                          fontSize: 13,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        description == harness
+                            ? harness
+                            : '$harness · $description',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: colors.text2, fontSize: 11),
+                      ),
+                    ],
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Abrir terminal',
+                  visualDensity: VisualDensity.compact,
+                  iconSize: 17,
+                  onPressed: () => widget.onOpenSession(session),
+                  icon: const Icon(Icons.terminal),
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildActivityFeed(BuildContext context) {
+    final colors = context.colors;
+    final labels = context.t.cockpit.officeWorld;
+    final rows =
+        <
+          ({
+            TerminalSession session,
+            Project project,
+            TerminalStatusEvent event,
+          })
+        >[];
+    for (final session in _officeSessions) {
+      final project = widget.projects
+          .where((item) => item.id == session.projectId)
+          .firstOrNull;
+      if (project == null) continue;
+      for (final event in session.officeStatusHistory) {
+        rows.add((session: session, project: project, event: event));
+      }
+    }
+    rows.sort((a, b) => b.event.at.compareTo(a.event.at));
+    final recent = rows.take(50).toList(growable: false);
+    return Positioned(
+      left: _sidebarVisible ? 322 : 16,
+      right: 16,
+      bottom: 14,
+      height: 174,
+      child: _officePanel(
+        colors,
+        child: Column(
+          children: [
+            _panelHeader(
+              context,
+              labels.activityFeed,
+              labels.collapseFeed,
+              () => setState(() => _activityVisible = false),
+            ),
+            Expanded(
+              child: recent.isEmpty
+                  ? Center(
+                      child: Text(
+                        labels.activityEmpty,
+                        style: TextStyle(color: colors.text2, fontSize: 12),
+                      ),
+                    )
+                  : ListView.builder(
+                      reverse: false,
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 3,
+                      ),
+                      itemCount: recent.length,
+                      itemBuilder: (context, index) {
+                        final row = recent[recent.length - 1 - index];
+                        final time = row.event.at;
+                        final clock =
+                            '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
+                        final summary = _activityLabel(context, row.event);
+                        return InkWell(
+                          onTap: () => unawaited(
+                            _showAgentProfile(
+                              context,
+                              session: row.session,
+                              project: row.project,
+                            ),
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(vertical: 5),
+                            child: Row(
+                              children: [
+                                SizedBox(
+                                  width: 42,
+                                  child: Text(
+                                    clock,
+                                    style: TextStyle(
+                                      color: colors.text3,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 5),
+                                SizedBox(
+                                  width: 19,
+                                  child: Text(
+                                    _activityIcon(row.event),
+                                    style: const TextStyle(fontSize: 13),
+                                  ),
+                                ),
+                                SizedBox(
+                                  width: 23,
+                                  height: 23,
+                                  child: FutureBuilder<_OfficePortrait?>(
+                                    future: _portraitFor(
+                                      row.session,
+                                      row.project,
+                                    ),
+                                    builder: (context, snapshot) =>
+                                        _agentPortrait(
+                                          snapshot.data?.face,
+                                          colors,
+                                          size: 23,
+                                          fallback: '👤',
+                                          fit: BoxFit.cover,
+                                        ),
+                                  ),
+                                ),
+                                const SizedBox(width: 5),
+                                SizedBox(
+                                  width: 100,
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(
+                                        _agentName(row.session),
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: colors.text,
+                                          fontSize: 11,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                                      Text(
+                                        row.session.activeHarness?.name ??
+                                            'Cockpit',
+                                        maxLines: 1,
+                                        overflow: TextOverflow.ellipsis,
+                                        style: TextStyle(
+                                          color: colors.text3,
+                                          fontSize: 9,
+                                        ),
+                                      ),
+                                    ],
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    summary,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: colors.text2,
+                                      fontSize: 11,
+                                    ),
+                                  ),
+                                ),
+                                const SizedBox(width: 8),
+                                SizedBox(
+                                  width: 110,
+                                  child: Text(
+                                    row.project.name,
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    textAlign: TextAlign.right,
+                                    style: TextStyle(
+                                      color: colors.text3,
+                                      fontSize: 10,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  String _activityLabel(BuildContext context, TerminalStatusEvent event) {
+    final labels = context.t.cockpit.officeWorld;
+    return switch (event.activityKind) {
+      'prompt' => labels.promptReceived,
+      'respond' => labels.agentResponded,
+      'thinking' => labels.agentThinking,
+      'read' => labels.readingFile,
+      'search' => labels.searchingCode,
+      'edit' => labels.editingFile,
+      'write' => labels.writingFile,
+      'command' => labels.runningCommand,
+      'wait' || 'needs_input' => labels.waitingInTerminal,
+      'test' => labels.runningTests,
+      'web' => labels.browsingWeb,
+      'plan' => labels.organizingTasks,
+      'delegate' => labels.callingSubagents,
+      'done' => labels.turnCompleted,
+      'error' => labels.activityError,
+      _ => labels.usingTool,
+    };
+  }
+
+  String _activityIcon(TerminalStatusEvent event) =>
+      switch (event.activityKind) {
+        'prompt' => '📨',
+        'respond' => '💬',
+        'thinking' => '💭',
+        'read' => '📖',
+        'search' => '🔎',
+        'edit' => '✏️',
+        'write' => '📝',
+        'command' => '💻',
+        'wait' || 'needs_input' => '✋',
+        'test' => '🧪',
+        'web' => '🌐',
+        'plan' => '🗒️',
+        'delegate' => '👥',
+        'done' => '✅',
+        'error' => '⚠️',
+        _ => '⚙️',
+      };
+
+  Widget _officePanel(AppColors colors, {required Widget child}) => Container(
+    clipBehavior: Clip.antiAlias,
+    decoration: BoxDecoration(
+      color: colors.panel.withValues(alpha: 0.96),
+      borderRadius: BorderRadius.circular(13),
+      border: Border.all(color: colors.border2.withValues(alpha: 0.85)),
+      boxShadow: const [
+        BoxShadow(
+          color: Color(0x55000000),
+          blurRadius: 16,
+          offset: Offset(0, 5),
+        ),
+      ],
+    ),
+    child: child,
+  );
+
+  Widget _panelHeader(
+    BuildContext context,
+    String title,
+    String tooltip,
+    VoidCallback onClose,
+  ) {
+    final colors = context.colors;
+    return Padding(
+      padding: const EdgeInsets.fromLTRB(12, 5, 5, 4),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              title,
+              style: TextStyle(
+                color: colors.text,
+                fontWeight: FontWeight.w700,
+                fontSize: 13,
+              ),
+            ),
+          ),
+          IconButton(
+            tooltip: tooltip,
+            visualDensity: VisualDensity.compact,
+            iconSize: 17,
+            onPressed: onClose,
+            icon: Icon(Icons.expand_less, color: context.colors.text2),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _panelToggle(
+    BuildContext context,
+    String icon,
+    String label,
+    VoidCallback onTap,
+  ) => Material(
+    color: context.colors.panel2,
+    borderRadius: BorderRadius.circular(9),
+    child: InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(9),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+        child: Text(
+          '$icon  $label',
+          style: TextStyle(color: context.colors.text, fontSize: 12),
+        ),
+      ),
+    ),
+  );
+
+  Widget _smallCount(int count, AppColors colors) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+    decoration: BoxDecoration(
+      color: colors.panel3,
+      borderRadius: BorderRadius.circular(9),
+    ),
+    child: Text('$count', style: TextStyle(color: colors.text2, fontSize: 10)),
+  );
+
+  Widget _agentPortrait(
+    Uint8List? bytes,
+    AppColors colors, {
+    required double size,
+    required String fallback,
+    BoxFit fit = BoxFit.contain,
+  }) => Container(
+    width: size,
+    height: size,
+    clipBehavior: Clip.antiAlias,
+    decoration: BoxDecoration(
+      color: colors.panel3,
+      borderRadius: BorderRadius.circular(size * 0.24),
+    ),
+    child: bytes == null
+        ? Center(
+            child: Text(fallback, style: TextStyle(fontSize: size * 0.52)),
+          )
+        : Image.memory(bytes, fit: fit, filterQuality: FilterQuality.none),
+  );
 }
 
 String _statusFor(TerminalStatus status) => switch (status) {
   TerminalStatus.working => 'working',
   TerminalStatus.waiting => 'waiting',
   TerminalStatus.idle => 'idle',
+};
+
+String get _officeLocale => switch (LocaleSettings.currentLocale) {
+  AppLocale.en => 'en',
+  AppLocale.es => 'es',
+  AppLocale.ptBr => 'pt-BR',
 };
 
 Map<String, dynamic> _officeStatusActivity(

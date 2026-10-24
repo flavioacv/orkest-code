@@ -221,7 +221,7 @@ class _OfficeWorldViewState extends State<OfficeWorldFlutterView> {
       actor.project = projects[slot];
       actor.slot = slot;
       actor.session = session;
-      if (session.activeHarness == null) {
+      if (!session.hasOfficeAgentPresence) {
         actor.missingAt ??= now;
         if (now - actor.missingAt! >= _OfficeAgent.missingGraceMs) {
           actor.beginLeaving(map, now);
@@ -237,7 +237,7 @@ class _OfficeWorldViewState extends State<OfficeWorldFlutterView> {
     }
 
     for (final session in sessions) {
-      if (session.activeHarness == null || activeIds.contains(session.id)) {
+      if (!session.hasOfficeAgentPresence || activeIds.contains(session.id)) {
         continue;
       }
       final slot = projectSlots[session.projectId];

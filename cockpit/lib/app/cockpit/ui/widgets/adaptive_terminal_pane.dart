@@ -1,6 +1,7 @@
 import 'dart:io' show Platform;
 
 import 'package:cockpit/app/core/terminal/ghostty_font_family.dart';
+import 'package:cockpit/app/core/terminal/macos_paste_activator.dart';
 import 'package:cockpit/app/core/domain/entities/app_settings.dart';
 import 'package:cockpit/app/core/terminal/terminal_controller.dart';
 import 'package:cockpit/app/core/terminal/terminal_find.dart';
@@ -131,6 +132,8 @@ class _GhosttyPaneState extends State<_GhosttyPane>
       shortcuts[const SingleActivator(LogicalKeyboardKey.keyV, meta: true)] =
           const _CockpitPasteIntent();
       shortcuts[const SingleActivator(LogicalKeyboardKey.keyV, control: true)] =
+          const _CockpitPasteIntent();
+      shortcuts[const MacOsSyntheticPasteActivator()] =
           const _CockpitPasteIntent();
     }
 

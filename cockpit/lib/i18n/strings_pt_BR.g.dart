@@ -315,6 +315,15 @@ class _Translations$cockpit$officeWorld$pt_BR extends Translations$cockpit$offic
 	@override String get cafe => 'Copa';
 	@override String get restrooms => 'Banheiros';
 	@override String get lounge => 'Lounge';
+	@override String get rosterTitle => 'Agentes do escritório';
+	@override String get rosterSearch => 'Buscar agentes ou projetos';
+	@override String get rosterEmpty => 'Nenhum agente ativo encontrado';
+	@override String get activityFeed => 'Atividade';
+	@override String get activityEmpty => 'As atividades observadas aparecerão aqui.';
+	@override String get collapseRoster => 'Recolher lista de agentes';
+	@override String get collapseFeed => 'Recolher atividades';
+	@override String get reopenRoster => 'Agentes';
+	@override String get reopenFeed => 'Atividade';
 	@override String get working => 'Trabalhando';
 	@override String get waiting => 'Aguardando';
 	@override String get idle => 'Disponível';
@@ -2083,6 +2092,15 @@ extension on TranslationsPtBr {
 			'cockpit.officeWorld.cafe' => 'Copa',
 			'cockpit.officeWorld.restrooms' => 'Banheiros',
 			'cockpit.officeWorld.lounge' => 'Lounge',
+			'cockpit.officeWorld.rosterTitle' => 'Agentes do escritório',
+			'cockpit.officeWorld.rosterSearch' => 'Buscar agentes ou projetos',
+			'cockpit.officeWorld.rosterEmpty' => 'Nenhum agente ativo encontrado',
+			'cockpit.officeWorld.activityFeed' => 'Atividade',
+			'cockpit.officeWorld.activityEmpty' => 'As atividades observadas aparecerão aqui.',
+			'cockpit.officeWorld.collapseRoster' => 'Recolher lista de agentes',
+			'cockpit.officeWorld.collapseFeed' => 'Recolher atividades',
+			'cockpit.officeWorld.reopenRoster' => 'Agentes',
+			'cockpit.officeWorld.reopenFeed' => 'Atividade',
 			'cockpit.officeWorld.working' => 'Trabalhando',
 			'cockpit.officeWorld.waiting' => 'Aguardando',
 			'cockpit.officeWorld.idle' => 'Disponível',
@@ -2502,6 +2520,8 @@ extension on TranslationsPtBr {
 			'cockpit.kanbanView.listView' => 'Lista',
 			'cockpit.kanbanView.refresh' => 'Atualizar do disco',
 			'cockpit.kanbanView.manageLabels' => 'Marcadores',
+			_ => null,
+		} ?? switch (path) {
 			'cockpit.kanbanView.labelsTitle' => 'Marcadores deste quadro',
 			'cockpit.kanbanView.labelNamePlaceholder' => 'nome do marcador',
 			'cockpit.kanbanView.labelUsage' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 card', other: '${n} cards', ), 
@@ -2514,8 +2534,6 @@ extension on TranslationsPtBr {
 			'cockpit.kanbanView.columnOptions' => 'Opções da coluna',
 			'cockpit.kanbanView.renameColumn' => 'Renomear coluna',
 			'cockpit.kanbanView.moveColumnLeft' => 'Mover pra esquerda',
-			_ => null,
-		} ?? switch (path) {
 			'cockpit.kanbanView.moveColumnRight' => 'Mover pra direita',
 			'cockpit.kanbanView.deleteColumn' => 'Apagar coluna',
 			'cockpit.kanbanView.newCardHere' => 'Novo card aqui',
@@ -3016,6 +3034,8 @@ extension on TranslationsPtBr {
 			'settings.page.languages.sectionFormatting' => 'FORMATAÇÃO',
 			'settings.page.languages.formatOnSaveTitle' => 'Formatar ao salvar',
 			'settings.page.languages.formatOnSaveDesc' => 'Formata o arquivo automaticamente ao salvar (⌘S).',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.languages.sectionLanguageServers' => 'SERVIDORES DE LINGUAGEM',
 			'settings.page.languages.footerNote' => 'Erros e formatação usam o language server de cada linguagem. O Cockpit não instala servidores — ele usa o que já está na sua máquina. ● responde · ○ não encontrado ou comando inválido (instale o servidor ou ajuste o comando).',
 			'settings.page.languages.serverCommandLabel' => 'Comando do language server',
@@ -3028,8 +3048,6 @@ extension on TranslationsPtBr {
 			'settings.page.automations.sectionCommitMessages' => 'Mensagens de commit',
 			'settings.page.automations.harness' => 'Harness',
 			'settings.page.automations.harnessDiscovering' => 'Procurando harnesses de linha de comando instalados…',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.automations.harnessNoneFound' => 'Nenhum harness compatível foi encontrado no PATH.',
 			'settings.page.automations.harnessConfiguredUnavailable' => ({required Object harness}) => '${harness} está configurado, mas indisponível.',
 			'settings.page.automations.harnessChoose' => 'Escolha a CLI usada para gerar mensagens de commit.',

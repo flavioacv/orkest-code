@@ -37,6 +37,7 @@ import 'package:cockpit/app/cockpit/ui/widgets/panel_view.dart';
 import 'package:cockpit/app/cockpit/ui/widgets/layout_preview_tab.dart';
 import 'package:cockpit/app/cockpit/ui/widgets/notebook_view.dart';
 import 'package:cockpit/app/cockpit/ui/widgets/pane_tab_leading.dart';
+import 'package:cockpit/app/core/terminal/macos_paste_activator.dart';
 import 'package:cockpit/app/core/domain/entities/terminal_profile.dart';
 import 'package:cockpit/app/core/terminal/xterm/xterm.dart';
 import 'package:cockpit/app/core/ui/file_icons/file_icons.dart';
@@ -1642,7 +1643,9 @@ class _PaneBodyState extends State<_PaneBody> {
     // Ctrl+V no resto — mas também aceitamos Ctrl+V no macOS caso ele chegue.
     final keys = HardwareKeyboard.instance;
     final isPaste =
-        (Platform.isMacOS && keys.isMetaPressed) || keys.isControlPressed;
+        (Platform.isMacOS && keys.isMetaPressed) ||
+        keys.isControlPressed ||
+        const MacOsSyntheticPasteActivator().accepts(event, keys);
     if (!isPaste) return KeyEventResult.ignored;
     session.pasteFromClipboard();
     return KeyEventResult.handled;

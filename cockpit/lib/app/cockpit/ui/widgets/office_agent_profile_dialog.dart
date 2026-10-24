@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:typed_data';
 
 import 'package:cockpit/app/cockpit/domain/entities/project.dart';
 import 'package:cockpit/app/cockpit/ui/session/terminal_session.dart';
@@ -19,6 +20,7 @@ Future<void> showOfficeAgentProfile(
   VoidCallback? onCenterAgent,
   required ValueChanged<String> onRename,
   String? officeName,
+  Uint8List? portraitBytes,
   OfficeAppearanceLoader? loadAppearance,
   Map<String, String> initialAppearance = const <String, String>{},
   ValueChanged<Map<String, String>>? onSaveAppearance,
@@ -33,6 +35,7 @@ Future<void> showOfficeAgentProfile(
     onCenterAgent: onCenterAgent,
     onRename: onRename,
     officeName: officeName,
+    portraitBytes: portraitBytes,
     loadAppearance: loadAppearance,
     initialAppearance: initialAppearance,
     onSaveAppearance: onSaveAppearance,
@@ -48,6 +51,7 @@ class _OfficeAgentProfileDialog extends StatefulWidget {
     this.onCenterAgent,
     required this.onRename,
     this.officeName,
+    this.portraitBytes,
     this.loadAppearance,
     this.initialAppearance = const <String, String>{},
     this.onSaveAppearance,
@@ -60,6 +64,7 @@ class _OfficeAgentProfileDialog extends StatefulWidget {
   final VoidCallback? onCenterAgent;
   final ValueChanged<String> onRename;
   final String? officeName;
+  final Uint8List? portraitBytes;
   final OfficeAppearanceLoader? loadAppearance;
   final Map<String, String> initialAppearance;
   final ValueChanged<Map<String, String>>? onSaveAppearance;
@@ -173,7 +178,7 @@ class _OfficeAgentProfileDialogState extends State<_OfficeAgentProfileDialog> {
       ),
       content: ConstrainedBox(
         constraints: BoxConstraints(
-          maxWidth: 460,
+          maxWidth: 620,
           maxHeight: MediaQuery.sizeOf(context).height * 0.72,
         ),
         child: SingleChildScrollView(
@@ -182,19 +187,60 @@ class _OfficeAgentProfileDialogState extends State<_OfficeAgentProfileDialog> {
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Expanded(
-                    child: Text(
-                      displayName,
-                      style: context.typo.title.copyWith(
-                        fontSize: 18,
-                        color: colors.text,
+                  if (widget.portraitBytes != null) ...[
+                    Container(
+                      width: 120,
+                      height: 165,
+                      alignment: Alignment.bottomCenter,
+                      decoration: BoxDecoration(
+                        color: colors.panel2,
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(color: colors.border),
+                      ),
+                      clipBehavior: Clip.antiAlias,
+                      child: Image.memory(
+                        widget.portraitBytes!,
+                        fit: BoxFit.cover,
+                        filterQuality: FilterQuality.none,scale: 0.2,
                       ),
                     ),
-                  ),
-                  shad.IconButton.ghost(
-                    icon: const Text('✎'),
-                    onPressed: _editName,
+                    const SizedBox(width: 12),
+                  ],
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: Text(
+                                displayName,
+                                style: context.typo.title.copyWith(
+                                  fontSize: 18,
+                                  color: colors.text,
+                                ),
+                              ),
+                            ),
+                            shad.IconButton.ghost(
+                              icon: const Text('✎'),
+                              onPressed: _editName,
+                            ),
+                          ],
+                        ),
+                        if (session.activeHarness != null)
+                          Text(
+                            HarnessCatalog
+                                    .specs[session.activeHarness]
+                                    ?.label ??
+                                session.activeHarness!.name,
+                            style: context.typo.body.copyWith(
+                              color: colors.text2,
+                            ),
+                          ),
+                      ],
+                    ),
                   ),
                 ],
               ),
@@ -252,35 +298,48 @@ class _OfficeAgentProfileDialogState extends State<_OfficeAgentProfileDialog> {
         ),
       ),
       actions: [
-        if (widget.onFollowAgent case final onFollowAgent?)
-          shad.OutlineButton(
-            onPressed: () {
-              setState(() => _following = !_following);
-              onFollowAgent(_following);
-            },
-            child: Text(_following ? tr.stopFollowingAgent : tr.followAgent),
-          ),
-        if (widget.onCenterAgent case final onCenterAgent?)
-          shad.OutlineButton(
-            onPressed: onCenterAgent,
-            child: Text(tr.centerAgent),
-          ),
-        if (widget.loadAppearance != null && widget.onSaveAppearance != null)
-          shad.OutlineButton(
-            onPressed: _editAppearance,
-            child: Text(tr.editAppearance),
-          ),
-        shad.OutlineButton(onPressed: _editName, child: Text(tr.editAgentName)),
-        shad.OutlineButton(
-          onPressed: () => showOfficeTerminalInteraction(context, session),
-          child: Text(tr.interactInOffice),
-        ),
-        shad.PrimaryButton(
-          onPressed: () {
-            Navigator.of(context).pop();
-            widget.onOpenTerminal();
-          },
-          child: Text(tr.openTerminal),
+        Wrap(
+          alignment: WrapAlignment.end,
+          spacing: 8,
+          runSpacing: 8,
+          children: [
+            if (widget.onFollowAgent case final onFollowAgent?)
+              shad.OutlineButton(
+                onPressed: () {
+                  setState(() => _following = !_following);
+                  onFollowAgent(_following);
+                },
+                child: Text(
+                  _following ? tr.stopFollowingAgent : tr.followAgent,
+                ),
+              ),
+            if (widget.onCenterAgent case final onCenterAgent?)
+              shad.OutlineButton(
+                onPressed: onCenterAgent,
+                child: Text(tr.centerAgent),
+              ),
+            if (widget.loadAppearance != null &&
+                widget.onSaveAppearance != null)
+              shad.OutlineButton(
+                onPressed: _editAppearance,
+                child: Text(tr.editAppearance),
+              ),
+            shad.OutlineButton(
+              onPressed: _editName,
+              child: Text(tr.editAgentName),
+            ),
+            shad.OutlineButton(
+              onPressed: () => showOfficeTerminalInteraction(context, session),
+              child: Text(tr.interactInOffice),
+            ),
+            shad.PrimaryButton(
+              onPressed: () {
+                Navigator.of(context).pop();
+                widget.onOpenTerminal();
+              },
+              child: Text(tr.openTerminal),
+            ),
+          ],
         ),
       ],
     );

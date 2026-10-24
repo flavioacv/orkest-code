@@ -9819,6 +9819,25 @@
     if (s === "es" || s.startsWith("es-")) return "es";
     return void 0;
   }
+  function setLocale(v) {
+    const next = normalizeLocale(v) ?? "pt-BR";
+    if (current === next) return;
+    current = next;
+    if (typeof KINDS !== "undefined") {
+      KINDS = {
+        tv: { label: tr("Vendo TV"), emoji: "📺", min: 2, max: 5 },
+        videogame: { label: tr("Jogando videogame"), emoji: "🎮", min: 2, max: 5, match: true },
+        arcade: { label: tr("Duelo no fliperama"), emoji: "👾", min: 2, max: 2, match: true },
+        pingpong: { label: tr("Jogando pingue-pongue"), emoji: "🏓", min: 2, max: 4, match: true },
+        kitchen: { label: tr("Papo na copa"), emoji: "☕", min: 2, max: 4 },
+        talk: { label: tr("Conversando"), emoji: "💬", min: 2, max: 2 },
+        rps: { label: tr("Jokenpô"), emoji: "✊", min: 2, max: 4, match: true },
+        mirror: { label: tr("Se arrumando no espelho"), emoji: "💄", min: 1, max: 2, solo: true }
+      };
+      PLACES = { [LOUNGE_ID]: tr("Lounge"), [CAFE_ID]: tr("Copa"), [RECEPTION_ID]: tr("Recepção"), [RESTROOM_ID]: tr("Banheiros") };
+      MATCH_WHAT = { rps: tr("no jokenpô"), pingpong: tr("no pingue-pongue"), videogame: tr("no videogame"), arcade: tr("no fliperama") };
+    }
+  }
   function serverLocale(env2, intl) {
     const own = normalizeLocale(env2.HABBLAUD_LANG);
     if (own) return own;
@@ -26709,16 +26728,33 @@
         options2[key].filter((value) => !editorConflict(appearance, key, value))
       ]));
       const sprite2 = characterSprite({ appearance, dir: "down", pose: "stand", frame: 0 });
+      const bounds = opaqueBounds(sprite2.canvas);
+      const bodyCanvas = document.createElement("canvas");
+      bodyCanvas.width = bounds.w;
+      bodyCanvas.height = bounds.h;
+      bodyCanvas.getContext("2d").drawImage(
+        sprite2.canvas,
+        bounds.x,
+        bounds.y,
+        bounds.w,
+        bounds.h,
+        0,
+        0,
+        bounds.w,
+        bounds.h
+      );
       return {
         parts: Object.fromEntries(PART_KEYS.map((key) => [key, appearance[key]])),
         options: selectable,
-        preview: sprite2.canvas.toDataURL("image/png")
+        preview: bodyCanvas.toDataURL("image/png"),
+        avatar: avatarCanvas(seed, { look, parts, scale: 3 }).toDataURL("image/png")
       };
     },
     update(snapshot) {
       const now = Date.now();
       if (snapshot?.options && typeof snapshot.options === "object") {
         const next = snapshot.options;
+        if (typeof next.locale === "string") setLocale(next.locale);
         options = {
           ...options,
           ...typeof next.showNames === "boolean" ? { showNames: next.showNames } : {},
