@@ -90,11 +90,12 @@ canvas{display:block;image-rendering:pixelated;outline:none}
     final sessions = widget.sessions
         .whereType<TerminalSession>()
         .where(
+          // Require evidence that this PTY is running an agent, but do not
+          // require the process to match a known harness. Generic PTY activity
+          // and the shared activity contract are enough for new harnesses.
           (session) =>
               projectIds.contains(session.projectId) &&
-              (session.officeStatusHistory.isNotEmpty ||
-                  session.status != TerminalStatus.idle ||
-                  session.officeSubagents.isNotEmpty),
+              session.hasOfficeAgentPresence,
         )
         .toList(growable: false);
     final identities = _resolveAgentIdentities(sessions, officeSettings);
@@ -143,6 +144,9 @@ canvas{display:block;image-rendering:pixelated;outline:none}
             delegate: officeLabels.callingSubagents,
             toolComplete: officeLabels.toolCompleted,
             usingTool: officeLabels.usingTool,
+            thinking: officeLabels.agentThinking,
+            responded: officeLabels.agentResponded,
+            activityError: officeLabels.activityError,
           ),
       ];
       final observedSince =
@@ -166,6 +170,9 @@ canvas{display:block;image-rendering:pixelated;outline:none}
               delegate: officeLabels.callingSubagents,
               toolComplete: officeLabels.toolCompleted,
               usingTool: officeLabels.usingTool,
+              thinking: officeLabels.agentThinking,
+              responded: officeLabels.agentResponded,
+              activityError: officeLabels.activityError,
             )
           : recent.last;
       agents.add({
@@ -355,6 +362,12 @@ canvas{display:block;image-rendering:pixelated;outline:none}
   Future<void> _pushSnapshot() async {
     final web = _web;
     if (!_loaded || web == null) return;
+    // Refresh the rendered PTY screen before computing the signature. A
+    // harness may have started before Office was opened, so its current
+    // activity cannot depend only on receiving a new output chunk.
+    for (final session in widget.sessions.whereType<TerminalSession>()) {
+      session.refreshOfficeActivityFromScreen();
+    }
     final signature = _snapshotSignature();
     if (signature == _lastSnapshotSignature) return;
     final encoded = jsonEncode(_snapshot());
@@ -655,6 +668,9 @@ Map<String, dynamic> _officeStatusActivity(
   required String delegate,
   required String toolComplete,
   required String usingTool,
+  required String thinking,
+  required String responded,
+  required String activityError,
   String? hookEvent,
   String? toolName,
   String? activityKind,
@@ -682,9 +698,31 @@ Map<String, dynamic> _officeStatusActivity(
       'error' => '⚠️',
       _ => '⚙️',
     };
-    final text = activityPhase == null || activityPhase == 'started'
-        ? activitySummary
-        : '$activitySummary · $activityPhase';
+    final observedLabel = switch (activityKind) {
+      'prompt' => prompt,
+      'respond' => responded,
+      'thinking' => thinking,
+      'read' => reading,
+      'search' => searching,
+      'edit' => editing,
+      'write' => writing,
+      'command' => command,
+      'wait' || 'needs_input' => waiting,
+      'test' => tests,
+      'web' => web,
+      'plan' => planning,
+      'delegate' => delegate,
+      'done' => idle,
+      'error' => activityError,
+      'mcp' || 'other' => usingTool,
+      _ => activitySummary,
+    };
+    final isObserved = activityPhase == 'observed';
+    final label = isObserved ? observedLabel : activitySummary;
+    final text =
+        isObserved || activityPhase == null || activityPhase == 'started'
+        ? label
+        : '$label · $activityPhase';
     return {
       'id': 'cockpit-activity-$at-$sequence',
       'kind': switch (activityKind) {

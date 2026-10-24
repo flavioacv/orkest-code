@@ -330,6 +330,9 @@ class _Translations$cockpit$officeWorld$es extends Translations$cockpit$officeWo
 	@override String get statsPending => 'Cockpit todavía no recopila estadísticas de modelo, tokens y herramientas.';
 	@override String get recentActivity => 'Actividad reciente en esta ejecución';
 	@override String get promptReceived => 'Recibió una solicitud';
+	@override String get agentThinking => 'Pensando';
+	@override String get agentResponded => 'Respuesta enviada';
+	@override String get activityError => 'Algo salió mal';
 	@override String get readingFile => 'Leyendo archivo';
 	@override String get searchingCode => 'Buscando en el código';
 	@override String get editingFile => 'Editando archivo';
@@ -2095,6 +2098,9 @@ extension on TranslationsEs {
 			'cockpit.officeWorld.statsPending' => 'Cockpit todavía no recopila estadísticas de modelo, tokens y herramientas.',
 			'cockpit.officeWorld.recentActivity' => 'Actividad reciente en esta ejecución',
 			'cockpit.officeWorld.promptReceived' => 'Recibió una solicitud',
+			'cockpit.officeWorld.agentThinking' => 'Pensando',
+			'cockpit.officeWorld.agentResponded' => 'Respuesta enviada',
+			'cockpit.officeWorld.activityError' => 'Algo salió mal',
 			'cockpit.officeWorld.readingFile' => 'Leyendo archivo',
 			'cockpit.officeWorld.searchingCode' => 'Buscando en el código',
 			'cockpit.officeWorld.editingFile' => 'Editando archivo',

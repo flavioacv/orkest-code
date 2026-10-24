@@ -62,6 +62,15 @@ class _OfficeTerminalInteractionDialogState
     }
   }
 
+  void _sendArrow({required bool up}) {
+    try {
+      widget.session.sendArrow(up: up);
+      _inputFocus.requestFocus();
+    } on StateError {
+      // The session may have closed concurrently.
+    }
+  }
+
   void _submit() {
     final text = _input.text;
     if (text.isEmpty) {
@@ -141,12 +150,12 @@ class _OfficeTerminalInteractionDialogState
             Wrap(
               spacing: 6,
               children: [
-                _key('↑', const [27, 91, 65]),
-                _key('↓', const [27, 91, 66]),
-                _key('Tab', const [9]),
-                _key('Esc', const [27]),
-                _key('Ctrl+C', const [3]),
-                _key('Enter', const [13]),
+                _key('↑', () => _sendArrow(up: true)),
+                _key('↓', () => _sendArrow(up: false)),
+                _key('Tab', () => _sendKey(const [9])),
+                _key('Esc', () => _sendKey(const [27])),
+                _key('Ctrl+C', () => _sendKey(const [3])),
+                _key('Enter', () => _sendKey(const [13])),
               ],
             ),
             const SizedBox(height: 6),
@@ -169,6 +178,6 @@ class _OfficeTerminalInteractionDialogState
     );
   }
 
-  Widget _key(String label, List<int> bytes) =>
-      shad.OutlineButton(onPressed: () => _sendKey(bytes), child: Text(label));
+  Widget _key(String label, VoidCallback onPressed) =>
+      shad.OutlineButton(onPressed: onPressed, child: Text(label));
 }

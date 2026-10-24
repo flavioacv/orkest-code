@@ -531,6 +531,15 @@ class Translations$cockpit$officeWorld$en {
 	/// en: 'Received a request'
 	String get promptReceived => 'Received a request';
 
+	/// en: 'Thinking'
+	String get agentThinking => 'Thinking';
+
+	/// en: 'Response sent'
+	String get agentResponded => 'Response sent';
+
+	/// en: 'Something went wrong'
+	String get activityError => 'Something went wrong';
+
 	/// en: 'Reading a file'
 	String get readingFile => 'Reading a file';
 
@@ -4322,6 +4331,9 @@ extension on Translations {
 			'cockpit.officeWorld.statsPending' => 'Model, token and tool statistics are not collected by Cockpit yet.',
 			'cockpit.officeWorld.recentActivity' => 'Recent activity in this run',
 			'cockpit.officeWorld.promptReceived' => 'Received a request',
+			'cockpit.officeWorld.agentThinking' => 'Thinking',
+			'cockpit.officeWorld.agentResponded' => 'Response sent',
+			'cockpit.officeWorld.activityError' => 'Something went wrong',
 			'cockpit.officeWorld.readingFile' => 'Reading a file',
 			'cockpit.officeWorld.searchingCode' => 'Searching the code',
 			'cockpit.officeWorld.editingFile' => 'Editing a file',

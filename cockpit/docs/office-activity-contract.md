@@ -57,3 +57,10 @@ Este contrato fornece um ponto comum de integração para qualquer harness. Sem
 hook, wrapper ou chamada explícita do agente, a heurística visual é apenas uma
 aproximação: a resposta continua sendo enviada ao PTY original, e o Cockpit não
 consegue inferir com segurança todas as ações internas do modelo.
+
+No mapa, uma aba só vira personagem quando há evidência de agente: uma atividade
+semântica reconhecida no PTY, um evento estruturado do contrato/hooks, estado de
+trabalho/espera ou subagente associado. A identificação por processo pode
+complementar isso, mas não é requisito. Assim, shells comuns permanecem fora do
+mapa e harnesses novos entram quando produzem um sinal de atividade reconhecível
+ou reportam pelo contrato `cockpit activity`.

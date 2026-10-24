@@ -283,6 +283,19 @@ class TerminalSession extends PaneItem {
   List<TerminalStatusEvent> get officeStatusHistory =>
       List.unmodifiable(_officeStatusHistory);
 
+  /// Whether this PTY has evidence of an agent for the Office map.
+  /// A detected agent process is sufficient evidence even before it emits a
+  /// recognizable activity row. Unknown harnesses can still enter through
+  /// semantic PTY activity or structured Cockpit activity events.
+  bool get hasOfficeAgentPresence =>
+      _activeHarness != null ||
+      _officeAgentActivityObserved ||
+      _status != TerminalStatus.idle ||
+      _officeSubagents.isNotEmpty ||
+      _officeStatusHistory.any(
+        (event) => event.event != null || event.activityKind != null,
+      );
+
   /// Most recent generic prompt/permission event, if this session is waiting.
   int get latestWaitingEventSequence {
     for (final event in _officeStatusHistory.reversed) {
@@ -298,6 +311,7 @@ class TerminalSession extends PaneItem {
     for (final event in _officeStatusHistory.reversed) {
       if (event.activityKind == 'needs_input' &&
           event.activitySummary != null) {
+        if (event.activityPhase == 'observed') return null;
         return event.activitySummary;
       }
       if (event.status == TerminalStatus.waiting && event.event != null) {
@@ -436,6 +450,7 @@ class TerminalSession extends PaneItem {
   final Queue<int> _observedOfficeActivityOrder = Queue<int>();
   DateTime? _lastOfficeActivityScanAt;
   bool _officeAgentActivityObserved = false;
+  bool _officePermissionPromptVisible = false;
 
   /// Janela em que um `working` mid-turn órfão (sem turno ativo) pós-`idle` é
   /// tratado como reordenação. Generosa (a real reordenação chega em ms); turnos
@@ -554,6 +569,7 @@ class TerminalSession extends PaneItem {
   /// input itself is never inspected or retained.
   void _observeGenericPromptSubmission({required bool responding}) {
     if (!responding && !_officeAgentActivityObserved) return;
+    if (responding) _officePermissionPromptVisible = false;
     applyOfficeActivity(
       kind: responding ? 'respond' : 'prompt',
       phase: 'started',
@@ -575,6 +591,28 @@ class TerminalSession extends PaneItem {
       return;
     }
     _lastOfficeActivityScanAt = now;
+
+    // Permission prompts are a current screen state, not transcript events.
+    // Limit detection to the visible terminal rows so an old approval in the
+    // scrollback cannot resurrect a notification after it was answered.
+    final visibleRows = _viewportRows ?? 25;
+    final visibleLines = terminal.plainLines(limit: visibleRows);
+    final hasVisiblePermissionPrompt = visibleLines.any((raw) {
+      final observation = _mapOfficeActivityLine(raw.trim());
+      return observation != null && observation.$1 == 'needs_input';
+    });
+    if (hasVisiblePermissionPrompt && !_officePermissionPromptVisible) {
+      _officePermissionPromptVisible = true;
+      _officeAgentActivityObserved = true;
+      applyOfficeActivity(
+        kind: 'needs_input',
+        phase: 'observed',
+        summary: 'Precisa de uma resposta no terminal',
+      );
+    } else if (!hasVisiblePermissionPrompt) {
+      _officePermissionPromptVisible = false;
+    }
+
     for (final raw in terminal.plainLines(limit: 80)) {
       final line = raw.trim();
       if (line.isEmpty) continue;
@@ -582,6 +620,9 @@ class TerminalSession extends PaneItem {
       if (observation == null) continue;
       _officeAgentActivityObserved = true;
       final (kind, summary, phase, fingerprint) = observation;
+      // The visible-screen transition above emits permission requests. Do not
+      // replay matching prompts from scrollback or deduplicate them forever.
+      if (kind == 'needs_input') continue;
       if (_status == TerminalStatus.waiting && kind != 'needs_input') continue;
       if (!_observedOfficeActivityFingerprints.add(fingerprint)) continue;
       _observedOfficeActivityOrder.addLast(fingerprint);
@@ -594,6 +635,13 @@ class TerminalSession extends PaneItem {
     }
   }
 
+  /// Rechecks the rendered terminal screen while the Office is visible.
+  ///
+  /// This covers sessions that were already running before the Office opened,
+  /// and restored scrollback that was rendered before the PTY output listener
+  /// was attached. The scan is throttled and only emits fixed activity labels.
+  void refreshOfficeActivityFromScreen() => _observeTerminalActivity();
+
   (String, String, String, int)? _mapOfficeActivityLine(String line) {
     // Common agent TUIs show this while a turn is active. It is an observed
     // state marker, not a harness identity or an inference from silence.
@@ -602,25 +650,45 @@ class TerminalSession extends PaneItem {
       return (
         'thinking',
         'Processando solicitação',
-        'updated',
+        'observed',
         Object.hash('working', 'active'),
       );
     }
+    // TUI prompts commonly put the question inside box borders or prefix it
+    // with a status glyph. Strip only those presentation characters, then
+    // recognize generic approval/confirmation wording across harnesses.
+    final promptLine = line
+        .trim()
+        .replaceFirst(RegExp(r'^[│┃╭╰┌└├┤┬┴┼─━╔╗╚╝]+'), '')
+        .replaceFirst(RegExp(r'^(?:🔒|🔐|✋|⚠️|❯|›|>|!|\?)+\s*'), '')
+        .trimLeft();
     if (RegExp(
-      r'^(permission required|approval required|waiting for (your )?(approval|permission|input)|allow this command|approve this command|do you want to (run|allow|proceed)|would you like to (allow|proceed)|select an option|choose an option)\b',
+      r'^(permission|approval)\s+(is\s+)?(required|requested|needed|pending)\b|'
+      r'^requesting\s+(permission|approval)\s+for\b|'
+      r'^(waiting|needs|requires)\b.{0,80}\b(your\s+)?(approval|permission|input|response)\b|'
+      r'^(do you want|would you like)\b.{0,100}\b(allow|approve|authorize|run|execute|proceed|continue)\b|'
+      r'^(allow|approve|authorize)\s+(this|the|once|always|command|action|request)\b.{0,100}(\?|$)|'
+      r'^(run|execute|apply)\s+(this|the)\s+(command|action|change)\b.{0,100}(\?|$)|'
+      r'^(select|choose|press)\b.{0,100}\b(allow|approve|yes|deny|reject|once|always|option)\b|'
+      r'^(select|choose)\s+an\s+option\b',
       caseSensitive: false,
-    ).hasMatch(line.trim())) {
+    ).hasMatch(promptLine)) {
       return (
         'needs_input',
         'Precisa de uma resposta no terminal',
-        'updated',
-        Object.hash('needs_input', line.toLowerCase()),
+        'observed',
+        Object.hash('needs_input', promptLine.toLowerCase()),
       );
     }
 
     // Action rows are rendered in the agent TUI. Match only row-like prefixes
     // so ordinary project output mentioning “read” or “run” is not classified.
-    final row = line.replaceFirst(RegExp(r'^[•*└├─\s]+'), '').trim();
+    final marker = RegExp(
+      r'^(?:🔴|🟢|🟡|✅|❌|⚠️|ℹ️|•|\*|└|├|─|›|❯|>)+\s*',
+    ).firstMatch(line);
+    final row = marker == null
+        ? line.trim()
+        : line.substring(marker.end).trim();
     if (row.isEmpty) return null;
     final lower = row.toLowerCase();
     if (RegExp(
@@ -630,8 +698,30 @@ class TerminalSession extends PaneItem {
       return (
         'done',
         'Turno concluído',
-        'completed',
+        'observed',
         Object.hash('done', lower),
+      );
+    }
+    if (marker == null) {
+      if (RegExp(r'^(thinking|pensando)\.{0,3}$').hasMatch(lower)) {
+        return (
+          'thinking',
+          'Pensando',
+          'observed',
+          Object.hash('thinking', lower),
+        );
+      }
+      return null;
+    }
+    if (RegExp(
+      r'^(ran|running|executing|executed|failed|falhou)\b.*\b(failed|errored|error|falhou|erro)\b',
+      caseSensitive: false,
+    ).hasMatch(row)) {
+      return (
+        'error',
+        'A execução encontrou um erro',
+        'observed',
+        Object.hash('error', lower),
       );
     }
     String? kind;
@@ -684,7 +774,7 @@ class TerminalSession extends PaneItem {
       summary = 'Organizando tarefas';
     }
     if (kind == null || summary == null) return null;
-    return (kind, summary, 'updated', Object.hash(kind, lower));
+    return (kind, summary, 'observed', Object.hash(kind, lower));
   }
 
   /// Detecta o **interrupt** do harness na entrada do usuário. O Claude Code
@@ -696,6 +786,17 @@ class TerminalSession extends PaneItem {
   /// otimista. Se não era interrupt de fato, o `_staleWorkingGuard` descarta o
   /// `working` mid-turn tardio, e um `UserPromptSubmit` legítimo reacende.
   void _maybeInterrupt(String data) {
+    if (data == '\x1b' && _status == TerminalStatus.waiting) {
+      // Escape is the harness' explicit cancel response for permission and
+      // choice prompts. Closing the Office mirror never calls this path.
+      _officePermissionPromptVisible = false;
+      applyOfficeActivity(
+        kind: 'respond',
+        phase: 'started',
+        summary: 'Solicitação cancelada no terminal',
+      );
+      return;
+    }
     if (data == '\x1b' && _status == TerminalStatus.working) {
       _turnActive = false;
       _notifyDebounce?.cancel();
@@ -837,6 +938,9 @@ class TerminalSession extends PaneItem {
   /// Envia bytes CRUS ao PTY (sequências de controle: ESC, setas, F-keys,
   /// Ctrl+C...). Usado pela barra de teclas do mobile — plano 60, Wave F.
   void sendKeys(List<int> bytes) => _writeInput(bytes);
+
+  /// Sends an arrow through the terminal engine's keyboard mode encoder.
+  void sendArrow({required bool up}) => terminal.sendArrow(up: up);
 
   void _writeInput(List<int> bytes) {
     final text = utf8.decode(bytes, allowMalformed: true);

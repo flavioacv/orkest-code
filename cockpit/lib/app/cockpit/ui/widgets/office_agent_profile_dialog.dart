@@ -289,6 +289,27 @@ class _OfficeAgentProfileDialogState extends State<_OfficeAgentProfileDialog> {
   String _officeEventLabel(TerminalStatusEvent event) {
     final tr = context.t.cockpit.officeWorld;
     if (event.event == 'OfficeActivity' && event.activitySummary != null) {
+      if (event.activityPhase == 'observed') {
+        return switch (event.activityKind) {
+          'prompt' => tr.promptReceived,
+          'respond' => tr.agentResponded,
+          'thinking' => tr.agentThinking,
+          'read' => tr.readingFile,
+          'search' => tr.searchingCode,
+          'edit' => tr.editingFile,
+          'write' => tr.writingFile,
+          'command' => tr.runningCommand,
+          'wait' || 'needs_input' => tr.waitingInTerminal,
+          'test' => tr.runningTests,
+          'web' => tr.browsingWeb,
+          'plan' => tr.organizingTasks,
+          'delegate' => tr.callingSubagents,
+          'done' => tr.turnCompleted,
+          'error' => tr.activityError,
+          'mcp' || 'other' => tr.usingTool,
+          _ => event.activitySummary!,
+        };
+      }
       return event.activitySummary!;
     }
     final tool = event.toolName;
@@ -330,6 +351,7 @@ class _OfficeAgentProfileDialogState extends State<_OfficeAgentProfileDialog> {
       event.event == 'OfficeActivity'
       ? switch (event.activityKind) {
           'prompt' => '📨',
+          'respond' => '💬',
           'thinking' => '💭',
           'read' => '📖',
           'search' => '🔎',

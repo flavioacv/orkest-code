@@ -1,6 +1,6 @@
 import 'package:cockpit_core/cockpit_core.dart';
 
-import 'dart:async' show StreamSubscription, unawaited;
+import 'dart:async' show StreamSubscription, Timer, unawaited;
 import 'dart:io';
 
 import 'package:cockpit/app/cockpit/ui/actions/remote_workspace_actions.dart';
@@ -9,6 +9,7 @@ import 'package:cockpit/app/cockpit/ui/actions/workspace_actions.dart';
 import 'package:cockpit/app/cockpit/ui/actions/worktree_actions.dart';
 import 'package:cockpit/app/core/app_intents.dart';
 import 'package:cockpit/app/cockpit/domain/entities/project.dart';
+import 'package:cockpit/app/cockpit/ui/session/pane_item.dart';
 import 'package:cockpit/app/cockpit/ui/session/terminal_session.dart';
 import 'package:cockpit/app/cockpit/ui/document/document_windows.dart';
 import 'package:cockpit/app/cockpit/domain/entities/remote_host.dart';
@@ -57,6 +58,7 @@ import 'package:flutter/services.dart'
         KeyRepeatEvent,
         LogicalKeyboardKey,
         PhysicalKeyboardKey;
+import 'package:flutter/scheduler.dart';
 import 'package:cockpit/app/core/ui/widgets/app_tooltip.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:flutter_modular/flutter_modular.dart';
@@ -1009,10 +1011,48 @@ class _CenterPanelState extends State<_CenterPanel> {
   final Map<String, Widget> _workspaceWidgets = {};
   String? _officeTerminalSessionId;
   final Map<String, int> _dismissedOfficeWaiting = <String, int>{};
+  final Set<TerminalSession> _observedTerminalSessions = <TerminalSession>{};
+  bool _officeInitialized = false;
+  bool _terminalSessionRebuildQueued = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _officeInitialized = widget.officeView;
+  }
+
+  void _syncTerminalSessionListeners(Iterable<PaneItem> sessions) {
+    final next = sessions.whereType<TerminalSession>().toSet();
+    for (final session in _observedTerminalSessions.difference(next)) {
+      session.removeListener(_onTerminalSessionChanged);
+    }
+    for (final session in next.difference(_observedTerminalSessions)) {
+      session.addListener(_onTerminalSessionChanged);
+    }
+    _observedTerminalSessions
+      ..clear()
+      ..addAll(next);
+  }
+
+  void _onTerminalSessionChanged() {
+    if (!mounted || !widget.officeView) return;
+    if (SchedulerBinding.instance.schedulerPhase !=
+        SchedulerPhase.persistentCallbacks) {
+      setState(() {});
+      return;
+    }
+    if (_terminalSessionRebuildQueued) return;
+    _terminalSessionRebuildQueued = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _terminalSessionRebuildQueued = false;
+      if (mounted && widget.officeView) setState(() {});
+    });
+  }
 
   @override
   void didUpdateWidget(covariant _CenterPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (widget.officeView) _officeInitialized = true;
     if (oldWidget.officeView && !widget.officeView) {
       _officeTerminalSessionId = null;
     }
@@ -1021,6 +1061,7 @@ class _CenterPanelState extends State<_CenterPanel> {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<CockpitViewModel>();
+    _syncTerminalSessionListeners(vm.allSessions);
     final colors = context.colors;
     final projectIds = vm.projects.map((project) => project.id).toList();
     final liveIds = projectIds.toSet();
@@ -1052,7 +1093,10 @@ class _CenterPanelState extends State<_CenterPanel> {
               .firstOrNull;
     final showTerminalWorkspace = !widget.officeView || officeSession != null;
 
-    final office = widget.officeView
+    // Build the WebView on first entry, then keep its canvas mounted while the
+    // user switches back to the terminal. Habblaud's simulation is stateful;
+    // disposing this widget respawns every existing character at the entrance.
+    final office = _officeInitialized
         ? OfficeWorldView(
             projects: <String, Project>{
               for (final root in vm.rootProjects) root.id: root,
@@ -1128,8 +1172,23 @@ class _CenterPanelState extends State<_CenterPanel> {
     final center = Stack(
       fit: StackFit.expand,
       children: [
-        if (office != null) Positioned.fill(child: office),
-        if (office != null && waitingSessions.isNotEmpty)
+        if (office != null)
+          Positioned.fill(
+            child: Offstage(offstage: !widget.officeView, child: office),
+          ),
+        if (terminalWorkspace != null)
+          if (widget.officeView)
+            _OfficeTerminalWindow(
+              title: officeSession?.displayTitle ?? 'Terminal',
+              projectName: officeProject?.name ?? '',
+              onClose: () => setState(() => _officeTerminalSessionId = null),
+              child: terminalWorkspace,
+            )
+          else
+            Positioned.fill(child: terminalWorkspace),
+        // Keep Office alerts above its floating live-terminal window; otherwise
+        // a permission prompt opened in that window hides the notification.
+        if (widget.officeView && office != null && waitingSessions.isNotEmpty)
           Positioned(
             right: 16,
             bottom: 16,
@@ -1153,20 +1212,34 @@ class _CenterPanelState extends State<_CenterPanel> {
               }),
             ),
           ),
-        if (terminalWorkspace != null)
-          if (widget.officeView)
-            _OfficeTerminalWindow(
-              title: officeSession?.displayTitle ?? 'Terminal',
-              projectName: officeProject?.name ?? '',
-              onClose: () => setState(() => _officeTerminalSessionId = null),
-              child: terminalWorkspace,
-            )
-          else
-            Positioned.fill(child: terminalWorkspace),
+        if (widget.officeView && office != null)
+          Positioned(
+            right: 16,
+            bottom: (16 + (waitingSessions.length.clamp(0, 3) * 76)).toDouble(),
+            width: 360,
+            child: _OfficeCompletionNotifications(
+              sessions: vm.allSessions.whereType<TerminalSession>().toList(),
+              projectName: (session) =>
+                  vm.projects
+                      .where((project) => project.id == session.projectId)
+                      .firstOrNull
+                      ?.name ??
+                  session.projectId,
+            ),
+          ),
       ],
     );
 
     return KeyedSubtree(key: widget.centerKey, child: center);
+  }
+
+  @override
+  void dispose() {
+    for (final session in _observedTerminalSessions) {
+      session.removeListener(_onTerminalSessionChanged);
+    }
+    _observedTerminalSessions.clear();
+    super.dispose();
   }
 
   int _activeIndex(CockpitViewModel vm) {
@@ -1244,6 +1317,161 @@ class _OfficeWaitingNotifications extends StatelessWidget {
                       variance: ButtonVariance.ghost,
                       onPressed: () => onDismiss(session),
                       icon: const Icon(Icons.close, size: 16),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+        ],
+      ),
+    );
+  }
+}
+
+class _OfficeCompletionNotice {
+  const _OfficeCompletionNotice(this.session, this.event);
+
+  final TerminalSession session;
+  final TerminalStatusEvent event;
+  String get id => '${session.id}:${event.sequence}';
+}
+
+/// Brief corner toast for a completed turn. Waiting requests have their own
+/// persistent card because they require action; completions expire on their
+/// own and remain available in the agent profile timeline.
+class _OfficeCompletionNotifications extends StatefulWidget {
+  const _OfficeCompletionNotifications({
+    required this.sessions,
+    required this.projectName,
+  });
+
+  final List<TerminalSession> sessions;
+  final String Function(TerminalSession) projectName;
+
+  @override
+  State<_OfficeCompletionNotifications> createState() =>
+      _OfficeCompletionNotificationsState();
+}
+
+class _OfficeCompletionNotificationsState
+    extends State<_OfficeCompletionNotifications> {
+  static const _visibleFor = Duration(seconds: 7);
+  final Set<String> _dismissed = <String>{};
+  Timer? _expiry;
+
+  @override
+  void initState() {
+    super.initState();
+    _scheduleExpiry();
+  }
+
+  @override
+  void didUpdateWidget(covariant _OfficeCompletionNotifications oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    _scheduleExpiry();
+  }
+
+  List<_OfficeCompletionNotice> _notices() {
+    final now = DateTime.now();
+    final notices = <_OfficeCompletionNotice>[];
+    for (final session in widget.sessions) {
+      final event = session.officeStatusHistory.reversed
+          .where(
+            (event) =>
+                event.activityKind == 'done' ||
+                (event.event == 'Stop' && event.status == TerminalStatus.idle),
+          )
+          .firstOrNull;
+      if (event == null ||
+          _dismissed.contains('${session.id}:${event.sequence}')) {
+        continue;
+      }
+      final age = now.difference(event.at);
+      if (age.isNegative || age >= _visibleFor) continue;
+      notices.add(_OfficeCompletionNotice(session, event));
+    }
+    notices.sort((a, b) => b.event.at.compareTo(a.event.at));
+    return notices.take(3).toList(growable: false);
+  }
+
+  void _scheduleExpiry() {
+    _expiry?.cancel();
+    final notices = _notices();
+    if (notices.isEmpty) return;
+    final earliest = notices
+        .map((notice) => notice.event.at.add(_visibleFor))
+        .reduce((a, b) => a.isBefore(b) ? a : b);
+    final delay = earliest.difference(DateTime.now());
+    _expiry = Timer(delay.isNegative ? Duration.zero : delay, () {
+      if (!mounted) return;
+      setState(_scheduleExpiry);
+    });
+  }
+
+  @override
+  void dispose() {
+    _expiry?.cancel();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final notices = _notices();
+    final colors = context.colors;
+    final tr = context.t.cockpit.officeWorld;
+    if (notices.isEmpty) return const SizedBox.shrink();
+    return AnimatedSwitcher(
+      duration: const Duration(milliseconds: 220),
+      transitionBuilder: (child, animation) => FadeTransition(
+        opacity: animation,
+        child: SlideTransition(
+          position: Tween<Offset>(
+            begin: const Offset(0.12, 0),
+            end: Offset.zero,
+          ).animate(animation),
+          child: child,
+        ),
+      ),
+      child: Column(
+        key: ValueKey(notices.map((notice) => notice.id).join(',')),
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          for (final notice in notices)
+            Padding(
+              padding: const EdgeInsets.only(top: 8),
+              child: Container(
+                decoration: BoxDecoration(
+                  color: colors.bg.withValues(alpha: 0.96),
+                  border: Border.all(color: const Color(0xFF49C779), width: 2),
+                  borderRadius: BorderRadius.circular(12),
+                  boxShadow: const [
+                    BoxShadow(color: Color(0x55000000), blurRadius: 18),
+                  ],
+                ),
+                padding: const EdgeInsets.fromLTRB(10, 8, 6, 8),
+                child: Row(
+                  children: [
+                    const Text('✅', style: TextStyle(fontSize: 19)),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        '${tr.turnCompleted} · ${widget.projectName(notice.session)}',
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(color: colors.text, fontSize: 12),
+                      ),
+                    ),
+                    Semantics(
+                      label: tr.dismissNotification,
+                      button: true,
+                      child: IconButton.ghost(
+                        variance: ButtonVariance.ghost,
+                        onPressed: () => setState(() {
+                          _dismissed.add(notice.id);
+                          _scheduleExpiry();
+                        }),
+                        icon: const Icon(Icons.close, size: 16),
+                      ),
                     ),
                   ],
                 ),

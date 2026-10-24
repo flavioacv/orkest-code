@@ -25,7 +25,7 @@ os terminais continuam acessíveis pela topbar e pelo clique no personagem.
 | Reorganizar panes sem controller/viewport descartado | Fluxo alterado para aguardar um frame entre detach e mount; falta repetir manualmente o gesto no macOS |
 | Notificação genérica de espera | Implementado: estado `waiting` produz balão/atividade e sino; resposta acontece na janela do terminal real |
 | Sons ambientais de teclado/elevador/atividades sociais | Implementado no Canvas Habblaud; opção local desligada por padrão e áudio liberado no primeiro gesto dentro do mundo |
-| Chegada de agentes ao abrir o escritório | Implementado no Canvas: primeiro snapshot constrói as salas sem agentes e o seguinte anima as chegadas pelo elevador; fallback Flutter já animava a entrada |
+| Chegada e continuidade dos agentes | Implementado no Canvas: chegada pelo elevador na primeira criação da sessão; alternar entre Office e terminal mantém o WebView e a posição atual dos personagens |
 | Edição de roupa/peças do personagem | Pendente: o editor do Habblaud persiste aparência por sala no store; Cockpit ainda não possui preferências de aparência por workspace |
 | Linha do tempo detalhada, tarefas, tokens, modelo e ferramentas | Pendente: Cockpit só registra transições genéricas de estado; não lê transcript nem coleta métricas uniformemente entre harnesses |
 | Gamificação social (moedas, jogos, amizades e ranking) | Fora desta integração: depende dos eventos/tarefas e armazenamento social do Habblaud; não deve exibir valores fictícios no Cockpit |
@@ -160,11 +160,14 @@ caminho de saída. O adapter não apaga o sprite diretamente.
 
 O comportamento inicial foi adaptado para o Cockpit: `main.ts` aplica o
 primeiro snapshot com as salas e sem agentes, e logo depois o snapshot real.
-Assim, as salas aparecem prontas e os agentes existentes são tratados como
-chegadas novas. O comportamento padrão do Habblaud é deliberadamente diferente
-porque o primeiro snapshot costuma ser histórico e deve mostrar todos já nos
-seus lugares. Se o usuário alternar o Office e a instância WebView for recriada,
-as chegadas podem ser animadas novamente.
+Assim, as salas aparecem prontas e os agentes existentes fazem a chegada pelo
+elevador na primeira criação da sessão. O Habblaud mantém a instância da
+simulação enquanto a página continua aberta. O Cockpit agora cria o WebView na
+primeira entrada no Office e o mantém montado, fora da tela, enquanto o usuário
+volta ao terminal. Isso preserva fila de movimento, posição, pose, câmera e
+estado social; ao voltar ao Office, o personagem continua do ponto em que estava
+em vez de repetir a chegada. Fechar/reiniciar o aplicativo ainda cria uma nova
+simulação e repete a chegada inicial.
 
 O histórico do perfil contém até 200 eventos de hook observados na sessão atual
 do Cockpit, mantidos em memória. O adapter mapeia eventos para categorias do

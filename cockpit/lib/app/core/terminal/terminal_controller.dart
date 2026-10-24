@@ -25,6 +25,7 @@ sealed class CockpitTerminalController {
   void write(String data);
   void restore(String data);
   void paste(String text);
+  void sendArrow({required bool up});
   List<String> plainLines({int? limit});
 
   /// Texto atualmente selecionado, ou vazio se não há seleção.
@@ -67,6 +68,11 @@ final class XtermTerminalController implements CockpitTerminalController {
 
   @override
   void paste(String text) => terminal.paste(text);
+
+  @override
+  void sendArrow({required bool up}) => terminal.keyInput(
+    up ? xterm.TerminalKey.arrowUp : xterm.TerminalKey.arrowDown,
+  );
 
   @override
   List<String> plainLines({int? limit}) {
@@ -265,6 +271,11 @@ final class GhosttyTerminalController implements CockpitTerminalController {
 
   @override
   void paste(String text) => controller.paste(text);
+
+  @override
+  void sendArrow({required bool up}) => controller.sendKey(
+    up ? ghost.Key.arrowUp : ghost.Key.arrowDown,
+  );
 
   @override
   List<String> plainLines({int? limit}) {
