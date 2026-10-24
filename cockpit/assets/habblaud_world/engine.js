@@ -26433,6 +26433,32 @@
     }
   };
 
+  // tool/habblaud_world/sim.ts
+  var hidingSteps = /* @__PURE__ */ new Set(["elevOut", "elevIn", "stall"]);
+  function repairCharacterVisibility(ch) {
+    if (ch.gone || ch.leaving || !ch.inside && ch.alpha >= 1) return false;
+    if (ch.step && hidingSteps.has(ch.step.t)) return false;
+    if (ch.queue.some((step) => hidingSteps.has(step.t))) return false;
+    ch.inside = false;
+    ch.alpha = 1;
+    ch.hiddenUntil = 0;
+    return true;
+  }
+  var CockpitSim = class extends Sim {
+    interrupt(ch) {
+      if (!ch.step && ch.queue[0]?.t === "elevOut") {
+        ch.step = ch.queue.shift();
+        ch.stepT = 0;
+        ch.stepStarted = false;
+      }
+      super.interrupt(ch);
+    }
+    update(dt, now) {
+      for (const ch of this.chars.values()) repairCharacterVisibility(ch);
+      super.update(dt, now);
+    }
+  };
+
   // ../../habblaud/client/src/world/sound-cues.ts
   var KEYS_TICK_MS = 160;
   var PINGPONG_PERIOD = 1100;
@@ -26539,7 +26565,7 @@
   var canvas2 = document.querySelector("#office");
   var options = { ...DEFAULT_WORLD_OPTIONS };
   var camera = new Camera();
-  var sim = new Sim(art_exports, () => options, null);
+  var sim = new CockpitSim(art_exports, () => options, null);
   var soundBoard = new SoundBoard();
   var soundCues = new SoundCues(sim, camera);
   var renderer = new Renderer(canvas2, art_exports, sim, camera);

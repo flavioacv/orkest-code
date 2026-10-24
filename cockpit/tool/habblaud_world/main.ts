@@ -9,14 +9,14 @@ import { BUILDING_H, COL_W, TILE } from '../../../../habblaud/client/src/world/c
 import { attachInput } from '../../../../habblaud/client/src/world/input.ts';
 import { Overlay } from '../../../../habblaud/client/src/world/render/overlay.ts';
 import { Renderer } from '../../../../habblaud/client/src/world/render/renderer.ts';
-import { Sim } from '../../../../habblaud/client/src/world/sim/sim.ts';
+import { CockpitSim } from './sim.ts';
 import { SoundCues } from '../../../../habblaud/client/src/world/sound-cues.ts';
 import { __HABBLAUD_ASSETS__ } from './assets.ts';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#office')!;
 let options: WorldOptions = { ...DEFAULT_WORLD_OPTIONS };
 const camera = new Camera();
-const sim = new Sim(art, () => options, null);
+const sim = new CockpitSim(art, () => options, null);
 const soundBoard = new SoundBoard();
 const soundCues = new SoundCues(sim, camera);
 const renderer = new Renderer(canvas, art, sim, camera);
