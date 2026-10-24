@@ -4,6 +4,7 @@ import 'dart:convert';
 import 'package:cockpit/app/cockpit/domain/entities/project.dart';
 import 'package:cockpit/app/cockpit/ui/session/pane_item.dart';
 import 'package:cockpit/app/cockpit/ui/session/terminal_session.dart';
+import 'package:cockpit/app/cockpit/ui/session/office_social_state.dart';
 import 'package:cockpit/app/core/ui/widgets/unzoomed_native_view.dart';
 import 'package:cockpit/app/cockpit/ui/widgets/webview_chrome.dart';
 import 'package:cockpit/app/core/domain/entities/harness.dart';
@@ -60,6 +61,11 @@ class _HabblaudWorldWebViewState extends State<HabblaudWorldWebView> {
   final TextEditingController _agentSearch = TextEditingController();
   final Map<String, Future<_OfficePortrait?>> _portraitCache = {};
   final Map<String, String> _portraitSignatures = {};
+  final Map<String, OfficeAgentSocial> _socialBySession = {};
+  List<OfficeSocialEvent> _socialEvents = [];
+  bool _readingSocial = false;
+  bool _socialReadFailed = false;
+  String? _socialSignature;
   final Map<String, TerminalStatus> _lastStatuses = {};
   final Map<String, int> _statusSince = {};
 
@@ -73,6 +79,7 @@ class _HabblaudWorldWebViewState extends State<HabblaudWorldWebView> {
     );
     _panelRefreshTimer = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
+      unawaited(_refreshSocial());
     });
   }
 
@@ -121,6 +128,13 @@ canvas{display:block;image-rendering:pixelated;outline:none}
     final officeLabels = context.t.cockpit.officeWorld;
 
     for (final session in sessions) {
+      final parent = sessions
+          .where(
+            (candidate) =>
+                candidate.id != session.id &&
+                candidate.officeIdentity == session.officeParentIdentity,
+          )
+          .firstOrNull;
       final harness = session.activeHarness;
       final identity = identities[session.id]!;
       final provider = _providerFor(harness);
@@ -191,7 +205,12 @@ canvas{display:block;image-rendering:pixelated;outline:none}
           : recent.last;
       agents.add({
         'id': session.id,
-        'kind': 'main',
+        'kind': parent == null ? 'main' : 'sub',
+        if (parent != null) 'parentId': parent.id,
+        'sessionBacked': true,
+        'socialIdentity': session.officeIdentity,
+        if (session.officeSocial.data != null)
+          'socialState': session.officeSocial.data,
         if (provider != 'claude') 'provider': provider,
         'roomId': session.projectId,
         'name': identity.name,
@@ -200,14 +219,22 @@ canvas{display:block;image-rendering:pixelated;outline:none}
         'title': session.title,
         'sessionId': session.id,
         'account': accountId,
-        'status': _statusFor(session.status),
+        'status':
+            session.status != TerminalStatus.waiting &&
+                session.officeShells.any((shell) => shell['background'] == true)
+            ? 'shell'
+            : _statusFor(session.status),
+        if (session.officeShells.isNotEmpty) 'shells': session.officeShells,
         if (session.status == TerminalStatus.waiting)
           'waitingFor':
               session.officeWaitingSummary ?? officeLabels.waitingBubble,
         'activity': latestActivity,
-        'recent': recent.isEmpty
-            ? [latestActivity]
-            : recent.skip(recent.length > 30 ? recent.length - 30 : 0).toList(),
+        'recent': [
+          if (session.officeShellDone != null) session.officeShellDone,
+          ...recent.isEmpty
+              ? [latestActivity]
+              : recent.skip(recent.length > 30 ? recent.length - 30 : 0),
+        ],
         'tasks': const <dynamic>[],
         'startedAt': session.createdAt.millisecondsSinceEpoch,
         'lastEventAt': now,
@@ -257,6 +284,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
           'role': role == null || role.isEmpty ? 'Subagente' : role,
           'title': role,
           'sessionId': childId,
+          'socialIdentity': '${session.officeIdentity}:sub:${subagent.id}',
           'account': accountId,
           'status': finishedAt == null
               ? 'working'
@@ -428,6 +456,10 @@ canvas{display:block;image-rendering:pixelated;outline:none}
     for (final session in widget.sessions.whereType<TerminalSession>()) ...[
       [
         session.id,
+        session.officeIdentity,
+        session.officeParentIdentity,
+        session.officeShells,
+        session.officeShellDone,
         session.projectId,
         session.displayTitle,
         session.activeHarness?.name,
@@ -564,6 +596,14 @@ canvas{display:block;image-rendering:pixelated;outline:none}
       project: project,
       officeName: agentIdentity?.name,
       portraitBytes: portrait?.body,
+      loadSocial: () async => _socialBySession[session.id],
+      parentAgentName: _officeSessions
+          .where(
+            (candidate) =>
+                candidate.officeIdentity == session.officeParentIdentity,
+          )
+          .map(_agentName)
+          .firstOrNull,
       loadPortrait: () async => (await _portraitFor(session, project))?.body,
       onOpenTerminal: () => widget.onOpenSession(session),
       onFollowAgent: (follow) {
@@ -727,6 +767,66 @@ canvas{display:block;image-rendering:pixelated;outline:none}
               session.hasOfficeAgentPresence,
         )
         .toList(growable: false);
+  }
+
+  Future<void> _refreshSocial() async {
+    if (!mounted || !_loaded || _web == null || _readingSocial) return;
+    _readingSocial = true;
+    try {
+      final raw = await _web!.evaluateJavascript(
+        source: 'window.cockpitHabblaudWorld?.getSocialSnapshot?.();',
+      );
+      if (!mounted) return;
+      final data = raw is String ? jsonDecode(raw) : raw;
+      if (data is! Map || data['agents'] is! Map) return;
+      _socialReadFailed = false;
+      final signature = jsonEncode(data);
+      if (signature == _socialSignature) return;
+      _socialSignature = signature;
+      final agents = data['agents'] as Map;
+      final live = _officeSessions;
+      final ids = live.map((session) => session.id).toSet();
+      _socialBySession.removeWhere((id, _) => !ids.contains(id));
+      for (final session in live) {
+        final value = agents[session.id];
+        if (value is! Map || value['identity'] != session.officeIdentity) {
+          continue;
+        }
+        if (value['social'] is Map) {
+          _socialBySession[session.id] = OfficeAgentSocial.fromJson(
+            value['social'] as Map,
+          );
+        }
+        if (value['state'] is Map) {
+          session.updateOfficeSocialState(
+            (value['state'] as Map).cast<String, dynamic>(),
+          );
+        }
+      }
+      _socialEvents =
+          (data['events'] is List ? data['events'] as List : const [])
+              .map(OfficeSocialEvent.fromJson)
+              .whereType<OfficeSocialEvent>()
+              .where((event) => ids.contains(event.agentId))
+              .take(40)
+              .toList();
+      if (mounted) setState(() {});
+    } catch (error, stack) {
+      // A WebView may disappear while this asynchronous read is in flight.
+      // Keep the last valid snapshot and retry on the next timer tick.
+      if (mounted && !_socialReadFailed) {
+        _socialReadFailed = true;
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stack,
+            library: 'Cockpit Office social bridge',
+          ),
+        );
+      }
+    } finally {
+      _readingSocial = false;
+    }
   }
 
   String _agentName(TerminalSession session) {
@@ -1010,6 +1110,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
             TerminalSession session,
             Project project,
             TerminalStatusEvent event,
+            String? socialIcon,
           })
         >[];
     for (final session in _officeSessions) {
@@ -1018,8 +1119,34 @@ canvas{display:block;image-rendering:pixelated;outline:none}
           .firstOrNull;
       if (project == null) continue;
       for (final event in session.officeStatusHistory) {
-        rows.add((session: session, project: project, event: event));
+        rows.add((
+          session: session,
+          project: project,
+          event: event,
+          socialIcon: null,
+        ));
       }
+    }
+    for (final event in _socialEvents) {
+      final session = _officeSessions
+          .where((session) => session.id == event.agentId)
+          .firstOrNull;
+      if (session == null) continue;
+      final project = widget.projects
+          .where((p) => p.id == session.projectId)
+          .firstOrNull;
+      if (project == null) continue;
+      rows.add((
+        session: session,
+        project: project,
+        event: TerminalStatusEvent(
+          session.status,
+          event.at,
+          activityKind: 'social',
+          activitySummary: event.text,
+        ),
+        socialIcon: event.icon,
+      ));
     }
     rows.sort((a, b) => b.event.at.compareTo(a.event.at));
     final recent = rows.take(50).toList(growable: false);
@@ -1058,7 +1185,9 @@ canvas{display:block;image-rendering:pixelated;outline:none}
                         final time = row.event.at;
                         final clock =
                             '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-                        final summary = _activityLabel(context, row.event);
+                        final summary = row.socialIcon == null
+                            ? _activityLabel(context, row.event)
+                            : '${labels.socialActivity}: ${row.event.activitySummary}';
                         return InkWell(
                           onTap: () => unawaited(
                             _showAgentProfile(
@@ -1085,7 +1214,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
                                 SizedBox(
                                   width: 19,
                                   child: Text(
-                                    _activityIcon(row.event),
+                                    row.socialIcon ?? _activityIcon(row.event),
                                     style: const TextStyle(fontSize: 13),
                                   ),
                                 ),
@@ -1187,7 +1316,8 @@ canvas{display:block;image-rendering:pixelated;outline:none}
       'edit' => labels.editingFile,
       'write' => labels.writingFile,
       'command' => labels.runningCommand,
-      'wait' || 'needs_input' => labels.waitingInTerminal,
+      'wait' => labels.shellWaiting,
+      'needs_input' => labels.waitingInTerminal,
       'test' => labels.runningTests,
       'web' => labels.browsingWeb,
       'plan' => labels.organizingTasks,
@@ -1208,7 +1338,8 @@ canvas{display:block;image-rendering:pixelated;outline:none}
         'edit' => '✏️',
         'write' => '📝',
         'command' => '💻',
-        'wait' || 'needs_input' => '✋',
+        'wait' => '⏳',
+        'needs_input' => '✋',
         'test' => '🧪',
         'web' => '🌐',
         'plan' => '🗒️',
@@ -1389,7 +1520,8 @@ Map<String, dynamic> _officeStatusActivity(
       'edit' => editing,
       'write' => writing,
       'command' => command,
-      'wait' || 'needs_input' => waiting,
+      'wait' => command,
+      'needs_input' => waiting,
       'test' => tests,
       'web' => web,
       'plan' => planning,

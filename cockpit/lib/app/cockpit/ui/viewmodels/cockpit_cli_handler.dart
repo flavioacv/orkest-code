@@ -1,6 +1,7 @@
 import 'dart:async' show unawaited;
 import 'dart:convert';
 import 'dart:io' show Directory, File, FileSystemException, Platform;
+import 'package:cockpit/i18n/strings.g.dart';
 
 import 'package:cockpit_remote/cockpit_remote.dart' show RemoteRpcException;
 import 'package:cockpit/app/cockpit/data/remote/remote_host_connector.dart';
@@ -145,10 +146,37 @@ class CockpitCliHandler {
     if (TelemetryCliHandler.handles(c.cmd)) {
       // `--app` (plano 68): store do próprio Cockpit, sem workspace.
       if (c.args['app'] == true) return _telemetry.handle(c, null, '');
-      return _projectCommand(
+      final result = await _projectCommand(
         c,
         (project, root) => _telemetry.handle(c, project, root),
       );
+      final session = c.tabId == null ? null : _vm.session(c.tabId!);
+      if (result.ok &&
+          session is TerminalSession &&
+          session.hasOfficeAgentPresence) {
+        if (c.cmd == 'telemetry-open' && result.data is Map) {
+          final run = (result.data as Map)['run'];
+          if (run is String) {
+            session.beginOfficeCommand(
+              run,
+              t.cockpit.officeWorld.runningCommand,
+            );
+          }
+        } else if (c.cmd == 'telemetry-close') {
+          final run = c.args['run'];
+          final code = c.args['exit_code'];
+          if (run is String && code is num) {
+            session.finishOfficeCommand(
+              run,
+              code.toInt(),
+              code == 0
+                  ? t.cockpit.officeWorld.toolCompleted
+                  : t.cockpit.officeWorld.activityError,
+            );
+          }
+        }
+      }
+      return result;
     }
     switch (c.cmd) {
       // `send` e `send-key` chegam unificados como `write` (a CLI já resolveu o
@@ -202,6 +230,15 @@ class CockpitCliHandler {
                 // mesmo aceito por `read-task`. Ausente nas demais tabs.
                 if (s is TaskOutputSession) 'taskId': s.taskId,
                 'working': s.isWorking,
+                if (s is TerminalSession && s.officeParentIdentity != null)
+                  'parentTabId': _vm.allSessions
+                      .whereType<TerminalSession>()
+                      .where(
+                        (parent) =>
+                            parent.officeIdentity == s.officeParentIdentity,
+                      )
+                      .map((parent) => parent.id)
+                      .firstOrNull,
                 // Aba em foco (a que `--focused` mira). Sempre no máximo uma.
                 'focused': s.id == focusedId,
               },
@@ -314,6 +351,15 @@ class CockpitCliHandler {
         }
         final title = (c.args['title'] ?? '').toString();
         final sender = c.tabId == null ? null : _vm.session(c.tabId!);
+        final explicitParent = c.args['parentTabId'];
+        final parent = explicitParent is String
+            ? _vm.session(explicitParent)
+            : sender;
+        if (explicitParent != null && parent is! TerminalSession) {
+          return const CockpitCommandResult.fail(
+            'parent tab must be an existing terminal',
+          );
+        }
         String? anchorLeaf;
         if (sender != null) {
           if (sender.projectId != _vm.selectedProjectId) {
@@ -323,6 +369,12 @@ class CockpitCliHandler {
         }
         final created = _vm.newTerminalTab(
           cwd: cwd,
+          officeParentIdentity:
+              c.args['independent'] != true &&
+                  parent is TerminalSession &&
+                  (explicitParent != null || parent.hasOfficeAgentPresence)
+              ? parent.officeIdentity
+              : null,
           title: title.isEmpty ? null : title,
           inPane: anchorLeaf,
           splitDir: splitDir,

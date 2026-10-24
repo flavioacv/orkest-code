@@ -3,6 +3,7 @@ import 'dart:typed_data';
 
 import 'package:cockpit/app/cockpit/domain/entities/project.dart';
 import 'package:cockpit/app/cockpit/ui/session/terminal_session.dart';
+import 'package:cockpit/app/cockpit/ui/session/office_social_state.dart';
 import 'package:cockpit/app/cockpit/ui/widgets/office_character_editor_dialog.dart';
 import 'package:cockpit/app/cockpit/ui/widgets/office_terminal_interaction_dialog.dart';
 import 'package:cockpit/app/core/domain/entities/harness.dart';
@@ -22,6 +23,8 @@ Future<void> showOfficeAgentProfile(
   String? officeName,
   Uint8List? portraitBytes,
   Future<Uint8List?> Function()? loadPortrait,
+  Future<OfficeAgentSocial?> Function()? loadSocial,
+  String? parentAgentName,
   OfficeAppearanceLoader? loadAppearance,
   Map<String, String> initialAppearance = const <String, String>{},
   ValueChanged<Map<String, String>>? onSaveAppearance,
@@ -38,6 +41,8 @@ Future<void> showOfficeAgentProfile(
     officeName: officeName,
     portraitBytes: portraitBytes,
     loadPortrait: loadPortrait,
+    loadSocial: loadSocial,
+    parentAgentName: parentAgentName,
     loadAppearance: loadAppearance,
     initialAppearance: initialAppearance,
     onSaveAppearance: onSaveAppearance,
@@ -55,6 +60,8 @@ class _OfficeAgentProfileDialog extends StatefulWidget {
     this.officeName,
     this.portraitBytes,
     this.loadPortrait,
+    this.loadSocial,
+    this.parentAgentName,
     this.loadAppearance,
     this.initialAppearance = const <String, String>{},
     this.onSaveAppearance,
@@ -69,6 +76,8 @@ class _OfficeAgentProfileDialog extends StatefulWidget {
   final String? officeName;
   final Uint8List? portraitBytes;
   final Future<Uint8List?> Function()? loadPortrait;
+  final Future<OfficeAgentSocial?> Function()? loadSocial;
+  final String? parentAgentName;
   final OfficeAppearanceLoader? loadAppearance;
   final Map<String, String> initialAppearance;
   final ValueChanged<Map<String, String>>? onSaveAppearance;
@@ -80,24 +89,39 @@ class _OfficeAgentProfileDialog extends StatefulWidget {
 
 class _OfficeAgentProfileDialogState extends State<_OfficeAgentProfileDialog> {
   Timer? _clock;
-  bool _following = false;
   late Uint8List? _portraitBytes = widget.portraitBytes;
   late Map<String, String> _appearanceParts = Map<String, String>.from(
     widget.initialAppearance,
   );
   int _portraitGeneration = 0;
+  OfficeAgentSocial? _social;
+  bool _loadingSocial = false;
 
   @override
   void initState() {
     super.initState();
     widget.session.addListener(_onSessionChanged);
+    unawaited(_refreshSocial());
     _clock = Timer.periodic(const Duration(seconds: 1), (_) {
       if (mounted) setState(() {});
+      unawaited(_refreshSocial());
     });
   }
 
   void _onSessionChanged() {
     if (mounted) setState(() {});
+  }
+
+  Future<void> _refreshSocial() async {
+    final load = widget.loadSocial;
+    if (load == null || _loadingSocial || !mounted) return;
+    _loadingSocial = true;
+    try {
+      final data = await load();
+      if (mounted && !identical(data, _social)) setState(() => _social = data);
+    } finally {
+      _loadingSocial = false;
+    }
   }
 
   Future<void> _editName() async {
@@ -193,11 +217,20 @@ class _OfficeAgentProfileDialogState extends State<_OfficeAgentProfileDialog> {
         : harness == null
         ? 'Cockpit'
         : HarnessCatalog.specs[harness]?.label ?? 'Cockpit';
-    final status = switch (session.status) {
-      TerminalStatus.working => tr.working,
-      TerminalStatus.waiting => tr.waiting,
-      TerminalStatus.idle => tr.idle,
-    };
+    final status =
+        session.status != TerminalStatus.waiting &&
+            session.officeShell != null &&
+            (session.officeShell!['background'] == true ||
+                session.status == TerminalStatus.working &&
+                    DateTime.now().millisecondsSinceEpoch -
+                            (session.officeShell!['startedAt'] as int) >
+                        10000)
+        ? tr.shellWaiting
+        : switch (session.status) {
+            TerminalStatus.working => tr.working,
+            TerminalStatus.waiting => tr.waiting,
+            TerminalStatus.idle => tr.idle,
+          };
     final elapsed = DateTime.now().difference(session.createdAt);
     final duration = _formatDuration(elapsed);
 
@@ -277,6 +310,11 @@ class _OfficeAgentProfileDialogState extends State<_OfficeAgentProfileDialog> {
               ),
               const SizedBox(height: 12),
               _ProfileValue(label: tr.project, value: project.name),
+              if (widget.parentAgentName case final parent?)
+                Text(
+                  tr.delegatedBy(name: parent),
+                  style: context.typo.body.copyWith(color: colors.accent),
+                ),
               _ProfileValue(
                 label: tr.provider,
                 value: harness == null
@@ -291,6 +329,80 @@ class _OfficeAgentProfileDialogState extends State<_OfficeAgentProfileDialog> {
                 monospace: true,
               ),
               const SizedBox(height: 12),
+              if (_social case final social?) ...[
+                Text(
+                  tr.socialLife,
+                  style: context.typo.title.copyWith(fontSize: 14),
+                ),
+                const SizedBox(height: 8),
+                Text(
+                  '🪙 ${tr.gameCoins(count: social.coins)}',
+                  style: context.typo.body.copyWith(color: colors.accent),
+                ),
+                Text(
+                  tr.earnedWorking(count: social.earned),
+                  style: context.typo.body.copyWith(color: colors.text2),
+                ),
+                Text(
+                  tr.matchRecord(wins: social.wins, losses: social.losses),
+                  style: context.typo.body.copyWith(color: colors.text2),
+                ),
+                Text(
+                  tr.socialEconomy,
+                  style: context.typo.body.copyWith(
+                    fontSize: 10,
+                    color: colors.text3,
+                  ),
+                ),
+                if (social.doing != null)
+                  Text(social.doing!, style: context.typo.body),
+                const SizedBox(height: 8),
+                Text(tr.personality, style: context.typo.label),
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 4,
+                  children: [
+                    for (final trait in social.traits)
+                      Text(
+                        '${trait['emoji'] ?? ''} ${trait['label'] ?? ''}',
+                        style: context.typo.body,
+                      ),
+                  ],
+                ),
+                if (social.catchphrase.isNotEmpty)
+                  Text(
+                    '“${social.catchphrase}”',
+                    style: context.typo.body.copyWith(color: colors.text2),
+                  ),
+                for (final kind in ['amizade', 'rivalidade'])
+                  if (social.bonds.any((bond) => bond['kind'] == kind)) ...[
+                    const SizedBox(height: 6),
+                    Text(
+                      kind == 'amizade' ? tr.friendships : tr.rivals,
+                      style: context.typo.label,
+                    ),
+                    Text(
+                      social.bonds
+                          .where((bond) => bond['kind'] == kind)
+                          .map((bond) => bond['name'])
+                          .join(', '),
+                      style: context.typo.body,
+                    ),
+                  ],
+                if (social.ledger.isNotEmpty) ...[
+                  const SizedBox(height: 8),
+                  Text(tr.socialLedger, style: context.typo.label),
+                  for (final item in social.ledger.take(6))
+                    Text(
+                      '${item['icon'] ?? '🪙'} ${item['delta']} · ${item['text'] ?? ''}',
+                      style: context.typo.body.copyWith(
+                        fontSize: 11,
+                        color: colors.text2,
+                      ),
+                    ),
+                ],
+                const SizedBox(height: 12),
+              ],
               Text(
                 tr.recentActivity,
                 style: context.typo.label.copyWith(color: colors.text2),
@@ -337,16 +449,17 @@ class _OfficeAgentProfileDialogState extends State<_OfficeAgentProfileDialog> {
             if (widget.onFollowAgent case final onFollowAgent?)
               shad.OutlineButton(
                 onPressed: () {
-                  setState(() => _following = !_following);
-                  onFollowAgent(_following);
+                  Navigator.of(context).pop();
+                  onFollowAgent(true);
                 },
-                child: Text(
-                  _following ? tr.stopFollowingAgent : tr.followAgent,
-                ),
+                child: Text(tr.followAgent),
               ),
             if (widget.onCenterAgent case final onCenterAgent?)
               shad.OutlineButton(
-                onPressed: onCenterAgent,
+                onPressed: () {
+                  Navigator.of(context).pop();
+                  onCenterAgent();
+                },
                 child: Text(tr.centerAgent),
               ),
             if (widget.loadAppearance != null &&

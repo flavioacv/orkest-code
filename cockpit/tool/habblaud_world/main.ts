@@ -12,6 +12,7 @@ import { Renderer } from '../../../../habblaud/client/src/world/render/renderer.
 import { CockpitSim } from './sim.ts';
 import { SoundCues } from '../../../../habblaud/client/src/world/sound-cues.ts';
 import { __HABBLAUD_ASSETS__ } from './assets.ts';
+import { setLocale, normalizeLocale } from '../../../../habblaud/shared/i18n.ts';
 
 const canvas = document.querySelector<HTMLCanvasElement>('#office')!;
 let options: WorldOptions = { ...DEFAULT_WORLD_OPTIONS };
@@ -202,7 +203,22 @@ function loop(ts: number) {
   soundCues.update(now, (cue) => soundBoard.play(cue.kind, cue));
 }
 
+function portraitCanvas(source: HTMLCanvasElement): HTMLCanvasElement {
+  const data = source.getContext('2d')!.getImageData(0, 0, source.width, source.height).data;
+  let x0 = source.width, y0 = source.height, x1 = -1, y1 = -1;
+  for (let y = 0; y < source.height; y++) for (let x = 0; x < source.width; x++) {
+    if (data[(y * source.width + x) * 4 + 3] <= 16) continue;
+    x0 = Math.min(x0, x); y0 = Math.min(y0, y); x1 = Math.max(x1, x); y1 = Math.max(y1, y);
+  }
+  if (x1 < 0) return source;
+  const cropped = document.createElement('canvas');
+  cropped.width = x1 - x0 + 1; cropped.height = y1 - y0 + 1;
+  cropped.getContext('2d')!.drawImage(source, x0, y0, cropped.width, cropped.height, 0, 0, cropped.width, cropped.height);
+  return cropped;
+}
+
 window.cockpitHabblaudWorld = {
+  getSocialSnapshot() { return sim.sessionSocial.snapshot(); },
   getAppearance(seed: number, look: 'f' | 'm', parts: AppearanceParts = {}) {
     const appearance = art.fitToOptions({ ...art.appearanceFromSeed(seed, { look }), ...parts });
     const options = art.editorOptions(appearance);
@@ -214,13 +230,15 @@ window.cockpitHabblaudWorld = {
     return {
       parts: Object.fromEntries(PART_KEYS.map((key) => [key, appearance[key]])),
       options: selectable,
-      preview: sprite.canvas.toDataURL('image/png'),
+      preview: portraitCanvas(sprite.canvas).toDataURL('image/png'),
+      avatar: art.avatarCanvas(seed, { look, parts, scale: 3 }).toDataURL('image/png'),
     };
   },
   update(snapshot: any) {
     const now = Date.now();
     if (snapshot?.options && typeof snapshot.options === 'object') {
       const next = snapshot.options;
+      if (typeof next.locale === 'string') setLocale(normalizeLocale(next.locale) ?? 'pt-BR');
       options = {
         ...options,
         ...(typeof next.showNames === 'boolean' ? { showNames: next.showNames } : {}),
@@ -300,10 +318,12 @@ raf = requestAnimationFrame(loop);
 declare global {
   interface Window {
     cockpitHabblaudWorld: {
+      getSocialSnapshot(): unknown;
       getAppearance(seed: number, look: 'f' | 'm', parts?: Record<string, string>): {
         parts: Record<string, string>;
         options: Record<string, readonly string[]>;
         preview: string;
+        avatar: string;
       };
       update(snapshot: unknown): void;
       selectAgent(id: string | null): void;

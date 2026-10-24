@@ -1,6 +1,7 @@
 import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
+import 'office_social_state.dart';
 
 import 'package:cockpit/app/cockpit/domain/contracts/terminal_gateway.dart';
 import 'package:cockpit/app/cockpit/domain/contracts/terminal_scrollback_store.dart';
@@ -88,7 +89,14 @@ class TerminalSession extends PaneItem {
     TerminalEngine engine = TerminalEngine.xterm,
     this._monitor,
     Iterable<OfficeSubagent> restoredOfficeSubagents = const [],
-  }) : _scrollback = scrollbackStore,
+    String? officeIdentity,
+    this.officeParentIdentity,
+    Map<String, dynamic>? restoredOfficeSocialState,
+  }) : officeSocial = OfficeSocialState(
+         identity: officeIdentity,
+         restored: restoredOfficeSocialState,
+       ),
+       _scrollback = scrollbackStore,
        _redactor = SecretRedactor(redactSecrets),
        _title = title ?? 'New terminal' {
     // O `ShiftEnterInputHandler` (antes do padrão) faz Shift+Enter virar quebra
@@ -247,6 +255,54 @@ class TerminalSession extends PaneItem {
   /// pra persistir o cwd vivo no layout — assim o restore sobe o shell onde o
   /// usuário parou, não no cwd inicial da aba.
   VoidCallback? onCwdChanged;
+  final OfficeSocialState officeSocial;
+  String get officeIdentity => officeSocial.identity;
+  String? officeParentIdentity;
+  VoidCallback? onOfficeStateChanged;
+  void updateOfficeSocialState(Map<String, dynamic> data) {
+    if (!_disposed && officeSocial.update(data)) onOfficeStateChanged?.call();
+  }
+
+  Map<String, dynamic>? _officeShell;
+  Map<String, dynamic>? _officeShellDone;
+  final Map<String, Map<String, dynamic>> _officeCommands = {};
+  List<Map<String, dynamic>> get officeShells => [
+    ?_officeShell,
+    ..._officeCommands.values,
+  ]..sort((a, b) => (a['startedAt'] as int).compareTo(b['startedAt'] as int));
+  Map<String, dynamic>? get officeShell => officeShells.firstOrNull;
+  Map<String, dynamic>? get officeShellDone => _officeShellDone;
+  void beginOfficeCommand(String runId, String label) {
+    if (_disposed || _officeCommands.containsKey(runId)) return;
+    _officeCommands[runId] = {
+      'id': runId,
+      'label': label,
+      'startedAt': DateTime.now().millisecondsSinceEpoch,
+      'background': false,
+      'kind': 'shell',
+    };
+    applyOfficeActivity(kind: 'command', phase: 'updated', summary: label);
+  }
+
+  void finishOfficeCommand(String runId, int exitCode, String label) {
+    if (_disposed || _officeCommands.remove(runId) == null) return;
+    final phase = exitCode == 0
+        ? 'completed'
+        : exitCode >= 128
+        ? 'interrupted'
+        : 'failed';
+    applyOfficeActivity(kind: 'command', phase: phase, summary: label);
+    _officeShellDone = {
+      'id': '$id:$runId:$phase',
+      'kind': exitCode == 0 ? 'done' : 'error',
+      'tool': 'ShellDone',
+      'icon': exitCode == 0 ? '🎉' : '🌧️',
+      'text': label,
+      'at': DateTime.now().millisecondsSinceEpoch,
+      'error': exitCode != 0,
+    };
+    notifyListeners();
+  }
 
   /// Disparado quando o processo do PTY termina por conta própria (não pelo
   /// [dispose]). Uma aba de shell fica na tela mostrando o terminal morto; a do
@@ -495,7 +551,11 @@ class TerminalSession extends PaneItem {
     }
 
     // Ciclo de vida do turno a partir da semântica do evento.
-    if (isTurnStart) _turnActive = true;
+    if (isTurnStart) {
+      _turnActive = true;
+      _officeShell = null;
+    }
+    if (status == TerminalStatus.waiting) _officeShell = null;
     if (status == TerminalStatus.idle) _turnActive = false;
     if (status == TerminalStatus.waiting) _turnActive = false;
 
@@ -532,6 +592,42 @@ class TerminalSession extends PaneItem {
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
     if (safeKind.isEmpty || safePhase.isEmpty || safeSummary.isEmpty) return;
+    final terminalPhase = {
+      'completed',
+      'failed',
+      'interrupted',
+    }.contains(safePhase);
+    if ((safeKind == 'wait' || safeKind == 'command') && terminalPhase) {
+      if (_officeShell != null) {
+        _officeShellDone = {
+          'id': '$id:shell:${DateTime.now().microsecondsSinceEpoch}',
+          'kind': safePhase == 'completed' ? 'done' : 'error',
+          'tool': 'ShellDone',
+          'icon': safePhase == 'completed' ? '🎉' : '🌧️',
+          'text': safeSummary,
+          'at': DateTime.now().millisecondsSinceEpoch,
+          'error': safePhase != 'completed',
+        };
+      }
+      _officeShell = null;
+    } else if ((safeKind == 'wait' && safePhase != 'observed') ||
+        (safeKind == 'command' && safePhase == 'started')) {
+      if (safeKind == 'command') _officeShell = null;
+      _officeShell = {
+        ...?_officeShell,
+        'id':
+            _officeShell?['id'] ??
+            '$id:shell:${DateTime.now().microsecondsSinceEpoch}',
+        'label': safeSummary,
+        'startedAt':
+            _officeShell?['startedAt'] ?? DateTime.now().millisecondsSinceEpoch,
+        'background': safeKind == 'wait',
+        'kind': 'shell',
+      };
+    } else if (!(safeKind == 'done' && _officeShell?['background'] == true) &&
+        (safePhase != 'observed' || safeKind == 'needs_input')) {
+      _officeShell = null;
+    }
     _pendingAgentPromptAt = null;
     if (safeKind == 'prompt' || safeKind == 'respond') {
       _turnActive = true;
@@ -571,6 +667,12 @@ class TerminalSession extends PaneItem {
           forceNotify: true,
         );
       default:
+        if (_status == TerminalStatus.waiting &&
+            safeKind != 'prompt' &&
+            safeKind != 'respond') {
+          notifyListeners();
+          return;
+        }
         _setStatus(
           TerminalStatus.working,
           recordHistory: false,
@@ -1146,6 +1248,10 @@ class TerminalSession extends PaneItem {
   @override
   Future<void> dispose() async {
     _disposed = true;
+    officeSocial.clear();
+    onOfficeStateChanged = null;
+    _officeCommands.clear();
+    _officeShell = null;
     _monitor?.unregisterSession(id);
     _notifyDebounce?.cancel();
     _saveDebounce.dispose();

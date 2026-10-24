@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 import 'package:cockpit/app/cockpit/domain/entities/project.dart';
 import 'package:cockpit/app/cockpit/ui/session/terminal_session.dart';
+import 'package:cockpit/app/cockpit/ui/session/office_social_state.dart';
 import 'package:cockpit/app/cockpit/ui/widgets/office_agent_profile_dialog.dart';
 import 'package:cockpit/app/core/ui/themes/app_theme.dart';
 import 'package:cockpit/app/core/domain/entities/harness.dart';
@@ -25,6 +26,8 @@ class _Session extends Fake implements TerminalSession {
   HarnessKind? get activeHarness => null;
   @override
   TerminalStatus get status => TerminalStatus.idle;
+  @override
+  Map<String, dynamic>? get officeShell => null;
   @override
   DateTime get createdAt => DateTime(2026);
   @override
@@ -53,6 +56,7 @@ void main() {
       final after = Uint8List.fromList(before);
       final drafts = <Map<String, String>>[];
       Map<String, String>? saved;
+      var social = OfficeAgentSocial.fromJson({'coins': 125, 'earned': 25});
       await tester.pumpWidget(
         TranslationProvider(
           child: shad.ShadcnApp(
@@ -73,6 +77,8 @@ void main() {
                     ),
                     onOpenTerminal: () {},
                     onRename: (_) {},
+                    parentAgentName: 'Orchestrator',
+                    loadSocial: () async => social,
                     portraitBytes: before,
                     initialAppearance: const {'top': '#0000ff'},
                     loadPortrait: () async => after,
@@ -94,6 +100,21 @@ void main() {
       );
       await tester.tap(find.text('Open profile'));
       await tester.pumpAndSettle();
+      expect(
+        find.textContaining(t.cockpit.officeWorld.gameCoins(count: 125)),
+        findsOneWidget,
+      );
+      expect(
+        find.text(t.cockpit.officeWorld.delegatedBy(name: 'Orchestrator')),
+        findsOneWidget,
+      );
+      social = OfficeAgentSocial.fromJson({'coins': 150, 'earned': 50});
+      await tester.pump(const Duration(seconds: 1));
+      await tester.pump();
+      expect(
+        find.textContaining(t.cockpit.officeWorld.gameCoins(count: 150)),
+        findsOneWidget,
+      );
       expect(
         (tester.widget<Image>(find.byType(Image).first).image as MemoryImage)
             .bytes,

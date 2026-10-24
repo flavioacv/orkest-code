@@ -83,6 +83,29 @@ fn send_manda_texto_em_base64_com_type_cmd() {
 }
 
 #[test]
+fn new_tab_preserva_origem_e_aceita_pai_explicito() {
+    let (req, out, _, code) = run_against_fake_app(
+        &["new-tab", "--cwd", "/tmp", "--parent-tab", "t3", "--title", "Developer"],
+        r#"{"ok":true,"data":{"tabId":"t12"}}"#,
+    );
+    assert_eq!(code, 0);
+    assert_eq!(req["tabId"], "t7");
+    assert_eq!(req["args"]["parentTabId"], "t3");
+    assert_eq!(out.trim(), "t12");
+}
+
+#[test]
+fn new_tab_independente_tem_opt_out_explicito() {
+    let (req, _, _, code) = run_against_fake_app(
+        &["new-tab", "--cwd", "/tmp", "--independent"],
+        r#"{"ok":true,"data":{"tabId":"t12"}}"#,
+    );
+    assert_eq!(code, 0);
+    assert_eq!(req["args"]["independent"], true);
+    assert!(req["args"]["parentTabId"].is_null());
+}
+
+#[test]
 fn send_key_resolve_teclas_nomeadas() {
     let (req, _, _, code) = run_against_fake_app(&["send-key", "C-c", "Enter"], r#"{"ok":true}"#);
     // \x03\r

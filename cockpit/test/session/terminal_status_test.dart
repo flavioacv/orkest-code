@@ -118,4 +118,80 @@ void main() {
       await s.dispose();
     });
   });
+  group('Office generic shell lifecycle', () {
+    test('structured commands track start and terminal outcomes', () async {
+      final s = _session();
+      s.applyOfficeActivity(
+        kind: 'command',
+        phase: 'started',
+        summary: 'Build',
+      );
+      expect(s.officeShell?['background'], false);
+      final started = s.officeShell!['startedAt'];
+      s.applyOfficeActivity(
+        kind: 'wait',
+        phase: 'updated',
+        summary: 'Waiting for build',
+      );
+      expect(s.officeShell?['background'], true);
+      expect(s.officeShell?['startedAt'], started);
+      s.applyOfficeActivity(
+        kind: 'done',
+        phase: 'completed',
+        summary: 'Turn finished',
+      );
+      expect(
+        s.officeShell,
+        isNotNull,
+      ); // a background shell can outlive the turn
+      s.applyOfficeActivity(
+        kind: 'wait',
+        phase: 'failed',
+        summary: 'Build failed',
+      );
+      expect(s.officeShell, isNull);
+      expect(s.officeShellDone?['error'], true);
+      expect(s.officeShellDone?['tool'], 'ShellDone');
+      await s.dispose();
+    });
+    test('PTY text observation does not manufacture a running shell', () async {
+      final s = _session();
+      s.applyOfficeActivity(
+        kind: 'command',
+        phase: 'observed',
+        summary: 'Ran a command',
+      );
+      expect(s.officeShell, isNull);
+      await s.dispose();
+    });
+    test(
+      'overlapping telemetry commands finish independently and preserve permission',
+      () async {
+        final s = _session();
+        s.beginOfficeCommand('build', 'Build');
+        s.beginOfficeCommand('tests', 'Tests');
+        expect(s.officeShells.length, 2);
+        s.applyOfficeActivity(
+          kind: 'needs_input',
+          phase: 'started',
+          summary: 'Permission',
+        );
+        s.finishOfficeCommand('build', 0, 'Completed');
+        expect(s.officeShells.length, 1);
+        expect(s.status, TerminalStatus.waiting);
+        expect(s.officeShellDone?['error'], false);
+        s.finishOfficeCommand('tests', 130, 'Interrupted');
+        expect(s.officeShells, isEmpty);
+        expect(s.officeShellDone?['error'], true);
+        expect(s.status, TerminalStatus.waiting);
+        s.updateOfficeSocialState({
+          'identity': s.officeIdentity,
+          'version': 1,
+          'wallet': {'coins': 120},
+        });
+        await s.dispose();
+        expect(s.officeSocial.data, isNull);
+      },
+    );
+  });
 }

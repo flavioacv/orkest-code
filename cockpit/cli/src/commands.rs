@@ -122,11 +122,13 @@ pub fn open(args: &[String]) -> ! {
 
 // ---- new-tab ----------------------------------------------------------------
 
-const NEW_TAB_HELP: &str = "cockpit new-tab [--cwd <dir>] [--title <name>] [--split h|v]
+const NEW_TAB_HELP: &str = "cockpit new-tab [--cwd <dir>] [--title <name>] [--split h|v] [--parent-tab <id> | --independent]
   --cwd    working directory (default: current directory)
   --title  stable tab label (read-tab/send can target it)
   --split  h|right = side by side, v|down = stacked; omit = new tab
            in the same pane
+  --parent-tab  explicit Office orchestrator (default: the calling agent tab)
+  --independent create an independent Office agent instead of a delegated one
   Prints the new tab id (e.g. t12).";
 
 pub fn new_tab(args: &[String]) -> ! {
@@ -135,6 +137,8 @@ pub fn new_tab(args: &[String]) -> ! {
     let mut split: Option<String> = None;
     let mut tab_id: Option<String> = None;
     let mut as_json = false;
+    let mut parent_tab: Option<String> = None;
+    let mut independent = false;
 
     let mut i = 0usize;
     while i < args.len() {
@@ -148,13 +152,19 @@ pub fn new_tab(args: &[String]) -> ! {
             i += 1;
             continue;
         }
+        if a == "--independent" {
+            independent = true;
+            i += 1;
+            continue;
+        }
         if let Some((flag, value)) =
-            take(args, &mut i, &["--cwd", "--title", "--split", "--tab-id"])
+            take(args, &mut i, &["--cwd", "--title", "--split", "--tab-id", "--parent-tab"])
         {
             match flag {
                 "--cwd" => cwd = value,
                 "--title" => title = value,
                 "--split" => split = value,
+                "--parent-tab" => parent_tab = value,
                 _ => tab_id = value,
             }
         }
@@ -180,6 +190,15 @@ pub fn new_tab(args: &[String]) -> ! {
             .unwrap_or_else(|_| ".".to_string())
     }));
     let mut cmd_args = Map::new();
+    if independent && parent_tab.is_some() {
+        die("--parent-tab and --independent cannot be combined", 2);
+    }
+    if independent {
+        cmd_args.insert("independent".into(), json!(true));
+    }
+    if let Some(parent) = parent_tab {
+        cmd_args.insert("parentTabId".into(), json!(parent));
+    }
     cmd_args.insert("cwd".into(), json!(cwd));
     if let Some(t) = title.filter(|t| !t.is_empty()) {
         cmd_args.insert("title".into(), json!(t));

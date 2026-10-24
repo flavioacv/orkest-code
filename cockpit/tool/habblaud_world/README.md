@@ -10,9 +10,7 @@ The adapter imports the Habblaud source from the adjacent `habblaud` checkout
 Cockpit directory with:
 
 ```sh
-../../habblaud/node_modules/.bin/esbuild tool/habblaud_world/main.ts \
-  --bundle --format=iife --target=es2022 \
-  --outfile=assets/habblaud_world/engine.js
+node tool/habblaud_world/build.mjs
 ```
 
 The copied Habblaud license is in `assets/habblaud_world/LICENSE`.
@@ -30,10 +28,14 @@ Regression checks (real Habblaud simulation, no renderer/browser required):
 node --test /tmp/cockpit-office-sim.test.cjs
 ```
 
-The current runtime bundle also contains existing compatibility patches for
-locale changes, cropped character portraits and expiring completion bubbles.
-A raw rebuild must preserve these patches; the `CockpitSim` update was applied
-to the existing bundle without replacing them.
+The build script preserves locale compatibility and expiring completion bubbles.
+Portrait cropping lives in `main.ts`. Use this script instead of a raw esbuild
+invocation. The script fails if an upstream compatibility anchor changes.
+
+`social.ts` exports the simulation's social profile and game events through a
+session-owned bridge. Wallets and opponent records use the terminal's immutable
+Office identity, never its project, character name or harness. Closed sessions
+are pruned. See [session lifecycle](../../docs/office-social-session-lifecycle.md).
 
 After changing the bundled engine, restart the Flutter application (hot restart
 is sufficient) to recreate the WebView with the new JavaScript. Ordinary tab and

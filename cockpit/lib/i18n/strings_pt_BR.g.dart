@@ -404,6 +404,18 @@ class _Translations$cockpit$officeWorld$pt_BR extends Translations$cockpit$offic
 	@override String get daylightAuto => 'Automático';
 	@override String get daylightDay => 'Sempre dia';
 	@override String get daylightNight => 'Sempre noite';
+	@override String get socialLife => 'Vida social';
+	@override String gameCoins({required Object count}) => '${count} moedinhas do escritório';
+	@override String earnedWorking({required Object count}) => '${count} ganhos com atividades';
+	@override String matchRecord({required Object wins, required Object losses}) => '${wins} vitórias · ${losses} derrotas';
+	@override String get personality => 'Personalidade';
+	@override String get friendships => 'Amizades';
+	@override String get rivals => 'Rivalidades';
+	@override String get socialLedger => 'Extrato de moedinhas';
+	@override String get socialActivity => 'Vida social do escritório';
+	@override String delegatedBy({required Object name}) => 'Delegado por ${name}';
+	@override String get shellWaiting => 'Esperando um comando';
+	@override String get socialEconomy => 'Jogo do escritório — sem valor monetário real';
 }
 
 // Path: cockpit.confirmDialog
@@ -2181,6 +2193,18 @@ extension on TranslationsPtBr {
 			'cockpit.officeWorld.daylightAuto' => 'Automático',
 			'cockpit.officeWorld.daylightDay' => 'Sempre dia',
 			'cockpit.officeWorld.daylightNight' => 'Sempre noite',
+			'cockpit.officeWorld.socialLife' => 'Vida social',
+			'cockpit.officeWorld.gameCoins' => ({required Object count}) => '${count} moedinhas do escritório',
+			'cockpit.officeWorld.earnedWorking' => ({required Object count}) => '${count} ganhos com atividades',
+			'cockpit.officeWorld.matchRecord' => ({required Object wins, required Object losses}) => '${wins} vitórias · ${losses} derrotas',
+			'cockpit.officeWorld.personality' => 'Personalidade',
+			'cockpit.officeWorld.friendships' => 'Amizades',
+			'cockpit.officeWorld.rivals' => 'Rivalidades',
+			'cockpit.officeWorld.socialLedger' => 'Extrato de moedinhas',
+			'cockpit.officeWorld.socialActivity' => 'Vida social do escritório',
+			'cockpit.officeWorld.delegatedBy' => ({required Object name}) => 'Delegado por ${name}',
+			'cockpit.officeWorld.shellWaiting' => 'Esperando um comando',
+			'cockpit.officeWorld.socialEconomy' => 'Jogo do escritório — sem valor monetário real',
 			'cockpit.confirmDialog.unsavedChangesTitle' => 'Alterações não salvas',
 			'cockpit.confirmDialog.unsavedChangesMessage' => ({required Object fileName}) => '“${fileName}” tem alterações não salvas. Salvar antes de fechar?',
 			'cockpit.confirmDialog.dontSave' => 'Não salvar',
@@ -2508,6 +2532,8 @@ extension on TranslationsPtBr {
 			'cockpit.kanbanView.filter' => 'Filtrar',
 			'cockpit.kanbanView.filterTitlePlaceholder' => 'Buscar por título',
 			'cockpit.kanbanView.filterLabels' => 'Marcadores',
+			_ => null,
+		} ?? switch (path) {
 			'cockpit.kanbanView.filterClear' => 'Limpar',
 			'cockpit.kanbanView.filterDependencies' => 'Dependências',
 			'cockpit.kanbanView.filterBlocked' => 'Bloqueado',
@@ -2520,8 +2546,6 @@ extension on TranslationsPtBr {
 			'cockpit.kanbanView.listView' => 'Lista',
 			'cockpit.kanbanView.refresh' => 'Atualizar do disco',
 			'cockpit.kanbanView.manageLabels' => 'Marcadores',
-			_ => null,
-		} ?? switch (path) {
 			'cockpit.kanbanView.labelsTitle' => 'Marcadores deste quadro',
 			'cockpit.kanbanView.labelNamePlaceholder' => 'nome do marcador',
 			'cockpit.kanbanView.labelUsage' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 card', other: '${n} cards', ), 
@@ -3022,6 +3046,8 @@ extension on TranslationsPtBr {
 			'settings.page.notifications.soundVolumeTitle' => 'Volume',
 			'settings.page.notifications.soundTurnDone' => 'Turno concluído',
 			'settings.page.notifications.soundTurnDoneDesc' => 'Um agente terminou o turno.',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.notifications.soundActionRequired' => 'Ação necessária',
 			'settings.page.notifications.soundActionRequiredDesc' => 'Um agente está esperando sua aprovação ou resposta.',
 			'settings.page.notifications.soundDefault' => 'Padrão',
@@ -3034,8 +3060,6 @@ extension on TranslationsPtBr {
 			'settings.page.languages.sectionFormatting' => 'FORMATAÇÃO',
 			'settings.page.languages.formatOnSaveTitle' => 'Formatar ao salvar',
 			'settings.page.languages.formatOnSaveDesc' => 'Formata o arquivo automaticamente ao salvar (⌘S).',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.languages.sectionLanguageServers' => 'SERVIDORES DE LINGUAGEM',
 			'settings.page.languages.footerNote' => 'Erros e formatação usam o language server de cada linguagem. O Cockpit não instala servidores — ele usa o que já está na sua máquina. ● responde · ○ não encontrado ou comando inválido (instale o servidor ou ajuste o comando).',
 			'settings.page.languages.serverCommandLabel' => 'Comando do language server',

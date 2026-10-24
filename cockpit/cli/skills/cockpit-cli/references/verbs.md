@@ -17,7 +17,7 @@ shows flags, output shape and the mistakes to avoid.
   prompt or transcript is transmitted. This reports a child the harness created;
   it does not spawn or control that child.
 - `cockpit activity <kind> --summary <text> [--phase started|updated|completed|failed|interrupted] [--tab-id <id>]` — report one bounded event to the Office timeline. Kinds include `prompt`, `thinking`, `read`, `search`, `edit`, `write`, `command`, `wait`, `test`, `web`, `plan`, `delegate`, `needs_input`, `respond`, `done`, `error`, and `other`. The summary is limited to 160 characters. This sends only the supplied summary and tab ID; it does not read PTY output, prompts, files, or transcripts. `needs_input` moves the character to the waiting state and raises the Office notification; only use it when a user response is actually required. `respond` records an answer sent through the PTY. The notification's Respond button opens the existing PTY interaction.
-- `cockpit new-tab [--cwd <dir>] [--title <name>] [--split h|v]` — open a new
+- `cockpit new-tab [--cwd <dir>] [--title <name>] [--split h|v] [--parent-tab <id> | --independent]` — open a new
   **terminal tab** in the app and print its id (`t12`). `--cwd` defaults to
   your current directory; `--title` sets the stable tab label (so `send`/
   `read-tab` can target it by name). Without `--split` the tab opens in the
@@ -28,6 +28,19 @@ shows flags, output shape and the mistakes to avoid.
   id=$(cockpit new-tab --cwd ~/proj --title Worker --split h)
   cockpit send --tab-id "$id" --enter "npm test"
   ```
+  When the calling terminal is recognized as an agent, the Office records it
+  as the new terminal's parent. `--parent-tab <id>` selects an explicit parent;
+  `--independent` opts out. A plain shell does not become an Office character:
+  an agent still needs to start in the new terminal. A session-backed delegate
+  reports completed turns to its orchestrator and stays available for follow-ups.
+  Closing the parent leaves remaining terminals independent. Unlike `agent start`,
+  `new-tab` really creates a PTY-backed terminal.
+
+  For reliable shell animations use `cockpit telemetry <command...>` to report
+  the actual command lifecycle. External wrappers can report an explicit wait
+  with `cockpit activity wait --phase started --summary 'Waiting for build'`,
+  update it with `--phase updated`, then finish with `completed`, `failed` or
+  `interrupted`. Silence in a PTY is not proof that a shell is still running.
 - `cockpit close-tab [<label|tab-id>]` — close a tab and print its id: the
   counterpart of `new-tab`. **Without a target it closes YOUR OWN tab**, which
   ends the shell you are typing in — pass the target explicitly unless that is

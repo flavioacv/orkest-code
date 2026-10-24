@@ -9819,25 +9819,6 @@
     if (s === "es" || s.startsWith("es-")) return "es";
     return void 0;
   }
-  function setLocale(v) {
-    const next = normalizeLocale(v) ?? "pt-BR";
-    if (current === next) return;
-    current = next;
-    if (typeof KINDS !== "undefined") {
-      KINDS = {
-        tv: { label: tr("Vendo TV"), emoji: "📺", min: 2, max: 5 },
-        videogame: { label: tr("Jogando videogame"), emoji: "🎮", min: 2, max: 5, match: true },
-        arcade: { label: tr("Duelo no fliperama"), emoji: "👾", min: 2, max: 2, match: true },
-        pingpong: { label: tr("Jogando pingue-pongue"), emoji: "🏓", min: 2, max: 4, match: true },
-        kitchen: { label: tr("Papo na copa"), emoji: "☕", min: 2, max: 4 },
-        talk: { label: tr("Conversando"), emoji: "💬", min: 2, max: 2 },
-        rps: { label: tr("Jokenpô"), emoji: "✊", min: 2, max: 4, match: true },
-        mirror: { label: tr("Se arrumando no espelho"), emoji: "💄", min: 1, max: 2, solo: true }
-      };
-      PLACES = { [LOUNGE_ID]: tr("Lounge"), [CAFE_ID]: tr("Copa"), [RECEPTION_ID]: tr("Recepção"), [RESTROOM_ID]: tr("Banheiros") };
-      MATCH_WHAT = { rps: tr("no jokenpô"), pingpong: tr("no pingue-pongue"), videogame: tr("no videogame"), arcade: tr("no fliperama") };
-    }
-  }
   function serverLocale(env2, intl) {
     const own = normalizeLocale(env2.HABBLAUD_LANG);
     if (own) return own;
@@ -9872,6 +9853,17 @@
     return serverLocale(env2, intl);
   }
   var current = detect();
+  function setLocale(value) {
+  const next = normalizeLocale(value) ?? "pt-BR";
+  if (current === next) return;
+  current = next;
+  if (typeof KINDS !== "undefined") {
+    const labels = {tv:"Vendo TV",videogame:"Jogando videogame",arcade:"Duelo no fliperama",pingpong:"Jogando pingue-pongue",kitchen:"Papo na copa",talk:"Conversando",rps:"Jokenpô",mirror:"Se arrumando no espelho"};
+    for (const [kind, label] of Object.entries(labels)) KINDS[kind].label = tr(label);
+    PLACES = { [LOUNGE_ID]: tr("Lounge"), [CAFE_ID]: tr("Copa"), [RECEPTION_ID]: tr("Recepção"), [RESTROOM_ID]: tr("Banheiros") };
+    MATCH_WHAT = { rps: tr("no jokenpô"), pingpong: tr("no pingue-pongue"), videogame: tr("no videogame"), arcade: tr("no fliperama") };
+  }
+}
   function tr(src, args) {
     const dict = DICTS[current];
     const s = dict && dict[src] || src;
@@ -18143,9 +18135,6 @@
       }
       if (!act || ch.leaving) return null;
       const age = now - ch.activityChangedAt;
-      // Completion is a momentary celebration, not the agent's permanent
-      // idle description. Selected/hovered agents still retain the event in
-      // their profile timeline, but the "turn completed" bubble expires.
       if (act.kind === "done" && age >= RECENT_MS) return null;
       if (selected) return this.takeBubble(ch, head, act.icon, act.text, "info", 80, 1, ch.activityChangedAt);
       if (hovered) return this.takeBubble(ch, head, act.icon, act.text, "info", 75, 1, ch.activityChangedAt);
@@ -26433,6 +26422,72 @@
     }
   };
 
+  // tool/habblaud_world/social.ts
+  var SessionSocialBridge = class {
+    constructor(sim2) {
+      this.sim = sim2;
+    }
+    sim;
+    identities = /* @__PURE__ */ new Map();
+    prepare(snapshot) {
+      const incoming = new Map(snapshot.agents.map((a) => [a.id, a.socialIdentity ?? a.id]));
+      const changed = incoming.size !== this.identities.size || [...incoming].some(([id, key]) => this.identities.get(id) !== key);
+      if (!changed) return;
+      const keptEvents = this.sim.social.events.filter((event) => incoming.has(event.agentId) && this.identities.get(event.agentId) === incoming.get(event.agentId));
+      this.sim.social.events.splice(0, this.sim.social.events.length, ...keptEvents);
+      const wallets = {};
+      const idForKey = new Map([...incoming].map(([id, key]) => [key, id]));
+      for (const agent of snapshot.agents) {
+        const same = this.identities.get(agent.id) === incoming.get(agent.id);
+        let wallet = same ? this.sim.social.wallets.get(agent.id) : void 0;
+        const saved = agent.socialState;
+        if (!same && this.identities.has(agent.id)) {
+          this.sim.spots.releaseAll(agent.id);
+          this.sim.chars.delete(agent.id);
+        }
+        if (!wallet && saved?.version === 1 && saved.identity === incoming.get(agent.id) && saved.wallet) {
+          wallet = { ...saved.wallet, vs: Object.fromEntries(Object.entries(saved.wallet.vs ?? {}).filter(([key]) => idForKey.has(key)).map(([key, score]) => [idForKey.get(key), score])) };
+          for (const event of Array.isArray(saved.events) ? saved.events.slice(-20) : []) {
+            if (typeof event.id === "string" && typeof event.at === "number" && typeof event.text === "string") {
+              this.sim.social.events.push({ ...event, agentId: agent.id });
+            }
+          }
+        }
+        if (wallet) wallets[agent.id] = { ...wallet, vs: Object.fromEntries(Object.entries(wallet.vs ?? {}).filter(([id]) => incoming.has(id) && (!this.identities.has(id) || this.identities.get(id) === incoming.get(id)))) };
+      }
+      Object.assign(this.sim.social, { wallets: new Wallets({
+        getItem: (key) => key === "habblaud.wallets.v1" ? JSON.stringify({ v: 1, wallets }) : null,
+        setItem: () => {
+        }
+      }) });
+      this.identities = incoming;
+      const validEvents = this.sim.social.events.filter((e) => incoming.has(e.agentId));
+      this.sim.social.events.splice(0, this.sim.social.events.length, ...validEvents.slice(-40));
+    }
+    snapshot() {
+      const events = this.sim.social.events.filter((e) => this.identities.has(e.agentId));
+      return {
+        agents: Object.fromEntries([...this.identities].map(([id, identity]) => {
+          const wallet = this.sim.social.wallets.get(id);
+          return [id, {
+            identity,
+            social: this.sim.social.info(id),
+            state: wallet ? {
+              version: 1,
+              identity,
+              wallet: {
+                ...wallet,
+                vs: Object.fromEntries(Object.entries(wallet.vs).filter(([other]) => this.identities.has(other)).map(([other, score]) => [this.identities.get(other), score]))
+              },
+              events: events.filter((e) => e.agentId === id).slice(-20)
+            } : null
+          }];
+        })),
+        events
+      };
+    }
+  };
+
   // tool/habblaud_world/sim.ts
   var hidingSteps = /* @__PURE__ */ new Set(["elevOut", "elevIn", "stall"]);
   function repairCharacterVisibility(ch) {
@@ -26445,6 +26500,44 @@
     return true;
   }
   var CockpitSim = class extends Sim {
+    sessionSocial = new SessionSocialBridge(this);
+    pendingDeliveries = /* @__PURE__ */ new Map();
+    applySnapshot(input, now) {
+      const previous = new Map([...this.chars].map(([id, ch]) => [id, ch.lastActivityId]));
+      this.sessionSocial.prepare(input);
+      super.applySnapshot(input, now);
+      for (const agent of input.agents) {
+        const ch = this.chars.get(agent.id);
+        if (ch && previous.get(agent.id) && previous.get(agent.id) !== agent.activity?.id) {
+          if (agent.sessionBacked && agent.kind === "sub" && agent.activity?.kind === "done") {
+            this.pendingDeliveries.set(agent.id, agent.activity.id);
+          }
+        }
+      }
+    }
+    reportSessionDelivery(ch, agent, now) {
+      if (agent.sessionBacked && agent.kind === "sub" && agent.parentId && agent.activity?.kind === "done") {
+        const parent = this.chars.get(agent.parentId);
+        if (!parent || parent.gone || parent.leaving || ch.inside || ch.arriving || ch.leaving) return false;
+        this.interrupt(ch);
+        if (ch.step) return false;
+        const target = this.building.grid.nearestWalkable(parent.tx + 1, parent.ty, 4);
+        if (!target) return false;
+        if (ch.atSpot) ch.queue.push({ t: "exit" });
+        ch.queue.push(
+          { t: "go", tx: target.x, ty: target.y },
+          { t: "act", pose: "talk", held: "papers", ms: 1800 },
+          { t: "do", fn: () => {
+            if (ch.info.status !== "idle") return;
+            ch.setIcon("box", 2e3, this.now);
+            parent.setIcon("check", 2e3, this.now);
+            this.social.delivered(ch, this.now);
+          } }
+        );
+        return true;
+      }
+      return false;
+    }
     interrupt(ch) {
       if (!ch.step && ch.queue[0]?.t === "elevOut") {
         ch.step = ch.queue.shift();
@@ -26456,6 +26549,14 @@
     update(dt, now) {
       for (const ch of this.chars.values()) repairCharacterVisibility(ch);
       super.update(dt, now);
+      for (const [id, activityId] of this.pendingDeliveries) {
+        const ch = this.chars.get(id);
+        if (!ch || ch.gone || ch.leaving || ch.info.activity?.id !== activityId || ch.info.activity.kind !== "done") {
+          this.pendingDeliveries.delete(id);
+        } else if (this.reportSessionDelivery(ch, ch.info, now)) {
+          this.pendingDeliveries.delete(id);
+        }
+      }
     }
   };
 
@@ -26745,7 +26846,27 @@
     renderer.pruneHeads();
     soundCues.update(now, (cue) => soundBoard.play(cue.kind, cue));
   }
+  function portraitCanvas(source) {
+    const data = source.getContext("2d").getImageData(0, 0, source.width, source.height).data;
+    let x0 = source.width, y0 = source.height, x1 = -1, y1 = -1;
+    for (let y = 0; y < source.height; y++) for (let x = 0; x < source.width; x++) {
+      if (data[(y * source.width + x) * 4 + 3] <= 16) continue;
+      x0 = Math.min(x0, x);
+      y0 = Math.min(y0, y);
+      x1 = Math.max(x1, x);
+      y1 = Math.max(y1, y);
+    }
+    if (x1 < 0) return source;
+    const cropped = document.createElement("canvas");
+    cropped.width = x1 - x0 + 1;
+    cropped.height = y1 - y0 + 1;
+    cropped.getContext("2d").drawImage(source, x0, y0, cropped.width, cropped.height, 0, 0, cropped.width, cropped.height);
+    return cropped;
+  }
   window.cockpitHabblaudWorld = {
+    getSocialSnapshot() {
+      return sim.sessionSocial.snapshot();
+    },
     getAppearance(seed, look, parts = {}) {
       const appearance = fitToOptions({ ...appearanceFromSeed2(seed, { look }), ...parts });
       const options2 = editorOptions(appearance);
@@ -26754,25 +26875,10 @@
         options2[key].filter((value) => !editorConflict(appearance, key, value))
       ]));
       const sprite2 = characterSprite({ appearance, dir: "down", pose: "stand", frame: 0 });
-      const bounds = opaqueBounds(sprite2.canvas);
-      const bodyCanvas = document.createElement("canvas");
-      bodyCanvas.width = bounds.w;
-      bodyCanvas.height = bounds.h;
-      bodyCanvas.getContext("2d").drawImage(
-        sprite2.canvas,
-        bounds.x,
-        bounds.y,
-        bounds.w,
-        bounds.h,
-        0,
-        0,
-        bounds.w,
-        bounds.h
-      );
       return {
         parts: Object.fromEntries(PART_KEYS.map((key) => [key, appearance[key]])),
         options: selectable,
-        preview: bodyCanvas.toDataURL("image/png"),
+        preview: portraitCanvas(sprite2.canvas).toDataURL("image/png"),
         avatar: avatarCanvas(seed, { look, parts, scale: 3 }).toDataURL("image/png")
       };
     },
@@ -26780,7 +26886,7 @@
       const now = Date.now();
       if (snapshot?.options && typeof snapshot.options === "object") {
         const next = snapshot.options;
-        if (typeof next.locale === "string") setLocale(next.locale);
+        if (typeof next.locale === "string") setLocale(normalizeLocale(next.locale) ?? "pt-BR");
         options = {
           ...options,
           ...typeof next.showNames === "boolean" ? { showNames: next.showNames } : {},

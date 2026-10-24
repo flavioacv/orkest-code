@@ -191,7 +191,19 @@
       "soundSocial": "Pingue-pongue e fliperama",
       "daylightAuto": "Automático",
       "daylightDay": "Sempre dia",
-      "daylightNight": "Sempre noite"
+      "daylightNight": "Sempre noite",
+      "socialLife": "Vida social",
+      "gameCoins": "${count} moedinhas do escritório",
+      "earnedWorking": "${count} ganhos com atividades",
+      "matchRecord": "${wins} vitórias · ${losses} derrotas",
+      "personality": "Personalidade",
+      "friendships": "Amizades",
+      "rivals": "Rivalidades",
+      "socialLedger": "Extrato de moedinhas",
+      "socialActivity": "Vida social do escritório",
+      "delegatedBy": "Delegado por ${name}",
+      "shellWaiting": "Esperando um comando",
+      "socialEconomy": "Jogo do escritório — sem valor monetário real"
     },
     "confirmDialog": {
       "unsavedChangesTitle": "Alterações não salvas",

@@ -4882,6 +4882,7 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
   /// título automático. Devolve o id da tab criada, ou a mensagem de erro.
   Result<String, String> newTerminalTab({
     required String cwd,
+    String? officeParentIdentity,
     String? title,
     String? inPane,
     SplitDir? splitDir,
@@ -4903,6 +4904,7 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
       cwd,
       title: title ?? _sanitizeName(_basename(cwd)),
       startupCommand: startupCommand,
+      officeParentIdentity: officeParentIdentity,
     );
     if (title != null && title.trim().isNotEmpty) {
       s.setManualLabel(title);
@@ -5818,6 +5820,9 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
     String? startupCommand,
     String? manualLabel,
     Iterable<OfficeSubagent> restoredOfficeSubagents = const <OfficeSubagent>[],
+    String? officeIdentity,
+    String? officeParentIdentity,
+    Map<String, dynamic>? restoredOfficeSocialState,
     // Plano 50: `null` = o padrão efetivo (o que o `+` abre hoje). A fatia 3
     // (dropdown do `+`) passa um perfil específico sem mexer no padrão global.
     TerminalProfile? profile,
@@ -5871,6 +5876,9 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
       // Detecção do harness interativo ativo (ícone da aba).
       monitor: _harnessMonitor,
       restoredOfficeSubagents: restoredOfficeSubagents,
+      officeIdentity: officeIdentity,
+      officeParentIdentity: officeParentIdentity,
+      restoredOfficeSocialState: restoredOfficeSocialState,
       // Injeta no env da PTY: roteamento (id da tab) + transporte (socket/porta).
       // O `cockpit-hook` do claude herda e reporta status de turno de volta.
       // `COCKPIT_TAB_ID` é o nome correto (o que a CLI endereça é uma tab);
@@ -5899,6 +5907,7 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
     t.onTurnFinished = () => unawaited(notifications.turnFinished(t));
     // cwd vivo (OSC 7) mudou → persiste o layout pra restaurar o shell ali.
     t.onCwdChanged = () => _scheduleSave(projectId);
+    t.onOfficeStateChanged = () => _scheduleSave(projectId);
     // Shell encerrou sozinho (`exit`, Ctrl-D, processo morto) e a preferência
     // está ligada: fecha a aba em vez de deixar o terminal morto na tela — como
     // a aba do Neovim fecha no `:q` (ver [_watchNeovimSession]). Desligada, a
@@ -6525,6 +6534,15 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
           // manual continua vencendo o título dinâmico após o reinício.
           manualLabel: desc['label'] as String?,
           restoredOfficeSubagents: restoredSubagents,
+          officeIdentity: desc['office_identity'] is String
+              ? desc['office_identity'] as String
+              : null,
+          officeParentIdentity: desc['office_parent'] is String
+              ? desc['office_parent'] as String
+              : null,
+          restoredOfficeSocialState: desc['office_social'] is Map
+              ? (desc['office_social'] as Map).cast<String, dynamic>()
+              : null,
           engine: _enumByName(
             TerminalEngine.values,
             desc['engine'],
@@ -6772,6 +6790,9 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
         ..remove('sessionPath')
         ..remove('claude_sid')
         ..remove('harness') // só faz sentido junto do claude_sid
+        ..remove('office_identity')
+        ..remove('office_parent')
+        ..remove('office_social')
         ..remove('cwd');
       final newId = _nid(desc['type'] == 'terminal' ? 't' : 'a');
       tabIdMap[entry.key as String] = newId;
@@ -6840,6 +6861,10 @@ class CockpitViewModel extends ChangeNotifier implements DocumentHost {
         'sub': relativeUnder(s.workingDirectory, project.path),
         'title': s.title,
         'engine': s.terminal.engine.name,
+        'office_identity': s.officeIdentity,
+        if (s.officeParentIdentity != null)
+          'office_parent': s.officeParentIdentity,
+        if (s.officeSocial.data != null) 'office_social': s.officeSocial.data,
         // Rótulo manual travado (se houver): persiste com o descritor da aba,
         // que no restore é re-hidratado pela mesma chave de sessão → o nome
         // estável sobrevive ao reinício e à re-emissão de OSC-title do shell.

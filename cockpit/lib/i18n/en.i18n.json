@@ -191,7 +191,19 @@
       "soundSocial": "Ping-pong and arcade",
       "daylightAuto": "Automatic",
       "daylightDay": "Always day",
-      "daylightNight": "Always night"
+      "daylightNight": "Always night",
+      "socialLife": "Social life",
+      "gameCoins": "${count} office coins",
+      "earnedWorking": "${count} earned through activity",
+      "matchRecord": "${wins} wins · ${losses} losses",
+      "personality": "Personality",
+      "friendships": "Friendships",
+      "rivals": "Rivalries",
+      "socialLedger": "Coin history",
+      "socialActivity": "Office social life",
+      "delegatedBy": "Delegated by ${name}",
+      "shellWaiting": "Waiting for a command",
+      "socialEconomy": "Office game — no real monetary value"
     },
     "confirmDialog": {
       "unsavedChangesTitle": "Unsaved changes",

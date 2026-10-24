@@ -24,7 +24,7 @@ PATH). `ck` is the same binary under a shorter name.
 | `send-key [--tab-id] <Key>...` | `Enter`, `Tab`, `Escape`, arrows, `C-c`... |
 | `agent start <id> [--type]` · `agent stop <id> [--outcome]` | report a child agent to Office from a harness adapter |
 | `activity <kind> --summary <text> [--phase]` | report a provider-neutral Office activity; use `needs_input` only when a human must act |
-| `new-tab [--cwd] [--title] [--split h\|v]` | open a terminal tab, prints its id |
+| `new-tab [--cwd] [--title] [--split h\|v] [--parent-tab id \| --independent]` | open a terminal tab, prints its id; agent callers become its Office parent |
 | `close-tab [<label\|id>]` | close a tab (**no target = your own tab**) |
 | `open <file>` / `cockpit <file>` | open a file in the app's viewer |
 | `exec [--cwd] [--timeout] [--json] -- <cmd>` | run a shell line through the app (on the host, in a remote workspace) |
