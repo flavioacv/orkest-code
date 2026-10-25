@@ -277,7 +277,13 @@ add_custom_command(
   # hook do agente apontando pra ela, e a acha na mesma pasta bin/.
   COMMAND "${CMAKE_COMMAND}" -E copy
           "${ORKEST_CLI_EXE}" "${ORKEST_SERVER_DIR}/bin/orkest"
+  COMMAND "${CMAKE_COMMAND}"
+          "-DPUBSPEC=${CMAKE_CURRENT_SOURCE_DIR}/../pubspec.yaml"
+          "-DBUNDLE=${ORKEST_SERVER_DIR}" "-DARCH=${CMAKE_SYSTEM_PROCESSOR}"
+          -P "${CMAKE_CURRENT_SOURCE_DIR}/../tool/write-server-version.cmake"
   DEPENDS ${ORKEST_SERVER_SOURCES} "${ORKEST_SERVER_PKG}/pubspec.yaml"
+          "${CMAKE_CURRENT_SOURCE_DIR}/../pubspec.yaml"
+          "${CMAKE_CURRENT_SOURCE_DIR}/../tool/write-server-version.cmake"
           "${ORKEST_CLI_EXE}" orkest_pty
   COMMENT "Compilando orkest-server (bundle do sidecar)"
   VERBATIM)

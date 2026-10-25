@@ -511,6 +511,37 @@ fn sem_app_nenhum_falha_com_exit_3() {
     );
 }
 
+#[cfg(target_os = "macos")]
+#[test]
+fn socket_bloqueado_explica_como_recuperar_sessao_sem_aprovacoes() {
+    let dir = unique_dir("orkest-denied");
+    std::fs::create_dir_all(dir.join(".orkest")).unwrap();
+    let sock_path = dir.join("explicit.sock");
+    let _listener = UnixListener::bind(&sock_path).unwrap();
+    let _fallback = UnixListener::bind(dir.join(".orkest/status.sock")).unwrap();
+
+    // O app existe e escuta, mas o sandbox do agente proíbe a conexão. Não
+    // precisa de servidor/thread: a requisição não deve chegar ao listener.
+    let out = Command::new("/usr/bin/sandbox-exec")
+        .args(["-p", "(version 1)(allow default)(deny network*)"])
+        .arg(env!("CARGO_BIN_EXE_orkest"))
+        .args(["list-tabs", "--json"])
+        .env("HOME", &dir)
+        .env("ORKEST_STATUS_SOCK", &sock_path)
+        .env_remove("ORKEST_STATUS_PORT")
+        .output()
+        .unwrap();
+    let _ = std::fs::remove_dir_all(&dir);
+    let stderr = String::from_utf8_lossy(&out.stderr);
+    assert_eq!(out.status.code(), Some(3), "{stderr}");
+    assert!(out.stdout.is_empty());
+    assert!(stderr.contains("local socket access blocked"), "{stderr}");
+    assert!(stderr.contains(&format!("socket {}:", sock_path.display())), "{stderr}");
+    assert!(stderr.contains("sandbox_approval=false"), "{stderr}");
+    assert!(stderr.contains("--ask-for-approval on-request"), "{stderr}");
+    assert!(!stderr.contains("Is the app running?"), "{stderr}");
+}
+
 #[test]
 fn new_workspace_manda_path_resolvido_e_nome_opcional() {
     let (req, stdout, _, code) = run_against_fake_app(

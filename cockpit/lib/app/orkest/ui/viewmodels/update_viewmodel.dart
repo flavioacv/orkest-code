@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:orkest_code/app/core/brand/app_identity.dart';
+
 import 'package:orkest_code/app/orkest/domain/contracts/dismissed_update_store.dart';
 import 'package:orkest_code/app/orkest/domain/contracts/self_updater.dart';
 import 'package:orkest_code/app/orkest/domain/contracts/update_checker.dart';
@@ -57,8 +59,7 @@ class UpdateViewModel extends ChangeNotifier {
   /// Página de download do site — fallback quando não há artefato da plataforma.
   final String fallbackUrl;
 
-  static const String _kFallbackUrl =
-      'https://remote-pi.jacobmoura.work/download';
+  static const String _kFallbackUrl = '${AppIdentity.repository}/releases';
 
   UpdateInfo? _available; // caminho Linux/notify
   StreamSubscription<SelfUpdateState>? _selfSub;

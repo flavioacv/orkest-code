@@ -55,7 +55,22 @@ void main() {
     },
   );
 
-  test('tipo desconhecido vira FormatException', () {
-    expect(() => codec.decodeLine('{"t":"nope"}'), throwsFormatException);
+  test('tipo novo não interrompe mensagens conhecidas no stream', () async {
+    final messages = await codec
+        .decodeStream(
+          Stream.value(
+            utf8.encode(
+              '{"t":"future.event"}\n${codec.encode(const PtyList())}',
+            ),
+          ),
+        )
+        .toList();
+    expect(messages.first, isA<UnknownMessage>());
+    expect((messages.first as UnknownMessage).rawType, 'future.event');
+    expect(messages.last, isA<PtyList>());
+  });
+
+  test('JSON que não é objeto continua inválido', () {
+    expect(() => codec.decodeLine('[]'), throwsFormatException);
   });
 }

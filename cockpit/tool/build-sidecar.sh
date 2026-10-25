@@ -26,6 +26,9 @@ fi
 if [ -f "$OUT/bin/orkest_server" ]; then
   mv "$OUT/bin/orkest_server" "$OUT/bin/orkest-server"
 fi
+VERSION=$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' "$ROOT/pubspec.yaml")
+[ -n "$VERSION" ] || { echo "Missing distribution version" >&2; exit 1; }
+printf '%s\n%s\n' "$VERSION" "$(uname -m)" > "$OUT/VERSION"
 # Dart >= 3.14 no Linux: o runtime em bin/ acha o snapshot por
 # lib/libdartaot<basename do exe>.so, então o .so acompanha o rename
 # (ver linux/rename_server_snapshot.cmake). Ausente em Dart < 3.14 e no macOS.

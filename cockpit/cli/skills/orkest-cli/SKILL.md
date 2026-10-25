@@ -1,6 +1,7 @@
 ---
 name: orkest-cli
-description: Drive Orkest's terminal tabs from inside one. Use when you (an agent in a Orkest terminal) need to open, split, type into, read or close tabs, run a shell line through the app (`orkest exec`), start or read a task run, or list tabs and workspaces. Triggers on tmux-like needs (new window, send keys, read another tab's output, interrupt a stuck process) and on "where am I / what is open" questions. Databases, telemetry and the files the human reads (.panel, .kanban, .notebook, .ckp, .http) have their own skills: orkest-db, orkest-telemetry, orkest-design.
+description: >-
+  Drive Orkest's terminal tabs from inside one. Use when you (an agent in a Orkest terminal) need to open, split, type into, read or close tabs, run a shell line through the app (`orkest exec`), start or read a task run, or list tabs and workspaces. Triggers on tmux-like needs (new window, send keys, read another tab's output, interrupt a stuck process) and on "where am I / what is open" questions. Databases, telemetry and the files the human reads (.panel, .kanban, .notebook, .ckp, .http) have their own skills: orkest-db, orkest-telemetry, orkest-design.
 ---
 
 # orkest — Orkest's internal CLI
@@ -25,9 +26,14 @@ The public command is `orkest`; no Cockpit alias is installed.
    select the binary/endpoint for the intended app; inspect the returned tabs.
 3. `Operation not permitted` / `Permission denied` means the execution sandbox
    or OS blocked a local connection, not that the skill or app is absent.
-   Request scoped approval for the same command using your execution tool's
-   permission mechanism, then retry if granted. Do not disable sandboxing or
-   change the harness's global configuration to make this work.
+   Inspect the session's permission policy before requesting scoped approval
+   for the same command. If an explicit permission-request tool is available,
+   request only the local connection it supports, then retry if granted.
+   If approvals are disabled (`never` or `sandbox_approval: false`), do not
+   repeatedly retry or ask the user to open tabs manually: explain the policy
+   and give the concrete recovery in [references/permissions.md](references/permissions.md). Permission
+   grants for this agent do not grant access to another session. Do not disable
+   sandboxing or change global harness configuration to make this work.
 4. If routing variables were removed, use explicit IDs from `list-tabs` for
    `send`/`read-tab`, and `new-tab --parent-tab <known-orchestrator-id>` when
    the parent is known. Do not guess the originating tab from focus alone.

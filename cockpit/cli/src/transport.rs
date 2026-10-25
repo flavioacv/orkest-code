@@ -145,7 +145,12 @@ fn connect() -> std::io::Result<Option<Conn>> {
             match std::os::unix::net::UnixStream::connect(path) {
                 Ok(s) => return Ok(Some(Conn::Unix(s))),
                 Err(e) if e.kind() == std::io::ErrorKind::PermissionDenied => {
-                    permission_error = Some(e);
+                    // O primeiro endpoint é o explícito ou o do flavor atual.
+                    // Um fallback bloqueado não deve trocar o path que o
+                    // usuário precisa autorizar.
+                    permission_error.get_or_insert_with(|| {
+                        std::io::Error::new(e.kind(), format!("socket {path}: {e}"))
+                    });
                 }
                 Err(e) => last_err = Some(e),
             }
@@ -171,7 +176,11 @@ fn connection_error(error: &std::io::Error) -> String {
             "orkest: local socket access blocked by permissions or sandbox: {error}. \
 The app may be running even when ORKEST_* variables are absent. \
 Request approval for this same CLI command outside the execution sandbox; \
-do not disable sandboxing globally."
+if the session forbids approvals (never or sandbox_approval=false), \
+use its permissions UI or resume Codex with \
+`codex resume <session-id> --sandbox workspace-write --ask-for-approval on-request`, \
+then approve the CLI command. A socket allowlist must use the socket path above. \
+Do not disable sandboxing globally."
         )
     } else {
         format!("orkest: could not connect to app: {error}")

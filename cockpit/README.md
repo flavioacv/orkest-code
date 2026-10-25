@@ -41,6 +41,12 @@ orkest read-tab Developer
 The application injects its CLI path and `ORKEST_*` connection variables. It
 does not register a global `cockpit` alias or route to the other product.
 
+If an agent reports `Operation not permitted`, its sandbox may be blocking the
+local socket. Sessions with `sandbox_approval: false` cannot request execution
+approval. Enable interactive approvals in that session, keeping the workspace
+sandbox, then approve the CLI command. See the
+[permission recovery guide](cli/skills/orkest-cli/references/permissions.md).
+
 ## Distribution status
 
 Version `0.1.0+1` starts a separate version history. Automatic updates are

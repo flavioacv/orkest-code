@@ -120,6 +120,15 @@ TARGET:
                   app boot → find them with `orkest list-tabs` before targeting
                   another tab (cross-tab).
 
+SOCKET PERMISSIONS:
+  Operation not permitted / Permission denied means the local connection was
+  blocked. Request scoped approval for the same command. If the agent session
+  disables approvals (never or sandbox_approval=false), change its permissions
+  through the agent UI first. In Codex, resume the same conversation with:
+    codex resume <session-id> --sandbox workspace-write --ask-for-approval on-request
+  Then approve the CLI command. Reinstalling the app/skill cannot grant socket
+  access. See orkest-cli/references/permissions.md; keep sandboxing enabled.
+
 KEYS (send-key):
   Enter Tab Escape Space BSpace Up Down Left Right Home End
   PageUp PageDown Delete   |   C-<letter> (e.g. C-c = Ctrl+C)

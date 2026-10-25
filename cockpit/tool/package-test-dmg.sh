@@ -24,6 +24,10 @@ for exe in "$APP/Contents/MacOS/Orkest Code" \
   }
 done
 /usr/bin/codesign --verify --deep --strict "$APP"
+SERVER_VERSION=$("$APP/Contents/Resources/orkest-server-bundle/bin/orkest-server" --version)
+[[ "$SERVER_VERSION" == "$VERSION" ]] || {
+  echo "Server version $SERVER_VERSION differs from app version $VERSION" >&2; exit 1;
+}
 mkdir -p "$OUT" "$ROOT/build"
 NAME="Orkest-Code-${VERSION}-${BUILD}-macos-apple-silicon-test.dmg"
 DMG="$OUT/$NAME"
@@ -50,6 +54,13 @@ Não é necessário instalar Flutter ou Dart para abrir o app. Para usar agentes
 instale e autentique no seu Mac o CLI do agente escolhido. Contas, chaves e
 histórico do desenvolvedor não acompanham este pacote. O app usa dados próprios
 em ~/.orkest e não substitui o Cockpit original. Updates automáticos desligados.
+
+CLI EM FERRAMENTAS DE AGENTES
+Se a ferramenta do agente filtrar o PATH, o CLI continua disponível por
+caminho absoluto: ~/.orkest/bin/orkest. Peça para reler a skill orkest-cli.
+Operation not permitted ao acessar o socket exige autorização pontual na
+ferramenta do agente; não significa que o aplicativo esteja ausente.
+Não é necessário desativar o sandbox global nem trocar por agentes internos.
 
 O QUE TESTAR
 - Abrir uma pasta e digitar/colar no terminal.

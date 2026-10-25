@@ -123,6 +123,10 @@ void main() {
       updater.dispose();
     });
 
+    test('download fallback belongs to the independent distribution', () {
+      expect(vm.fallbackUrl, 'https://github.com/flavioacv/remote_pi/releases');
+    });
+
     test('available → card aparece com "click to install"', () async {
       await vm.check();
       updater.emit(

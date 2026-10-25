@@ -40,3 +40,8 @@ Private build generated on 2026-10-24: `0.1.0+1`, Apple Silicon, macOS 12+.
 The DMG checksum and mounted app's ad-hoc signature were verified; the bundled
 CLI and server executed from a read-only mount. The test image was then ejected.
 GUI acceptance testing on the recipient's Mac remains the purpose of this build.
+
+The subsequent `0.1.1+2` test DMG includes CLI `0.7.1r` and corrected agent-skill
+instructions for filtered environments and sandbox-denied socket access. Its
+mounted CLI successfully listed the running app's tabs; image integrity,
+ad-hoc signature and SHA-256 were checked before sharing.

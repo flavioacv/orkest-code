@@ -1,5 +1,12 @@
 # Changelog — Orkest Code
 
+## 0.1.2 (build 3) — 2026-10-24
+
+- Download fallback uses the independent repository's releases page.
+- macOS and development server bundles report the distribution version.
+- Cross-compiled Linux ARM64 bundles include the version receipt.
+- Secret-file permission regression test works on macOS and Linux.
+
 ## 0.1.1 (build 2) — 2026-10-24
 
 - CLI 0.7.1r diferencia bloqueio de socket por sandbox de app desconectado.

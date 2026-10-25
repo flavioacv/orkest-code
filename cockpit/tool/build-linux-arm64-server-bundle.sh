@@ -89,5 +89,8 @@ chmod +x "$ZIG_LINKER"
 )
 cp "$ROOT/cli/target/$TARGET/release/orkest" "$DEST/bin/orkest"
 chmod +x "$DEST/bin/orkest-server" "$DEST/bin/orkest"
+VERSION=$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' "$ROOT/pubspec.yaml")
+[ -n "$VERSION" ] || { echo "Missing distribution version" >&2; exit 1; }
+printf '%s\narm64\n' "$VERSION" > "$DEST/VERSION"
 
 echo "[linux-server] bundle OK -> $DEST"

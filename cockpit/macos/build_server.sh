@@ -50,6 +50,11 @@ mv "$DEST/bin/orkest_server" "$DEST/bin/orkest-server"
 cp "$PTY" "$DEST/lib/liborkest_pty.dylib"
 chmod +x "$DEST/bin/orkest-server"
 
+# The server reports its distribution version from this bundle receipt.
+VERSION=$(sed -n 's/^version: *\([0-9][0-9.]*\).*/\1/p' "$ROOT/pubspec.yaml")
+[ -n "$VERSION" ] || { echo "[build_server] missing distribution version" >&2; exit 1; }
+printf '%s\n%s\n' "$VERSION" "$(uname -m)" > "$DEST/VERSION"
+
 # Target de bootstrap para os VMs Linux arm64 de workspaces remotos. Fica
 # isolado do sidecar macOS para o resolver nunca tentar executar um ELF local.
 # O helper também produz liborkest_pty.so e a CLI Rust para o host remoto.

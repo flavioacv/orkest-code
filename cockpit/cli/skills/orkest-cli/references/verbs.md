@@ -7,7 +7,9 @@ When an agent tool strips PATH, invoke `~/.orkest/bin/orkest` by absolute path
 (`~/.orkest/bin-debug/orkest` for a development build). Local socket discovery
 does not require inherited `ORKEST_*`. A permission-denied socket connection
 requires scoped approval through the agent's execution tool, not a different
-agent backend. Missing routing variables require explicit target tab IDs.
+agent backend. If the policy disables approvals, follow
+[`permissions.md`](permissions.md) to recover that session before retrying.
+Missing routing variables require explicit target tab IDs.
 
 - `orkest send [--tab-id <id>] [--enter] <text>` — type literal text; add
   `--enter` to submit it (equivalent to a `send-key Enter` right after).
