@@ -1,5 +1,6 @@
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
 import 'package:orkest_code/app/core/ui/widgets/orkest_brand_logo.dart';
 
@@ -25,19 +26,33 @@ void main() {
   ) async {
     await tester.pumpWidget(host(Brightness.light));
     await tester.pumpAndSettle();
-    Image logo() => tester.widget<Image>(find.byType(Image));
+    SvgPicture lettering() =>
+        tester.widget<SvgPicture>(find.byType(SvgPicture));
+    Image symbol() => tester.widget<Image>(find.byType(Image));
     expect(
-      (logo().image as AssetImage).assetName,
-      'assets/branding/orkest-wordmark-ribbon-v1.png',
+      lettering().bytesLoader,
+      isA<SvgAssetLoader>().having(
+        (loader) => loader.assetName,
+        'assetName',
+        'assets/branding/orkest-wordmark-lettering.svg',
+      ),
     );
-    expect(logo().semanticLabel, 'Orkest Code');
+    expect(
+      (symbol().image as AssetImage).assetName,
+      'assets/branding/orkest-symbol-ribbon-v1.png',
+    );
+    expect(find.bySemanticsLabel('Orkest Code'), findsOneWidget);
     expect(tester.getSize(find.byType(Image)).width, lessThanOrEqualTo(180));
 
     await tester.pumpWidget(host(Brightness.dark));
     await tester.pumpAndSettle();
     expect(
-      (logo().image as AssetImage).assetName,
-      'assets/branding/orkest-wordmark-ribbon-dark-v1.png',
+      lettering().bytesLoader,
+      isA<SvgAssetLoader>().having(
+        (loader) => loader.assetName,
+        'assetName',
+        'assets/branding/orkest-wordmark-lettering-dark.svg',
+      ),
     );
     expect(tester.takeException(), isNull);
   });

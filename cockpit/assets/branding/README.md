@@ -10,6 +10,8 @@ wordmark, based on the user's identity-board reference.
 | `orkest_logo.png` | Packaged shared UI icon, rounded tile |
 | `orkest-wordmark-ribbon-v1.png` | Symbol + dark lettering, transparent background, light layouts |
 | `orkest-wordmark-ribbon-dark-v1.png` | Symbol + white lettering on opaque navy background, dark layouts |
+| `orkest-wordmark-lettering.svg` | User-provided vector lettering, light layouts |
+| `orkest-wordmark-lettering-dark.svg` | Same vector lettering in white, dark layouts |
 
 The symbol and lettering artwork were generated with the built-in imagegen
 tool. These are raster masters, not vector exports or an installable typeface.
@@ -22,7 +24,10 @@ only changes sizes, masks, adaptive-icon safe areas and encoding; it does not
 redesign the artwork. iOS icons are opaque RGB; Android has separate foreground
 and monochrome resources; Windows ICO contains seven sizes.
 
-`OrkestBrandLogo` displays the correct wordmark in startup and welcome screens.
+`OrkestBrandLogo` combines the existing symbol PNG with the vector lettering
+exported by the user in `Rectangle.svg`. The SVG files contain only the letter
+paths; the embedded symbol in that export was removed so the approved icon asset
+remains the source of truth. They appear in startup and welcome screens.
 The shared icon continues to serve document/gallery icons. Existing manifests
 and asset catalog filenames are retained, so the OS launcher references remain
 valid. Restart/rebuild the app to refresh the native app icon.
