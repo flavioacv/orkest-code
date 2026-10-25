@@ -1,6 +1,13 @@
 # Changelog — Orkest Code
 
-## 0.1.2 (build 3) — 2026-10-24
+## 0.1.3 (build 5) — 2026-10-25
+
+- Office room labels now follow the selected language, including changes while it is open.
+- New tabs created through the CLI use the explicit parent workspace when no source tab is available.
+- Closing the last tab leaves the workspace open without starting another terminal.
+- The mobile connection identifies itself as Orkest mobile and reports stale server errors correctly.
+
+## 0.1.2 (build 4) — 2026-10-24
 
 - Download fallback uses the independent repository's releases page.
 - macOS and development server bundles report the distribution version.

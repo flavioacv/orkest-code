@@ -38,6 +38,10 @@ Missing routing variables require explicit target tab IDs.
   ```
   When the calling terminal is recognized as an agent, the Office records it
   as the new terminal's parent. `--parent-tab <id>` selects an explicit parent;
+  `--tab-id <id>` selects the source tab and its workspace when the CLI is run
+  outside an Orkest terminal. `--cwd` sets the shell directory; it does not
+  select a workspace. With no source tab, an explicit parent also anchors the
+  new tab in the parent's workspace.
   `--independent` opts out. A plain shell does not become an Office character:
   an agent still needs to start in the new terminal. A session-backed delegate
   reports completed turns to its orchestrator and stays available for follow-ups.
@@ -53,7 +57,8 @@ Missing routing variables require explicit target tab IDs.
   counterpart of `new-tab`. **Without a target it closes YOUR OWN tab**, which
   ends the shell you are typing in — pass the target explicitly unless that is
   what you mean. Closing the last tab of a split removes the split; closing the
-  last tab of a workspace leaves an empty tab behind (same as the tab's "x").
+  last tab of a workspace leaves the workspace open with no running terminal
+  (same as the tab's "x").
 
   ```sh
   id=$(orkest new-tab --cwd ~/proj --title Worker)

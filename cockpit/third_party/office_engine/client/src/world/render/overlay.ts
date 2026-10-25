@@ -47,11 +47,16 @@ const OVERVIEW_PER_ROOM = 1;
 const OVERVIEW_TOTAL = 4;
 
 const CORE_NAMES: Record<string, string> = {
-  'core:recepcao': tr('Recepção'),
-  'core:banheiros': tr('Banheiros'),
-  'core:copa': tr('Copa'),
-  'core:lounge': tr('Lounge'),
+  'core:recepcao': 'Recepção',
+  'core:banheiros': 'Banheiros',
+  'core:copa': 'Copa',
+  'core:lounge': 'Lounge',
 };
+
+export function coreAreaName(id: string): string | undefined {
+  const source = CORE_NAMES[id];
+  return source == null ? undefined : tr(source);
+}
 
 /** 'shell' = espera de shell: balão escuro de terminal com texto verde. 'say' = fala das rodas (papo, torcida, apostas). */
 type Tone = 'info' | 'alert' | 'deliver' | 'shell' | 'say';
@@ -439,8 +444,9 @@ export class Overlay {
         // endereço antigo de uma mudança: o nome já está na sala nova
         if (!room.present || room.ghost || (anim && anim.walls < 0.6)) continue;
         this.drawRoomPill(room.info.name, cx, cy, colW - 8, room.accounts, this.countIn(room.id), room.theme.accent, room.lightOn);
-      } else if (CORE_NAMES[vis.id]) {
-        this.drawCorePill(CORE_NAMES[vis.id], cx, cy, colW - 8);
+      } else {
+        const coreName = coreAreaName(vis.id);
+        if (coreName) this.drawCorePill(coreName, cx, cy, colW - 8);
       }
     }
   }

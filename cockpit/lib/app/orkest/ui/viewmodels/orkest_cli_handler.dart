@@ -211,6 +211,7 @@ class OrkestCliHandler {
       case 'list-panes':
         final focusedId = _vm.focusedTabId;
         final panes = _vm.allSessions
+            .where((s) => s is! EmptyTab)
             .map(
               (s) => <String, dynamic>{
                 'id': s.id,
@@ -360,12 +361,14 @@ class OrkestCliHandler {
             'parent tab must be an existing terminal',
           );
         }
+        // An explicit parent is also the workspace anchor when the CLI runs
+        // outside an Orkest terminal (and therefore has no sender tab id).
+        // Otherwise the selected workspace could silently claim the child.
+        final anchor = sender ?? (explicitParent != null ? parent : null);
         String? anchorLeaf;
-        if (sender != null) {
-          if (sender.projectId != _vm.selectedProjectId) {
-            _vm.selectProject(sender.projectId);
-          }
-          anchorLeaf = _vm.leafOfTab(sender.projectId, sender.id);
+        if (anchor is TerminalSession) {
+          await _vm.selectProjectAndWait(anchor.projectId);
+          anchorLeaf = _vm.leafOfTab(anchor.projectId, anchor.id);
         }
         final created = _vm.newTerminalTab(
           cwd: cwd,
@@ -566,7 +569,7 @@ class OrkestCliHandler {
                 // Nº de tabs (sessões) abertas nesse workspace. Campo era 'panes'
                 // (enganoso — sempre foi contagem de tabs, não de folhas-pane).
                 'tabs': _vm.allSessions
-                    .where((s) => s.projectId == p.id)
+                    .where((s) => s.projectId == p.id && s is! EmptyTab)
                     .length,
               },
             )

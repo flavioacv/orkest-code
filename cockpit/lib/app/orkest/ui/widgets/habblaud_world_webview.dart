@@ -679,6 +679,9 @@ canvas{display:block;image-rendering:pixelated;outline:none}
       builder: (context, snapshot) {
         final html = snapshot.data;
         final labels = context.t.orkest.officeWorld;
+        if (snapshot.hasError) {
+          return Center(child: Text(context.t.core.appErrorView.renderFailed));
+        }
         if (html == null) return const SizedBox.expand();
         return Stack(
           fit: StackFit.expand,

@@ -513,12 +513,12 @@ class RemoteHostConnector {
           }.onError<Object>((e, _) {
             throw RemoteHostException(
               RemoteHostErrorKind.serverInstallFailed,
-              'o host anunciou um servidor que não responde mais (rendezvous obsoleto): \$e',
+              'o host anunciou um servidor que não responde mais (rendezvous obsoleto): $e',
             );
           });
       final connection = await RemoteConnection.connectOn(
         duplex,
-        clientName: 'orkest-ipad',
+        clientName: 'orkest-mobile',
         token: remote.token,
       );
       _connection = connection;

@@ -4,8 +4,26 @@ import * as art from '../../third_party/office_engine/client/src/art/index.ts';
 import { DEFAULT_WORLD_OPTIONS } from '../../third_party/office_engine/client/src/world/api.ts';
 import { Sim } from '../../third_party/office_engine/client/src/world/sim/sim.ts';
 import { OrkestSim, repairCharacterVisibility } from './sim.ts';
+import { coreAreaName } from '../../third_party/office_engine/client/src/world/render/overlay.ts';
+import { setLocale } from '../../third_party/office_engine/shared/i18n.ts';
 
 const now = 1_800_000_000_000;
+
+test('core room labels follow Flutter locale changes without rebuilding the world', () => {
+  try {
+    setLocale('en');
+    assert.deepEqual(['core:recepcao', 'core:banheiros', 'core:copa', 'core:lounge'].map(coreAreaName),
+      ['Reception', 'Restrooms', 'Kitchen', 'Lounge']);
+    setLocale('pt-BR');
+    assert.deepEqual(['core:recepcao', 'core:banheiros', 'core:copa', 'core:lounge'].map(coreAreaName),
+      ['Recepção', 'Banheiros', 'Copa', 'Lounge']);
+    setLocale('es');
+    assert.equal(coreAreaName('core:recepcao'), 'Recepción');
+    assert.equal(coreAreaName('project'), undefined);
+  } finally {
+    setLocale('pt-BR');
+  }
+});
 function snapshot(status = 'working') {
   return {
     serverTime: now,
@@ -54,6 +72,24 @@ test('two terminal sessions survive rapid status changes and get separate desks'
   }
   assert.equal(chars[0].mode, 'wait');
   assert.equal(chars[1].mode, 'work');
+});
+
+test('local and remote projects keep their sessions in separate rooms and update agent state', () => {
+  const input = snapshot();
+  input.rooms.push({ id: 'remote', name: 'Remote host', seed: 2, slot: 1,
+    path: '/srv/remote', createdAt: now });
+  input.agents[1].roomId = 'remote';
+  const sim = new OrkestSim(art, () => DEFAULT_WORLD_OPTIONS, null);
+  sim.applySnapshot(input, now);
+  assert.deepEqual([...sim.rooms.values()].map(room => room.info.name), ['Project', 'Remote host']);
+  assert.equal(sim.chars.get('orchestrator')!.roomId, 'project');
+  assert.equal(sim.chars.get('developer')!.roomId, 'remote');
+  input.agents[1].status = 'waiting';
+  input.agents[1].activity = { ...input.agents[1].activity,
+    id: 'developer-waiting', kind: 'ask', at: now + 1 };
+  sim.applySnapshot(input, now + 1);
+  assert.equal(sim.chars.get('developer')!.info.status, 'waiting');
+  assert.equal(sim.chars.get('orchestrator')!.mode, 'work');
 });
 
 test('recovers orphaned visibility while preserving the character position', () => {

@@ -17656,11 +17656,15 @@
   var OVERVIEW_PER_ROOM = 1;
   var OVERVIEW_TOTAL = 4;
   var CORE_NAMES = {
-    "core:recepcao": tr("Recep\xE7\xE3o"),
-    "core:banheiros": tr("Banheiros"),
-    "core:copa": tr("Copa"),
-    "core:lounge": tr("Lounge")
+    "core:recepcao": "Recep\xE7\xE3o",
+    "core:banheiros": "Banheiros",
+    "core:copa": "Copa",
+    "core:lounge": "Lounge"
   };
+  function coreAreaName(id) {
+    const source = CORE_NAMES[id];
+    return source == null ? void 0 : tr(source);
+  }
   var SAY_MAX_W = 170;
   var SAY_H = 17;
   var SHELL_BUBBLE_ICON = "\u23F3";
@@ -17954,8 +17958,9 @@
         if (room) {
           if (!room.present || room.ghost || anim && anim.walls < 0.6) continue;
           this.drawRoomPill(room.info.name, cx, cy, colW - 8, room.accounts, this.countIn(room.id), room.theme.accent, room.lightOn);
-        } else if (CORE_NAMES[vis.id]) {
-          this.drawCorePill(CORE_NAMES[vis.id], cx, cy, colW - 8);
+        } else {
+          const coreName = coreAreaName(vis.id);
+          if (coreName) this.drawCorePill(coreName, cx, cy, colW - 8);
         }
       }
     }

@@ -85,7 +85,7 @@ class PaneView extends StatelessWidget {
   final VoidCallback onCreateTab;
   final ValueChanged<SplitDir> onSplit;
 
-  /// Preenche a pane vazia (placeholder → terminal), por id da aba vazia.
+  /// Abre um terminal na pane vazia por ação explícita do usuário.
   final ValueChanged<String> onFillEmpty;
 
   @override
@@ -456,57 +456,61 @@ class _TabStripState extends State<_TabStrip> {
                           child: Row(
                             children: [
                               for (var i = 0; i < pane.tabs.length; i++)
-                                _TabDropSlot(
-                                  index: i,
-                                  onInsert: (data, index) =>
-                                      widget.vm.moveTabToIndex(
-                                        data.paneId,
-                                        data.tabId,
+                                if (widget.vm.session(pane.tabs[i])
+                                    is! EmptyTab)
+                                  _TabDropSlot(
+                                    index: i,
+                                    onInsert: (data, index) =>
+                                        widget.vm.moveTabToIndex(
+                                          data.paneId,
+                                          data.tabId,
+                                          pane.id,
+                                          index,
+                                        ),
+                                    child: _Tab(
+                                      item: widget.vm.session(pane.tabs[i]),
+                                      paneId: pane.id,
+                                      visible: widget.visible,
+                                      active: pane.tabs[i] == pane.active,
+                                      focused: widget.focused,
+                                      onSelect: () => widget.vm.selectTab(
                                         pane.id,
-                                        index,
+                                        pane.tabs[i],
                                       ),
-                                  child: _Tab(
-                                    item: widget.vm.session(pane.tabs[i]),
-                                    paneId: pane.id,
-                                    visible: widget.visible,
-                                    active: pane.tabs[i] == pane.active,
-                                    focused: widget.focused,
-                                    onSelect: () => widget.vm.selectTab(
-                                      pane.id,
-                                      pane.tabs[i],
+                                      onClose: () => widget.vm.closeTab(
+                                        pane.id,
+                                        pane.tabs[i],
+                                      ),
+                                      // Null na única aba: ali "fechar as outras"
+                                      // não faria nada e "fechar todas" seria o
+                                      // próprio "fechar", com um diálogo a mais.
+                                      onCloseOthers: pane.tabs.length > 1
+                                          ? () => _closeTabs([
+                                              for (final t in pane.tabs)
+                                                if (t != pane.tabs[i]) t,
+                                            ])
+                                          : null,
+                                      onCloseAll: pane.tabs.length > 1
+                                          ? () => _closeTabs(pane.tabs.toList())
+                                          : null,
+                                      // Só se existir aba à direita desta.
+                                      onCloseToTheRight:
+                                          i < pane.tabs.length - 1
+                                          ? () => _closeTabs(
+                                              pane.tabs.sublist(i + 1),
+                                            )
+                                          : null,
+                                      onRestart: () =>
+                                          widget.vm.restartTerminal(
+                                            pane.id,
+                                            pane.tabs[i],
+                                          ),
+                                      onSetLabel: (label) => widget.vm
+                                          .setPaneLabel(pane.tabs[i], label),
+                                      onResetLabel: () => widget.vm
+                                          .resetPaneLabel(pane.tabs[i]),
                                     ),
-                                    onClose: () => widget.vm.closeTab(
-                                      pane.id,
-                                      pane.tabs[i],
-                                    ),
-                                    // Null na única aba: ali "fechar as outras"
-                                    // não faria nada e "fechar todas" seria o
-                                    // próprio "fechar", com um diálogo a mais.
-                                    onCloseOthers: pane.tabs.length > 1
-                                        ? () => _closeTabs([
-                                            for (final t in pane.tabs)
-                                              if (t != pane.tabs[i]) t,
-                                          ])
-                                        : null,
-                                    onCloseAll: pane.tabs.length > 1
-                                        ? () => _closeTabs(pane.tabs.toList())
-                                        : null,
-                                    // Só se existir aba à direita desta.
-                                    onCloseToTheRight: i < pane.tabs.length - 1
-                                        ? () => _closeTabs(
-                                            pane.tabs.sublist(i + 1),
-                                          )
-                                        : null,
-                                    onRestart: () => widget.vm.restartTerminal(
-                                      pane.id,
-                                      pane.tabs[i],
-                                    ),
-                                    onSetLabel: (label) => widget.vm
-                                        .setPaneLabel(pane.tabs[i], label),
-                                    onResetLabel: () =>
-                                        widget.vm.resetPaneLabel(pane.tabs[i]),
                                   ),
-                                ),
                             ],
                           ),
                         ),
@@ -1504,7 +1508,7 @@ class _PaneBody extends StatefulWidget {
   /// é o único gatilho de foco quando não há transição de [focused].
   final int focusGen;
 
-  /// `(terminal)` — qual tipo criar ao preencher a pane vazia.
+  /// Abre o terminal ao clicar na ação da pane vazia.
   final VoidCallback onFillEmpty;
 
   @override
@@ -1513,10 +1517,6 @@ class _PaneBody extends StatefulWidget {
 
 class _PaneBodyState extends State<_PaneBody> {
   final FocusNode _terminalFocus = FocusNode();
-
-  /// Id da aba vazia já convertida em terminal — evita reentrar no
-  /// `onFillEmpty` a cada build.
-  String? _autoTerminalFor;
 
   /// Tabs que usam um `TerminalPane` e portanto querem foco de teclado quando
   /// ativas. Inclui a aba de logs de task ([TaskOutputSession]) — mesmo sendo
@@ -1927,16 +1927,25 @@ class _PaneBodyState extends State<_PaneBody> {
       );
     }
 
-    // Aba vazia ([EmptyTab]): vira **terminal direto**. O placeholder existe
-    // só pelo frame entre criar a pane e o shell subir. Guard por id (não
-    // reentra no build; cobre uma nova aba vazia criada depois na mesma pane).
-    if (_autoTerminalFor != item.id) {
-      _autoTerminalFor = item.id;
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted) widget.onFillEmpty();
-      });
-    }
-    return ColoredBox(color: context.colors.panel);
+    // O placeholder mantém a pane válida sem iniciar outro shell depois que
+    // o usuário fecha a última aba. O terminal só nasce por ação explícita.
+    return Center(
+      child: HoverTap(
+        borderRadius: BorderRadius.circular(7),
+        onTap: widget.onFillEmpty,
+        child: Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              const Icon(Icons.terminal_outlined, size: 18),
+              const SizedBox(width: 8),
+              Text(context.t.orkest.paneView.openTerminal),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

@@ -122,11 +122,12 @@ pub fn open(args: &[String]) -> ! {
 
 // ---- new-tab ----------------------------------------------------------------
 
-const NEW_TAB_HELP: &str = "orkest new-tab [--cwd <dir>] [--title <name>] [--split h|v] [--parent-tab <id> | --independent]
+const NEW_TAB_HELP: &str = "orkest new-tab [--cwd <dir>] [--title <name>] [--split h|v] [--tab-id <source-id>] [--parent-tab <id> | --independent]
   --cwd    working directory (default: current directory)
   --title  stable tab label (read-tab/send can target it)
   --split  h|right = side by side, v|down = stacked; omit = new tab
            in the same pane
+  --tab-id  source tab whose workspace owns the new tab (default: current tab)
   --parent-tab  explicit Office orchestrator (default: the calling agent tab)
   --independent create an independent Office agent instead of a delegated one
   Prints the new tab id (e.g. t12).";
@@ -230,7 +231,8 @@ const CLOSE_TAB_HELP: &str = "orkest close-tab [<label|tab-id>] [--json]
   CURRENT tab — which ends the shell you are typing in.
   A target may be a stable tab label or a tab-id (see `orkest list-tabs`).
   Same behaviour as the tab's \"x\" in the UI: closing the last tab of a split
-  removes the split; closing the last tab of a workspace leaves an empty tab.
+  removes the split; closing the last tab of a workspace leaves it open with
+  no running terminal.
   Prints the id of the closed tab.";
 
 pub fn close_tab(args: &[String]) -> ! {
