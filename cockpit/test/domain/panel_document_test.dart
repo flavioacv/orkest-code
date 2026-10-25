@@ -1,4 +1,4 @@
-import 'package:cockpit/app/cockpit/domain/entities/panel_document.dart';
+import 'package:orkest_code/app/orkest/domain/entities/panel_document.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

@@ -1,7 +1,7 @@
-import 'package:cockpit/app/core/data/diagnostics/diagnostics_log.dart';
-import 'package:cockpit/app/core/data/diagnostics/issue_report.dart';
-import 'package:cockpit/app/core/ui/themes/themes.dart';
-import 'package:cockpit/i18n/strings.g.dart';
+import 'package:orkest_code/app/core/data/diagnostics/diagnostics_log.dart';
+import 'package:orkest_code/app/core/data/diagnostics/issue_report.dart';
+import 'package:orkest_code/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/i18n/strings.g.dart';
 import 'package:flutter/services.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -23,7 +23,7 @@ Future<void> showErrorReportDialog(
   if (!context.mounted) return;
 
   final report = IssueReport(
-    title: '[cockpit] $title',
+    title: '[orkest] $title',
     error: error,
     stack: stack,
     logTail: logTail,

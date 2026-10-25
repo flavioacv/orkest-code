@@ -1,5 +1,5 @@
-import 'package:cockpit/app/cockpit/domain/entities/git_info.dart';
-import 'package:cockpit/app/cockpit/ui/widgets/projects_rail.dart';
+import 'package:orkest_code/app/orkest/domain/entities/git_info.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/projects_rail.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Resolução da branch do "Copiar branch" do kebab do workspace.

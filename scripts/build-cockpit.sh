@@ -7,14 +7,14 @@ set -euo pipefail
 #   scripts/build-cockpit.sh [--install] [--dest <path>]
 #
 # Options:
-#   --install       Installs Cockpit.app to ~/Applications/Cockpit.app (with backup)
-#   --dest <dir>    Custom destination directory for the installed Cockpit.app
+#   --install       Installs Orkest Code.app to ~/Applications/Orkest Code.app (with backup)
+#   --dest <dir>    Custom destination directory for the installed Orkest Code.app
 #   --help, -h      Show this help
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-COCKPIT_DIR="$REPO_ROOT/cockpit"
-CLI_DIR="$COCKPIT_DIR/cli"
+ORKEST_DIR="$REPO_ROOT/cockpit"
+CLI_DIR="$ORKEST_DIR/cli"
 
 DO_INSTALL=false
 DEST_DIR="$HOME/Applications"
@@ -46,18 +46,17 @@ command -v cargo >/dev/null 2>&1 || { echo "Error: 'cargo' not found in PATH" >&
 command -v flutter >/dev/null 2>&1 || { echo "Error: 'flutter' not found in PATH" >&2; exit 1; }
 command -v zig >/dev/null 2>&1 || { echo "Error: 'zig' not found in PATH" >&2; exit 1; }
 
-echo "==> Building Rust CLI (cockpit-cli)..."
+echo "==> Building Rust CLI (orkest-cli)..."
 cargo build --release --manifest-path "$CLI_DIR/Cargo.toml"
 cargo test --manifest-path "$CLI_DIR/Cargo.toml" --quiet
 
-echo "==> Installing CLI to ~/.cockpit/bin..."
-mkdir -p "$HOME/.cockpit/bin"
-cp "$CLI_DIR/target/release/cockpit" "$HOME/.cockpit/bin/cockpit"
-chmod +x "$HOME/.cockpit/bin/cockpit"
-ln -sf cockpit "$HOME/.cockpit/bin/ck"
+echo "==> Installing CLI to ~/.orkest/bin..."
+mkdir -p "$HOME/.orkest/bin"
+cp "$CLI_DIR/target/release/orkest" "$HOME/.orkest/bin/orkest"
+chmod +x "$HOME/.orkest/bin/orkest"
 
 echo "==> Preparing Flutter dependencies..."
-cd "$COCKPIT_DIR"
+cd "$ORKEST_DIR"
 flutter pub get
 
 echo "==> Applying macOS patches (media_kit BSD cut)..."
@@ -69,7 +68,7 @@ fi
 echo "==> Building macOS release application..."
 flutter build macos
 
-BUILT_APP="$COCKPIT_DIR/build/macos/Build/Products/Release/Cockpit.app"
+BUILT_APP="$ORKEST_DIR/build/macos/Build/Products/Release/Orkest Code.app"
 if [ ! -d "$BUILT_APP" ]; then
   echo "Error: Built app not found at $BUILT_APP" >&2
   exit 1
@@ -81,8 +80,8 @@ codesign --verify --deep --strict "$BUILT_APP"
 echo "==> Build successful: $BUILT_APP"
 
 if [ "$DO_INSTALL" = true ]; then
-  TARGET_APP="$DEST_DIR/Cockpit.app"
-  BACKUP_APP="$DEST_DIR/Cockpit.app.bak"
+  TARGET_APP="$DEST_DIR/Orkest Code.app"
+  BACKUP_APP="$DEST_DIR/Orkest Code.app.bak"
   mkdir -p "$DEST_DIR"
   if [ -d "$TARGET_APP" ]; then
     echo "==> Backing up existing app to $BACKUP_APP..."
@@ -90,7 +89,7 @@ if [ "$DO_INSTALL" = true ]; then
     cp -R "$TARGET_APP" "$BACKUP_APP"
   fi
   echo "==> Staging install to $TARGET_APP..."
-  TEMP_APP="$DEST_DIR/Cockpit.app.tmp.$$"
+  TEMP_APP="$DEST_DIR/Orkest Code.app.tmp.$$"
   rm -rf "$TEMP_APP"
   ditto "$BUILT_APP" "$TEMP_APP"
   rm -rf "$TARGET_APP"

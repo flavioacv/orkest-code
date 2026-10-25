@@ -1,5 +1,5 @@
-import 'package:cockpit/app/core/ui/themes/themes.dart';
-import 'package:cockpit/i18n/strings.g.dart';
+import 'package:orkest_code/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/i18n/strings.g.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 /// Widget do dialog contendo as instruções para ativar as notificações no macOS.

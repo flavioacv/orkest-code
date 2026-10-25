@@ -1,0 +1,16 @@
+name: orkest_remote
+description: Proxies remotos dos contratos do Orkest (plano 58) — o cliente fala com o orkest-server pelo protocolo.
+version: 0.1.0
+publish_to: none
+
+environment:
+  sdk: ^3.9.0
+
+dependencies:
+  orkest_core:
+    path: ../orkest_core
+  orkest_protocol:
+    path: ../orkest_protocol
+
+dev_dependencies:
+  test: ^1.25.0

@@ -1,10 +1,10 @@
 import 'dart:io';
-import 'package:cockpit/app/cockpit/data/process/linux_process_tree_provider.dart';
-import 'package:cockpit/app/cockpit/data/process/macos_process_tree_provider.dart';
-import 'package:cockpit/app/cockpit/data/process/windows_process_tree_provider.dart';
-import 'package:cockpit/app/cockpit/data/process/windows_native_process_snapshot.dart';
-import 'package:cockpit/app/cockpit/data/process/wsl_process_tree_provider.dart';
-import 'package:cockpit/app/cockpit/domain/entities/process_snapshot.dart';
+import 'package:orkest_code/app/orkest/data/process/linux_process_tree_provider.dart';
+import 'package:orkest_code/app/orkest/data/process/macos_process_tree_provider.dart';
+import 'package:orkest_code/app/orkest/data/process/windows_process_tree_provider.dart';
+import 'package:orkest_code/app/orkest/data/process/windows_native_process_snapshot.dart';
+import 'package:orkest_code/app/orkest/data/process/wsl_process_tree_provider.dart';
+import 'package:orkest_code/app/orkest/domain/entities/process_snapshot.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

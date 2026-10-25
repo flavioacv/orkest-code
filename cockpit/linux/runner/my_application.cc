@@ -9,7 +9,7 @@
 
 #include "desktop_multi_window/desktop_multi_window_plugin.h"
 
-// Canal "cockpit/document_window" das JANELAS DE DOCUMENTO
+// Canal "orkest/document_window" das JANELAS DE DOCUMENTO
 // (desktop_multi_window): a janela nasce sem título; o Dart manda `present`
 // com título e tamanho e aplicamos na GtkWindow de cima da view. Espelha
 // DocumentWindows.swift no macOS.
@@ -57,12 +57,12 @@ static void document_window_created_cb(FlPluginRegistry* registry) {
   fl_register_plugins(registry);
   g_autoptr(FlPluginRegistrar) registrar =
       fl_plugin_registry_get_registrar_for_plugin(registry,
-                                                  "CockpitDocumentWindow");
+                                                  "OrkestDocumentWindow");
   FlView* view = fl_plugin_registrar_get_view(registrar);
   if (view == nullptr) return;
   g_autoptr(FlStandardMethodCodec) codec = fl_standard_method_codec_new();
   FlMethodChannel* channel = fl_method_channel_new(
-      fl_plugin_registrar_get_messenger(registrar), "cockpit/document_window",
+      fl_plugin_registrar_get_messenger(registrar), "orkest/document_window",
       FL_METHOD_CODEC(codec));
   fl_method_channel_set_method_call_handler(channel, document_window_method_cb,
                                             g_object_ref(view), g_object_unref);
@@ -106,17 +106,17 @@ static void my_application_activate(GApplication* application) {
   if (use_header_bar) {
     GtkHeaderBar* header_bar = GTK_HEADER_BAR(gtk_header_bar_new());
     gtk_widget_show(GTK_WIDGET(header_bar));
-    gtk_header_bar_set_title(header_bar, "Cockpit");
+    gtk_header_bar_set_title(header_bar, "Orkest Code");
     gtk_header_bar_set_show_close_button(header_bar, TRUE);
     gtk_window_set_titlebar(window, GTK_WIDGET(header_bar));
   } else {
-    gtk_window_set_title(window, "Cockpit");
+    gtk_window_set_title(window, "Orkest Code");
   }
 
   gtk_window_set_default_size(window, 1280, 720);
 
   // Ícone da janela/taskbar: usa o ícone do tema cujo nome é o APPLICATION_ID
-  // (instalado em share/icons/hicolor/.../work.jacobmoura.cockpit.png).
+  // (instalado em share/icons/hicolor/.../com.flavioacv.orkestcode.png).
   gtk_window_set_default_icon_name(APPLICATION_ID);
 
   g_autoptr(FlDartProject) project = fl_dart_project_new();

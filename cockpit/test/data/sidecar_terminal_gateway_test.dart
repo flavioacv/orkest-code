@@ -4,9 +4,9 @@ library;
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:cockpit/app/cockpit/data/terminal/sidecar/sidecar_terminal_connector.dart';
-import 'package:cockpit/app/cockpit/data/terminal/sidecar/sidecar_terminal_gateway_factory.dart';
-import 'package:cockpit/app/core/domain/entities/terminal_profile.dart';
+import 'package:orkest_code/app/orkest/data/terminal/sidecar/sidecar_terminal_connector.dart';
+import 'package:orkest_code/app/orkest/data/terminal/sidecar/sidecar_terminal_gateway_factory.dart';
+import 'package:orkest_code/app/core/domain/entities/terminal_profile.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Integração da Wave 1 (plano 58): o gateway do app servido pelo sidecar
@@ -18,17 +18,17 @@ void main() {
   // O caminho antigo fica como fallback pra bundle gerado por versão anterior.
   final binary =
       [
-        File('build/server-bundle/bin/cockpit-server'),
-        File('build/wave0/cockpit-server'),
+        File('build/server-bundle/bin/orkest-server'),
+        File('build/wave0/orkest-server'),
       ].firstWhere(
         (f) => f.existsSync(),
-        orElse: () => File('build/wave0/cockpit-server'),
+        orElse: () => File('build/wave0/orkest-server'),
       );
 
   test('terminal via sidecar: eco, ack e kill', () async {
     if (!binary.existsSync()) {
       markTestSkipped(
-        'binário do cockpit-server ausente; rode tool/build-sidecar.sh',
+        'binário do orkest-server ausente; rode tool/build-sidecar.sh',
       );
       return;
     }
@@ -78,7 +78,7 @@ void main() {
   test('dois terminais abertos ao mesmo tempo não compartilham PTY', () async {
     if (!binary.existsSync()) {
       markTestSkipped(
-        'binário do cockpit-server ausente; rode tool/build-sidecar.sh',
+        'binário do orkest-server ausente; rode tool/build-sidecar.sh',
       );
       return;
     }

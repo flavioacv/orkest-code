@@ -1,10 +1,10 @@
 import 'dart:ui';
 import 'package:flutter/painting.dart';
 
-import 'package:cockpit/app/core/terminal/xterm/src/ui/builtin_glyphs.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/ui/palette_builder.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/ui/paragraph_cache.dart';
-import 'package:cockpit/app/core/terminal/xterm/xterm.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/ui/builtin_glyphs.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/ui/palette_builder.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/ui/paragraph_cache.dart';
+import 'package:orkest_code/app/core/terminal/xterm/xterm.dart';
 
 /// Encapsulates the logic for painting various terminal elements.
 class TerminalPainter {

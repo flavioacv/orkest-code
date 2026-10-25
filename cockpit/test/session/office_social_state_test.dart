@@ -1,4 +1,4 @@
-import 'package:cockpit/app/cockpit/ui/session/office_social_state.dart';
+import 'package:orkest_code/app/orkest/ui/session/office_social_state.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

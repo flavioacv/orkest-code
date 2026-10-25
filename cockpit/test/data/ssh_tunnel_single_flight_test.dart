@@ -1,4 +1,4 @@
-import 'package:cockpit_core/cockpit_core.dart';
+import 'package:orkest_core/orkest_core.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _NoHostKeys implements SshHostKeyStore {

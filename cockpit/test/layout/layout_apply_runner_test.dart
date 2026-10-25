@@ -1,10 +1,10 @@
-import 'package:cockpit/app/cockpit/domain/entities/layout_spec.dart';
-import 'package:cockpit/app/cockpit/domain/services/layout_apply_runner.dart';
-import 'package:cockpit/app/core/domain/result.dart';
+import 'package:orkest_code/app/orkest/domain/entities/layout_spec.dart';
+import 'package:orkest_code/app/orkest/domain/services/layout_apply_runner.dart';
+import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Workspace de mentira: só o que o runner toca (fechar tudo / criar panes).
-/// O `CockpitViewModel` real tem 31 deps — o contrato de ordem (validar →
+/// O `OrkestViewModel` real tem 31 deps — o contrato de ordem (validar →
 /// fechar → aplicar) é o que se testa aqui, com os mesmos callbacks que o VM
 /// injeta no [LayoutApplyRunner.run].
 class _Workspace {

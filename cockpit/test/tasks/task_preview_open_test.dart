@@ -1,4 +1,4 @@
-import 'package:cockpit/app/cockpit/domain/entities/task_definition.dart';
+import 'package:orkest_code/app/orkest/domain/entities/task_definition.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 TaskDefinition def({

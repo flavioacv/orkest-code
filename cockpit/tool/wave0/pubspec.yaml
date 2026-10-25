@@ -7,11 +7,11 @@ environment:
   sdk: ^3.9.0
 
 dependencies:
-  cockpit_core:
-    path: ../../packages/cockpit_core
-  cockpit_engine:
-    path: ../../packages/cockpit_engine
-  cockpit_protocol:
-    path: ../../packages/cockpit_protocol
-  cockpit_remote:
-    path: ../../packages/cockpit_remote
+  orkest_core:
+    path: ../../packages/orkest_core
+  orkest_engine:
+    path: ../../packages/orkest_engine
+  orkest_protocol:
+    path: ../../packages/orkest_protocol
+  orkest_remote:
+    path: ../../packages/orkest_remote

@@ -1,16 +1,16 @@
 //! Helpers compartilhados: ambiente, caminhos e formatação de coluna.
 //!
-//! Porte fiel dos helpers do `tool/cockpit_cli.dart` — o formato de saída é
+//! Porte fiel dos helpers do `tool/orkest_cli.dart` — o formato de saída é
 //! consumido por humano E por agente, então largura de coluna e espaçamento
 //! importam.
 
 use std::path::Path;
 
-/// Id da própria tab: `COCKPIT_TAB_ID` (novo) com fallback pro legado
-/// `COCKPIT_PANE_ID`. O app injeta os dois; o fallback cobre binário novo com
+/// Id da própria tab: `ORKEST_TAB_ID` (novo) com fallback pro legado
+/// `ORKEST_PANE_ID`. O app injeta os dois; o fallback cobre binário novo com
 /// app antigo (só PANE_ID) e vice-versa.
 pub fn self_tab_id() -> Option<String> {
-    env_non_empty("COCKPIT_TAB_ID").or_else(|| env_non_empty("COCKPIT_PANE_ID"))
+    env_non_empty("ORKEST_TAB_ID").or_else(|| env_non_empty("ORKEST_PANE_ID"))
 }
 
 /// Variável de ambiente, tratando vazio como ausente.

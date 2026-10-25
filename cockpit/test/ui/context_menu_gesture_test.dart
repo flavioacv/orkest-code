@@ -1,5 +1,5 @@
-import 'package:cockpit/app/core/ui/widgets/context_menu_gesture.dart';
-import 'package:cockpit/app/core/utils/platform_kind.dart';
+import 'package:orkest_code/app/core/ui/widgets/context_menu_gesture.dart';
+import 'package:orkest_code/app/core/utils/platform_kind.dart';
 import 'package:flutter/gestures.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';

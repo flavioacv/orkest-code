@@ -1,11 +1,11 @@
-import 'package:cockpit/app/core/data/diagnostics/issue_report.dart';
+import 'package:orkest_code/app/core/data/diagnostics/issue_report.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
   group('IssueReport', () {
     test('markdown inclui versão, erro e stack', () {
       final report = IssueReport(
-        title: '[cockpit] boom',
+        title: '[orkest] boom',
         error: StateError('deu ruim'),
         stack: StackTrace.fromString('#0 foo\n#1 bar'),
         appVersion: '1.14.12+41',

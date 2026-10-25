@@ -2,13 +2,13 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:cockpit/app/cockpit/domain/entities/project.dart';
-import 'package:cockpit/app/cockpit/ui/session/terminal_session.dart';
-import 'package:cockpit/app/cockpit/ui/session/office_social_state.dart';
-import 'package:cockpit/app/cockpit/ui/widgets/office_agent_profile_dialog.dart';
-import 'package:cockpit/app/core/ui/themes/app_theme.dart';
-import 'package:cockpit/app/core/domain/entities/harness.dart';
-import 'package:cockpit/i18n/strings.g.dart';
+import 'package:orkest_code/app/orkest/domain/entities/project.dart';
+import 'package:orkest_code/app/orkest/ui/session/terminal_session.dart';
+import 'package:orkest_code/app/orkest/ui/session/office_social_state.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/office_agent_profile_dialog.dart';
+import 'package:orkest_code/app/core/ui/themes/app_theme.dart';
+import 'package:orkest_code/app/core/domain/entities/harness.dart';
+import 'package:orkest_code/i18n/strings.g.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as shad;
@@ -51,7 +51,7 @@ void main() {
       tester.view.devicePixelRatio = 1;
       addTearDown(tester.view.reset);
       final session = _Session();
-      final before = File('assets/branding/cockpit_logo.png').readAsBytesSync();
+      final before = File('assets/branding/orkest_logo.png').readAsBytesSync();
       final png = 'data:image/png;base64,${base64Encode(before)}';
       final after = Uint8List.fromList(before);
       final drafts = <Map<String, String>>[];
@@ -101,18 +101,18 @@ void main() {
       await tester.tap(find.text('Open profile'));
       await tester.pumpAndSettle();
       expect(
-        find.textContaining(t.cockpit.officeWorld.gameCoins(count: 125)),
+        find.textContaining(t.orkest.officeWorld.gameCoins(count: 125)),
         findsOneWidget,
       );
       expect(
-        find.text(t.cockpit.officeWorld.delegatedBy(name: 'Orchestrator')),
+        find.text(t.orkest.officeWorld.delegatedBy(name: 'Orchestrator')),
         findsOneWidget,
       );
       social = OfficeAgentSocial.fromJson({'coins': 150, 'earned': 50});
       await tester.pump(const Duration(seconds: 1));
       await tester.pump();
       expect(
-        find.textContaining(t.cockpit.officeWorld.gameCoins(count: 150)),
+        find.textContaining(t.orkest.officeWorld.gameCoins(count: 150)),
         findsOneWidget,
       );
       expect(
@@ -120,7 +120,7 @@ void main() {
             .bytes,
         same(before),
       );
-      await tester.tap(find.text(t.cockpit.officeWorld.editAppearance));
+      await tester.tap(find.text(t.orkest.officeWorld.editAppearance));
       await tester.pumpAndSettle();
       await tester.tap(find.text(t.common.save));
       await tester.pumpAndSettle();
@@ -130,7 +130,7 @@ void main() {
             .bytes,
         same(after),
       );
-      await tester.tap(find.text(t.cockpit.officeWorld.editAppearance));
+      await tester.tap(find.text(t.orkest.officeWorld.editAppearance));
       await tester.pumpAndSettle();
       expect(drafts.last, {'top': '#ff0000'});
       await tester.pumpWidget(const SizedBox.shrink());

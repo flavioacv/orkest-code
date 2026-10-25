@@ -1,6 +1,6 @@
 import 'package:flutter/widgets.dart';
-import 'package:cockpit/app/core/terminal/xterm/core.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/ui/infinite_scroll_view.dart';
+import 'package:orkest_code/app/core/terminal/xterm/core.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/ui/infinite_scroll_view.dart';
 
 /// Handles scrolling gestures in the alternate screen buffer. In alternate
 /// screen buffer, the terminal don't have a scrollback buffer, instead, the

@@ -1,14 +1,21 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:cockpit/app/cockpit/data/http/http_request_runner_impl.dart';
-import 'package:cockpit/app/cockpit/domain/entities/http_document.dart';
-import 'package:cockpit/app/cockpit/domain/entities/http_response_result.dart';
-import 'package:cockpit/app/cockpit/domain/exceptions/http_request_error.dart';
-import 'package:cockpit/app/core/domain/result.dart';
+import 'package:orkest_code/app/orkest/data/http/http_request_runner_impl.dart';
+import 'package:orkest_code/app/orkest/domain/entities/http_document.dart';
+import 'package:orkest_code/app/orkest/domain/entities/http_response_result.dart';
+import 'package:orkest_code/app/orkest/domain/exceptions/http_request_error.dart';
+import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
+  // These integration-style tests talk only to their own loopback server.
+  // The global widget binding otherwise replaces HttpClient with HTTP 400.
+  setUpAll(() {
+    final previous = HttpOverrides.current;
+    HttpOverrides.global = null;
+    addTearDown(() => HttpOverrides.global = previous);
+  });
   late HttpServer server;
   late String base;
   final runner = HttpRequestRunnerImpl();

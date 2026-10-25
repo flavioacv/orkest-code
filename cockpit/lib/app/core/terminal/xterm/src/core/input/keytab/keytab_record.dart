@@ -1,5 +1,5 @@
-import 'package:cockpit/app/core/terminal/xterm/src/core/input/keys.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/core/input/keytab/keytab_escape.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/core/input/keys.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/core/input/keytab/keytab_escape.dart';
 
 enum KeytabActionType { input, shortcut }
 

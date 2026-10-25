@@ -1,6 +1,7 @@
 import 'dart:math' as math;
 
-import 'package:cockpit/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/app/core/ui/widgets/orkest_brand_logo.dart';
 import 'package:flutter/widgets.dart';
 
 class LoadingScreen extends StatefulWidget {
@@ -57,7 +58,6 @@ class _LoadingScreenState extends State<LoadingScreen>
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final typo = context.typo;
 
     return ColoredBox(
       color: colors.bg,
@@ -83,8 +83,8 @@ class _LoadingScreenState extends State<LoadingScreen>
                     alignment: Alignment.center,
                     children: [
                       Container(
-                        width: 128,
-                        height: 128,
+                        width: 320,
+                        height: 160,
                         decoration: BoxDecoration(
                           shape: BoxShape.circle,
                           gradient: RadialGradient(
@@ -101,18 +101,8 @@ class _LoadingScreenState extends State<LoadingScreen>
                     ],
                   );
                 },
-                child: ClipRRect(
-                  borderRadius: BorderRadius.circular(14),
-                  child: Image.asset(
-                    'assets/branding/cockpit_logo.png',
-                    width: 64,
-                    height: 64,
-                    filterQuality: FilterQuality.medium,
-                  ),
-                ),
+                child: const OrkestBrandLogo(width: 280),
               ),
-              const SizedBox(height: 22),
-              Text('Cockpit', style: typo.display.copyWith(color: colors.text)),
               const SizedBox(height: 20),
               AnimatedBuilder(
                 animation: _spinController,

@@ -1,5 +1,5 @@
-import 'package:cockpit/app/cockpit/domain/entities/file_view.dart';
-import 'package:cockpit/app/cockpit/ui/session/file_viewer_session.dart';
+import 'package:orkest_code/app/orkest/domain/entities/file_view.dart';
+import 'package:orkest_code/app/orkest/ui/session/file_viewer_session.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

@@ -41,31 +41,31 @@ packages:
       url: "https://pub.dev"
     source: hosted
     version: "0.1.4"
-  cockpit_core:
+  orkest_core:
     dependency: "direct main"
     description:
-      path: "../../packages/cockpit_core"
+      path: "../../packages/orkest_core"
       relative: true
     source: path
     version: "0.1.0"
-  cockpit_engine:
+  orkest_engine:
     dependency: "direct main"
     description:
-      path: "../../packages/cockpit_engine"
+      path: "../../packages/orkest_engine"
       relative: true
     source: path
     version: "0.1.0"
-  cockpit_protocol:
+  orkest_protocol:
     dependency: "direct main"
     description:
-      path: "../../packages/cockpit_protocol"
+      path: "../../packages/orkest_protocol"
       relative: true
     source: path
     version: "0.1.0"
-  cockpit_remote:
+  orkest_remote:
     dependency: "direct main"
     description:
-      path: "../../packages/cockpit_remote"
+      path: "../../packages/orkest_remote"
       relative: true
     source: path
     version: "0.1.0"

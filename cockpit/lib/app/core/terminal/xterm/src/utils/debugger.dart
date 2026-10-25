@@ -1,7 +1,7 @@
-import 'package:cockpit/app/core/terminal/xterm/src/core/escape/handler.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/core/escape/parser.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/core/mouse/mode.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/base/observable.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/core/escape/handler.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/core/escape/parser.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/core/mouse/mode.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/base/observable.dart';
 
 class TerminalCommand {
   TerminalCommand(

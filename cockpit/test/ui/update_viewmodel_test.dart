@@ -1,15 +1,15 @@
 import 'dart:async';
 
-import 'package:cockpit/app/cockpit/domain/contracts/dismissed_update_store.dart';
-import 'package:cockpit/app/cockpit/domain/contracts/self_updater.dart';
-import 'package:cockpit/app/cockpit/domain/contracts/update_checker.dart';
-import 'package:cockpit/app/cockpit/domain/contracts/url_opener.dart';
-import 'package:cockpit/app/cockpit/domain/entities/update_info.dart';
-import 'package:cockpit/app/cockpit/domain/value_objects/update_target.dart';
-import 'package:cockpit/app/core/domain/contracts/settings_store.dart';
-import 'package:cockpit/app/core/domain/entities/app_settings.dart';
-import 'package:cockpit/app/core/ui/settings_controller.dart';
-import 'package:cockpit/app/cockpit/ui/viewmodels/update_viewmodel.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/dismissed_update_store.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/self_updater.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/update_checker.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/url_opener.dart';
+import 'package:orkest_code/app/orkest/domain/entities/update_info.dart';
+import 'package:orkest_code/app/orkest/domain/value_objects/update_target.dart';
+import 'package:orkest_code/app/core/domain/contracts/settings_store.dart';
+import 'package:orkest_code/app/core/domain/entities/app_settings.dart';
+import 'package:orkest_code/app/core/ui/settings_controller.dart';
+import 'package:orkest_code/app/orkest/ui/viewmodels/update_viewmodel.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _FakeSettingsStore implements SettingsStore {

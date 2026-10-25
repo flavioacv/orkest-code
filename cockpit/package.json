@@ -1,0 +1,10 @@
+{
+  "name": "orkest-office-tools",
+  "private": true,
+  "version": "0.1.0",
+  "scripts": {
+    "office:build": "node tool/office_world/build.mjs",
+    "office:test": "esbuild tool/office_world/sim.test.ts --bundle --platform=node --format=cjs --outfile=build/office/sim.test.cjs && node --test build/office/sim.test.cjs"
+  },
+  "devDependencies": { "esbuild": "0.28.2" }
+}

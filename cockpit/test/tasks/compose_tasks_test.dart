@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:cockpit/app/cockpit/data/tasks/compose_tasks.dart';
-import 'package:cockpit/app/cockpit/domain/entities/task_definition.dart';
-import 'package:cockpit/app/core/data/jsonc.dart';
+import 'package:orkest_code/app/orkest/data/tasks/compose_tasks.dart';
+import 'package:orkest_code/app/orkest/domain/entities/task_definition.dart';
+import 'package:orkest_code/app/core/data/jsonc.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

@@ -1,5 +1,5 @@
-import 'package:cockpit/app/cockpit/data/db/nosql_command_runner.dart';
-import 'package:cockpit/app/cockpit/domain/entities/db_connection.dart';
+import 'package:orkest_code/app/orkest/data/db/nosql_command_runner.dart';
+import 'package:orkest_code/app/orkest/domain/entities/db_connection.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// O runner Mongo conecta pela **URI**, não por campos soltos — só assim

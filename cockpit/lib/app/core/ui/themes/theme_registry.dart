@@ -1,41 +1,41 @@
-import 'package:cockpit/app/core/terminal/xterm/xterm.dart';
-import 'package:cockpit/app/core/ui/themes/app_colors.dart';
-import 'package:cockpit/app/core/ui/themes/syntax_colors.dart';
-import 'package:cockpit/app/core/ui/themes/terminal_theme.dart';
-import 'package:cockpit/app/core/ui/themes/theme_codec.dart';
-import 'package:cockpit/app/core/ui/themes/theme_spec.dart';
+import 'package:orkest_code/app/core/terminal/xterm/xterm.dart';
+import 'package:orkest_code/app/core/ui/themes/app_colors.dart';
+import 'package:orkest_code/app/core/ui/themes/syntax_colors.dart';
+import 'package:orkest_code/app/core/ui/themes/terminal_theme.dart';
+import 'package:orkest_code/app/core/ui/themes/theme_codec.dart';
+import 'package:orkest_code/app/core/ui/themes/theme_spec.dart';
 import 'package:flutter/widgets.dart';
 
 /// Id do tema que sempre existe. Persistir um id (e não um enum) é o que abre
 /// espaço para temas custom sem migração a cada tema novo.
-const String kDefaultThemeId = 'cockpit';
+const String kDefaultThemeId = 'orkest';
 
-/// O tema oficial do Cockpit, e a raiz de todos os outros built-in.
+/// O tema oficial do Orkest, e a raiz de todos os outros built-in.
 ///
 /// Também é a **base implícita** de qualquer tema importado sem `extends`: é o
 /// que garante que um arquivo com três tokens ainda gere um app inteiro
 /// pintado.
 ///
 /// O realce de código é o GitHub (não o One): é a paleta que casa com as
-/// superfícies neutras da UI do Cockpit, e a que a maioria já reconhece de
+/// superfícies neutras da UI do Orkest, e a que a maioria já reconhece de
 /// olhar código no navegador.
-final CockpitThemeSpec cockpitDefaultTheme = CockpitThemeSpec(
+final OrkestThemeSpec orkestDefaultTheme = OrkestThemeSpec(
   id: kDefaultThemeId,
-  name: 'Cockpit',
+  name: 'Orkest',
   author: 'Remote Pi',
   dark: _variant(
     ui: AppColors.dark,
     syntax: SyntaxColors.githubDark,
-    terminal: cockpitTerminalThemeDark,
+    terminal: orkestTerminalThemeDark,
   ),
   light: _variant(
     ui: AppColors.light,
     syntax: SyntaxColors.githubLight,
-    terminal: cockpitTerminalThemeLight,
+    terminal: orkestTerminalThemeLight,
   ),
 );
 
-/// **Cockpit 2** — a hierarquia de superfícies invertida.
+/// **Orkest 2** — a hierarquia de superfícies invertida.
 ///
 /// No tema oficial o *chrome* (rail de projetos, árvore de arquivos, painéis de
 /// tasks/busca, tab strip) é a camada mais profunda, e o corpo da aba fica uma
@@ -54,9 +54,9 @@ final CockpitThemeSpec cockpitDefaultTheme = CockpitThemeSpec(
 ///
 /// Mesmo realce de código do oficial (GitHub): a mudança aqui é de superfície,
 /// não de sintaxe.
-final CockpitThemeSpec cockpit2Theme = CockpitThemeSpec(
-  id: 'cockpit.2',
-  name: 'Cockpit 2',
+final OrkestThemeSpec orkest2Theme = OrkestThemeSpec(
+  id: 'orkest.2',
+  name: 'Orkest 2',
   author: 'Remote Pi',
   dark: _variant(
     // O conteúdo afunda, mas **não** até o quase-preto: o corpo da aba é onde o
@@ -77,7 +77,7 @@ final CockpitThemeSpec cockpit2Theme = CockpitThemeSpec(
       text4: const Color(0xFF5A5A62),
     ),
     syntax: SyntaxColors.githubDark,
-    terminal: cockpitTerminalThemeDark,
+    terminal: orkestTerminalThemeDark,
   ),
   light: _variant(
     // Mesma inversão no claro: o oficial põe o chrome no cinza e o conteúdo no
@@ -93,7 +93,7 @@ final CockpitThemeSpec cockpit2Theme = CockpitThemeSpec(
     // liberdade real — e ele afunda **pouco**: o corpo da aba é onde moram o
     // código e o terminal, e um cinza fechado ali pesa o dia inteiro. Em
     // `#F0F0F5` a inversão vale 1,09, a mesma separação painel/conteúdo do
-    // Cockpit 1 — tão legível quanto o arranjo clássico, só invertida.
+    // Orkest 1 — tão legível quanto o arranjo clássico, só invertida.
     ui: AppColors.light.copyWith(
       bg: const Color(0xFFFAFAFC), // chrome — quase branco, mas não o teto
       panel: const Color(0xFFF0F0F5), // corpo da aba afunda (de leve)
@@ -109,7 +109,7 @@ final CockpitThemeSpec cockpit2Theme = CockpitThemeSpec(
       text4: const Color(0xFFA2A2AC),
     ),
     syntax: SyntaxColors.githubLight,
-    terminal: cockpitTerminalThemeLight,
+    terminal: orkestTerminalThemeLight,
   ),
 );
 
@@ -152,7 +152,7 @@ ThemeVariant _variant({
 /// superfície, uma borda que suma leva junto a leitura de onde termina um
 /// painel e começa o outro. Por isso as bordas aqui são **mais fortes** que as
 /// de qualquer outro tema (1,59 de razão contra o preto, ante ~1,1 do
-/// Cockpit).
+/// Orkest).
 ///
 /// O que **não** colapsa: `panel2` (composer, cards) e `panel3` (hover)
 /// continuam separados. Eles não têm borda para se apoiar — um card invisível
@@ -162,7 +162,7 @@ ThemeVariant _variant({
 /// um accent colorido seria a única cor da tela e roubaria a ideia. As cores
 /// de **estado** (erro, aviso, git) ficam: elas carregam informação, e um tema
 /// monocromático que esconde um erro cobra caro pela estética.
-final CockpitThemeSpec panteraTheme = CockpitThemeSpec(
+final OrkestThemeSpec panteraTheme = OrkestThemeSpec(
   id: 'pantera',
   name: 'Pantera',
   author: 'Remote Pi',
@@ -183,7 +183,7 @@ final CockpitThemeSpec panteraTheme = CockpitThemeSpec(
       accentSoft: const Color(0x33FFFFFF),
     ),
     syntax: SyntaxColors.githubDark,
-    terminal: cockpitTerminalThemeDark,
+    terminal: orkestTerminalThemeDark,
     terminalOverrides: {'cursor': '#FFFFFF', 'selection': '#FFFFFF33'},
   ),
   light: _variant(
@@ -203,15 +203,15 @@ final CockpitThemeSpec panteraTheme = CockpitThemeSpec(
       accentSoft: const Color(0x14000000),
     ),
     syntax: SyntaxColors.githubLight,
-    terminal: cockpitTerminalThemeLight,
+    terminal: orkestTerminalThemeLight,
     terminalOverrides: {'cursor': '#000000', 'selection': '#00000014'},
   ),
 );
 
 /// **Flexoki** — esquema de tinta de [Steph Ango](https://stephango.com/flexoki).
 ///
-/// Não é um Cockpit tingido: a paleta inteira (UI, syntax e ANSI) vem do
-/// Flexoki. O arranjo é o clássico do Cockpit 1 — chrome mais fundo, conteúdo
+/// Não é um Orkest tingido: a paleta inteira (UI, syntax e ANSI) vem do
+/// Flexoki. O arranjo é o clássico do Orkest 1 — chrome mais fundo, conteúdo
 /// um degrau acima — porque as bases oficiais (`black`/`base-950` no escuro,
 /// `base-50`/`paper` no claro) já nascem nessa ordem.
 ///
@@ -223,7 +223,7 @@ final CockpitThemeSpec panteraTheme = CockpitThemeSpec(
 ///
 /// Syntax e terminal usam as séries oficiais (400 no escuro, 600 no claro). O
 /// fundo do código/terminal continua sendo `ui.panel`, como em todo built-in.
-final CockpitThemeSpec flexokiTheme = CockpitThemeSpec(
+final OrkestThemeSpec flexokiTheme = OrkestThemeSpec(
   id: 'flexoki',
   name: 'Flexoki',
   author: 'Steph Ango',
@@ -238,7 +238,7 @@ final CockpitThemeSpec flexokiTheme = CockpitThemeSpec(
       text: const Color(0xFFCECDC3), // base-200
       text2: const Color(0xFF878580), // base-500
       // base-700 (#575653) e base-600 (#6F6E69) caem abaixo de 3:1 sobre o
-      // elevado — sobe para base-500, o mesmo piso que o Cockpit 2 precisou.
+      // elevado — sobe para base-500, o mesmo piso que o Orkest 2 precisou.
       text3: const Color(0xFF878580),
       text4: const Color(0xFF575653), // base-700
       accent: const Color(0xFF3AA99F), // cyan-400
@@ -256,7 +256,7 @@ final CockpitThemeSpec flexokiTheme = CockpitThemeSpec(
       gitConflict: const Color(0xFFDA702C), // orange-400
     ),
     syntax: SyntaxColors.flexokiDark,
-    terminal: cockpitTerminalThemeDark,
+    terminal: orkestTerminalThemeDark,
     terminalOverrides: {
       'cursor': '#3AA99F',
       'selection': '#3AA99F33',
@@ -310,7 +310,7 @@ final CockpitThemeSpec flexokiTheme = CockpitThemeSpec(
       gitConflict: const Color(0xFFBC5215), // orange-600
     ),
     syntax: SyntaxColors.flexokiLight,
-    terminal: cockpitTerminalThemeLight,
+    terminal: orkestTerminalThemeLight,
     terminalOverrides: {
       // No claro a série 400 some sobre o papel (yellow-400 a 2,3:1) — a 600
       // é a que o próprio Flexoki pede para temas claros.
@@ -348,9 +348,9 @@ final CockpitThemeSpec flexokiTheme = CockpitThemeSpec(
 ///
 /// Um tema de cor não é um conjunto novo de superfícies: é o mesmo arranjo com
 /// outro tom. Derivar (em vez de escrever 25 hexes à mão) garante que Violet
-/// herde de graça toda a calibragem do Cockpit correspondente — a inversão do
-/// Cockpit 2, os degraus de elevação, o contraste dos textos fracos —, e que um
-/// ajuste no Cockpit se propague em vez de criar divergência silenciosa.
+/// herde de graça toda a calibragem do Orkest correspondente — a inversão do
+/// Orkest 2, os degraus de elevação, o contraste dos textos fracos —, e que um
+/// ajuste no Orkest se propague em vez de criar divergência silenciosa.
 ///
 /// A conversão é em HSL: troca matiz e saturação, **mantém a luminosidade**.
 /// Por isso a ordem das superfícies (o que é mais fundo, o que é mais alto)
@@ -413,7 +413,7 @@ AppColors _tinted(
 /// Uma família de tom: o matiz e como a marca se comporta em cada brilho.
 ///
 /// Existe para que um tema de cor novo seja uma declaração, não uma cópia de 25
-/// hexes. O arranjo de superfícies vem sempre de um Cockpit; isto aqui é só a
+/// hexes. O arranjo de superfícies vem sempre de um Orkest; isto aqui é só a
 /// camada de tom por cima.
 @immutable
 class _Hue {
@@ -486,11 +486,11 @@ const _Hue _violet = _Hue(
 /// Midnight — azul-marinho profundo. O tom é mais forte que o do Violet de
 /// propósito: aqui a cor **é** o tema, não um tempero sobre o cinza.
 ///
-/// A marca é o **próprio azul do Cockpit**, e não um azul mais claro puxado
+/// A marca é o **próprio azul do Orkest**, e não um azul mais claro puxado
 /// para destacar do fundo. Um azul mais claro destacaria mais (5,3:1 contra
 /// 3,9:1), mas cruzaria o ponto em que o texto legível sobre ele passa a ser
 /// escuro — e botão azul com texto escuro lê como defeito, não como tema. Com
-/// o azul da marca o botão do Midnight fica idêntico ao do Cockpit (branco a
+/// o azul da marca o botão do Midnight fica idêntico ao do Orkest (branco a
 /// 4,5:1) e ainda se separa do marinho com folga sobre o mínimo de 3:1 que
 /// vale para elemento não-textual.
 const _Hue _midnight = _Hue(
@@ -503,10 +503,10 @@ const _Hue _midnight = _Hue(
   lightAccentText: Color(0xFF1A4CAC),
 );
 
-/// Constrói um tema a partir de um Cockpit, herdando dele o arranjo de
+/// Constrói um tema a partir de um Orkest, herdando dele o arranjo de
 /// superfícies e trocando só o tom.
 /// [darkFrom]/[lightFrom] são independentes de propósito: um arranjo que
-/// funciona no escuro pode não funcionar no claro. A inversão do Cockpit 2 é
+/// funciona no escuro pode não funcionar no claro. A inversão do Orkest 2 é
 /// justamente esse caso — ver [midnightTheme].
 /// [lightContent] é o campo claro (código, terminal, corpo da aba) **já
 /// tingido** — ver o parâmetro `panel` de [_tinted] para o porquê de não ser
@@ -518,14 +518,14 @@ const _Hue _midnight = _Hue(
 /// `null` = o campo da base. Branco puro é o que os temas de cor tinham, e é o
 /// que destoava: painéis com tom e conteúdo sem nenhum, como um recorte branco
 /// colado por cima do tema.
-CockpitThemeSpec _tintedThemeOf(
+OrkestThemeSpec _tintedThemeOf(
   _Hue tone, {
   required String id,
   required String name,
   required ThemeVariant darkFrom,
   required ThemeVariant lightFrom,
   Color? lightContent,
-}) => CockpitThemeSpec(
+}) => OrkestThemeSpec(
   id: id,
   name: name,
   author: 'Remote Pi',
@@ -596,69 +596,69 @@ ThemeVariant _tintedVariant(
   );
 }
 
-/// **Violet 1** — o arranjo do Cockpit oficial em roxo.
-final CockpitThemeSpec violet1Theme = _tintedThemeOf(
+/// **Violet 1** — o arranjo do Orkest oficial em roxo.
+final OrkestThemeSpec violet1Theme = _tintedThemeOf(
   _violet,
   id: 'violet',
   name: 'Violet 1',
-  darkFrom: cockpitDefaultTheme.dark!,
-  lightFrom: cockpitDefaultTheme.light!,
+  darkFrom: orkestDefaultTheme.dark!,
+  lightFrom: orkestDefaultTheme.light!,
   lightContent: const Color(0xFFFCFAFF),
 );
 
-/// **Violet 2** — o arranjo invertido do Cockpit 2 em roxo: chrome acima,
+/// **Violet 2** — o arranjo invertido do Orkest 2 em roxo: chrome acima,
 /// corpo da aba afundado.
-final CockpitThemeSpec violet2Theme = _tintedThemeOf(
+final OrkestThemeSpec violet2Theme = _tintedThemeOf(
   _violet,
   id: 'violet.2',
   name: 'Violet 2',
-  darkFrom: cockpit2Theme.dark!,
-  lightFrom: cockpit2Theme.light!,
+  darkFrom: orkest2Theme.dark!,
+  lightFrom: orkest2Theme.light!,
 );
 
-/// Base do **claro** dos temas de cor: o arranjo do Cockpit 1 (chrome fundo,
+/// Base do **claro** dos temas de cor: o arranjo do Orkest 1 (chrome fundo,
 /// conteúdo no topo) com o chrome puxado mais um passo para baixo.
 ///
-/// A inversão do Cockpit 2 não sobrevive ao modo claro. No escuro ela funciona
+/// A inversão do Orkest 2 não sobrevive ao modo claro. No escuro ela funciona
 /// porque sobra range abaixo do chrome para o conteúdo afundar. No claro o
 /// chrome tem de ficar quase branco para o conteúdo caber acima dele — e aí a
 /// tela vira dois cinzas quase iguais, sem hierarquia: os painéis param de
 /// emoldurar coisa nenhuma.
 ///
 /// Então aqui o claro volta ao arranjo clássico, e o chrome desce um degrau
-/// além do Cockpit 1. Isso devolve a separação painel/conteúdo que o modo claro
+/// além do Orkest 1. Isso devolve a separação painel/conteúdo que o modo claro
 /// perde, e dá ao claro a mesma leitura do escuro: painéis como moldura,
 /// conteúdo como campo.
 ///
 /// Todo tema de cor nasce daqui no claro — a lição vale para o matiz que for.
 final ThemeVariant _deepChromeLightBase = ThemeVariant(
   ui: AppColors.light.copyWith(
-    bg: const Color(0xFFE8E8EF), // painéis mais fundos que no Cockpit 1
+    bg: const Color(0xFFE8E8EF), // painéis mais fundos que no Orkest 1
     panel3: const Color(0xFFDDDDE6),
     border: const Color(0xFFD8D8E1),
     border2: const Color(0xFFC3C3CF),
     // Painel mais fundo come contraste do texto fraco — o mesmo efeito que o
-    // Cockpit 2 sofreu no escuro, aqui espelhado. Com os valores do Cockpit 1,
+    // Orkest 2 sofreu no escuro, aqui espelhado. Com os valores do Orkest 1,
     // `text3` caía para 2,8:1 sobre o painel; escurecem para voltar acima de
     // 3:1 sem virar texto primário.
     text3: const Color(0xFF787883),
     text4: const Color(0xFF9C9CA8),
   ),
   syntax: SyntaxColors.githubLight,
-  terminal: cockpitTerminalThemeLight,
+  terminal: orkestTerminalThemeLight,
 );
 
 /// **Midnight** — azul-marinho, com arranjo **diferente por brilho**.
 ///
-/// Escuro: a inversão do Cockpit 2 (conteúdo afundado), que é o que faz o
+/// Escuro: a inversão do Orkest 2 (conteúdo afundado), que é o que faz o
 /// marinho ler como "noite" em vez de "azulzinho no fundo".
-/// Claro: o arranjo clássico do Cockpit 1 com o chrome reforçado — ver
+/// Claro: o arranjo clássico do Orkest 1 com o chrome reforçado — ver
 /// [_deepChromeLightBase] para o porquê.
-final CockpitThemeSpec midnightTheme = _tintedThemeOf(
+final OrkestThemeSpec midnightTheme = _tintedThemeOf(
   _midnight,
   id: 'midnight',
   name: 'Midnight',
-  darkFrom: cockpit2Theme.dark!,
+  darkFrom: orkest2Theme.dark!,
   lightFrom: _deepChromeLightBase,
   lightContent: const Color(0xFFF7FAFF),
 );
@@ -688,10 +688,10 @@ const _Hue _rose = _Hue(
   lightAccent: Color(0xFFBE185D),
   lightAccentText: Color(0xFF9D174D),
   // Sobe o painel claro: ver [_Hue.lightChrome]. Aqui o painel chega à mesma
-  // luminância do Cockpit 1 (0,914) — o rosa fica no tom, não no peso. A
+  // luminância do Orkest 1 (0,914) — o rosa fica no tom, não no peso. A
   // separação painel/conteúdo cai para 1,09, igual à do oficial: é o piso, não
   // um degrau a descer de novo. Abaixo disso o painel encosta no branco do
-  // conteúdo e a moldura some — que é justamente o defeito do Cockpit 2 claro.
+  // conteúdo e a moldura some — que é justamente o defeito do Orkest 2 claro.
   lightChrome: Color(0xFFF4F4F9),
 );
 
@@ -729,30 +729,30 @@ const _Hue _sun = _Hue(
 );
 
 /// **Sun** — dourado, mesmo arranjo por brilho do Midnight e do Rosê.
-final CockpitThemeSpec sunTheme = _tintedThemeOf(
+final OrkestThemeSpec sunTheme = _tintedThemeOf(
   _sun,
   id: 'sun',
   name: 'Sun',
-  darkFrom: cockpit2Theme.dark!,
+  darkFrom: orkest2Theme.dark!,
   lightFrom: _deepChromeLightBase,
   lightContent: const Color(0xFFFFFDF7),
 );
 
 /// **Rosê** — mesmo arranjo por brilho do Midnight (ver [midnightTheme]):
 /// invertido no escuro, clássico com chrome reforçado no claro.
-final CockpitThemeSpec roseTheme = _tintedThemeOf(
+final OrkestThemeSpec roseTheme = _tintedThemeOf(
   _rose,
   id: 'rose',
   name: 'Rosê',
-  darkFrom: cockpit2Theme.dark!,
+  darkFrom: orkest2Theme.dark!,
   lightFrom: _deepChromeLightBase,
   lightContent: const Color(0xFFFFF9FB),
 );
 
 /// Todos os temas que vêm no app, na ordem em que aparecem no seletor.
-final List<CockpitThemeSpec> builtInThemes = [
-  cockpitDefaultTheme,
-  cockpit2Theme,
+final List<OrkestThemeSpec> builtInThemes = [
+  orkestDefaultTheme,
+  orkest2Theme,
   violet1Theme,
   violet2Theme,
   midnightTheme,
@@ -764,7 +764,7 @@ final List<CockpitThemeSpec> builtInThemes = [
 
 /// Resolve um built-in por id (`null` se não existe). É o `resolveBase` usado
 /// pelo `extends` de temas importados.
-CockpitThemeSpec? builtInThemeById(String id) {
+OrkestThemeSpec? builtInThemeById(String id) {
   for (final theme in builtInThemes) {
     if (theme.id == id) return theme;
   }

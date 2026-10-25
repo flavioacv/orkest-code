@@ -1,8 +1,8 @@
 //! Transporte: uma requisição por conexão, uma linha JSON em cada direção.
 //!
 //! Mesmo socket do hook, discriminado por `type` no wire (`"cmd"` aqui,
-//! status no hook). POSIX usa socket Unix (`COCKPIT_STATUS_SOCK`); Windows usa
-//! TCP no loopback (`COCKPIT_STATUS_PORT` + `COCKPIT_STATUS_TOKEN`), porque lá
+//! status no hook). POSIX usa socket Unix (`ORKEST_STATUS_SOCK`); Windows usa
+//! TCP no loopback (`ORKEST_STATUS_PORT` + `ORKEST_STATUS_TOKEN`), porque lá
 //! não há UDS. O token só importa no TCP: o loopback é acessível por qualquer
 //! processo local, enquanto no UDS a permissão do arquivo já protege.
 
@@ -58,19 +58,19 @@ impl Write for Conn {
 }
 
 /// Abre a conexão com o app pelo transporte da plataforma. `Ok(None)` = as envs
-/// não estão setadas (não estamos dentro de um terminal do Cockpit).
+/// não fornecem um endpoint e nenhum endpoint local foi descoberto.
 /// Flavor assado no binário pelo build (ver `build.rs`). `Some("debug")` no
 /// build de desenvolvimento.
-const FLAVOR: Option<&str> = option_env!("COCKPIT_FLAVOR");
+const FLAVOR: Option<&str> = option_env!("ORKEST_FLAVOR");
 
 /// Sockets a tentar, em ordem: o do ambiente (injetado pelo app na PTY da aba)
 /// e, como fallback, os caminhos bem conhecidos.
 ///
-/// O fallback é o que permite usar a CLI **de fora** de um terminal do Cockpit
-/// (ex.: uma ferramenta de ditado chamando `cockpit send --focused`), onde não
+/// O fallback é o que permite usar a CLI **de fora** de um terminal do Orkest
+/// (ex.: uma ferramenta de ditado chamando `orkest send --focused`), onde não
 /// existe env nenhuma herdada.
 ///
-/// Release e debug têm sockets separados de propósito (um Cockpit de dev e um
+/// Release e debug têm sockets separados de propósito (um Orkest de dev e um
 /// instalado rodam lado a lado), então a ordem importa: **o socket do próprio
 /// flavor vem primeiro**. Com os dois apps abertos, a CLI de dev era atendida
 /// pelo app instalado, que pode ser bem mais velho — deu "tab @focused does not
@@ -79,12 +79,12 @@ const FLAVOR: Option<&str> = option_env!("COCKPIT_FLAVOR");
 #[cfg(unix)]
 fn candidate_sockets() -> Vec<String> {
     let mut out = Vec::new();
-    if let Some(path) = env_non_empty("COCKPIT_STATUS_SOCK") {
+    if let Some(path) = env_non_empty("ORKEST_STATUS_SOCK") {
         out.push(path);
     }
     if let Some(home) = crate::util::home_dir() {
-        let release = format!("{home}/.cockpit/status.sock");
-        let debug = format!("{home}/.cockpit/status-debug.sock");
+        let release = format!("{home}/.orkest/status.sock");
+        let debug = format!("{home}/.orkest/status-debug.sock");
         if FLAVOR == Some("debug") {
             out.push(debug);
             out.push(release);
@@ -96,7 +96,7 @@ fn candidate_sockets() -> Vec<String> {
     out
 }
 
-/// Windows: `{port, tok}` que o app grava em `~/.cockpit/status[-debug].json`
+/// Windows: `{port, tok}` que o app grava em `~/.orkest/status[-debug].json`
 /// ao subir — o equivalente do caminho bem conhecido do socket Unix, pra CLI
 /// rodada de FORA de uma aba (sem env herdada). Mesma ordem de flavor do POSIX.
 #[cfg(windows)]
@@ -107,7 +107,7 @@ fn endpoint_from_file() -> Option<(u16, Option<String>)> {
         names.reverse();
     }
     for name in names {
-        let path = format!("{home}\\.cockpit\\{name}");
+        let path = format!("{home}\\.orkest\\{name}");
         let Ok(raw) = std::fs::read_to_string(&path) else {
             continue;
         };
@@ -128,8 +128,8 @@ fn endpoint_from_file() -> Option<(u16, Option<String>)> {
     None
 }
 
-fn connect() -> Result<Option<Conn>, String> {
-    let mut port = env_non_empty("COCKPIT_STATUS_PORT").and_then(|p| p.parse::<u16>().ok());
+fn connect() -> std::io::Result<Option<Conn>> {
+    let mut port = env_non_empty("ORKEST_STATUS_PORT").and_then(|p| p.parse::<u16>().ok());
     if port.is_none() {
         port = endpoint_from_file().map(|(p, _)| p);
     }
@@ -137,17 +137,21 @@ fn connect() -> Result<Option<Conn>, String> {
     #[cfg(unix)]
     {
         let candidates = candidate_sockets();
-        let mut last_err: Option<String> = None;
+        let mut last_err = None;
+        let mut permission_error = None;
         for path in &candidates {
             // Socket órfão (app fechado sem limpar) existe no disco mas recusa
             // conexão — por isso quem decide é o connect, não o exists.
             match std::os::unix::net::UnixStream::connect(path) {
                 Ok(s) => return Ok(Some(Conn::Unix(s))),
-                Err(e) => last_err = Some(e.to_string()),
+                Err(e) if e.kind() == std::io::ErrorKind::PermissionDenied => {
+                    permission_error = Some(e);
+                }
+                Err(e) => last_err = Some(e),
             }
         }
         if port.is_none() {
-            return match last_err {
+            return match permission_error.or(last_err) {
                 Some(e) => Err(e),
                 None => Ok(None),
             };
@@ -156,17 +160,29 @@ fn connect() -> Result<Option<Conn>, String> {
 
     if let Some(port) = port {
         return std::net::TcpStream::connect(("127.0.0.1", port))
-            .map(|s| Some(Conn::Tcp(s)))
-            .map_err(|e| e.to_string());
+            .map(|s| Some(Conn::Tcp(s)));
     }
     Ok(None)
+}
+
+fn connection_error(error: &std::io::Error) -> String {
+    if error.kind() == std::io::ErrorKind::PermissionDenied {
+        format!(
+            "orkest: local socket access blocked by permissions or sandbox: {error}. \
+The app may be running even when ORKEST_* variables are absent. \
+Request approval for this same CLI command outside the execution sandbox; \
+do not disable sandboxing globally."
+        )
+    } else {
+        format!("orkest: could not connect to app: {error}")
+    }
 }
 
 /// `true` quando há algum caminho possível até o app (env de socket, porta, ou
 /// um socket bem conhecido no disco).
 pub fn transport_configured() -> bool {
-    if env_non_empty("COCKPIT_STATUS_SOCK").is_some()
-        || env_non_empty("COCKPIT_STATUS_PORT")
+    if env_non_empty("ORKEST_STATUS_SOCK").is_some()
+        || env_non_empty("ORKEST_STATUS_PORT")
             .and_then(|p| p.parse::<u16>().ok())
             .is_some()
     {
@@ -184,19 +200,19 @@ pub fn transport_configured() -> bool {
 
 /// Envia uma requisição e devolve a resposta decodificada.
 ///
-/// Fora de um terminal do Cockpit, encerra com exit 3 (mesma mensagem da CLI
+/// Fora de um terminal do Orkest, encerra com exit 3 (mesma mensagem da CLI
 /// Dart). Falha de rede também é exit 3; resposta ausente/malformada vira um
 /// `{"ok": false, "error": …}` pro chamador tratar como erro de aplicação.
 pub fn request(mut req: Value, timeout: Duration) -> Value {
     if !transport_configured() {
         die(
-            "cockpit: no Cockpit app to talk to (COCKPIT_STATUS_SOCK is unset and \
-no socket found in ~/.cockpit). Is the app running?",
+            "orkest: no Orkest app to talk to (ORKEST_STATUS_SOCK is unset and \
+no socket found in ~/.orkest). Is the app running?",
             3,
         );
     }
     req["type"] = json!("cmd");
-    if let Ok(tok) = std::env::var("COCKPIT_STATUS_TOKEN") {
+    if let Ok(tok) = std::env::var("ORKEST_STATUS_TOKEN") {
         req["tok"] = json!(tok);
     } else if let Some((_, Some(tok))) = endpoint_from_file() {
         req["tok"] = json!(tok);
@@ -205,10 +221,10 @@ no socket found in ~/.cockpit). Is the app running?",
     let mut conn = match connect() {
         Ok(Some(c)) => c,
         Ok(None) => die(
-            "cockpit: not inside a Cockpit terminal (COCKPIT_STATUS_SOCK is unset)",
+            "orkest: not inside a Orkest terminal (ORKEST_STATUS_SOCK is unset)",
             3,
         ),
-        Err(e) => die(&format!("cockpit: could not connect to app: {e}"), 3),
+        Err(e) => die(&connection_error(&e), 3),
     };
     let _ = conn.set_read_timeout(timeout);
 
@@ -218,7 +234,7 @@ no socket found in ~/.cockpit). Is the app running?",
         .write_all(payload.as_bytes())
         .and_then(|_| conn.flush())
     {
-        die(&format!("cockpit: could not connect to app: {e}"), 3);
+        die(&format!("orkest: could not connect to app: {e}"), 3);
     }
 
     // O servidor responde UMA linha e fecha. Lemos até a primeira quebra (ou
@@ -255,19 +271,21 @@ no socket found in ~/.cockpit). Is the app running?",
 /// encaminham pelo fluxo de status de turno, local ou remoto.
 pub fn notify(mut event: Value) -> Result<(), String> {
     if !transport_configured() {
-        return Err("no Cockpit app to talk to (is the app running?)".to_string());
+        return Err("no Orkest app to talk to (is the app running?)".to_string());
     }
-    if let Ok(tok) = std::env::var("COCKPIT_STATUS_TOKEN") {
+    if let Ok(tok) = std::env::var("ORKEST_STATUS_TOKEN") {
         event["tok"] = json!(tok);
     } else if let Some((_, Some(tok))) = endpoint_from_file() {
         event["tok"] = json!(tok);
     }
-    let mut conn = connect()?.ok_or_else(|| "no Cockpit status socket".to_string())?;
+    let mut conn = connect()
+        .map_err(|error| connection_error(&error))?
+        .ok_or_else(|| "no Orkest status socket".to_string())?;
     let mut payload = event.to_string();
     payload.push('\n');
     conn.write_all(payload.as_bytes())
         .and_then(|_| conn.flush())
-        .map_err(|e| format!("could not send event to Cockpit: {e}"))
+        .map_err(|e| format!("could not send event to Orkest: {e}"))
 }
 
 /// `resp["ok"] == true`. Emite no **stderr** o aviso que a resposta trouxer.
@@ -278,7 +296,7 @@ pub fn notify(mut event: Value) -> Result<(), String> {
 /// mas o resultado tem cara de ser da máquina onde o comando foi digitado.
 pub fn is_ok(resp: &Value) -> bool {
     if let Some(Value::String(w)) = resp.get("warning") {
-        eprintln!("cockpit: {w}");
+        eprintln!("orkest: {w}");
     }
     resp.get("ok") == Some(&Value::Bool(true))
 }
@@ -294,5 +312,26 @@ pub fn error_text(resp: &Value) -> String {
 
 /// Encerra com o erro da resposta (exit 1) — padrão dos comandos "simples".
 pub fn fail_with(resp: &Value) -> ! {
-    die(&format!("cockpit: {}", error_text(resp)), 1)
+    die(&format!("orkest: {}", error_text(resp)), 1)
+}
+
+#[cfg(test)]
+mod tests {
+    use super::connection_error;
+    use std::io::{Error, ErrorKind};
+
+    #[test]
+    fn sandbox_denial_requests_scoped_approval_without_claiming_missing_context() {
+        let text = connection_error(&Error::from(ErrorKind::PermissionDenied));
+        assert!(text.contains("Request approval"));
+        assert!(text.contains("ORKEST_* variables are absent"));
+        assert!(!text.contains("not inside"));
+    }
+
+    #[test]
+    fn connection_refusal_is_not_reported_as_sandbox_denial() {
+        let text = connection_error(&Error::from(ErrorKind::ConnectionRefused));
+        assert!(text.contains("could not connect"));
+        assert!(!text.contains("Request approval"));
+    }
 }

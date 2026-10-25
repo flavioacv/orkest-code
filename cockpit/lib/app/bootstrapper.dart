@@ -2,40 +2,40 @@ import 'dart:async';
 import 'dart:io' show Platform;
 import 'dart:ui' show AppExitResponse;
 
-import 'package:cockpit/app/app_module.dart';
-import 'package:cockpit/app/app_widget.dart';
-import 'package:cockpit/app/cockpit/data/hooks/claude_hook_installer_impl.dart';
-import 'package:cockpit/app/cockpit/data/hooks/codex_hook_installer_impl.dart';
-import 'package:cockpit/app/cockpit/data/terminal/sidecar/sidecar_terminal_connector.dart';
-import 'package:cockpit/app/cockpit/data/tasks/task_process_registry.dart';
-import 'package:cockpit/app/cockpit/domain/contracts/hook_installer.dart';
-import 'package:cockpit/app/cockpit/data/telemetry/app_telemetry_bridge.dart';
-import 'package:cockpit/app/core/data/diagnostics/diagnostics_log.dart';
-import 'package:cockpit/app/core/data/lsp/lsp_process_registry.dart';
-import 'package:cockpit/app/core/data/repositories/json_settings_store.dart';
-import 'package:cockpit/app/core/utils/platform_kind.dart';
-import 'package:cockpit/app/core/data/setup/hive_migration.dart';
-import 'package:cockpit/app/core/data/setup/local_network_permission.dart';
-import 'package:cockpit/app/core/data/setup/json_state_store.dart';
-import 'package:cockpit/app/cockpit/ui/document/open_files_channel.dart';
-import 'package:cockpit/app/core/data/setup/storage_location.dart';
-import 'package:cockpit/app/core/data/theme_store.dart';
-import 'package:cockpit/app/core/domain/entities/app_settings.dart';
-import 'package:cockpit/app/core/domain/services/window_placement.dart';
-import 'package:cockpit/app/core/ui/keep_awake_controller.dart';
-import 'package:cockpit/app/core/ui/automation_controller.dart';
-import 'package:cockpit/app/core/ui/menu/editor_menu_bridge.dart';
-import 'package:cockpit/app/core/ui/menu/workspace_menu_bridge.dart';
-import 'package:cockpit/app/core/ui/settings_controller.dart';
-import 'package:cockpit/app/core/ui/window_activity_controller.dart';
-import 'package:cockpit/i18n/strings.g.dart';
-import 'package:cockpit/app/core/ui/themes/themes.dart';
-import 'package:cockpit/app/core/ui/widgets/bootstrap_error_view.dart';
-import 'package:cockpit/app/core/ui/widgets/devtools_inspector.dart';
-import 'package:cockpit/app/core/ui/widgets/error_report_dialog.dart';
-import 'package:cockpit/app/core/ui/widgets/loading_screen.dart';
-import 'package:cockpit/app/cockpit/ui/widgets/confirm_dialog.dart';
-import 'package:cockpit/app/core/utils/login_shell.dart';
+import 'package:orkest_code/app/app_module.dart';
+import 'package:orkest_code/app/app_widget.dart';
+import 'package:orkest_code/app/orkest/data/hooks/claude_hook_installer_impl.dart';
+import 'package:orkest_code/app/orkest/data/hooks/codex_hook_installer_impl.dart';
+import 'package:orkest_code/app/orkest/data/terminal/sidecar/sidecar_terminal_connector.dart';
+import 'package:orkest_code/app/orkest/data/tasks/task_process_registry.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/hook_installer.dart';
+import 'package:orkest_code/app/orkest/data/telemetry/app_telemetry_bridge.dart';
+import 'package:orkest_code/app/core/data/diagnostics/diagnostics_log.dart';
+import 'package:orkest_code/app/core/data/lsp/lsp_process_registry.dart';
+import 'package:orkest_code/app/core/data/repositories/json_settings_store.dart';
+import 'package:orkest_code/app/core/utils/platform_kind.dart';
+import 'package:orkest_code/app/core/data/setup/hive_migration.dart';
+import 'package:orkest_code/app/core/data/setup/local_network_permission.dart';
+import 'package:orkest_code/app/core/data/setup/json_state_store.dart';
+import 'package:orkest_code/app/orkest/ui/document/open_files_channel.dart';
+import 'package:orkest_code/app/core/data/setup/storage_location.dart';
+import 'package:orkest_code/app/core/data/theme_store.dart';
+import 'package:orkest_code/app/core/domain/entities/app_settings.dart';
+import 'package:orkest_code/app/core/domain/services/window_placement.dart';
+import 'package:orkest_code/app/core/ui/keep_awake_controller.dart';
+import 'package:orkest_code/app/core/ui/automation_controller.dart';
+import 'package:orkest_code/app/core/ui/menu/editor_menu_bridge.dart';
+import 'package:orkest_code/app/core/ui/menu/workspace_menu_bridge.dart';
+import 'package:orkest_code/app/core/ui/settings_controller.dart';
+import 'package:orkest_code/app/core/ui/window_activity_controller.dart';
+import 'package:orkest_code/i18n/strings.g.dart';
+import 'package:orkest_code/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/app/core/ui/widgets/bootstrap_error_view.dart';
+import 'package:orkest_code/app/core/ui/widgets/devtools_inspector.dart';
+import 'package:orkest_code/app/core/ui/widgets/error_report_dialog.dart';
+import 'package:orkest_code/app/core/ui/widgets/loading_screen.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/confirm_dialog.dart';
+import 'package:orkest_code/app/core/utils/login_shell.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:screen_retriever/screen_retriever.dart';
@@ -54,15 +54,15 @@ const _splashFloor = Duration(milliseconds: 400);
 /// sem feedback.
 ///
 /// Mora fora de `core/` de propósito: o bootstrap conhece features
-/// (hooks/registries do cockpit) e o `core/` não pode importar de feature.
-class CockpitBootstrapper extends StatefulWidget {
-  const CockpitBootstrapper({super.key});
+/// (hooks/registries do orkest) e o `core/` não pode importar de feature.
+class OrkestBootstrapper extends StatefulWidget {
+  const OrkestBootstrapper({super.key});
 
   @override
-  State<CockpitBootstrapper> createState() => _CockpitBootstrapperState();
+  State<OrkestBootstrapper> createState() => _OrkestBootstrapperState();
 }
 
-class _CockpitBootstrapperState extends State<CockpitBootstrapper> {
+class _OrkestBootstrapperState extends State<OrkestBootstrapper> {
   bool _initialized = false;
   Object? _error;
   Module? _appModule;
@@ -98,7 +98,7 @@ class _CockpitBootstrapperState extends State<CockpitBootstrapper> {
         } on Object catch (e, stack) {
           DiagnosticsLog.instance.logError('exit-flush', e, stack);
         }
-        // Encerra o sidecar JUNTO com o app. Sem isto, o `cockpit-server`
+        // Encerra o sidecar JUNTO com o app. Sem isto, o `orkest-server`
         // sobrevivia ao fechamento e — como o self-update troca o binário no
         // disco embaixo do processo vivo — o host seguia servindo código
         // antigo indefinidamente. O `--exit-on-parent-close` cobre a morte
@@ -133,10 +133,10 @@ class _CockpitBootstrapperState extends State<CockpitBootstrapper> {
       // instância viva, então o caminho é idempotente.
       //
       // Raiz do estado via StorageLocation: pasta padrão OU a escolhida nas
-      // Configurações (ponteiro fixo em `~/.cockpit/storage_root`).
-      // Subdiretório próprio (`cockpit`/`cockpit-debug`) separa debug de
+      // Configurações (ponteiro fixo em `~/.orkest/storage_root`).
+      // Subdiretório próprio (`orkest`/`orkest-debug`) separa debug de
       // produção. Os stores das features são abertos pelos próprios builders
-      // async (ver buildCockpitModule); aqui só settings + window_state.
+      // async (ver buildOrkestModule); aqui só settings + window_state.
       //
       // Migração one-shot Hive→JSON: dados legados (boxes .hive, inclusive no
       // default antigo do Windows em Documents) são despejados nos JSONs de
@@ -188,13 +188,13 @@ class _CockpitBootstrapperState extends State<CockpitBootstrapper> {
         unawaited(LocalNetworkPermission.prime());
 
         // Mata filhos órfãos desta instância ou de instâncias já encerradas,
-        // preservando LSP/tasks de outros Cockpits ainda vivos.
+        // preservando LSP/tasks de outros Orkests ainda vivos.
         await Future.wait([
           LspProcessRegistry.cleanOrphans(),
           TaskProcessRegistry.cleanOrphans(),
         ]);
 
-        // Hooks do Cockpit nos harnesses suportados (idempotente) pra sessões
+        // Hooks do Orkest nos harnesses suportados (idempotente) pra sessões
         // de agente nas abas reportarem status de turno: Claude Code em
         // ~/.claude/settings.json, Codex CLI em ~/.codex/hooks.json (+ trust no
         // config.toml). Não-fatal e independentes. Desktop-only (mobile não tem
@@ -409,12 +409,12 @@ class _CockpitBootstrapperState extends State<CockpitBootstrapper> {
     final brightness = _brightnessFor(s);
     final tokens = buildTokens(brightness: brightness, settings: s);
     return ShadcnApp(
-      title: 'Cockpit',
+      title: 'Orkest',
       debugShowCheckedModeBanner: false,
       theme: buildTheme(brightness: brightness, settings: s),
       home: home,
       builder: (context, child) {
-        return CockpitTheme(
+        return OrkestTheme(
           colors: tokens.colors,
           typo: tokens.typo,
           syntax: tokens.syntax,
@@ -454,7 +454,7 @@ class _CockpitBootstrapperState extends State<CockpitBootstrapper> {
           ..addChangeNotifier<SettingsController>(() => _settings!)
           ..addChangeNotifier<WindowActivityController>(() => _windowActivity)
           // A mesma instância bootstrap-owned é observada por Settings e Source
-          // Control e injetada nos controllers da feature Cockpit.
+          // Control e injetada nos controllers da feature Orkest.
           ..addChangeNotifier<AutomationController>(
             () => inject<AutomationController>(),
           )
@@ -617,12 +617,12 @@ class WindowStateKeeperState extends State<WindowStateKeeper>
     if (ms >= 250) DiagnosticsLog.instance.log('close', '$tag levou ${ms}ms');
   }
 
-  /// Fechamento da janela: **este** é o encerramento limpo do Cockpit.
+  /// Fechamento da janela: **este** é o encerramento limpo do Orkest.
   ///
   /// Só chega aqui porque o boot liga `setPreventClose(true)`. Sem isso, tanto
   /// o X da barra de título quanto o Quit do menu chamam `windowManager.close()`
   /// e o processo morre sem o Dart saber — e o boot seguinte encontra o
-  /// marcador de sessão viva e acusa crash. Era o motivo de o aviso "o Cockpit
+  /// marcador de sessão viva e acusa crash. Era o motivo de o aviso "o Orkest
   /// fechou inesperadamente" voltar a **cada** inicialização no Windows: o app
   /// nunca conseguia registrar uma saída limpa. No macOS o ⌘Q passa pelo
   /// handshake de saída do engine (`onExitRequested`), que já marcava — por

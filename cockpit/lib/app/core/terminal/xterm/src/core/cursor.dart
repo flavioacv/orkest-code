@@ -1,4 +1,4 @@
-import 'package:cockpit/app/core/terminal/xterm/src/core/cell.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/core/cell.dart';
 
 class CursorStyle {
   int foreground;

@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:cockpit/app/cockpit/data/layout/ckp_layout_loader.dart';
-import 'package:cockpit/app/cockpit/domain/entities/layout_spec.dart';
-import 'package:cockpit/app/core/domain/result.dart';
+import 'package:orkest_code/app/orkest/data/layout/ckp_layout_loader.dart';
+import 'package:orkest_code/app/orkest/domain/entities/layout_spec.dart';
+import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

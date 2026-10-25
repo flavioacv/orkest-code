@@ -1,8 +1,8 @@
 import 'dart:convert';
 
-import 'package:cockpit/app/core/domain/entities/app_settings.dart';
-import 'package:cockpit/app/core/terminal/ghostty_sgr_weight_normalizer.dart';
-import 'package:cockpit/app/core/terminal/xterm/xterm.dart' as xterm;
+import 'package:orkest_code/app/core/domain/entities/app_settings.dart';
+import 'package:orkest_code/app/core/terminal/ghostty_sgr_weight_normalizer.dart';
+import 'package:orkest_code/app/core/terminal/xterm/xterm.dart' as xterm;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/scheduler.dart';
 import 'package:flterm/flterm.dart' as ghost;
@@ -15,7 +15,7 @@ typedef TerminalResizeCallback = void Function(int columns, int rows);
 ///
 /// O modelo concreto continua exposto nos adapters para as views específicas;
 /// sessão, task store e CLI usam apenas esta superfície.
-sealed class CockpitTerminalController {
+sealed class OrkestTerminalController {
   TerminalEngine get engine;
 
   ValueChanged<Uint8List>? onOutput;
@@ -32,13 +32,13 @@ sealed class CockpitTerminalController {
   ///
   /// Serve o botão de copiar da barra de teclas do mobile, que não tem como
   /// alcançar a view. No xterm absorvido a seleção vive no controller da
-  /// **view** (`CockpitTerminal`), fora do alcance da sessão — lá devolve vazio.
+  /// **view** (`OrkestTerminal`), fora do alcance da sessão — lá devolve vazio.
   String selectedText();
 
   void dispose();
 }
 
-final class XtermTerminalController implements CockpitTerminalController {
+final class XtermTerminalController implements OrkestTerminalController {
   XtermTerminalController({xterm.TerminalInputHandler? inputHandler})
     : terminal = xterm.Terminal(maxLines: 10000, inputHandler: inputHandler) {
     terminal.onOutput = (data) => onOutput?.call(utf8.encode(data));
@@ -83,7 +83,7 @@ final class XtermTerminalController implements CockpitTerminalController {
     return [for (var i = start; i < lines.length; i++) lines[i].getText()];
   }
 
-  /// A seleção do xterm pertence ao controller da view (`CockpitTerminal`), que
+  /// A seleção do xterm pertence ao controller da view (`OrkestTerminal`), que
   /// a sessão não enxerga — o motor em si não guarda seleção. Copiar por aqui
   /// só existe no Ghostty (o padrão dos buffers novos, inclusive no mobile).
   @override
@@ -93,7 +93,7 @@ final class XtermTerminalController implements CockpitTerminalController {
   void dispose() {}
 }
 
-final class GhosttyTerminalController implements CockpitTerminalController {
+final class GhosttyTerminalController implements OrkestTerminalController {
   GhosttyTerminalController()
     : controller = ghost.TerminalController(
         config: const ghost.TerminalConfig(
@@ -321,7 +321,7 @@ bool get terminalEngineIsSelectable => true;
 /// Histórico: o mobile chegou a ser travado no xterm por um `EXC_BAD_ACCESS` na
 /// init do Ghostty no iOS. A causa era mismatch de ABI do enum de options entre
 /// `flterm 0.0.4` e `libghostty 0.0.11` (versões descasadas), não um bug de
-/// iOS. Com o pin casado (`cockpit-pin-flterm-ios-recover`: flterm 0.0.5 +
+/// iOS. Com o pin casado (`orkest-pin-flterm-ios-recover`: flterm 0.0.5 +
 /// libghostty 0.0.12 na mesma ref) o Ghostty voltou a rodar no iOS, então o
 /// gate saiu.
 ///
@@ -329,7 +329,7 @@ bool get terminalEngineIsSelectable => true;
 /// touch e removido de novo — o xterm no mobile ficou pior que o Ghostty.
 TerminalEngine resolveTerminalEngine(TerminalEngine engine) => engine;
 
-CockpitTerminalController createTerminalController(
+OrkestTerminalController createTerminalController(
   TerminalEngine engine, {
   xterm.TerminalInputHandler? xtermInputHandler,
 }) => switch (resolveTerminalEngine(engine)) {

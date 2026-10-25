@@ -1,6 +1,6 @@
 # Synthetic terminal profile benchmark
 
-From `cockpit/`, run:
+From `orkest/`, run:
 
 ```powershell
 flutter run --profile -d windows -t benchmark/terminal_profile.dart

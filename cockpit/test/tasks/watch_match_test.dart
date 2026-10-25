@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:cockpit/app/cockpit/data/tasks/pty_task_runner.dart';
-import 'package:cockpit/app/cockpit/domain/contracts/telemetry_ingest.dart';
-import 'package:cockpit/app/cockpit/domain/entities/task_definition.dart';
+import 'package:orkest_code/app/orkest/data/tasks/pty_task_runner.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/telemetry_ingest.dart';
+import 'package:orkest_code/app/orkest/domain/entities/task_definition.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Cobre o casamento de paths do watcher (reload-on-save) via uma task watch

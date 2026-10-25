@@ -1,10 +1,10 @@
-import 'package:cockpit/app/core/domain/entities/app_settings.dart';
-import 'package:cockpit/app/settings/domain/editor_appearance_policy.dart';
+import 'package:orkest_code/app/core/domain/entities/app_settings.dart';
+import 'package:orkest_code/app/settings/domain/editor_appearance_policy.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
-  test('Cockpit engine exposes both code appearance settings', () {
-    const settings = AppSettings(fileEditorEngine: FileEditorEngine.cockpit);
+  test('Orkest engine exposes both code appearance settings', () {
+    const settings = AppSettings(fileEditorEngine: FileEditorEngine.orkest);
     expect(EditorAppearancePolicy.showCodeFont(settings), isTrue);
     expect(EditorAppearancePolicy.showCodeSize(settings), isTrue);
   });

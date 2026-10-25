@@ -5,8 +5,8 @@ use serde_json::json;
 use crate::transport;
 use crate::util::{die, self_tab_id};
 
-const HELP: &str = "cockpit agent <start|stop> <agent-id> [--type <role>] [--outcome success|error|interrupted] [--parent-agent-id <parent-agent>] [--tab-id <parent-tab>]
-  Report a child-agent lifecycle event to the Office in the current Cockpit tab.
+const HELP: &str = "orkest agent <start|stop> <agent-id> [--type <role>] [--outcome success|error|interrupted] [--parent-agent-id <parent-agent>] [--tab-id <parent-tab>]
+  Report a child-agent lifecycle event to the Office in the current Orkest tab.
   IDs must be stable across start/stop. No prompt or transcript is sent.";
 
 /// Reports a provider-neutral start/stop event for a subagent.
@@ -18,7 +18,7 @@ pub fn agent(args: &[String]) -> ! {
     let event = match args[0].as_str() {
         "start" => "SubagentStart",
         "stop" | "finish" => "SubagentStop",
-        other => die(&format!("cockpit agent: unknown action \"{other}\"\n{HELP}"), 2),
+        other => die(&format!("orkest agent: unknown action \"{other}\"\n{HELP}"), 2),
     };
 
     let mut id: Option<String> = None;
@@ -32,7 +32,7 @@ pub fn agent(args: &[String]) -> ! {
         match arg {
             "--id" | "--type" | "--outcome" | "--parent-agent-id" | "--tab-id" => {
                 if i + 1 >= args.len() {
-                    die(&format!("cockpit agent: {arg} requires a value"), 2);
+                    die(&format!("orkest agent: {arg} requires a value"), 2);
                 }
                 i += 1;
                 match arg {
@@ -44,10 +44,10 @@ pub fn agent(args: &[String]) -> ! {
                 }
             }
             _ if arg.starts_with('-') => {
-                die(&format!("cockpit agent: unknown option \"{arg}\""), 2)
+                die(&format!("orkest agent: unknown option \"{arg}\""), 2)
             }
             _ if id.is_none() => id = Some(arg.to_string()),
-            _ => die("cockpit agent: unexpected positional argument", 2),
+            _ => die("orkest agent: unexpected positional argument", 2),
         }
         i += 1;
     }
@@ -56,13 +56,13 @@ pub fn agent(args: &[String]) -> ! {
         Some(value) => safe(value, 120).filter(|value| !value.is_empty()),
         None => None,
     }
-    .unwrap_or_else(|| die("cockpit agent: missing or invalid agent-id", 2));
+    .unwrap_or_else(|| die("orkest agent: missing or invalid agent-id", 2));
     let pane_id = tab_id
         .filter(|value| !value.trim().is_empty())
         .or_else(self_tab_id)
         .unwrap_or_else(|| {
             die(
-                "cockpit agent: no parent tab — run inside a Cockpit terminal or pass --tab-id",
+                "orkest agent: no parent tab — run inside a Orkest terminal or pass --tab-id",
                 2,
             )
         });
@@ -74,10 +74,10 @@ pub fn agent(args: &[String]) -> ! {
         None if event == "SubagentStop" => Some("success"),
         None => None,
         Some(value @ ("success" | "error" | "interrupted")) => Some(value),
-        Some(_) => die("cockpit agent: --outcome must be success, error, or interrupted", 2),
+        Some(_) => die("orkest agent: --outcome must be success, error, or interrupted", 2),
     };
     if outcome.is_some() && event != "SubagentStop" {
-        die("cockpit agent: --outcome is only valid with stop", 2);
+        die("orkest agent: --outcome is only valid with stop", 2);
     }
 
     let mut payload = json!({
@@ -96,7 +96,7 @@ pub fn agent(args: &[String]) -> ! {
         payload["subOutcome"] = json!(outcome);
     }
     if let Err(error) = transport::notify(payload) {
-        die(&format!("cockpit agent: {error}"), 3);
+        die(&format!("orkest agent: {error}"), 3);
     }
     std::process::exit(0)
 }

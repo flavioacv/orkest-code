@@ -1,7 +1,7 @@
 {
   "core": {
     "bootstrapError": {
-      "title": "Falha ao inicializar o Cockpit",
+      "title": "Falha ao inicializar o Orkest Code",
       "retry": "Tentar novamente"
     },
     "macosNotifications": {
@@ -9,7 +9,7 @@
       "intro": "As notificações estão desativadas nas configurações do sistema. Siga os passos abaixo para ativá-las:",
       "step1": "Abra as Configurações do Sistema no seu Mac.",
       "step2": "Acesse a seção Notificações na barra lateral esquerda.",
-      "step3": "Encontre e selecione o aplicativo Cockpit na lista.",
+      "step3": "Encontre e selecione o aplicativo Orkest Code na lista.",
       "step4": "Ative a opção Permitir Notificações.",
       "tip": "Dica: se o aplicativo não aparecer na lista, feche e reabra-o para acionar seu registro no sistema.",
       "gotIt": "Entendi"
@@ -31,7 +31,7 @@
     },
     "crash": {
       "title": "Encerramento inesperado",
-      "bannerTitle": "O Cockpit fechou inesperadamente",
+      "bannerTitle": "O Orkest Code fechou inesperadamente",
       "report": "Reportar",
       "dismiss": "Dispensar",
       "crashMessage": "A sessão anterior (versão ${version}) terminou sem encerrar corretamente. Quer reportar? O log vai junto e você pode revisar tudo antes de enviar.",
@@ -97,7 +97,7 @@
     "search": "Buscar",
     "noResults": "Nenhum resultado"
   },
-  "cockpit": {
+  "orkest": {
     "officeWorld": {
       "reception": "Recepção",
       "cafe": "Copa",
@@ -122,9 +122,9 @@
       "followAgent": "Seguir personagem",
       "stopFollowingAgent": "Parar de seguir",
       "centerAgent": "Centralizar personagem",
-      "sessionDuration": "Sessão atual no Cockpit",
+      "sessionDuration": "Sessão atual no Orkest Code",
       "workingDirectory": "Diretório de trabalho",
-      "statsPending": "O Cockpit ainda não coleta estatísticas de modelo, tokens e ferramentas.",
+      "statsPending": "O Orkest Code ainda não coleta estatísticas de modelo, tokens e ferramentas.",
       "recentActivity": "Atividade recente nesta execução",
       "promptReceived": "Recebeu um pedido",
       "agentThinking": "Pensando",
@@ -212,8 +212,8 @@
       "saveAndClose": "Salvar e fechar"
     },
     "neovim": {
-      "unavailable": "O Neovim não está disponível. Abrindo no Cockpit.",
-      "openFailed": "Não foi possível acessar o Neovim. Abrindo no Cockpit.",
+      "unavailable": "O Neovim não está disponível. Abrindo no Orkest Code.",
+      "openFailed": "Não foi possível acessar o Neovim. Abrindo no Orkest Code.",
       "unsavedTitle": "Buffers não salvos no Neovim",
       "unsavedMessage": "O Neovim tem buffers modificados. Fechar a aba e descartar essas alterações?",
       "closeAnyway": "Fechar mesmo assim"
@@ -283,7 +283,7 @@
       "invalidTasksJson": "tasks.json é inválido. Nenhuma alteração foi gravada.",
       "composeConflicts": "Tasks não Compose com rótulos conflitantes foram mantidas: ${labels}"
     },
-    "cockpitPage": {
+    "orkestPage": {
       "chooseProjectFolderDialogTitle": "Escolha a pasta do projeto",
       "chooseWorkspaceFolderDialogTitle": "Escolha a pasta do workspace",
       "workspaceRenamedTitle": "Workspace renomeado",
@@ -316,7 +316,7 @@
       "lspStopped": "parado"
     },
     "welcomeView": {
-      "title": "Bem-vindo ao Cockpit",
+      "title": "Bem-vindo ao Orkest Code",
       "subtitle": "Abra uma pasta ou conecte a um host remoto para começar.",
       "createWorkspace": "Criar workspace",
       "openLocalFolder": "Abrir pasta local",
@@ -648,8 +648,8 @@
       "browseKeys": "Ver chaves",
       "deleteConnectionTitle": "Excluir conexão",
       "deleteConnectionMessage": "Remover \"${name}\" deste workspace? Qualquer senha salva será descartada. Arquivos .dbq que fazem referência a ela não são afetados.",
-      "footer": ".cockpit/databases.json · ${n} conexões",
-      "footerOne": ".cockpit/databases.json · 1 conexão",
+      "footer": ".orkest/databases.json · ${n} conexões",
+      "footerOne": ".orkest/databases.json · 1 conexão",
       "noConnections": "Nenhuma conexão ainda.",
       "passwordRequired": "Senha não encontrada no host. Abra esta conexão e digite-a de novo — ela fica salva na máquina que executa o banco, não nesta."
     },
@@ -700,18 +700,18 @@
     },
     "sshPrompts": {
       "unknownSshHostTitle": "Host SSH desconhecido",
-      "neverConnected": "O Cockpit nunca se conectou a ${endpoint} antes.",
+      "neverConnected": "O Orkest Code nunca se conectou a ${endpoint} antes.",
       "trustHint": "Confie apenas se esta fingerprint corresponder ao servidor. Você pode verificar no servidor com:",
       "trust": "Confiar",
       "sshKeyPassphraseTitle": "Senha da chave SSH",
       "unlockMessage": "Desbloqueie ${keyPath} para conectar \"${connectionName}\".",
-      "keptInMemoryHint": "Mantida em memória até o Cockpit fechar. Para permitir que agentes usem esta conexão, ative \"Salvar senha da chave\" na conexão.",
+      "keptInMemoryHint": "Mantida em memória até o Orkest Code fechar. Para permitir que agentes usem esta conexão, ative \"Salvar senha da chave\" na conexão.",
       "unlock": "Desbloquear"
     },
     "projectsRail": {
       "workspaces": "Workspaces",
       "keepAwakeOn": "Mantendo este computador acordado para acesso remoto. Clique para deixá-lo dormir de novo.",
-      "keepAwakeOff": "Manter este computador acordado para acesso remoto. Desliga sozinho quando o Cockpit reinicia.",
+      "keepAwakeOff": "Manter este computador acordado para acesso remoto. Desliga sozinho quando o Orkest Code reinicia.",
       "keepAwakeBattery": "Acordado na bateria. Isso consome a bateria.",
       "keepAwakeLid": "Fechar a tampa do notebook continua colocando-o para dormir.",
       "newWorkspace": "Novo workspace",
@@ -765,7 +765,7 @@
     "topbar": {
       "collapseSidebar": "Recolher barra lateral",
       "toggleFiles": "Mostrar/ocultar arquivos",
-      "filesUnavailable": "Arquivos indisponíveis no Cockpit",
+      "filesUnavailable": "Arquivos indisponíveis no Orkest Code",
       "hideKeyboard": "Baixar teclado",
       "showOffice": "Mostrar escritório",
       "showTerminals": "Mostrar terminais"
@@ -793,7 +793,7 @@
     },
     "terminal": {
       "cwdFallbackWarning": "Aviso: a pasta \"${requested}\" não existe. Este terminal abriu em \"${path}\".",
-      "workspaceEnvTracked": "Aviso: o .env.cockpit está rastreado pelo git (veio com o repositório). Injetado: ${keys}"
+      "workspaceEnvTracked": "Aviso: o .env.orkest está rastreado pelo git (veio com o repositório). Injetado: ${keys}"
     },
     "remoteHost": {
       "addHost": "Adicionar host remoto",
@@ -836,9 +836,9 @@
       "identityEmpty": "Nenhuma chave selecionada",
       "identityDialogTitle": "Selecione a chave privada SSH",
       "errIdentity": "Escolha a chave privada para autenticar.",
-      "errHostKeyUnknown": "O Cockpit ainda não confia em ${host}. Conecte de novo e confirme o fingerprint.",
+      "errHostKeyUnknown": "O Orkest Code ainda não confia em ${host}. Conecte de novo e confirme o fingerprint.",
       "errHostKeyChanged": "${host} está apresentando uma chave SSH diferente da guardada. Se você não reinstalou essa máquina, pare e verifique — se reinstalou, remova a entrada antiga do ~/.ssh/known_hosts.",
-      "errHostBundleMissing": "${host} é Windows mas não tem o Cockpit instalado. O servidor remoto é instalado a partir do bundle do Cockpit que já está naquela máquina — instale o Cockpit lá e tente de novo.",
+      "errHostBundleMissing": "${host} é Windows mas não tem o Orkest Code instalado. O servidor remoto é instalado a partir do bundle do Orkest Code que já está naquela máquina — instale o Orkest Code lá e tente de novo.",
       "errHostUnknownOs": "Não foi possível identificar o sistema de ${host}. A conta pode ter shell restrito, ou nenhum shell.",
       "errIdentityPublic": "Só a chave pública está aqui. Isso só funciona se a privada estiver no seu agente SSH; senão, escolha a privada (mesmo nome, sem .pub).",
       "errIdentityNotKey": "Esse arquivo não parece uma chave privada.",
@@ -853,11 +853,11 @@
       "go": "Ir"
     },
     "documentWindow": {
-      "mediaNotSupported": "Áudio e vídeo abrem na janela principal do Cockpit.",
+      "mediaNotSupported": "Áudio e vídeo abrem na janela principal do Orkest Code.",
       "fileNotFound": "Arquivo não encontrado: ${path}"
     },
     "gallery": {
-      "intro": "Documentos especiais do Cockpit para que você tenha o visual do que o agente de IA esteja fazendo.",
+      "intro": "Documentos especiais do Orkest Code para que você tenha o visual do que o agente de IA esteja fazendo.",
       "createErrorTitle": "Não foi possível criar o arquivo",
       "dbQuery": {
         "title": "Consulta de banco",
@@ -877,11 +877,11 @@
       },
       "html": {
         "title": "Visual HTML",
-        "description": "Uma página que o agente escreve e o Cockpit renderiza direto: mapa mental, diagrama, gráfico, o que precisar."
+        "description": "Uma página que o agente escreve e o Orkest Code renderiza direto: mapa mental, diagrama, gráfico, o que precisar."
       },
       "tasks": {
         "title": "Tarefas",
-        "description": "Comandos para rodar pelo painel de Tasks, como dev server, testes e build. Fica em .cockpit/tasks.json."
+        "description": "Comandos para rodar pelo painel de Tasks, como dev server, testes e build. Fica em .orkest/tasks.json."
       },
       "notebook": {
         "title": "Caderno",
@@ -893,7 +893,7 @@
       },
       "panel": {
         "title": "Painel",
-        "description": "Uma página HTML com ponte para o app: os botões rodam comandos da CLI do Cockpit e do shell nesta máquina. Um playground para dashboards rápidos."
+        "description": "Uma página HTML com ponte para o app: os botões rodam comandos da CLI do Orkest Code e do shell nesta máquina. Um playground para dashboards rápidos."
       }
     },
     "notebook": {
@@ -940,7 +940,7 @@
     },
     "layoutPreview": {
       "applyFailedTitle": "Não foi possível aplicar o layout",
-      "applyInCockpit": "Aplicar no Cockpit",
+      "applyInOrkest": "Aplicar no Orkest Code",
       "applyNewWorkspace": "Abrir como novo workspace",
       "applyTo": "Aplicar em ${workspace}",
       "autorunWorktree": "autorun: worktree. Este layout também é aplicado sozinho quando você cria uma worktree do workspace onde ele está.",
@@ -974,7 +974,7 @@
       "tagResolved": "resolvido",
       "tagIgnored": "ignorado",
       "srcTask": "task",
-      "srcWrapper": "cockpit telemetry",
+      "srcWrapper": "orkest telemetry",
       "run": "run ${id}",
       "resolve": "Marcar resolvido",
       "ignore": "Ignorar (some para os agentes também)",
@@ -1018,7 +1018,7 @@
       "byAgent": "pelo agente",
       "caseTabTitle": "${type} · ${file}",
       "srcApp": "App",
-      "chipApp": "Cockpit"
+      "chipApp": "Orkest Code"
     },
     "panelView": {
       "unavailable": "Painéis precisam da web view embutida, que ainda não existe no Linux.",
@@ -1052,18 +1052,18 @@
       "general": {
         "sectionEditor": "Editor",
         "editorEngineTitle": "Motor",
-        "editorEngineCockpit": "Cockpit (padrão)",
+        "editorEngineOrkest": "Orkest Code (padrão)",
         "editorEngineNeovim": "Neovim",
         "neovimChecking": "Procurando o Neovim…",
         "neovimNotFound": "O Neovim não foi encontrado na PATH do seu shell.",
         "neovimRefresh": "Verificar novamente",
-        "showCockpitTitle": "Mostrar terminal do Cockpit",
-        "showCockpitDesc": "Mantém um workspace sem pasta, só de terminal, fixado no topo da barra lateral. Desligar fecha seus terminais.",
+        "showOrkestTitle": "Mostrar terminal do Orkest Code",
+        "showOrkestDesc": "Mantém um workspace sem pasta, só de terminal, fixado no topo da barra lateral. Desligar fecha seus terminais.",
         "launchAtStartupTitle": "Iniciar ao ligar",
-        "launchAtStartupDesc": "Inicia o Cockpit automaticamente quando você faz login no computador.",
+        "launchAtStartupDesc": "Inicia o Orkest Code automaticamente quando você faz login no computador.",
         "sectionUpdates": "Atualizações",
         "checkUpdatesTitle": "Verificar atualizações",
-        "checkUpdatesDesc": "Com que frequência o Cockpit deve procurar novas versões.",
+        "checkUpdatesDesc": "Com que frequência o Orkest Code deve procurar novas versões.",
         "updateFrequency": {
           "daily": "Diariamente",
           "weekly": "Semanalmente",
@@ -1071,7 +1071,7 @@
           "never": "Nunca"
         },
         "developerModeTitle": "Modo desenvolvedor",
-        "developerModeDesc": "Registra os erros e avisos do próprio Cockpit numa base separada da Telemetria (chip “Cockpit”) e liga as métricas de performance. Só serve a quem mantém o app."
+        "developerModeDesc": "Registra os erros e avisos do próprio Orkest Code numa base separada da Telemetria (chip “Orkest Code”) e liga as métricas de performance. Só serve a quem mantém o app."
       },
       "diagnostics": {
         "sectionTitle": "Diagnóstico",
@@ -1089,23 +1089,23 @@
       "storage": {
         "sectionTitle": "Armazenamento",
         "locationTitle": "Local de armazenamento",
-        "locationDesc": "O Cockpit guarda seus projetos, layouts e configurações aqui. Aponte para uma pasta sincronizada para fazer backup.\n${root}",
+        "locationDesc": "O Orkest Code guarda seus projetos, layouts e configurações aqui. Aponte para uma pasta sincronizada para fazer backup.\n${root}",
         "useDefault": "Usar padrão",
         "working": "Trabalhando…",
         "change": "Alterar…",
-        "resetTitle": "Redefinir o Cockpit",
+        "resetTitle": "Redefinir o Orkest Code",
         "resetDesc": "Exclui todos os dados locais — projetos, layouts, configurações e histórico do terminal — e volta ao local padrão.",
         "resetButton": "Redefinir…",
         "resetConfirm": "Redefinir",
-        "resetDialogTitle": "Redefinir o Cockpit?",
-        "resetDialogContent": "Isso exclui permanentemente todos os dados locais do Cockpit — projetos, layouts, configurações e histórico do terminal. Isso não pode ser desfeito. O Cockpit será fechado para você começar do zero.",
+        "resetDialogTitle": "Redefinir o Orkest Code?",
+        "resetDialogContent": "Isso exclui permanentemente todos os dados locais do Orkest Code — projetos, layouts, configurações e histórico do terminal. Isso não pode ser desfeito. O Orkest Code será fechado para você começar do zero.",
         "restartRequiredTitle": "Reinicialização necessária",
-        "restartChangeFolderMessage": "O Cockpit usará esta pasta a partir da próxima abertura:\n${path}",
-        "restartUseDefaultMessage": "O Cockpit usará o local padrão do sistema a partir da próxima abertura. Seus dados na pasta personalizada permanecem intactos.",
-        "restartResetMessage": "Todos os dados do Cockpit foram apagados. Reinicie para começar do zero.",
+        "restartChangeFolderMessage": "O Orkest Code usará esta pasta a partir da próxima abertura:\n${path}",
+        "restartUseDefaultMessage": "O Orkest Code usará o local padrão do sistema a partir da próxima abertura. Seus dados na pasta personalizada permanecem intactos.",
+        "restartResetMessage": "Todos os dados do Orkest Code foram apagados. Reinicie para começar do zero.",
         "later": "Mais tarde",
-        "quitCockpit": "Sair do Cockpit",
-        "chooseFolderDialogTitle": "Escolha uma pasta para os dados do Cockpit"
+        "quitOrkest": "Sair do Orkest Code",
+        "chooseFolderDialogTitle": "Escolha uma pasta para os dados do Orkest Code"
       },
       "terminal": {
         "sectionDefaultTerminal": "Terminal padrão",
@@ -1113,7 +1113,7 @@
         "engineDesc": "Usado por novas abas de terminal e buffers de saída de tasks. Abas abertas mantêm o motor atual.",
         "shellTitle": "Shell",
         "shellDesc": "Qual shell novas abas de terminal abrem. A seta ao lado do + ainda abre qualquer outro, só para aquela aba.",
-        "noWslMessage": "Nenhuma distro WSL encontrada. Instale uma (wsl.exe --install) e reinicie o Cockpit para vê-la listada aqui.",
+        "noWslMessage": "Nenhuma distro WSL encontrada. Instale uma (wsl.exe --install) e reinicie o Orkest Code para vê-la listada aqui.",
         "sectionBehavior": "Comportamento",
         "closeOnExitTitle": "Fechar a aba quando o shell encerrar",
         "closeOnExitDesc": "Quando um shell termina sozinho (exit, Ctrl-D), fecha a aba em vez de deixar um terminal morto."
@@ -1181,7 +1181,7 @@
         "enableTitle": "Ativar notificações",
         "enableDesc": "Avisar quando um agente terminar uma resposta e a janela não estiver em foco.",
         "systemPermissionTitle": "Permissão do sistema",
-        "grantedDesc": "O Cockpit tem permissão para enviar notificações.",
+        "grantedDesc": "O Orkest Code tem permissão para enviar notificações.",
         "notGrantedDesc": "O macOS ainda não concedeu acesso a notificações.",
         "granted": "Concedido",
         "requestPermission": "Solicitar permissão",
@@ -1206,7 +1206,7 @@
         "formatOnSaveTitle": "Formatar ao salvar",
         "formatOnSaveDesc": "Formata o arquivo automaticamente ao salvar (⌘S).",
         "sectionLanguageServers": "SERVIDORES DE LINGUAGEM",
-        "footerNote": "Erros e formatação usam o language server de cada linguagem. O Cockpit não instala servidores — ele usa o que já está na sua máquina. ● responde · ○ não encontrado ou comando inválido (instale o servidor ou ajuste o comando).",
+        "footerNote": "Erros e formatação usam o language server de cada linguagem. O Orkest Code não instala servidores — ele usa o que já está na sua máquina. ● responde · ○ não encontrado ou comando inválido (instale o servidor ou ajuste o comando).",
         "serverCommandLabel": "Comando do language server",
         "formatterCommandLabel": "Comando do formatador (opcional)",
         "formatterHint": "Formatador externo com o placeholder %FILE%. Tem prioridade sobre o formatador do LSP quando definido.",
@@ -1233,7 +1233,7 @@
         "modelAutoRouted": "Este harness escolhe o modelo automaticamente.",
         "modelAccountOnly": "Só aparecem os modelos liberados na sua conta.",
         "generateFromSourceControl": "Gerar pelo Controle de Versão",
-        "generateFromSourceControlDescription": "O Cockpit envia apenas o diff selecionado e os assuntos dos commits recentes. Padrões comuns de credenciais e arquivos sensíveis são redigidos antes de o harness rodar.",
+        "generateFromSourceControlDescription": "O Orkest Code envia apenas o diff selecionado e os assuntos dos commits recentes. Padrões comuns de credenciais e arquivos sensíveis são redigidos antes de o harness rodar.",
         "discoveryFailed": "Não foi possível descobrir os harnesses de automação instalados.",
         "staleModel": "O modelo \"${model}\" não está mais disponível para ${harness}. Usando o padrão da CLI; escolha outro modelo em Configurações se precisar.",
         "recommendedSuffix": "Recomendado"
@@ -1260,7 +1260,7 @@
       "statusOffline": "Offline",
       "statusIdle": "Não conectado",
       "helpTitle": "Como funciona",
-      "helpBody": "O Cockpit conecta na sua máquina por SSH e fala com um servidor pequeno que roda os terminais, arquivos e git lá. O host precisa ter o Cockpit (desktop) ou o cockpit-server instalado e rodando, e a chave pública deste dispositivo adicionada no ~/.ssh/authorized_keys dele."
+      "helpBody": "O Orkest Code conecta na sua máquina por SSH e fala com um servidor pequeno que roda os terminais, arquivos e git lá. O host precisa ter o Orkest Code (desktop) ou o orkest-server instalado e rodando, e a chave pública deste dispositivo adicionada no ~/.ssh/authorized_keys dele."
     }
   },
   "automation": {

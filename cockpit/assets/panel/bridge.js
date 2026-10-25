@@ -1,15 +1,15 @@
 // Ponte dos arquivos `.panel` (plano 67). Injetada pelo app no início do
-// documento; a página só vê `window.cockpit`.
+// documento; a página só vê `window.orkest`.
 //
-//   const r = await cockpit("exec git status --short");
+//   const r = await orkest("exec git status --short");
 //   r.ok, r.code, r.stdout, r.stderr, r.json (stdout parseado quando é JSON)
-//   cockpit.on("theme", vars => ...)   // troca de tema do app
-//   cockpit.theme                       // as CSS variables --ckp-* atuais
-//   cockpit.route / cockpit.on("route") // hash routing (multi-página)
-// Libs embarcadas (sem rede): /__cockpit__/{cockpit.css,petite-vue.js,
+//   orkest.on("theme", vars => ...)   // troca de tema do app
+//   orkest.theme                       // as CSS variables --ckp-* atuais
+//   orkest.route / orkest.on("route") // hash routing (multi-página)
+// Libs embarcadas (sem rede): /__orkest__/{orkest.css,petite-vue.js,
 // chart.js,marked.js,tailwind.js} — servidas dos assets do app.
 (function () {
-  if (window.cockpit) return;
+  if (window.orkest) return;
   var listeners = {};
 
   function ready() {
@@ -23,13 +23,13 @@
     });
   }
 
-  function cockpit(line) {
+  function orkest(line) {
     return ready().then(function () {
-      return window.flutter_inappwebview.callHandler('cockpit', String(line));
+      return window.flutter_inappwebview.callHandler('orkest', String(line));
     });
   }
 
-  cockpit.on = function (event, fn) {
+  orkest.on = function (event, fn) {
     (listeners[event] = listeners[event] || []).push(fn);
     return function () {
       listeners[event] = (listeners[event] || []).filter(function (f) {
@@ -38,10 +38,10 @@
     };
   };
 
-  cockpit.theme = {};
+  orkest.theme = {};
 
 
-  cockpit.__emit = function (event, data) {
+  orkest.__emit = function (event, data) {
     (listeners[event] || []).forEach(function (fn) {
       try {
         fn(data);
@@ -51,19 +51,19 @@
     });
   };
 
-  cockpit.__setTheme = function (vars) {
-    cockpit.theme = vars;
+  orkest.__setTheme = function (vars) {
+    orkest.theme = vars;
     var root = document.documentElement;
     for (var k in vars) root.style.setProperty(k, vars[k]);
-    cockpit.__emit('theme', vars);
+    orkest.__emit('theme', vars);
   };
 
   // Roteamento por hash para painéis com mais de uma "página" num arquivo só.
-  //   cockpit.route.path            // "/" | "/detail/3" (location.hash sem "#")
-  //   cockpit.route.params          // { id: "3" } quando casou com um pattern
-  //   cockpit.route.go("/detail/3") // navega (muda o hash)
-  //   cockpit.route.match("/detail/:id")  // params ou null
-  //   cockpit.on("route", route => ...)   // dispara a cada mudança
+  //   orkest.route.path            // "/" | "/detail/3" (location.hash sem "#")
+  //   orkest.route.params          // { id: "3" } quando casou com um pattern
+  //   orkest.route.go("/detail/3") // navega (muda o hash)
+  //   orkest.route.match("/detail/:id")  // params ou null
+  //   orkest.on("route", route => ...)   // dispara a cada mudança
   var route = {
     path: '/',
     params: {},
@@ -86,11 +86,11 @@
     var h = location.hash.replace(/^#/, '');
     route.path = h.charAt(0) === '/' ? h : '/' + h;
     route.params = {};
-    cockpit.__emit('route', route);
+    orkest.__emit('route', route);
   }
   window.addEventListener('hashchange', readHash);
   readHash();
-  cockpit.route = route;
+  orkest.route = route;
 
-  window.cockpit = cockpit;
+  window.orkest = orkest;
 })();

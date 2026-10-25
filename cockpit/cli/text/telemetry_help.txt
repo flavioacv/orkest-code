@@ -1,38 +1,38 @@
-cockpit telemetry — the workspace's structured error/log store (agent-friendly JSON)
+orkest telemetry — the workspace's structured error/log store (agent-friendly JSON)
 
 Every task the app runs feeds it by default. Anything else you run (a dev
 server in a plain terminal, `flutter test` from an agent's shell) enters it
-when you prefix the command with `cockpit telemetry`. Query it instead of
+when you prefix the command with `orkest telemetry`. Query it instead of
 reading terminal output.
 
 RUN A COMMAND (the wrapper):
-  cockpit telemetry flutter run                    observe this process (PTY when interactive)
-  cockpit telemetry --name api npm run dev         stable name for the run
-  cockpit telemetry -q -- ./script.sh              `--` forces "everything after is the command"
-  Prints, at exit:  telemetry: run r_42 · 3 errors · 12 warnings · cockpit telemetry errors --run r_42
+  orkest telemetry flutter run                    observe this process (PTY when interactive)
+  orkest telemetry --name api npm run dev         stable name for the run
+  orkest telemetry -q -- ./script.sh              `--` forces "everything after is the command"
+  Prints, at exit:  telemetry: run r_42 · 3 errors · 12 warnings · orkest telemetry errors --run r_42
   The child's exit code is returned unchanged.
 
 QUERY:
-  cockpit telemetry errors   [filters]             open cases, grouped by fingerprint (default: --level error)
-  cockpit telemetry logs     [filters]             non-error events (--level debug|info|warn)
-  cockpit telemetry events   [filters]             everything, raw
-  cockpit telemetry runs     [--project P] [--key K] [--live]
-  cockpit telemetry show <id> [--context N]        e_xxxx (case) | ev_xxxx (event) | r_xx (run)
-  cockpit telemetry wait --fingerprint e_xxxx [--absent 30s] [--timeout 60s]
-  cockpit telemetry wait --any-new [--timeout 60s]
-  cockpit telemetry mark start|end <name>
-  cockpit telemetry resolve|ignore|reopen <e_xxxx> [--reason "..."]
-  cockpit telemetry clear --case e_xxxx | --run r_xx | --project P
-  cockpit telemetry probes                         added lines in the working tree that carry "probe"
-  cockpit telemetry perf [--run r_xx] [--metric m] performance metrics of the app run (P50/P95/max)
+  orkest telemetry errors   [filters]             open cases, grouped by fingerprint (default: --level error)
+  orkest telemetry logs     [filters]             non-error events (--level debug|info|warn)
+  orkest telemetry events   [filters]             everything, raw
+  orkest telemetry runs     [--project P] [--key K] [--live]
+  orkest telemetry show <id> [--context N]        e_xxxx (case) | ev_xxxx (event) | r_xx (run)
+  orkest telemetry wait --fingerprint e_xxxx [--absent 30s] [--timeout 60s]
+  orkest telemetry wait --any-new [--timeout 60s]
+  orkest telemetry mark start|end <name>
+  orkest telemetry resolve|ignore|reopen <e_xxxx> [--reason "..."]
+  orkest telemetry clear --case e_xxxx | --run r_xx | --project P
+  orkest telemetry probes                         added lines in the working tree that carry "probe"
+  orkest telemetry perf [--run r_xx] [--metric m] performance metrics of the app run (P50/P95/max)
 
 THE APP ITSELF (--app):
-  cockpit telemetry errors --app                   Cockpit's own errors (framework, async, isolates)
-  cockpit telemetry logs --app --level warn        its warnings (fallbacks the app took silently)
-  cockpit telemetry runs --app                     one run per app boot
+  orkest telemetry errors --app                   Orkest's own errors (framework, async, isolates)
+  orkest telemetry logs --app --level warn        its warnings (fallbacks the app took silently)
+  orkest telemetry runs --app                     one run per app boot
   Add --app to any query verb to read the app's store instead of the
   workspace's. It only fills while Settings → General → Developer mode is on
-  (off by default); metrics are recorded then too (or with COCKPIT_PERF=1).
+  (off by default); metrics are recorded then too (or with ORKEST_PERF=1).
 
 FILTERS (errors/logs/events):
   --project <name>    --task <task-id>   --run <r_xx>   --key <run key>   --tab <tab-id>
@@ -53,4 +53,4 @@ LOOP (how an agent should use it):
 
 FLAGS:
   --tab-id <id>       act as another tab (workspace resolution)
-  --workspace <id>    explicit workspace (see `cockpit list-workspaces`)
+  --workspace <id>    explicit workspace (see `orkest list-workspaces`)

@@ -1,14 +1,14 @@
 import 'dart:async';
-import 'package:cockpit/app/cockpit/domain/entities/git_file_status.dart';
-import 'package:cockpit/app/cockpit/domain/entities/git_info.dart';
-import 'package:cockpit/app/cockpit/domain/entities/project.dart';
-import 'package:cockpit/app/cockpit/domain/entities/remote_host.dart';
-import 'package:cockpit/app/cockpit/domain/entities/remote_workspace_pin.dart';
-import 'package:cockpit/app/cockpit/domain/contracts/remote_hosts_store.dart';
-import 'package:cockpit/app/cockpit/ui/remote/remote_hosts_controller.dart';
-import 'package:cockpit/app/cockpit/ui/viewmodels/remote_workspace_controller.dart';
-import 'package:cockpit_core/cockpit_core.dart' show GitRunResult, GitStatus;
-import 'package:cockpit_remote/cockpit_remote.dart'
+import 'package:orkest_code/app/orkest/domain/entities/git_file_status.dart';
+import 'package:orkest_code/app/orkest/domain/entities/git_info.dart';
+import 'package:orkest_code/app/orkest/domain/entities/project.dart';
+import 'package:orkest_code/app/orkest/domain/entities/remote_host.dart';
+import 'package:orkest_code/app/orkest/domain/entities/remote_workspace_pin.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/remote_hosts_store.dart';
+import 'package:orkest_code/app/orkest/ui/remote/remote_hosts_controller.dart';
+import 'package:orkest_code/app/orkest/ui/viewmodels/remote_workspace_controller.dart';
+import 'package:orkest_core/orkest_core.dart' show GitRunResult, GitStatus;
+import 'package:orkest_remote/orkest_remote.dart'
     show RemoteFileService, RemoteGitService;
 import 'package:flutter_test/flutter_test.dart';
 

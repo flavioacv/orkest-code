@@ -1,6 +1,6 @@
-import 'package:cockpit/app/core/domain/exceptions/automation_error.dart';
-import 'package:cockpit/app/core/ui/automation_error_message.dart';
-import 'package:cockpit/i18n/strings.g.dart';
+import 'package:orkest_code/app/core/domain/exceptions/automation_error.dart';
+import 'package:orkest_code/app/core/ui/automation_error_message.dart';
+import 'package:orkest_code/i18n/strings.g.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_test/flutter_test.dart';
 

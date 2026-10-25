@@ -7,7 +7,7 @@
 # dois compilam. Os testes de wire (tests/wire.rs) sobem um servidor falso e
 # conferem a requisição que chega — é o contrato que o app enxerga.
 
-name: cockpit-cli
+name: orkest-cli
 
 on:
   push:
@@ -72,9 +72,9 @@ jobs:
           rustup target add aarch64-apple-darwin x86_64-apple-darwin
           cargo build --release --target aarch64-apple-darwin
           cargo build --release --target x86_64-apple-darwin
-          lipo -create target/aarch64-apple-darwin/release/cockpit \
-                       target/x86_64-apple-darwin/release/cockpit \
-               -output /tmp/cockpit-universal
-          lipo -archs /tmp/cockpit-universal
-          /tmp/cockpit-universal --version
-          arch -x86_64 /tmp/cockpit-universal --version
+          lipo -create target/aarch64-apple-darwin/release/orkest \
+                       target/x86_64-apple-darwin/release/orkest \
+               -output /tmp/orkest-universal
+          lipo -archs /tmp/orkest-universal
+          /tmp/orkest-universal --version
+          arch -x86_64 /tmp/orkest-universal --version

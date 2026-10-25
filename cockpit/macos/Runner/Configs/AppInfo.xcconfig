@@ -5,12 +5,12 @@
 // 'flutter create' template.
 
 // The application's name. By default this is also the title of the Flutter window.
-PRODUCT_NAME = Cockpit
+PRODUCT_NAME = Orkest Code
 
 // The application's bundle identifier. BUNDLE_ID_SUFFIX é vazio em
 // Release/Profile; o config Debug do Runner define `.debug` — isola Hive
 // (path_provider) e chaves do Keychain do build de produção.
-PRODUCT_BUNDLE_IDENTIFIER = work.jacobmoura.cockpit$(BUNDLE_ID_SUFFIX)
+PRODUCT_BUNDLE_IDENTIFIER = com.flavioacv.orkestcode$(BUNDLE_ID_SUFFIX)
 
 // The copyright displayed in application information
-PRODUCT_COPYRIGHT = Copyright © 2026 Jacob Moura. All rights reserved.
+PRODUCT_COPYRIGHT = Copyright © 2026 Flavio ACV. All rights reserved.

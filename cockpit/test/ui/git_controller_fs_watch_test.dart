@@ -1,10 +1,10 @@
 import 'dart:async';
 import 'dart:io';
 
-import 'package:cockpit/app/cockpit/domain/contracts/git_command_runner.dart';
-import 'package:cockpit/app/cockpit/domain/contracts/git_status_reader.dart';
-import 'package:cockpit/app/cockpit/ui/viewmodels/git_controller.dart';
-import 'package:cockpit/app/core/ui/window_activity_controller.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/git_command_runner.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/git_status_reader.dart';
+import 'package:orkest_code/app/orkest/ui/viewmodels/git_controller.dart';
+import 'package:orkest_code/app/core/ui/window_activity_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 Never _unused() => throw UnimplementedError();

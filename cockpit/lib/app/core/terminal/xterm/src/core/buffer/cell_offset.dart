@@ -1,4 +1,4 @@
-import 'package:cockpit/app/core/terminal/xterm/src/core/buffer/range.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/core/buffer/range.dart';
 
 class CellOffset {
   final int x;

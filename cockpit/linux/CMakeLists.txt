@@ -4,10 +4,10 @@ project(runner LANGUAGES CXX)
 
 # The name of the executable created for the application. Change this to change
 # the on-disk name of your application.
-set(BINARY_NAME "cockpit")
+set(BINARY_NAME "orkest")
 # The unique GTK application identifier for this application. See:
 # https://wiki.gnome.org/HowDoI/ChooseApplicationID
-set(APPLICATION_ID "work.jacobmoura.cockpit")
+set(APPLICATION_ID "com.flavioacv.orkestcode")
 
 # Explicitly opt in to modern CMake behaviors to avoid warnings with recent
 # versions of CMake.
@@ -137,11 +137,11 @@ if(NOT CMAKE_BUILD_TYPE MATCHES "Debug")
     COMPONENT Runtime)
 endif()
 
-# === tool → cockpit-hook + cockpit-cli (helpers Dart AOT) ===
+# === tool → orkest-hook + orkest-cli (helpers Dart AOT) ===
 # Compila o helper de hook (status de turno do claude) e a CLI interna
 # (send/send-key/list-panes/open) e os instala **ao lado do binário** (raiz do
 # bundle, onde o [_bundledHelper] os procura). Em runtime o ClaudeHookInstaller
-# os materializa em ~/.cockpit/bin. Equivale ao build_hook.sh/build_cli.sh do
+# os materializa em ~/.orkest/bin. Equivale ao build_hook.sh/build_cli.sh do
 # macOS e ao bloco correspondente no windows/CMakeLists.txt.
 if(DEFINED ENV{FLUTTER_ROOT})
   set(DART_EXE "$ENV{FLUTTER_ROOT}/bin/dart")
@@ -149,23 +149,23 @@ else()
   set(DART_EXE "dart")
 endif()
 
-set(COCKPIT_HOOK_SRC "${CMAKE_SOURCE_DIR}/../tool/cockpit_hook.dart")
-set(COCKPIT_HOOK_EXE "${CMAKE_BINARY_DIR}/cockpit-hook")
+set(ORKEST_HOOK_SRC "${CMAKE_SOURCE_DIR}/../tool/orkest_hook.dart")
+set(ORKEST_HOOK_EXE "${CMAKE_BINARY_DIR}/orkest-hook")
 add_custom_command(
-  OUTPUT "${COCKPIT_HOOK_EXE}"
-  COMMAND "${DART_EXE}" compile exe "${COCKPIT_HOOK_SRC}" -o "${COCKPIT_HOOK_EXE}"
-  DEPENDS "${COCKPIT_HOOK_SRC}"
-  COMMENT "Compilando cockpit-hook"
+  OUTPUT "${ORKEST_HOOK_EXE}"
+  COMMAND "${DART_EXE}" compile exe "${ORKEST_HOOK_SRC}" -o "${ORKEST_HOOK_EXE}"
+  DEPENDS "${ORKEST_HOOK_SRC}"
+  COMMENT "Compilando orkest-hook"
   VERBATIM)
-add_custom_target(cockpit_hook ALL DEPENDS "${COCKPIT_HOOK_EXE}")
-install(PROGRAMS "${COCKPIT_HOOK_EXE}" DESTINATION "${CMAKE_INSTALL_PREFIX}"
+add_custom_target(orkest_hook ALL DEPENDS "${ORKEST_HOOK_EXE}")
+install(PROGRAMS "${ORKEST_HOOK_EXE}" DESTINATION "${CMAKE_INSTALL_PREFIX}"
   COMPONENT Runtime)
 
-# === cli/ → cockpit-cli (CLI interna em Rust, com o hook como subcomando) ===
-# A CLI absorveu o antigo helper `cockpit-hook`: `cockpit hook` faz o mesmo
+# === cli/ → orkest-cli (CLI interna em Rust, com o hook como subcomando) ===
+# A CLI absorveu o antigo helper `orkest-hook`: `orkest hook` faz o mesmo
 # papel. Rust porque o `dart compile exe` sai de UMA arquitetura, não
 # cross-compila e não sobrevive ao `lipo` — ver macos/build_cli.sh.
-set(COCKPIT_CLI_CRATE "${CMAKE_SOURCE_DIR}/../cli")
+set(ORKEST_CLI_CRATE "${CMAKE_SOURCE_DIR}/../cli")
 # O PATH do processo que roda o CMake nem sempre traz o `cargo` (IDE/launcher
 # não herda o shell de login), então a instalação padrão do rustup entra como
 # hint — mesma resolução do `resolve_cargo` do macos/build_cli.sh. Falhar aqui,
@@ -179,41 +179,41 @@ endif()
 # `build.rs` entra na lista: é ele que assa o flavor no binário, e uma
 # mudança lá não mexe em `src/` — sem isto o CMake daria a CLI por
 # atualizada. Mesma classe do glob do servidor logo abaixo.
-file(GLOB_RECURSE COCKPIT_CLI_SOURCES CONFIGURE_DEPENDS
-  "${COCKPIT_CLI_CRATE}/src/*.rs" "${COCKPIT_CLI_CRATE}/text/*"
-  "${COCKPIT_CLI_CRATE}/build.rs")
-set(COCKPIT_CLI_BUILT "${COCKPIT_CLI_CRATE}/target/release/cockpit")
-set(COCKPIT_CLI_EXE "${CMAKE_BINARY_DIR}/cockpit-cli")
+file(GLOB_RECURSE ORKEST_CLI_SOURCES CONFIGURE_DEPENDS
+  "${ORKEST_CLI_CRATE}/src/*.rs" "${ORKEST_CLI_CRATE}/text/*"
+  "${ORKEST_CLI_CRATE}/build.rs")
+set(ORKEST_CLI_BUILT "${ORKEST_CLI_CRATE}/target/release/orkest")
+set(ORKEST_CLI_EXE "${CMAKE_BINARY_DIR}/orkest-cli")
 # Flavor assado no binário (ver cli/build.rs): decide qual socket a CLI procura
-# primeiro quando roda fora de um terminal do Cockpit.
+# primeiro quando roda fora de um terminal do Orkest.
 if(CMAKE_BUILD_TYPE STREQUAL "Debug")
-  set(COCKPIT_CLI_FLAVOR "debug")
+  set(ORKEST_CLI_FLAVOR "debug")
 else()
-  set(COCKPIT_CLI_FLAVOR "release")
+  set(ORKEST_CLI_FLAVOR "release")
 endif()
 add_custom_command(
-  OUTPUT "${COCKPIT_CLI_EXE}"
-  COMMAND "${CMAKE_COMMAND}" -E env "COCKPIT_FLAVOR=${COCKPIT_CLI_FLAVOR}"
+  OUTPUT "${ORKEST_CLI_EXE}"
+  COMMAND "${CMAKE_COMMAND}" -E env "ORKEST_FLAVOR=${ORKEST_CLI_FLAVOR}"
           "${CARGO_EXECUTABLE}" build --release
-          --manifest-path "${COCKPIT_CLI_CRATE}/Cargo.toml"
-  COMMAND "${CMAKE_COMMAND}" -E copy "${COCKPIT_CLI_BUILT}" "${COCKPIT_CLI_EXE}"
-  DEPENDS ${COCKPIT_CLI_SOURCES} "${COCKPIT_CLI_CRATE}/Cargo.toml"
-  COMMENT "Compilando cockpit-cli (Rust)"
+          --manifest-path "${ORKEST_CLI_CRATE}/Cargo.toml"
+  COMMAND "${CMAKE_COMMAND}" -E copy "${ORKEST_CLI_BUILT}" "${ORKEST_CLI_EXE}"
+  DEPENDS ${ORKEST_CLI_SOURCES} "${ORKEST_CLI_CRATE}/Cargo.toml"
+  COMMENT "Compilando orkest-cli (Rust)"
   VERBATIM)
-add_custom_target(cockpit_cli ALL DEPENDS "${COCKPIT_CLI_EXE}")
-install(PROGRAMS "${COCKPIT_CLI_EXE}" DESTINATION "${CMAKE_INSTALL_PREFIX}"
+add_custom_target(orkest_cli ALL DEPENDS "${ORKEST_CLI_EXE}")
+install(PROGRAMS "${ORKEST_CLI_EXE}" DESTINATION "${CMAKE_INSTALL_PREFIX}"
   COMPONENT Runtime)
 
 # === Desktop integration (nome + ícone para publicação) ===
-# .desktop com Name=Cockpit, e ícones do tema hicolor nomeados pelo
-# APPLICATION_ID (work.jacobmoura.cockpit) — é assim que o launcher/dock e a
+# .desktop com Name=Orkest, e ícones do tema hicolor nomeados pelo
+# APPLICATION_ID (com.flavioacv.orkestcode) — é assim que o launcher/dock e a
 # barra de tarefas resolvem nome e ícone do app empacotado (deb/AppImage/snap).
-install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/cockpit.desktop"
+install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/orkest.desktop"
   DESTINATION "${CMAKE_INSTALL_PREFIX}/share/applications"
   RENAME "${APPLICATION_ID}.desktop"
   COMPONENT Runtime)
 
-# Tipos de arquivo do Cockpit (.kanban/.ckp/.dbq/.http) pro "Abrir com" do
+# Tipos de arquivo do Orkest (.kanban/.ckp/.dbq/.http) pro "Abrir com" do
 # gerenciador de arquivos — o .desktop acima declara os MimeType.
 install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${APPLICATION_ID}.xml"
   DESTINATION "${CMAKE_INSTALL_PREFIX}/share/mime/packages"
@@ -231,57 +231,57 @@ install(FILES "${CMAKE_CURRENT_SOURCE_DIR}/${APPLICATION_ID}.metainfo.xml"
   DESTINATION "${CMAKE_INSTALL_PREFIX}/share/metainfo"
   COMPONENT Runtime)
 
-# === cockpit-server (sidecar) ===
+# === orkest-server (sidecar) ===
 # Bundle `bin/` + `lib/` do servidor headless, instalado AO LADO do executável
-# (mesmo lugar do cockpit-hook e da cockpit-cli; o deb/rpm empacota o prefixo
+# (mesmo lugar do orkest-hook e da orkest-cli; o deb/rpm empacota o prefixo
 # inteiro). Equivale ao Run Script do macOS (build_server.sh); sem isto o app
 # cai no fallback in-process e o Linux roda uma arquitetura diferente do macOS.
 #
 # `dart build cli` NÃO cross-compila, mas aqui não é problema: o CI compila cada
 # arquitetura no seu próprio runner nativo (x64 e arm64).
-set(COCKPIT_SERVER_PKG "${CMAKE_SOURCE_DIR}/../packages/cockpit_server")
-set(COCKPIT_SERVER_DIR "${CMAKE_BINARY_DIR}/server-bundle")
-set(COCKPIT_SERVER_EXE "${COCKPIT_SERVER_DIR}/bin/cockpit-server")
+set(ORKEST_SERVER_PKG "${CMAKE_SOURCE_DIR}/../packages/orkest_server")
+set(ORKEST_SERVER_DIR "${CMAKE_BINARY_DIR}/server-bundle")
+set(ORKEST_SERVER_EXE "${ORKEST_SERVER_DIR}/bin/orkest-server")
 # O servidor NÃO é só o pacote dele: depende dos irmãos por `path:`
-# (cockpit_core, cockpit_engine, cockpit_protocol). Com o glob olhando só
-# `cockpit_server/`, editar o engine não invalidava nada e o CMake dava o
-# bundle por atualizado — o build saía com um `cockpit-server` VELHO, em
+# (orkest_core, orkest_engine, orkest_protocol). Com o glob olhando só
+# `orkest_server/`, editar o engine não invalidava nada e o CMake dava o
+# bundle por atualizado — o build saía com um `orkest-server` VELHO, em
 # silêncio. Mesmo ajuste do windows/CMakeLists.txt.
-file(GLOB_RECURSE COCKPIT_SERVER_SOURCES CONFIGURE_DEPENDS
-  "${COCKPIT_SERVER_PKG}/bin/*.dart" "${COCKPIT_SERVER_PKG}/lib/*.dart"
-  "${COCKPIT_SERVER_PKG}/../cockpit_core/lib/*.dart"
-  "${COCKPIT_SERVER_PKG}/../cockpit_engine/lib/*.dart"
-  "${COCKPIT_SERVER_PKG}/../cockpit_protocol/lib/*.dart")
+file(GLOB_RECURSE ORKEST_SERVER_SOURCES CONFIGURE_DEPENDS
+  "${ORKEST_SERVER_PKG}/bin/*.dart" "${ORKEST_SERVER_PKG}/lib/*.dart"
+  "${ORKEST_SERVER_PKG}/../orkest_core/lib/*.dart"
+  "${ORKEST_SERVER_PKG}/../orkest_engine/lib/*.dart"
+  "${ORKEST_SERVER_PKG}/../orkest_protocol/lib/*.dart")
 add_custom_command(
-  OUTPUT "${COCKPIT_SERVER_EXE}"
+  OUTPUT "${ORKEST_SERVER_EXE}"
   # Bundle limpo: `dart build cli` recusa diretório de saída já existente.
-  COMMAND "${CMAKE_COMMAND}" -E rm -rf "${COCKPIT_SERVER_DIR}" "${CMAKE_BINARY_DIR}/server-out"
-  COMMAND "${CMAKE_COMMAND}" -E chdir "${COCKPIT_SERVER_PKG}" "${DART_EXE}" pub get
-  COMMAND "${CMAKE_COMMAND}" -E chdir "${COCKPIT_SERVER_PKG}" "${DART_EXE}" build cli
+  COMMAND "${CMAKE_COMMAND}" -E rm -rf "${ORKEST_SERVER_DIR}" "${CMAKE_BINARY_DIR}/server-out"
+  COMMAND "${CMAKE_COMMAND}" -E chdir "${ORKEST_SERVER_PKG}" "${DART_EXE}" pub get
+  COMMAND "${CMAKE_COMMAND}" -E chdir "${ORKEST_SERVER_PKG}" "${DART_EXE}" build cli
           -o "${CMAKE_BINARY_DIR}/server-out"
   # `dart build cli` gera <out>/bundle/{bin,lib}; o exe sai com underscore.
   COMMAND "${CMAKE_COMMAND}" -E copy_directory
-          "${CMAKE_BINARY_DIR}/server-out/bundle" "${COCKPIT_SERVER_DIR}"
+          "${CMAKE_BINARY_DIR}/server-out/bundle" "${ORKEST_SERVER_DIR}"
   COMMAND "${CMAKE_COMMAND}" -E rename
-          "${COCKPIT_SERVER_DIR}/bin/cockpit_server" "${COCKPIT_SERVER_EXE}"
+          "${ORKEST_SERVER_DIR}/bin/orkest_server" "${ORKEST_SERVER_EXE}"
   # Dart >= 3.14: o snapshot lib/libdartaot<nome>.so segue o nome do exe
   # (ver rename_server_snapshot.cmake); no-op em Dart mais antigo.
-  COMMAND "${CMAKE_COMMAND}" -DBUNDLE_DIR=${COCKPIT_SERVER_DIR}
+  COMMAND "${CMAKE_COMMAND}" -DBUNDLE_DIR=${ORKEST_SERVER_DIR}
           -P "${CMAKE_CURRENT_SOURCE_DIR}/rename_server_snapshot.cmake"
   # A lib do PTY vai ao LADO do exe do servidor: é o 2º candidato do
-  # openPtyDylib (o 1º é a env COCKPIT_PTY_DYLIB, que o sidecar preenche).
+  # openPtyDylib (o 1º é a env ORKEST_PTY_DYLIB, que o sidecar preenche).
   # Reusa o artefato do plugin em vez de compilar o mesmo .c duas vezes.
   COMMAND "${CMAKE_COMMAND}" -E copy
-          "$<TARGET_FILE:cockpit_pty>" "${COCKPIT_SERVER_DIR}/bin/"
+          "$<TARGET_FILE:orkest_pty>" "${ORKEST_SERVER_DIR}/bin/"
   # CLI embarcada ao lado do servidor (plano 60, Wave G): o servidor instala o
   # hook do agente apontando pra ela, e a acha na mesma pasta bin/.
   COMMAND "${CMAKE_COMMAND}" -E copy
-          "${COCKPIT_CLI_EXE}" "${COCKPIT_SERVER_DIR}/bin/cockpit"
-  DEPENDS ${COCKPIT_SERVER_SOURCES} "${COCKPIT_SERVER_PKG}/pubspec.yaml"
-          "${COCKPIT_CLI_EXE}" cockpit_pty
-  COMMENT "Compilando cockpit-server (bundle do sidecar)"
+          "${ORKEST_CLI_EXE}" "${ORKEST_SERVER_DIR}/bin/orkest"
+  DEPENDS ${ORKEST_SERVER_SOURCES} "${ORKEST_SERVER_PKG}/pubspec.yaml"
+          "${ORKEST_CLI_EXE}" orkest_pty
+  COMMENT "Compilando orkest-server (bundle do sidecar)"
   VERBATIM)
-add_custom_target(cockpit_server ALL DEPENDS "${COCKPIT_SERVER_EXE}")
-install(DIRECTORY "${COCKPIT_SERVER_DIR}/"
-  DESTINATION "${CMAKE_INSTALL_PREFIX}/cockpit-server-bundle"
+add_custom_target(orkest_server ALL DEPENDS "${ORKEST_SERVER_EXE}")
+install(DIRECTORY "${ORKEST_SERVER_DIR}/"
+  DESTINATION "${CMAKE_INSTALL_PREFIX}/orkest-server-bundle"
   USE_SOURCE_PERMISSIONS COMPONENT Runtime)

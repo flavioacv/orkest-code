@@ -1,5 +1,5 @@
-import 'package:cockpit/app/core/domain/contracts/system_permissions.dart';
-import 'package:cockpit/app/core/domain/entities/setup_check.dart';
+import 'package:orkest_code/app/core/domain/contracts/system_permissions.dart';
+import 'package:orkest_code/app/core/domain/entities/setup_check.dart';
 import 'package:flutter/foundation.dart';
 
 /// Estado da permissão de notificações do SO para a aba **Notifications**.

@@ -35,13 +35,13 @@ class TranslationsEs extends Translations with BaseTranslations<AppLocale, Trans
 
 	late final TranslationsEs _root = this; // ignore: unused_field
 
-	@override 
+	@override
 	TranslationsEs $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsEs(meta: meta ?? this.$meta);
 
 	// Translations
 	@override late final _Translations$core$es core = _Translations$core$es._(_root);
 	@override late final _Translations$common$es common = _Translations$common$es._(_root);
-	@override late final _Translations$cockpit$es cockpit = _Translations$cockpit$es._(_root);
+	@override late final _Translations$orkest$es orkest = _Translations$orkest$es._(_root);
 	@override late final _Translations$settings$es settings = _Translations$settings$es._(_root);
 	@override late final _Translations$automation$es automation = _Translations$automation$es._(_root);
 	@override late final _Translations$fileOperation$es fileOperation = _Translations$fileOperation$es._(_root);
@@ -96,50 +96,50 @@ class _Translations$common$es extends Translations$common$en {
 	@override String get noResults => 'Sin resultados';
 }
 
-// Path: cockpit
-class _Translations$cockpit$es extends Translations$cockpit$en {
-	_Translations$cockpit$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest
+class _Translations$orkest$es extends Translations$orkest$en {
+	_Translations$orkest$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
 	// Translations
-	@override late final _Translations$cockpit$officeWorld$es officeWorld = _Translations$cockpit$officeWorld$es._(_root);
-	@override late final _Translations$cockpit$confirmDialog$es confirmDialog = _Translations$cockpit$confirmDialog$es._(_root);
-	@override late final _Translations$cockpit$neovim$es neovim = _Translations$cockpit$neovim$es._(_root);
-	@override late final _Translations$cockpit$worktreeCreateDialog$es worktreeCreateDialog = _Translations$cockpit$worktreeCreateDialog$es._(_root);
-	@override late final _Translations$cockpit$commitMessageDialog$es commitMessageDialog = _Translations$cockpit$commitMessageDialog$es._(_root);
-	@override late final _Translations$cockpit$tasksPanel$es tasksPanel = _Translations$cockpit$tasksPanel$es._(_root);
-	@override late final _Translations$cockpit$cockpitPage$es cockpitPage = _Translations$cockpit$cockpitPage$es._(_root);
-	@override late final _Translations$cockpit$welcomeView$es welcomeView = _Translations$cockpit$welcomeView$es._(_root);
-	@override late final _Translations$cockpit$paneView$es paneView = _Translations$cockpit$paneView$es._(_root);
-	@override late final _Translations$cockpit$fileTreePanel$es fileTreePanel = _Translations$cockpit$fileTreePanel$es._(_root);
-	@override late final _Translations$cockpit$fileViewer$es fileViewer = _Translations$cockpit$fileViewer$es._(_root);
-	@override late final _Translations$cockpit$workspaceSettingsDialog$es workspaceSettingsDialog = _Translations$cockpit$workspaceSettingsDialog$es._(_root);
-	@override late final _Translations$cockpit$realmDialogs$es realmDialogs = _Translations$cockpit$realmDialogs$es._(_root);
-	@override late final _Translations$cockpit$dbRedisTable$es dbRedisTable = _Translations$cockpit$dbRedisTable$es._(_root);
-	@override late final _Translations$cockpit$dbQueryView$es dbQueryView = _Translations$cockpit$dbQueryView$es._(_root);
-	@override late final _Translations$cockpit$httpView$es httpView = _Translations$cockpit$httpView$es._(_root);
-	@override late final _Translations$cockpit$kanbanView$es kanbanView = _Translations$cockpit$kanbanView$es._(_root);
-	@override late final _Translations$cockpit$dbPanel$es dbPanel = _Translations$cockpit$dbPanel$es._(_root);
-	@override late final _Translations$cockpit$dbMongoView$es dbMongoView = _Translations$cockpit$dbMongoView$es._(_root);
-	@override late final _Translations$cockpit$dbConnectionDialog$es dbConnectionDialog = _Translations$cockpit$dbConnectionDialog$es._(_root);
-	@override late final _Translations$cockpit$sshPrompts$es sshPrompts = _Translations$cockpit$sshPrompts$es._(_root);
-	@override late final _Translations$cockpit$projectsRail$es projectsRail = _Translations$cockpit$projectsRail$es._(_root);
-	@override late final _Translations$cockpit$findBar$es findBar = _Translations$cockpit$findBar$es._(_root);
-	@override late final _Translations$cockpit$contentSearch$es contentSearch = _Translations$cockpit$contentSearch$es._(_root);
-	@override late final _Translations$cockpit$topbar$es topbar = _Translations$cockpit$topbar$es._(_root);
-	@override late final _Translations$cockpit$tasks$es tasks = _Translations$cockpit$tasks$es._(_root);
-	@override late final _Translations$cockpit$notifications$es notifications = _Translations$cockpit$notifications$es._(_root);
-	@override late final _Translations$cockpit$terminalLink$es terminalLink = _Translations$cockpit$terminalLink$es._(_root);
-	@override late final _Translations$cockpit$terminal$es terminal = _Translations$cockpit$terminal$es._(_root);
-	@override late final _Translations$cockpit$remoteHost$es remoteHost = _Translations$cockpit$remoteHost$es._(_root);
-	@override late final _Translations$cockpit$browserPane$es browserPane = _Translations$cockpit$browserPane$es._(_root);
-	@override late final _Translations$cockpit$documentWindow$es documentWindow = _Translations$cockpit$documentWindow$es._(_root);
-	@override late final _Translations$cockpit$gallery$es gallery = _Translations$cockpit$gallery$es._(_root);
-	@override late final _Translations$cockpit$notebook$es notebook = _Translations$cockpit$notebook$es._(_root);
-	@override late final _Translations$cockpit$layoutPreview$es layoutPreview = _Translations$cockpit$layoutPreview$es._(_root);
-	@override late final _Translations$cockpit$telemetry$es telemetry = _Translations$cockpit$telemetry$es._(_root);
-	@override late final _Translations$cockpit$panelView$es panelView = _Translations$cockpit$panelView$es._(_root);
+	@override late final _Translations$orkest$officeWorld$es officeWorld = _Translations$orkest$officeWorld$es._(_root);
+	@override late final _Translations$orkest$confirmDialog$es confirmDialog = _Translations$orkest$confirmDialog$es._(_root);
+	@override late final _Translations$orkest$neovim$es neovim = _Translations$orkest$neovim$es._(_root);
+	@override late final _Translations$orkest$worktreeCreateDialog$es worktreeCreateDialog = _Translations$orkest$worktreeCreateDialog$es._(_root);
+	@override late final _Translations$orkest$commitMessageDialog$es commitMessageDialog = _Translations$orkest$commitMessageDialog$es._(_root);
+	@override late final _Translations$orkest$tasksPanel$es tasksPanel = _Translations$orkest$tasksPanel$es._(_root);
+	@override late final _Translations$orkest$orkestPage$es orkestPage = _Translations$orkest$orkestPage$es._(_root);
+	@override late final _Translations$orkest$welcomeView$es welcomeView = _Translations$orkest$welcomeView$es._(_root);
+	@override late final _Translations$orkest$paneView$es paneView = _Translations$orkest$paneView$es._(_root);
+	@override late final _Translations$orkest$fileTreePanel$es fileTreePanel = _Translations$orkest$fileTreePanel$es._(_root);
+	@override late final _Translations$orkest$fileViewer$es fileViewer = _Translations$orkest$fileViewer$es._(_root);
+	@override late final _Translations$orkest$workspaceSettingsDialog$es workspaceSettingsDialog = _Translations$orkest$workspaceSettingsDialog$es._(_root);
+	@override late final _Translations$orkest$realmDialogs$es realmDialogs = _Translations$orkest$realmDialogs$es._(_root);
+	@override late final _Translations$orkest$dbRedisTable$es dbRedisTable = _Translations$orkest$dbRedisTable$es._(_root);
+	@override late final _Translations$orkest$dbQueryView$es dbQueryView = _Translations$orkest$dbQueryView$es._(_root);
+	@override late final _Translations$orkest$httpView$es httpView = _Translations$orkest$httpView$es._(_root);
+	@override late final _Translations$orkest$kanbanView$es kanbanView = _Translations$orkest$kanbanView$es._(_root);
+	@override late final _Translations$orkest$dbPanel$es dbPanel = _Translations$orkest$dbPanel$es._(_root);
+	@override late final _Translations$orkest$dbMongoView$es dbMongoView = _Translations$orkest$dbMongoView$es._(_root);
+	@override late final _Translations$orkest$dbConnectionDialog$es dbConnectionDialog = _Translations$orkest$dbConnectionDialog$es._(_root);
+	@override late final _Translations$orkest$sshPrompts$es sshPrompts = _Translations$orkest$sshPrompts$es._(_root);
+	@override late final _Translations$orkest$projectsRail$es projectsRail = _Translations$orkest$projectsRail$es._(_root);
+	@override late final _Translations$orkest$findBar$es findBar = _Translations$orkest$findBar$es._(_root);
+	@override late final _Translations$orkest$contentSearch$es contentSearch = _Translations$orkest$contentSearch$es._(_root);
+	@override late final _Translations$orkest$topbar$es topbar = _Translations$orkest$topbar$es._(_root);
+	@override late final _Translations$orkest$tasks$es tasks = _Translations$orkest$tasks$es._(_root);
+	@override late final _Translations$orkest$notifications$es notifications = _Translations$orkest$notifications$es._(_root);
+	@override late final _Translations$orkest$terminalLink$es terminalLink = _Translations$orkest$terminalLink$es._(_root);
+	@override late final _Translations$orkest$terminal$es terminal = _Translations$orkest$terminal$es._(_root);
+	@override late final _Translations$orkest$remoteHost$es remoteHost = _Translations$orkest$remoteHost$es._(_root);
+	@override late final _Translations$orkest$browserPane$es browserPane = _Translations$orkest$browserPane$es._(_root);
+	@override late final _Translations$orkest$documentWindow$es documentWindow = _Translations$orkest$documentWindow$es._(_root);
+	@override late final _Translations$orkest$gallery$es gallery = _Translations$orkest$gallery$es._(_root);
+	@override late final _Translations$orkest$notebook$es notebook = _Translations$orkest$notebook$es._(_root);
+	@override late final _Translations$orkest$layoutPreview$es layoutPreview = _Translations$orkest$layoutPreview$es._(_root);
+	@override late final _Translations$orkest$telemetry$es telemetry = _Translations$orkest$telemetry$es._(_root);
+	@override late final _Translations$orkest$panelView$es panelView = _Translations$orkest$panelView$es._(_root);
 }
 
 // Path: settings
@@ -191,7 +191,7 @@ class _Translations$core$bootstrapError$es extends Translations$core$bootstrapEr
 	final TranslationsEs _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'No se pudo inicializar Cockpit';
+	@override String get title => 'No se pudo inicializar Orkest Code';
 	@override String get retry => 'Reintentar';
 }
 
@@ -206,7 +206,7 @@ class _Translations$core$macosNotifications$es extends Translations$core$macosNo
 	@override String get intro => 'Las notificaciones están desactivadas en la configuración del sistema. Sigue los pasos a continuación para activarlas:';
 	@override String get step1 => 'Abre los Ajustes del Sistema en tu Mac.';
 	@override String get step2 => 'Ve a la sección Notificaciones en la barra lateral izquierda.';
-	@override String get step3 => 'Busca y selecciona la aplicación Cockpit en la lista.';
+	@override String get step3 => 'Busca y selecciona la aplicación Orkest Code en la lista.';
 	@override String get step4 => 'Activa el interruptor Permitir Notificaciones.';
 	@override String get tip => 'Consejo: si la aplicación no aparece en la lista, ciérrala y vuelve a abrirla para activar su registro en el sistema.';
 	@override String get gotIt => 'Entendido';
@@ -256,7 +256,7 @@ class _Translations$core$crash$es extends Translations$core$crash$en {
 
 	// Translations
 	@override String get title => 'Cierre inesperado';
-	@override String get bannerTitle => 'Cockpit se cerró inesperadamente';
+	@override String get bannerTitle => 'Orkest Code se cerró inesperadamente';
 	@override String get report => 'Reportar';
 	@override String get dismiss => 'Descartar';
 	@override String crashMessage({required Object version}) => 'La sesión anterior (versión ${version}) terminó sin cerrarse correctamente. ¿Quieres reportarlo? El log se incluye y puedes revisar todo antes de enviar.';
@@ -304,9 +304,9 @@ class _Translations$core$menu$es extends Translations$core$menu$en {
 	@override String get zoom => 'Zoom';
 }
 
-// Path: cockpit.officeWorld
-class _Translations$cockpit$officeWorld$es extends Translations$cockpit$officeWorld$en {
-	_Translations$cockpit$officeWorld$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.officeWorld
+class _Translations$orkest$officeWorld$es extends Translations$orkest$officeWorld$en {
+	_Translations$orkest$officeWorld$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -334,9 +334,9 @@ class _Translations$cockpit$officeWorld$es extends Translations$cockpit$officeWo
 	@override String get followAgent => 'Seguir personaje';
 	@override String get stopFollowingAgent => 'Dejar de seguir';
 	@override String get centerAgent => 'Centrar personaje';
-	@override String get sessionDuration => 'Sesión actual en Cockpit';
+	@override String get sessionDuration => 'Sesión actual en Orkest Code';
 	@override String get workingDirectory => 'Directorio de trabajo';
-	@override String get statsPending => 'Cockpit todavía no recopila estadísticas de modelo, tokens y herramientas.';
+	@override String get statsPending => 'Orkest Code todavía no recopila estadísticas de modelo, tokens y herramientas.';
 	@override String get recentActivity => 'Actividad reciente en esta ejecución';
 	@override String get promptReceived => 'Recibió una solicitud';
 	@override String get agentThinking => 'Pensando';
@@ -418,9 +418,9 @@ class _Translations$cockpit$officeWorld$es extends Translations$cockpit$officeWo
 	@override String get socialEconomy => 'Juego de la oficina — sin valor monetario real';
 }
 
-// Path: cockpit.confirmDialog
-class _Translations$cockpit$confirmDialog$es extends Translations$cockpit$confirmDialog$en {
-	_Translations$cockpit$confirmDialog$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.confirmDialog
+class _Translations$orkest$confirmDialog$es extends Translations$orkest$confirmDialog$en {
+	_Translations$orkest$confirmDialog$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -431,23 +431,23 @@ class _Translations$cockpit$confirmDialog$es extends Translations$cockpit$confir
 	@override String get saveAndClose => 'Guardar y cerrar';
 }
 
-// Path: cockpit.neovim
-class _Translations$cockpit$neovim$es extends Translations$cockpit$neovim$en {
-	_Translations$cockpit$neovim$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.neovim
+class _Translations$orkest$neovim$es extends Translations$orkest$neovim$en {
+	_Translations$orkest$neovim$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
 	// Translations
-	@override String get unavailable => 'Neovim no está disponible. Abriendo en Cockpit.';
-	@override String get openFailed => 'No se pudo acceder a Neovim. Abriendo en Cockpit.';
+	@override String get unavailable => 'Neovim no está disponible. Abriendo en Orkest Code.';
+	@override String get openFailed => 'No se pudo acceder a Neovim. Abriendo en Orkest Code.';
 	@override String get unsavedTitle => 'Búferes de Neovim sin guardar';
 	@override String get unsavedMessage => 'Neovim tiene búferes modificados. ¿Cerrar la pestaña y descartar esos cambios?';
 	@override String get closeAnyway => 'Cerrar de todos modos';
 }
 
-// Path: cockpit.worktreeCreateDialog
-class _Translations$cockpit$worktreeCreateDialog$es extends Translations$cockpit$worktreeCreateDialog$en {
-	_Translations$cockpit$worktreeCreateDialog$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.worktreeCreateDialog
+class _Translations$orkest$worktreeCreateDialog$es extends Translations$orkest$worktreeCreateDialog$en {
+	_Translations$orkest$worktreeCreateDialog$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -481,9 +481,9 @@ class _Translations$cockpit$worktreeCreateDialog$es extends Translations$cockpit
 	@override String get back => 'Atrás';
 }
 
-// Path: cockpit.commitMessageDialog
-class _Translations$cockpit$commitMessageDialog$es extends Translations$cockpit$commitMessageDialog$en {
-	_Translations$cockpit$commitMessageDialog$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.commitMessageDialog
+class _Translations$orkest$commitMessageDialog$es extends Translations$orkest$commitMessageDialog$en {
+	_Translations$orkest$commitMessageDialog$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -504,9 +504,9 @@ class _Translations$cockpit$commitMessageDialog$es extends Translations$cockpit$
 	@override String get cancelGeneration => 'Cancelar generación';
 }
 
-// Path: cockpit.tasksPanel
-class _Translations$cockpit$tasksPanel$es extends Translations$cockpit$tasksPanel$en {
-	_Translations$cockpit$tasksPanel$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.tasksPanel
+class _Translations$orkest$tasksPanel$es extends Translations$orkest$tasksPanel$en {
+	_Translations$orkest$tasksPanel$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -531,9 +531,9 @@ class _Translations$cockpit$tasksPanel$es extends Translations$cockpit$tasksPane
 	@override String composeConflicts({required Object labels}) => 'Se conservaron tareas que no son Compose con etiquetas en conflicto: ${labels}';
 }
 
-// Path: cockpit.cockpitPage
-class _Translations$cockpit$cockpitPage$es extends Translations$cockpit$cockpitPage$en {
-	_Translations$cockpit$cockpitPage$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.orkestPage
+class _Translations$orkest$orkestPage$es extends Translations$orkest$orkestPage$en {
+	_Translations$orkest$orkestPage$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -570,14 +570,14 @@ class _Translations$cockpit$cockpitPage$es extends Translations$cockpit$cockpitP
 	@override String get lspStopped => 'detenido';
 }
 
-// Path: cockpit.welcomeView
-class _Translations$cockpit$welcomeView$es extends Translations$cockpit$welcomeView$en {
-	_Translations$cockpit$welcomeView$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.welcomeView
+class _Translations$orkest$welcomeView$es extends Translations$orkest$welcomeView$en {
+	_Translations$orkest$welcomeView$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
 	// Translations
-	@override String get title => 'Bienvenido a Cockpit';
+	@override String get title => 'Bienvenido a Orkest Code';
 	@override String get subtitle => 'Abre una carpeta o conéctate a un host remoto para empezar.';
 	@override String get createWorkspace => 'Crear workspace';
 	@override String get openLocalFolder => 'Abrir carpeta local';
@@ -586,9 +586,9 @@ class _Translations$cockpit$welcomeView$es extends Translations$cockpit$welcomeV
 	@override String get addWorkspace => 'Añadir workspace';
 }
 
-// Path: cockpit.paneView
-class _Translations$cockpit$paneView$es extends Translations$cockpit$paneView$en {
-	_Translations$cockpit$paneView$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.paneView
+class _Translations$orkest$paneView$es extends Translations$orkest$paneView$en {
+	_Translations$orkest$paneView$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -625,9 +625,9 @@ class _Translations$cockpit$paneView$es extends Translations$cockpit$paneView$en
 	@override String get openAsHtml => 'Abrir como HTML';
 }
 
-// Path: cockpit.fileTreePanel
-class _Translations$cockpit$fileTreePanel$es extends Translations$cockpit$fileTreePanel$en {
-	_Translations$cockpit$fileTreePanel$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.fileTreePanel
+class _Translations$orkest$fileTreePanel$es extends Translations$orkest$fileTreePanel$en {
+	_Translations$orkest$fileTreePanel$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -740,9 +740,9 @@ class _Translations$cockpit$fileTreePanel$es extends Translations$cockpit$fileTr
 	@override String openInAgent({required Object harness}) => 'Abrir en ${harness}';
 }
 
-// Path: cockpit.fileViewer
-class _Translations$cockpit$fileViewer$es extends Translations$cockpit$fileViewer$en {
-	_Translations$cockpit$fileViewer$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.fileViewer
+class _Translations$orkest$fileViewer$es extends Translations$orkest$fileViewer$en {
+	_Translations$orkest$fileViewer$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -754,9 +754,9 @@ class _Translations$cockpit$fileViewer$es extends Translations$cockpit$fileViewe
 	@override String get reload => 'Recargar';
 }
 
-// Path: cockpit.workspaceSettingsDialog
-class _Translations$cockpit$workspaceSettingsDialog$es extends Translations$cockpit$workspaceSettingsDialog$en {
-	_Translations$cockpit$workspaceSettingsDialog$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.workspaceSettingsDialog
+class _Translations$orkest$workspaceSettingsDialog$es extends Translations$orkest$workspaceSettingsDialog$en {
+	_Translations$orkest$workspaceSettingsDialog$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -772,9 +772,9 @@ class _Translations$cockpit$workspaceSettingsDialog$es extends Translations$cock
 	@override String get folder => 'Carpeta';
 }
 
-// Path: cockpit.realmDialogs
-class _Translations$cockpit$realmDialogs$es extends Translations$cockpit$realmDialogs$en {
-	_Translations$cockpit$realmDialogs$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.realmDialogs
+class _Translations$orkest$realmDialogs$es extends Translations$orkest$realmDialogs$en {
+	_Translations$orkest$realmDialogs$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -795,9 +795,9 @@ class _Translations$cockpit$realmDialogs$es extends Translations$cockpit$realmDi
 	);
 }
 
-// Path: cockpit.dbRedisTable
-class _Translations$cockpit$dbRedisTable$es extends Translations$cockpit$dbRedisTable$en {
-	_Translations$cockpit$dbRedisTable$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.dbRedisTable
+class _Translations$orkest$dbRedisTable$es extends Translations$orkest$dbRedisTable$en {
+	_Translations$orkest$dbRedisTable$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -826,9 +826,9 @@ class _Translations$cockpit$dbRedisTable$es extends Translations$cockpit$dbRedis
 	@override String get searchHint => 'Buscar — patrón, ej.: user:*';
 }
 
-// Path: cockpit.dbQueryView
-class _Translations$cockpit$dbQueryView$es extends Translations$cockpit$dbQueryView$en {
-	_Translations$cockpit$dbQueryView$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.dbQueryView
+class _Translations$orkest$dbQueryView$es extends Translations$orkest$dbQueryView$en {
+	_Translations$orkest$dbQueryView$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -857,9 +857,9 @@ class _Translations$cockpit$dbQueryView$es extends Translations$cockpit$dbQueryV
 	@override String get copy => 'Copiar';
 }
 
-// Path: cockpit.httpView
-class _Translations$cockpit$httpView$es extends Translations$cockpit$httpView$en {
-	_Translations$cockpit$httpView$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.httpView
+class _Translations$orkest$httpView$es extends Translations$orkest$httpView$en {
+	_Translations$orkest$httpView$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -880,12 +880,12 @@ class _Translations$cockpit$httpView$es extends Translations$cockpit$httpView$en
 	@override String get headers => 'Headers';
 	@override String get raw => 'Text';
 	@override String get truncatedSuffix => ' · truncado (respuesta demasiado grande)';
-	@override late final _Translations$cockpit$httpView$error$es error = _Translations$cockpit$httpView$error$es._(_root);
+	@override late final _Translations$orkest$httpView$error$es error = _Translations$orkest$httpView$error$es._(_root);
 }
 
-// Path: cockpit.kanbanView
-class _Translations$cockpit$kanbanView$es extends Translations$cockpit$kanbanView$en {
-	_Translations$cockpit$kanbanView$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.kanbanView
+class _Translations$orkest$kanbanView$es extends Translations$orkest$kanbanView$en {
+	_Translations$orkest$kanbanView$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -945,12 +945,12 @@ class _Translations$cockpit$kanbanView$es extends Translations$cockpit$kanbanVie
 	@override String get startBoard => 'Empezar un tablero';
 	@override String get couldNotSave => 'No se pudo guardar el tablero';
 	@override String get unrecognizedBlock => 'No reconocido por el analizador — se arrastra entero, sin edición en línea.';
-	@override late final _Translations$cockpit$kanbanView$deleteColumnDialog$es deleteColumnDialog = _Translations$cockpit$kanbanView$deleteColumnDialog$es._(_root);
+	@override late final _Translations$orkest$kanbanView$deleteColumnDialog$es deleteColumnDialog = _Translations$orkest$kanbanView$deleteColumnDialog$es._(_root);
 }
 
-// Path: cockpit.dbPanel
-class _Translations$cockpit$dbPanel$es extends Translations$cockpit$dbPanel$en {
-	_Translations$cockpit$dbPanel$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.dbPanel
+class _Translations$orkest$dbPanel$es extends Translations$orkest$dbPanel$en {
+	_Translations$orkest$dbPanel$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -962,15 +962,15 @@ class _Translations$cockpit$dbPanel$es extends Translations$cockpit$dbPanel$en {
 	@override String get browseKeys => 'Ver claves';
 	@override String get deleteConnectionTitle => 'Eliminar conexión';
 	@override String deleteConnectionMessage({required Object name}) => '¿Quitar "${name}" de este workspace? Cualquier contraseña guardada se descartará. Los archivos .dbq que la referencian no se modifican.';
-	@override String footer({required Object n}) => '.cockpit/databases.json · ${n} conexiones';
-	@override String get footerOne => '.cockpit/databases.json · 1 conexión';
+	@override String footer({required Object n}) => '.orkest/databases.json · ${n} conexiones';
+	@override String get footerOne => '.orkest/databases.json · 1 conexión';
 	@override String get noConnections => 'Aún no hay conexiones.';
 	@override String get passwordRequired => 'Contraseña no encontrada en el host. Abre esta conexión y vuelve a escribirla — se guarda en la máquina que ejecuta la base de datos, no en esta.';
 }
 
-// Path: cockpit.dbMongoView
-class _Translations$cockpit$dbMongoView$es extends Translations$cockpit$dbMongoView$en {
-	_Translations$cockpit$dbMongoView$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.dbMongoView
+class _Translations$orkest$dbMongoView$es extends Translations$orkest$dbMongoView$en {
+	_Translations$orkest$dbMongoView$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -991,9 +991,9 @@ class _Translations$cockpit$dbMongoView$es extends Translations$cockpit$dbMongoV
 	@override String get insert => 'Insertar';
 }
 
-// Path: cockpit.dbConnectionDialog
-class _Translations$cockpit$dbConnectionDialog$es extends Translations$cockpit$dbConnectionDialog$en {
-	_Translations$cockpit$dbConnectionDialog$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.dbConnectionDialog
+class _Translations$orkest$dbConnectionDialog$es extends Translations$orkest$dbConnectionDialog$en {
+	_Translations$orkest$dbConnectionDialog$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1027,33 +1027,33 @@ class _Translations$cockpit$dbConnectionDialog$es extends Translations$cockpit$d
 	@override String get passwordOnHost => 'La contraseña se guarda en el host, no en esta máquina.';
 }
 
-// Path: cockpit.sshPrompts
-class _Translations$cockpit$sshPrompts$es extends Translations$cockpit$sshPrompts$en {
-	_Translations$cockpit$sshPrompts$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.sshPrompts
+class _Translations$orkest$sshPrompts$es extends Translations$orkest$sshPrompts$en {
+	_Translations$orkest$sshPrompts$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
 	// Translations
 	@override String get unknownSshHostTitle => 'Host SSH desconocido';
-	@override String neverConnected({required Object endpoint}) => 'Cockpit nunca se ha conectado a ${endpoint} antes.';
+	@override String neverConnected({required Object endpoint}) => 'Orkest Code nunca se ha conectado a ${endpoint} antes.';
 	@override String get trustHint => 'Confía solo si esta fingerprint coincide con el servidor. Puedes verificarla en el servidor con:';
 	@override String get trust => 'Confiar';
 	@override String get sshKeyPassphraseTitle => 'Frase de contraseña de la clave SSH';
 	@override String unlockMessage({required Object keyPath, required Object connectionName}) => 'Desbloquea ${keyPath} para conectar "${connectionName}".';
-	@override String get keptInMemoryHint => 'Se mantiene en memoria hasta que Cockpit se cierre. Para que los agentes usen esta conexión, activa "Guardar frase de contraseña" en la conexión.';
+	@override String get keptInMemoryHint => 'Se mantiene en memoria hasta que Orkest Code se cierre. Para que los agentes usen esta conexión, activa "Guardar frase de contraseña" en la conexión.';
 	@override String get unlock => 'Desbloquear';
 }
 
-// Path: cockpit.projectsRail
-class _Translations$cockpit$projectsRail$es extends Translations$cockpit$projectsRail$en {
-	_Translations$cockpit$projectsRail$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.projectsRail
+class _Translations$orkest$projectsRail$es extends Translations$orkest$projectsRail$en {
+	_Translations$orkest$projectsRail$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
 	// Translations
 	@override String get workspaces => 'Workspaces';
 	@override String get keepAwakeOn => 'Manteniendo este equipo despierto para acceso remoto. Haz clic para dejarlo dormir de nuevo.';
-	@override String get keepAwakeOff => 'Mantener este equipo despierto para acceso remoto. Se apaga solo cuando Cockpit se reinicia.';
+	@override String get keepAwakeOff => 'Mantener este equipo despierto para acceso remoto. Se apaga solo cuando Orkest Code se reinicia.';
 	@override String get keepAwakeBattery => 'Despierto con batería. Esto consume la batería.';
 	@override String get keepAwakeLid => 'Cerrar la tapa del portátil sigue poniéndolo a dormir.';
 	@override String get newWorkspace => 'Nuevo workspace';
@@ -1082,9 +1082,9 @@ class _Translations$cockpit$projectsRail$es extends Translations$cockpit$project
 	@override String get collapseWorktrees => 'Contraer worktrees';
 }
 
-// Path: cockpit.findBar
-class _Translations$cockpit$findBar$es extends Translations$cockpit$findBar$en {
-	_Translations$cockpit$findBar$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.findBar
+class _Translations$orkest$findBar$es extends Translations$orkest$findBar$en {
+	_Translations$orkest$findBar$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1101,9 +1101,9 @@ class _Translations$cockpit$findBar$es extends Translations$cockpit$findBar$en {
 	@override String get noResults => 'Sin resultados';
 }
 
-// Path: cockpit.contentSearch
-class _Translations$cockpit$contentSearch$es extends Translations$cockpit$contentSearch$en {
-	_Translations$cockpit$contentSearch$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.contentSearch
+class _Translations$orkest$contentSearch$es extends Translations$orkest$contentSearch$en {
+	_Translations$orkest$contentSearch$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1119,24 +1119,24 @@ class _Translations$cockpit$contentSearch$es extends Translations$cockpit$conten
 	@override String get noResults => 'Sin resultados.';
 }
 
-// Path: cockpit.topbar
-class _Translations$cockpit$topbar$es extends Translations$cockpit$topbar$en {
-	_Translations$cockpit$topbar$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.topbar
+class _Translations$orkest$topbar$es extends Translations$orkest$topbar$en {
+	_Translations$orkest$topbar$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
 	// Translations
 	@override String get collapseSidebar => 'Contraer barra lateral';
 	@override String get toggleFiles => 'Mostrar/ocultar archivos';
-	@override String get filesUnavailable => 'Archivos no disponibles en Cockpit';
+	@override String get filesUnavailable => 'Archivos no disponibles en Orkest Code';
 	@override String get hideKeyboard => 'Ocultar teclado';
 	@override String get showOffice => 'Mostrar oficina';
 	@override String get showTerminals => 'Mostrar terminales';
 }
 
-// Path: cockpit.tasks
-class _Translations$cockpit$tasks$es extends Translations$cockpit$tasks$en {
-	_Translations$cockpit$tasks$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.tasks
+class _Translations$orkest$tasks$es extends Translations$orkest$tasks$en {
+	_Translations$orkest$tasks$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1148,9 +1148,9 @@ class _Translations$cockpit$tasks$es extends Translations$cockpit$tasks$en {
 	@override String get quit => 'Salir';
 }
 
-// Path: cockpit.notifications
-class _Translations$cockpit$notifications$es extends Translations$cockpit$notifications$en {
-	_Translations$cockpit$notifications$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.notifications
+class _Translations$orkest$notifications$es extends Translations$orkest$notifications$en {
+	_Translations$orkest$notifications$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1160,9 +1160,9 @@ class _Translations$cockpit$notifications$es extends Translations$cockpit$notifi
 	@override String get agentNeedsAction => 'El agente necesita tu acción';
 }
 
-// Path: cockpit.terminalLink
-class _Translations$cockpit$terminalLink$es extends Translations$cockpit$terminalLink$en {
-	_Translations$cockpit$terminalLink$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.terminalLink
+class _Translations$orkest$terminalLink$es extends Translations$orkest$terminalLink$en {
+	_Translations$orkest$terminalLink$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1176,20 +1176,20 @@ class _Translations$cockpit$terminalLink$es extends Translations$cockpit$termina
 	@override String get copyLink => 'Copiar enlace';
 }
 
-// Path: cockpit.terminal
-class _Translations$cockpit$terminal$es extends Translations$cockpit$terminal$en {
-	_Translations$cockpit$terminal$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.terminal
+class _Translations$orkest$terminal$es extends Translations$orkest$terminal$en {
+	_Translations$orkest$terminal$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
 	// Translations
 	@override String cwdFallbackWarning({required Object requested, required Object path}) => 'Aviso: la carpeta "${requested}" no existe. Esta terminal se abrió en "${path}".';
-	@override String workspaceEnvTracked({required Object keys}) => 'Aviso: el .env.cockpit está rastreado por git (vino con el repositorio). Inyectado: ${keys}';
+	@override String workspaceEnvTracked({required Object keys}) => 'Aviso: el .env.orkest está rastreado por git (vino con el repositorio). Inyectado: ${keys}';
 }
 
-// Path: cockpit.remoteHost
-class _Translations$cockpit$remoteHost$es extends Translations$cockpit$remoteHost$en {
-	_Translations$cockpit$remoteHost$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.remoteHost
+class _Translations$orkest$remoteHost$es extends Translations$orkest$remoteHost$en {
+	_Translations$orkest$remoteHost$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1234,9 +1234,9 @@ class _Translations$cockpit$remoteHost$es extends Translations$cockpit$remoteHos
 	@override String get identityEmpty => 'Ninguna clave seleccionada';
 	@override String get identityDialogTitle => 'Selecciona la clave privada SSH';
 	@override String get errIdentity => 'Elige la clave privada para autenticarte.';
-	@override String errHostKeyUnknown({required Object host}) => 'Cockpit todavía no confía en ${host}. Conecta de nuevo y confirma la huella.';
+	@override String errHostKeyUnknown({required Object host}) => 'Orkest Code todavía no confía en ${host}. Conecta de nuevo y confirma la huella.';
 	@override String errHostKeyChanged({required Object host}) => '${host} presenta una clave SSH distinta de la guardada. Si no reinstalaste esa máquina, detente y compruébalo; si la reinstalaste, elimina la entrada antigua de ~/.ssh/known_hosts.';
-	@override String errHostBundleMissing({required Object host}) => '${host} es Windows pero no tiene Cockpit instalado. El servidor remoto se instala desde el bundle de Cockpit que ya está en esa máquina — instálalo allí e inténtalo de nuevo.';
+	@override String errHostBundleMissing({required Object host}) => '${host} es Windows pero no tiene Orkest Code instalado. El servidor remoto se instala desde el bundle de Orkest Code que ya está en esa máquina — instálalo allí e inténtalo de nuevo.';
 	@override String errHostUnknownOs({required Object host}) => 'No se pudo identificar el sistema de ${host}. La cuenta puede tener un shell restringido, o ninguno.';
 	@override String get errIdentityPublic => 'Solo está la clave pública. Eso funciona solo si la privada está en tu agente SSH; si no, elige la privada (mismo nombre, sin .pub).';
 	@override String get errIdentityNotKey => 'Ese archivo no parece una clave privada.';
@@ -1244,9 +1244,9 @@ class _Translations$cockpit$remoteHost$es extends Translations$cockpit$remoteHos
 	@override String get errIdentityUnreadable => 'No se pudo leer ese archivo.';
 }
 
-// Path: cockpit.browserPane
-class _Translations$cockpit$browserPane$es extends Translations$cockpit$browserPane$en {
-	_Translations$cockpit$browserPane$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.browserPane
+class _Translations$orkest$browserPane$es extends Translations$orkest$browserPane$en {
+	_Translations$orkest$browserPane$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1258,40 +1258,40 @@ class _Translations$cockpit$browserPane$es extends Translations$cockpit$browserP
 	@override String get go => 'Ir';
 }
 
-// Path: cockpit.documentWindow
-class _Translations$cockpit$documentWindow$es extends Translations$cockpit$documentWindow$en {
-	_Translations$cockpit$documentWindow$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.documentWindow
+class _Translations$orkest$documentWindow$es extends Translations$orkest$documentWindow$en {
+	_Translations$orkest$documentWindow$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
 	// Translations
-	@override String get mediaNotSupported => 'Audio y video se abren en la ventana principal de Cockpit.';
+	@override String get mediaNotSupported => 'Audio y video se abren en la ventana principal de Orkest Code.';
 	@override String fileNotFound({required Object path}) => 'Archivo no encontrado: ${path}';
 }
 
-// Path: cockpit.gallery
-class _Translations$cockpit$gallery$es extends Translations$cockpit$gallery$en {
-	_Translations$cockpit$gallery$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.gallery
+class _Translations$orkest$gallery$es extends Translations$orkest$gallery$en {
+	_Translations$orkest$gallery$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
 	// Translations
-	@override String get intro => 'Documentos especiales de Cockpit para que veas lo que el agente de IA está haciendo.';
+	@override String get intro => 'Documentos especiales de Orkest Code para que veas lo que el agente de IA está haciendo.';
 	@override String get createErrorTitle => 'No se pudo crear el archivo';
-	@override late final _Translations$cockpit$gallery$dbQuery$es dbQuery = _Translations$cockpit$gallery$dbQuery$es._(_root);
-	@override late final _Translations$cockpit$gallery$kanban$es kanban = _Translations$cockpit$gallery$kanban$es._(_root);
-	@override late final _Translations$cockpit$gallery$layout$es layout = _Translations$cockpit$gallery$layout$es._(_root);
-	@override late final _Translations$cockpit$gallery$httpRequest$es httpRequest = _Translations$cockpit$gallery$httpRequest$es._(_root);
-	@override late final _Translations$cockpit$gallery$html$es html = _Translations$cockpit$gallery$html$es._(_root);
-	@override late final _Translations$cockpit$gallery$tasks$es tasks = _Translations$cockpit$gallery$tasks$es._(_root);
-	@override late final _Translations$cockpit$gallery$notebook$es notebook = _Translations$cockpit$gallery$notebook$es._(_root);
-	@override late final _Translations$cockpit$gallery$workspaceEnv$es workspaceEnv = _Translations$cockpit$gallery$workspaceEnv$es._(_root);
-	@override late final _Translations$cockpit$gallery$panel$es panel = _Translations$cockpit$gallery$panel$es._(_root);
+	@override late final _Translations$orkest$gallery$dbQuery$es dbQuery = _Translations$orkest$gallery$dbQuery$es._(_root);
+	@override late final _Translations$orkest$gallery$kanban$es kanban = _Translations$orkest$gallery$kanban$es._(_root);
+	@override late final _Translations$orkest$gallery$layout$es layout = _Translations$orkest$gallery$layout$es._(_root);
+	@override late final _Translations$orkest$gallery$httpRequest$es httpRequest = _Translations$orkest$gallery$httpRequest$es._(_root);
+	@override late final _Translations$orkest$gallery$html$es html = _Translations$orkest$gallery$html$es._(_root);
+	@override late final _Translations$orkest$gallery$tasks$es tasks = _Translations$orkest$gallery$tasks$es._(_root);
+	@override late final _Translations$orkest$gallery$notebook$es notebook = _Translations$orkest$gallery$notebook$es._(_root);
+	@override late final _Translations$orkest$gallery$workspaceEnv$es workspaceEnv = _Translations$orkest$gallery$workspaceEnv$es._(_root);
+	@override late final _Translations$orkest$gallery$panel$es panel = _Translations$orkest$gallery$panel$es._(_root);
 }
 
-// Path: cockpit.notebook
-class _Translations$cockpit$notebook$es extends Translations$cockpit$notebook$en {
-	_Translations$cockpit$notebook$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.notebook
+class _Translations$orkest$notebook$es extends Translations$orkest$notebook$en {
+	_Translations$orkest$notebook$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1311,7 +1311,7 @@ class _Translations$cockpit$notebook$es extends Translations$cockpit$notebook$en
 	@override String get deleteNote => 'Eliminar nota';
 	@override String deleteConfirm({required Object name}) => '¿Mover “${name}” a la papelera?';
 	@override String get imageFailed => 'No se pudo guardar la imagen';
-	@override late final _Translations$cockpit$notebook$format$es format = _Translations$cockpit$notebook$format$es._(_root);
+	@override late final _Translations$orkest$notebook$format$es format = _Translations$orkest$notebook$format$es._(_root);
 	@override String get backlinks => 'Enlazada desde';
 	@override String get renameTag => 'Renombrar tag';
 	@override String get deleteTag => 'Eliminar tag';
@@ -1320,15 +1320,15 @@ class _Translations$cockpit$notebook$es extends Translations$cockpit$notebook$en
 	@override String get hideList => 'Ocultar lista de notas';
 }
 
-// Path: cockpit.layoutPreview
-class _Translations$cockpit$layoutPreview$es extends Translations$cockpit$layoutPreview$en {
-	_Translations$cockpit$layoutPreview$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.layoutPreview
+class _Translations$orkest$layoutPreview$es extends Translations$orkest$layoutPreview$en {
+	_Translations$orkest$layoutPreview$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
 	// Translations
 	@override String get applyFailedTitle => 'No se pudo aplicar el diseño';
-	@override String get applyInCockpit => 'Aplicar en Cockpit';
+	@override String get applyInOrkest => 'Aplicar en Orkest Code';
 	@override String get applyNewWorkspace => 'Abrir como nuevo espacio de trabajo';
 	@override String applyTo({required Object workspace}) => 'Aplicar en ${workspace}';
 	@override String get autorunWorktree => 'autorun: worktree. Este diseño también se aplica solo al crear un worktree del espacio de trabajo que lo contiene.';
@@ -1345,9 +1345,9 @@ class _Translations$cockpit$layoutPreview$es extends Translations$cockpit$layout
 	@override String subtitle({required Object n}) => 'Este diseño abre ${n} terminales. Lee los comandos antes de aplicarlo.';
 }
 
-// Path: cockpit.telemetry
-class _Translations$cockpit$telemetry$es extends Translations$cockpit$telemetry$en {
-	_Translations$cockpit$telemetry$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.telemetry
+class _Translations$orkest$telemetry$es extends Translations$orkest$telemetry$en {
+	_Translations$orkest$telemetry$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1369,7 +1369,7 @@ class _Translations$cockpit$telemetry$es extends Translations$cockpit$telemetry$
 	@override String get tagResolved => 'resuelto';
 	@override String get tagIgnored => 'ignorado';
 	@override String get srcTask => 'task';
-	@override String get srcWrapper => 'cockpit telemetry';
+	@override String get srcWrapper => 'orkest telemetry';
 	@override String run({required Object id}) => 'run ${id}';
 	@override String get resolve => 'Marcar resuelto';
 	@override String get ignore => 'Ignorar (también se oculta a los agentes)';
@@ -1413,12 +1413,12 @@ class _Translations$cockpit$telemetry$es extends Translations$cockpit$telemetry$
 	@override String get byAgent => 'por el agente';
 	@override String caseTabTitle({required Object type, required Object file}) => '${type} · ${file}';
 	@override String get srcApp => 'App';
-	@override String get chipApp => 'Cockpit';
+	@override String get chipApp => 'Orkest Code';
 }
 
-// Path: cockpit.panelView
-class _Translations$cockpit$panelView$es extends Translations$cockpit$panelView$en {
-	_Translations$cockpit$panelView$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.panelView
+class _Translations$orkest$panelView$es extends Translations$orkest$panelView$en {
+	_Translations$orkest$panelView$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1489,7 +1489,7 @@ class _Translations$settings$remoteHosts$es extends Translations$settings$remote
 	@override String get statusOffline => 'Sin conexión';
 	@override String get statusIdle => 'No conectado';
 	@override String get helpTitle => 'Cómo funciona';
-	@override String get helpBody => 'Cockpit se conecta a tu máquina por SSH y habla con un pequeño servidor que ejecuta las terminales, archivos y git allí. El host debe tener Cockpit (escritorio) o el cockpit-server instalado y en ejecución, y la clave pública de este dispositivo añadida en su ~/.ssh/authorized_keys.';
+	@override String get helpBody => 'Orkest Code se conecta a tu máquina por SSH y habla con un pequeño servidor que ejecuta las terminales, archivos y git allí. El host debe tener Orkest Code (escritorio) o el orkest-server instalado y en ejecución, y la clave pública de este dispositivo añadida en su ~/.ssh/authorized_keys.';
 }
 
 // Path: automation.error
@@ -1566,9 +1566,9 @@ class _Translations$theme$error$es extends Translations$theme$error$en {
 	@override String get noVariants => 'El tema no declara ningún variant. Añade "dark", "light" o ambos en "variants".';
 }
 
-// Path: cockpit.httpView.error
-class _Translations$cockpit$httpView$error$es extends Translations$cockpit$httpView$error$en {
-	_Translations$cockpit$httpView$error$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.httpView.error
+class _Translations$orkest$httpView$error$es extends Translations$orkest$httpView$error$en {
+	_Translations$orkest$httpView$error$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1585,9 +1585,9 @@ class _Translations$cockpit$httpView$error$es extends Translations$cockpit$httpV
 	@override String responseTooLarge({required Object bytes}) => 'La respuesta superó el límite de ${bytes} bytes.';
 }
 
-// Path: cockpit.kanbanView.deleteColumnDialog
-class _Translations$cockpit$kanbanView$deleteColumnDialog$es extends Translations$cockpit$kanbanView$deleteColumnDialog$en {
-	_Translations$cockpit$kanbanView$deleteColumnDialog$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.kanbanView.deleteColumnDialog
+class _Translations$orkest$kanbanView$deleteColumnDialog$es extends Translations$orkest$kanbanView$deleteColumnDialog$en {
+	_Translations$orkest$kanbanView$deleteColumnDialog$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1599,9 +1599,9 @@ class _Translations$cockpit$kanbanView$deleteColumnDialog$es extends Translation
 	@override String get emptyMessage => 'Esta columna está vacía.';
 }
 
-// Path: cockpit.gallery.dbQuery
-class _Translations$cockpit$gallery$dbQuery$es extends Translations$cockpit$gallery$dbQuery$en {
-	_Translations$cockpit$gallery$dbQuery$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.gallery.dbQuery
+class _Translations$orkest$gallery$dbQuery$es extends Translations$orkest$gallery$dbQuery$en {
+	_Translations$orkest$gallery$dbQuery$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1610,9 +1610,9 @@ class _Translations$cockpit$gallery$dbQuery$es extends Translations$cockpit$gall
 	@override String get description => 'Editor SQL con grilla de resultados, usando una de las conexiones registradas.';
 }
 
-// Path: cockpit.gallery.kanban
-class _Translations$cockpit$gallery$kanban$es extends Translations$cockpit$gallery$kanban$en {
-	_Translations$cockpit$gallery$kanban$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.gallery.kanban
+class _Translations$orkest$gallery$kanban$es extends Translations$orkest$gallery$kanban$en {
+	_Translations$orkest$gallery$kanban$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1621,9 +1621,9 @@ class _Translations$cockpit$gallery$kanban$es extends Translations$cockpit$galle
 	@override String get description => 'Columnas y tarjetas guardadas como markdown puro. Arrastra, edita y comenta.';
 }
 
-// Path: cockpit.gallery.layout
-class _Translations$cockpit$gallery$layout$es extends Translations$cockpit$gallery$layout$en {
-	_Translations$cockpit$gallery$layout$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.gallery.layout
+class _Translations$orkest$gallery$layout$es extends Translations$orkest$gallery$layout$en {
+	_Translations$orkest$gallery$layout$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1632,9 +1632,9 @@ class _Translations$cockpit$gallery$layout$es extends Translations$cockpit$galle
 	@override String get description => 'Terminales y splits para abrir de una vez, estilo tmuxinator. Puede ejecutarse solo en worktrees nuevos.';
 }
 
-// Path: cockpit.gallery.httpRequest
-class _Translations$cockpit$gallery$httpRequest$es extends Translations$cockpit$gallery$httpRequest$en {
-	_Translations$cockpit$gallery$httpRequest$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.gallery.httpRequest
+class _Translations$orkest$gallery$httpRequest$es extends Translations$orkest$gallery$httpRequest$en {
+	_Translations$orkest$gallery$httpRequest$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1643,31 +1643,31 @@ class _Translations$cockpit$gallery$httpRequest$es extends Translations$cockpit$
 	@override String get description => 'Escribe requests en un archivo y ejecútalos con la respuesta al lado.';
 }
 
-// Path: cockpit.gallery.html
-class _Translations$cockpit$gallery$html$es extends Translations$cockpit$gallery$html$en {
-	_Translations$cockpit$gallery$html$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.gallery.html
+class _Translations$orkest$gallery$html$es extends Translations$orkest$gallery$html$en {
+	_Translations$orkest$gallery$html$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
 	// Translations
 	@override String get title => 'Vista HTML';
-	@override String get description => 'Una página que el agente escribe y Cockpit renderiza directo: mapa mental, diagrama, gráfico, lo que necesites.';
+	@override String get description => 'Una página que el agente escribe y Orkest Code renderiza directo: mapa mental, diagrama, gráfico, lo que necesites.';
 }
 
-// Path: cockpit.gallery.tasks
-class _Translations$cockpit$gallery$tasks$es extends Translations$cockpit$gallery$tasks$en {
-	_Translations$cockpit$gallery$tasks$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.gallery.tasks
+class _Translations$orkest$gallery$tasks$es extends Translations$orkest$gallery$tasks$en {
+	_Translations$orkest$gallery$tasks$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
 	// Translations
 	@override String get title => 'Tareas';
-	@override String get description => 'Comandos para ejecutar desde el panel de Tasks, como dev server, tests y build. Vive en .cockpit/tasks.json.';
+	@override String get description => 'Comandos para ejecutar desde el panel de Tasks, como dev server, tests y build. Vive en .orkest/tasks.json.';
 }
 
-// Path: cockpit.gallery.notebook
-class _Translations$cockpit$gallery$notebook$es extends Translations$cockpit$gallery$notebook$en {
-	_Translations$cockpit$gallery$notebook$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.gallery.notebook
+class _Translations$orkest$gallery$notebook$es extends Translations$orkest$gallery$notebook$en {
+	_Translations$orkest$gallery$notebook$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1676,9 +1676,9 @@ class _Translations$cockpit$gallery$notebook$es extends Translations$cockpit$gal
 	@override String get description => 'Una carpeta de notas cortas con tags. El agente escribe, tú lees y editas. También abre en Obsidian.';
 }
 
-// Path: cockpit.gallery.workspaceEnv
-class _Translations$cockpit$gallery$workspaceEnv$es extends Translations$cockpit$gallery$workspaceEnv$en {
-	_Translations$cockpit$gallery$workspaceEnv$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.gallery.workspaceEnv
+class _Translations$orkest$gallery$workspaceEnv$es extends Translations$orkest$gallery$workspaceEnv$en {
+	_Translations$orkest$gallery$workspaceEnv$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1687,20 +1687,20 @@ class _Translations$cockpit$gallery$workspaceEnv$es extends Translations$cockpit
 	@override String get description => 'Variables inyectadas en cada terminal de este workspace. Pon tokens o credenciales de API aquí en vez de pegarlos en el prompt del agente. Queda fuera de git.';
 }
 
-// Path: cockpit.gallery.panel
-class _Translations$cockpit$gallery$panel$es extends Translations$cockpit$gallery$panel$en {
-	_Translations$cockpit$gallery$panel$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.gallery.panel
+class _Translations$orkest$gallery$panel$es extends Translations$orkest$gallery$panel$en {
+	_Translations$orkest$gallery$panel$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
 	// Translations
 	@override String get title => 'Panel';
-	@override String get description => 'Una página HTML con puente a la app: sus botones ejecutan comandos de la CLI de Cockpit y del shell en esta máquina. Un playground para dashboards rápidos.';
+	@override String get description => 'Una página HTML con puente a la app: sus botones ejecutan comandos de la CLI de Orkest Code y del shell en esta máquina. Un playground para dashboards rápidos.';
 }
 
-// Path: cockpit.notebook.format
-class _Translations$cockpit$notebook$format$es extends Translations$cockpit$notebook$format$en {
-	_Translations$cockpit$notebook$format$es._(TranslationsEs root) : this._root = root, super.internal(root);
+// Path: orkest.notebook.format
+class _Translations$orkest$notebook$format$es extends Translations$orkest$notebook$format$en {
+	_Translations$orkest$notebook$format$es._(TranslationsEs root) : this._root = root, super.internal(root);
 
 	final TranslationsEs _root; // ignore: unused_field
 
@@ -1761,21 +1761,21 @@ class _Translations$settings$page$general$es extends Translations$settings$page$
 	// Translations
 	@override String get sectionEditor => 'Editor';
 	@override String get editorEngineTitle => 'Motor';
-	@override String get editorEngineCockpit => 'Cockpit (predeterminado)';
+	@override String get editorEngineOrkest => 'Orkest Code (predeterminado)';
 	@override String get editorEngineNeovim => 'Neovim';
 	@override String get neovimChecking => 'Buscando Neovim…';
 	@override String get neovimNotFound => 'Neovim no se encontró en la PATH de tu shell.';
 	@override String get neovimRefresh => 'Comprobar de nuevo';
-	@override String get showCockpitTitle => 'Mostrar terminal de Cockpit';
-	@override String get showCockpitDesc => 'Mantiene un workspace sin carpeta, solo de terminal, fijado en la parte superior de la barra lateral. Desactivarlo cierra sus terminales.';
+	@override String get showOrkestTitle => 'Mostrar terminal de Orkest Code';
+	@override String get showOrkestDesc => 'Mantiene un workspace sin carpeta, solo de terminal, fijado en la parte superior de la barra lateral. Desactivarlo cierra sus terminales.';
 	@override String get launchAtStartupTitle => 'Iniciar al arrancar';
-	@override String get launchAtStartupDesc => 'Inicia Cockpit automáticamente cuando inicias sesión en tu computadora.';
+	@override String get launchAtStartupDesc => 'Inicia Orkest Code automáticamente cuando inicias sesión en tu computadora.';
 	@override String get sectionUpdates => 'Actualizaciones';
 	@override String get checkUpdatesTitle => 'Buscar actualizaciones';
-	@override String get checkUpdatesDesc => 'Con qué frecuencia Cockpit debe buscar nuevas versiones.';
+	@override String get checkUpdatesDesc => 'Con qué frecuencia Orkest Code debe buscar nuevas versiones.';
 	@override late final _Translations$settings$page$general$updateFrequency$es updateFrequency = _Translations$settings$page$general$updateFrequency$es._(_root);
 	@override String get developerModeTitle => 'Modo desarrollador';
-	@override String get developerModeDesc => 'Registra los errores y avisos del propio Cockpit en una base aparte de la Telemetría (chip “Cockpit”) y activa las métricas de rendimiento. Solo sirve a quien mantiene la app.';
+	@override String get developerModeDesc => 'Registra los errores y avisos del propio Orkest Code en una base aparte de la Telemetría (chip “Orkest Code”) y activa las métricas de rendimiento. Solo sirve a quien mantiene la app.';
 }
 
 // Path: settings.page.diagnostics
@@ -1807,23 +1807,23 @@ class _Translations$settings$page$storage$es extends Translations$settings$page$
 	// Translations
 	@override String get sectionTitle => 'Almacenamiento';
 	@override String get locationTitle => 'Ubicación de almacenamiento';
-	@override String locationDesc({required Object root}) => 'Cockpit guarda aquí sus proyectos, diseños y configuración. Apúntalo a una carpeta sincronizada para respaldarlo.\n${root}';
+	@override String locationDesc({required Object root}) => 'Orkest Code guarda aquí sus proyectos, diseños y configuración. Apúntalo a una carpeta sincronizada para respaldarlo.\n${root}';
 	@override String get useDefault => 'Usar predeterminado';
 	@override String get working => 'Procesando…';
 	@override String get change => 'Cambiar…';
-	@override String get resetTitle => 'Restablecer Cockpit';
+	@override String get resetTitle => 'Restablecer Orkest Code';
 	@override String get resetDesc => 'Elimina todos los datos locales — proyectos, diseños, configuración e historial de terminal — y vuelve a la ubicación predeterminada.';
 	@override String get resetButton => 'Restablecer…';
 	@override String get resetConfirm => 'Restablecer';
-	@override String get resetDialogTitle => '¿Restablecer Cockpit?';
-	@override String get resetDialogContent => 'Esto elimina permanentemente todos los datos locales de Cockpit — proyectos, diseños, configuración e historial de terminal. Esto no se puede deshacer. Cockpit se cerrará para que puedas empezar de nuevo.';
+	@override String get resetDialogTitle => '¿Restablecer Orkest Code?';
+	@override String get resetDialogContent => 'Esto elimina permanentemente todos los datos locales de Orkest Code — proyectos, diseños, configuración e historial de terminal. Esto no se puede deshacer. Orkest Code se cerrará para que puedas empezar de nuevo.';
 	@override String get restartRequiredTitle => 'Reinicio necesario';
-	@override String restartChangeFolderMessage({required Object path}) => 'Cockpit usará esta carpeta a partir del próximo inicio:\n${path}';
-	@override String get restartUseDefaultMessage => 'Cockpit usará la ubicación predeterminada del sistema a partir del próximo inicio. Tus datos en la carpeta personalizada permanecen intactos.';
-	@override String get restartResetMessage => 'Se borraron todos los datos de Cockpit. Reinicia para empezar de nuevo.';
+	@override String restartChangeFolderMessage({required Object path}) => 'Orkest Code usará esta carpeta a partir del próximo inicio:\n${path}';
+	@override String get restartUseDefaultMessage => 'Orkest Code usará la ubicación predeterminada del sistema a partir del próximo inicio. Tus datos en la carpeta personalizada permanecen intactos.';
+	@override String get restartResetMessage => 'Se borraron todos los datos de Orkest Code. Reinicia para empezar de nuevo.';
 	@override String get later => 'Más tarde';
-	@override String get quitCockpit => 'Salir de Cockpit';
-	@override String get chooseFolderDialogTitle => 'Elige una carpeta para los datos de Cockpit';
+	@override String get quitOrkest => 'Salir de Orkest Code';
+	@override String get chooseFolderDialogTitle => 'Elige una carpeta para los datos de Orkest Code';
 }
 
 // Path: settings.page.terminal
@@ -1838,7 +1838,7 @@ class _Translations$settings$page$terminal$es extends Translations$settings$page
 	@override String get engineDesc => 'Usado por nuevas pestañas de terminal y buffers de salida de tasks. Las pestañas abiertas mantienen su motor actual.';
 	@override String get shellTitle => 'Shell';
 	@override String get shellDesc => 'Qué shell abren las nuevas pestañas de terminal. La flecha junto al + sigue abriendo cualquier otro, solo para esa pestaña.';
-	@override String get noWslMessage => 'No se encontraron distros de WSL. Instala una (wsl.exe --install) y reinicia Cockpit para verla listada aquí.';
+	@override String get noWslMessage => 'No se encontraron distros de WSL. Instala una (wsl.exe --install) y reinicia Orkest Code para verla listada aquí.';
 	@override String get sectionBehavior => 'Comportamiento';
 	@override String get closeOnExitTitle => 'Cerrar la pestaña cuando el shell termine';
 	@override String get closeOnExitDesc => 'Cuando un shell termina por sí solo (exit, Ctrl-D), cierra su pestaña en lugar de dejar un terminal muerto.';
@@ -1920,7 +1920,7 @@ class _Translations$settings$page$notifications$es extends Translations$settings
 	@override String get enableTitle => 'Activar notificaciones';
 	@override String get enableDesc => 'Avisarme cuando un agente termine un turno y la ventana no esté enfocada.';
 	@override String get systemPermissionTitle => 'Permiso del sistema';
-	@override String get grantedDesc => 'Cockpit tiene permiso para enviar notificaciones.';
+	@override String get grantedDesc => 'Orkest Code tiene permiso para enviar notificaciones.';
 	@override String get notGrantedDesc => 'macOS aún no ha concedido acceso a las notificaciones.';
 	@override String get granted => 'Concedido';
 	@override String get requestPermission => 'Solicitar permiso';
@@ -1959,7 +1959,7 @@ class _Translations$settings$page$languages$es extends Translations$settings$pag
 	@override String get formatOnSaveTitle => 'Formatear al guardar';
 	@override String get formatOnSaveDesc => 'Formatea el archivo automáticamente al guardar (⌘S).';
 	@override String get sectionLanguageServers => 'SERVIDORES DE LENGUAJE';
-	@override String get footerNote => 'Los errores y el formato usan el language server de cada lenguaje. Cockpit no instala servidores — usa lo que ya está en tu máquina. ● responde · ○ no encontrado o comando inválido (instala el servidor o ajusta el comando).';
+	@override String get footerNote => 'Los errores y el formato usan el language server de cada lenguaje. Orkest Code no instala servidores — usa lo que ya está en tu máquina. ● responde · ○ no encontrado o comando inválido (instala el servidor o ajusta el comando).';
 	@override String get serverCommandLabel => 'Comando del language server';
 	@override String get formatterCommandLabel => 'Comando del formateador (opcional)';
 	@override String get formatterHint => 'Formateador externo con el marcador %FILE%. Tiene prioridad sobre el formateador del LSP cuando está definido.';
@@ -1993,7 +1993,7 @@ class _Translations$settings$page$automations$es extends Translations$settings$p
 	@override String get modelAutoRouted => 'Este harness elige el modelo automáticamente.';
 	@override String get modelAccountOnly => 'Solo se muestran los modelos disponibles en tu cuenta.';
 	@override String get generateFromSourceControl => 'Generar desde Control de versiones';
-	@override String get generateFromSourceControlDescription => 'Cockpit envía solo el diff seleccionado y los asuntos de los commits recientes. Los patrones habituales de credenciales y los archivos sensibles se redactan antes de ejecutar el harness.';
+	@override String get generateFromSourceControlDescription => 'Orkest Code envía solo el diff seleccionado y los asuntos de los commits recientes. Los patrones habituales de credenciales y los archivos sensibles se redactan antes de ejecutar el harness.';
 	@override String get discoveryFailed => 'No se pudieron descubrir los harnesses de automatización instalados.';
 	@override String staleModel({required Object model, required Object harness}) => 'El modelo "${model}" ya no está disponible para ${harness}. Se usará el predeterminado de la CLI; elige otro modelo en Configuración si lo necesitas.';
 	@override String get recommendedSuffix => 'Recomendado';
@@ -2020,13 +2020,13 @@ class _Translations$settings$page$general$updateFrequency$es extends Translation
 extension on TranslationsEs {
 	dynamic _flatMapFunction(String path) {
 		return switch (path) {
-			'core.bootstrapError.title' => 'No se pudo inicializar Cockpit',
+			'core.bootstrapError.title' => 'No se pudo inicializar Orkest Code',
 			'core.bootstrapError.retry' => 'Reintentar',
 			'core.macosNotifications.title' => 'Activar notificaciones en macOS',
 			'core.macosNotifications.intro' => 'Las notificaciones están desactivadas en la configuración del sistema. Sigue los pasos a continuación para activarlas:',
 			'core.macosNotifications.step1' => 'Abre los Ajustes del Sistema en tu Mac.',
 			'core.macosNotifications.step2' => 'Ve a la sección Notificaciones en la barra lateral izquierda.',
-			'core.macosNotifications.step3' => 'Busca y selecciona la aplicación Cockpit en la lista.',
+			'core.macosNotifications.step3' => 'Busca y selecciona la aplicación Orkest Code en la lista.',
 			'core.macosNotifications.step4' => 'Activa el interruptor Permitir Notificaciones.',
 			'core.macosNotifications.tip' => 'Consejo: si la aplicación no aparece en la lista, ciérrala y vuelve a abrirla para activar su registro en el sistema.',
 			'core.macosNotifications.gotIt' => 'Entendido',
@@ -2040,7 +2040,7 @@ extension on TranslationsEs {
 			'core.windowControls.maximize' => 'Maximizar',
 			'core.windowControls.close' => 'Cerrar',
 			'core.crash.title' => 'Cierre inesperado',
-			'core.crash.bannerTitle' => 'Cockpit se cerró inesperadamente',
+			'core.crash.bannerTitle' => 'Orkest Code se cerró inesperadamente',
 			'core.crash.report' => 'Reportar',
 			'core.crash.dismiss' => 'Descartar',
 			'core.crash.crashMessage' => ({required Object version}) => 'La sesión anterior (versión ${version}) terminó sin cerrarse correctamente. ¿Quieres reportarlo? El log se incluye y puedes revisar todo antes de enviar.',
@@ -2100,810 +2100,810 @@ extension on TranslationsEs {
 			'common.copyCode' => 'Copiar código',
 			'common.search' => 'Buscar',
 			'common.noResults' => 'Sin resultados',
-			'cockpit.officeWorld.reception' => 'Recepción',
-			'cockpit.officeWorld.cafe' => 'Cocina',
-			'cockpit.officeWorld.restrooms' => 'Baños',
-			'cockpit.officeWorld.lounge' => 'Sala de descanso',
-			'cockpit.officeWorld.rosterTitle' => 'Agentes de la oficina',
-			'cockpit.officeWorld.rosterSearch' => 'Buscar agentes o proyectos',
-			'cockpit.officeWorld.rosterEmpty' => 'No se encontraron agentes activos',
-			'cockpit.officeWorld.activityFeed' => 'Actividad',
-			'cockpit.officeWorld.activityEmpty' => 'La actividad observada aparecerá aquí.',
-			'cockpit.officeWorld.collapseRoster' => 'Contraer lista de agentes',
-			'cockpit.officeWorld.collapseFeed' => 'Contraer actividad',
-			'cockpit.officeWorld.reopenRoster' => 'Agentes',
-			'cockpit.officeWorld.reopenFeed' => 'Actividad',
-			'cockpit.officeWorld.working' => 'Trabajando',
-			'cockpit.officeWorld.waiting' => 'Esperando',
-			'cockpit.officeWorld.idle' => 'Disponible',
-			'cockpit.officeWorld.agentProfile' => 'Perfil del agente',
-			'cockpit.officeWorld.project' => 'Proyecto',
-			'cockpit.officeWorld.provider' => 'Agente',
-			'cockpit.officeWorld.currentStatus' => 'Estado actual',
-			'cockpit.officeWorld.followAgent' => 'Seguir personaje',
-			'cockpit.officeWorld.stopFollowingAgent' => 'Dejar de seguir',
-			'cockpit.officeWorld.centerAgent' => 'Centrar personaje',
-			'cockpit.officeWorld.sessionDuration' => 'Sesión actual en Cockpit',
-			'cockpit.officeWorld.workingDirectory' => 'Directorio de trabajo',
-			'cockpit.officeWorld.statsPending' => 'Cockpit todavía no recopila estadísticas de modelo, tokens y herramientas.',
-			'cockpit.officeWorld.recentActivity' => 'Actividad reciente en esta ejecución',
-			'cockpit.officeWorld.promptReceived' => 'Recibió una solicitud',
-			'cockpit.officeWorld.agentThinking' => 'Pensando',
-			'cockpit.officeWorld.agentResponded' => 'Respuesta enviada',
-			'cockpit.officeWorld.activityError' => 'Algo salió mal',
-			'cockpit.officeWorld.readingFile' => 'Leyendo archivo',
-			'cockpit.officeWorld.searchingCode' => 'Buscando en el código',
-			'cockpit.officeWorld.editingFile' => 'Editando archivo',
-			'cockpit.officeWorld.writingFile' => 'Escribiendo archivo',
-			'cockpit.officeWorld.runningCommand' => 'Comando en terminal',
-			'cockpit.officeWorld.runningTests' => 'Ejecutando pruebas',
-			'cockpit.officeWorld.browsingWeb' => 'Buscando en la web',
-			'cockpit.officeWorld.organizingTasks' => 'Organizando tareas',
-			'cockpit.officeWorld.callingSubagents' => 'Llamando subagentes',
-			'cockpit.officeWorld.toolCompleted' => 'Herramienta completada',
-			'cockpit.officeWorld.usingTool' => 'Usando herramienta',
-			'cockpit.officeWorld.editAgentName' => 'Editar nombre del agente',
-			'cockpit.officeWorld.agentName' => 'Nombre del agente',
-			'cockpit.officeWorld.workingInTerminal' => 'Trabajando en el terminal',
-			'cockpit.officeWorld.waitingInTerminal' => 'Te necesita en el terminal',
-			'cockpit.officeWorld.waitingBubble' => 'Responder en la terminal',
-			'cockpit.officeWorld.respond' => 'Responder',
-			'cockpit.officeWorld.dismissNotification' => 'Descartar aviso',
-			'cockpit.officeWorld.editAppearance' => 'Editar personaje',
-			'cockpit.officeWorld.randomizeAppearance' => 'Sortear',
-			'cockpit.officeWorld.resetAppearance' => 'Volver al sorteo',
-			'cockpit.officeWorld.skin' => 'Piel',
-			'cockpit.officeWorld.hair' => 'Cabello',
-			'cockpit.officeWorld.beard' => 'Barba',
-			'cockpit.officeWorld.eyes' => 'Ojos',
-			'cockpit.officeWorld.top' => 'Parte superior',
-			'cockpit.officeWorld.bottom' => 'Parte inferior',
-			'cockpit.officeWorld.shoes' => 'Zapatos',
-			'cockpit.officeWorld.accessory' => 'Accesorio',
-			'cockpit.officeWorld.turnCompleted' => 'Turno terminado',
-			'cockpit.officeWorld.subagentFailed' => 'El subagente falló',
-			'cockpit.officeWorld.subagentInterrupted' => 'Subagente interrumpido',
-			'cockpit.officeWorld.openTerminal' => 'Abrir terminal',
-			'cockpit.officeWorld.interactInOffice' => 'Interactuar en Office',
-			'cockpit.officeWorld.liveTerminal' => 'Terminal en vivo',
-			'cockpit.officeWorld.terminalInputPlaceholder' => 'Escribe en la terminal…',
-			'cockpit.officeWorld.terminalOfficeHint' => 'La entrada se envía a la sesión original. Usa las opciones de respuesta que el agente muestre en esta terminal.',
-			'cockpit.officeWorld.appearance' => 'Apariencia de la oficina',
-			'cockpit.officeWorld.officeTheme' => 'Tema estacional',
-			'cockpit.officeWorld.themeAuto' => 'Automático',
-			'cockpit.officeWorld.themeNone' => 'Original',
-			'cockpit.officeWorld.themeChristmas' => 'Navidad',
-			'cockpit.officeWorld.themeHalloween' => 'Halloween',
-			'cockpit.officeWorld.showNames' => 'Mostrar nombres de agentes',
-			'cockpit.officeWorld.bubbles' => 'Globos de actividad',
-			'cockpit.officeWorld.bubblesAll' => 'Todos',
-			'cockpit.officeWorld.bubblesImportant' => 'Importantes',
-			'cockpit.officeWorld.bubblesNone' => 'Ninguno',
-			'cockpit.officeWorld.movement' => 'Movimiento por la oficina',
-			'cockpit.officeWorld.movementCalm' => 'Tranquilo',
-			'cockpit.officeWorld.movementNormal' => 'Normal',
-			'cockpit.officeWorld.movementLively' => 'Animado',
-			'cockpit.officeWorld.daylight' => 'Ciclo día/noche',
-			'cockpit.officeWorld.sounds' => 'Sonidos de la oficina',
-			'cockpit.officeWorld.soundVolume' => 'Volumen',
-			'cockpit.officeWorld.soundAlerts' => 'Avisos y tareas completadas',
-			'cockpit.officeWorld.soundKeys' => 'Teclado',
-			'cockpit.officeWorld.soundElevator' => 'Ascensor',
-			'cockpit.officeWorld.soundSocial' => 'Ping-pong y arcade',
-			'cockpit.officeWorld.daylightAuto' => 'Automático',
-			'cockpit.officeWorld.daylightDay' => 'Siempre de día',
-			'cockpit.officeWorld.daylightNight' => 'Siempre de noche',
-			'cockpit.officeWorld.socialLife' => 'Vida social',
-			'cockpit.officeWorld.gameCoins' => ({required Object count}) => '${count} monedas de la oficina',
-			'cockpit.officeWorld.earnedWorking' => ({required Object count}) => '${count} ganadas con actividades',
-			'cockpit.officeWorld.matchRecord' => ({required Object wins, required Object losses}) => '${wins} victorias · ${losses} derrotas',
-			'cockpit.officeWorld.personality' => 'Personalidad',
-			'cockpit.officeWorld.friendships' => 'Amistades',
-			'cockpit.officeWorld.rivals' => 'Rivalidades',
-			'cockpit.officeWorld.socialLedger' => 'Historial de monedas',
-			'cockpit.officeWorld.socialActivity' => 'Vida social de la oficina',
-			'cockpit.officeWorld.delegatedBy' => ({required Object name}) => 'Delegado por ${name}',
-			'cockpit.officeWorld.shellWaiting' => 'Esperando un comando',
-			'cockpit.officeWorld.socialEconomy' => 'Juego de la oficina — sin valor monetario real',
-			'cockpit.confirmDialog.unsavedChangesTitle' => 'Cambios sin guardar',
-			'cockpit.confirmDialog.unsavedChangesMessage' => ({required Object fileName}) => '“${fileName}” tiene cambios sin guardar. ¿Guardarlos antes de cerrar?',
-			'cockpit.confirmDialog.dontSave' => 'No guardar',
-			'cockpit.confirmDialog.saveAndClose' => 'Guardar y cerrar',
-			'cockpit.neovim.unavailable' => 'Neovim no está disponible. Abriendo en Cockpit.',
-			'cockpit.neovim.openFailed' => 'No se pudo acceder a Neovim. Abriendo en Cockpit.',
-			'cockpit.neovim.unsavedTitle' => 'Búferes de Neovim sin guardar',
-			'cockpit.neovim.unsavedMessage' => 'Neovim tiene búferes modificados. ¿Cerrar la pestaña y descartar esos cambios?',
-			'cockpit.neovim.closeAnyway' => 'Cerrar de todos modos',
-			'cockpit.worktreeCreateDialog.forkTitle' => 'Fork del worktree',
-			'cockpit.worktreeCreateDialog.createTitle' => 'Crear worktree',
-			'cockpit.worktreeCreateDialog.forkSubtitle' => ({required Object root}) => 'Nueva worktree ramificada desde ${root}.',
-			'cockpit.worktreeCreateDialog.createSubtitle' => ({required Object root}) => 'Nueva feature en ${root} — nueva branch desde el HEAD actual.',
-			'cockpit.worktreeCreateDialog.namePlaceholder' => 'feat/mi-feature',
-			'cockpit.worktreeCreateDialog.errorWhitespace' => 'Sin espacios en el nombre.',
-			'cockpit.worktreeCreateDialog.errorInvalidChar' => 'Carácter inválido para un nombre de branch.',
-			'cockpit.worktreeCreateDialog.errorInvalidSequence' => 'Secuencia inválida (ej.: "..", "//", empezar/terminar con "/").',
-			'cockpit.worktreeCreateDialog.errorReserved' => 'Posición reservada (no empieces con "-"/"." ni termines con ".lock").',
-			'cockpit.worktreeCreateDialog.errorDuplicateBranch' => 'Ya existe una branch con ese nombre.',
-			'cockpit.worktreeCreateDialog.errorDuplicateWorktree' => 'Ya existe un worktree con ese nombre.',
-			'cockpit.worktreeCreateDialog.errorBranchHierarchyConflict' => ({required Object target, required Object existing}) => 'No se puede crear la branch \'${target}\' porque entra en conflicto con la branch \'${existing}\' ya existente.',
-			'cockpit.worktreeCreateDialog.errorBranchHierarchicalConflictGeneral' => 'Ya existe una branch con una jerarquía conflictiva.',
-			'cockpit.worktreeCreateDialog.fork' => 'Fork',
-			'cockpit.worktreeCreateDialog.postCheckoutHint' => 'Este repositorio tiene un hook post-checkout.',
-			'cockpit.worktreeCreateDialog.running' => 'Ejecutando…',
-			'cockpit.worktreeCreateDialog.advancedSettings' => 'Configuración Avanzada',
-			'cockpit.worktreeCreateDialog.copyIgnored' => 'Copiar archivos ignorados (.gitignore)',
-			'cockpit.worktreeCreateDialog.copyIgnoredDesc' => 'Copia los archivos ignorados por .gitignore (ej. .env, claves locales) al nuevo worktree.',
-			'cockpit.worktreeCreateDialog.copyUntracked' => 'Copiar archivos no rastreados',
-			'cockpit.worktreeCreateDialog.copyUntrackedDesc' => 'Copia los archivos nuevos o modificados que aún no se han agregado al stage.',
-			'cockpit.worktreeCreateDialog.baseBranch' => 'Branch base',
-			'cockpit.worktreeCreateDialog.baseBranchDesc' => 'La branch desde la cual se creará el nuevo worktree y branch.',
-			'cockpit.worktreeCreateDialog.fetchRemote' => 'Sincronizar branch remota (fetch)',
-			'cockpit.worktreeCreateDialog.fetchRemoteDesc' => 'Ejecuta git fetch para garantizar que la branch base esté confirmada antes de crear el worktree.',
-			'cockpit.worktreeCreateDialog.searchBranch' => 'Buscar branch...',
-			'cockpit.worktreeCreateDialog.back' => 'Atrás',
-			'cockpit.commitMessageDialog.commitTitle' => 'Commit',
-			'cockpit.commitMessageDialog.stageAndCommitTitle' => 'Stage y Commit',
-			'cockpit.commitMessageDialog.scopeNote' => ({required Object fileName}) => 'Commit solo de "${fileName}".',
-			'cockpit.commitMessageDialog.placeholder' => 'fix: resumen breve del cambio',
-			'cockpit.commitMessageDialog.errorEmptySubject' => 'La primera línea (asunto) no puede estar vacía.',
-			'cockpit.commitMessageDialog.errorTooShort' => ({required Object min}) => 'Asunto demasiado corto (mín. ${min} caracteres).',
-			'cockpit.commitMessageDialog.errorTooLong' => ({required Object max}) => 'Asunto demasiado largo (máx. ${max} caracteres).',
-			'cockpit.commitMessageDialog.errorTrailingPeriod' => 'El asunto no debe terminar con un punto.',
-			'cockpit.commitMessageDialog.errorControlChars' => 'El asunto contiene caracteres de control.',
-			'cockpit.commitMessageDialog.errorBlankSecondLine' => 'Deja la segunda línea en blanco (separador entre asunto y cuerpo de git).',
-			'cockpit.commitMessageDialog.generate' => 'Generar mensaje de commit',
-			'cockpit.commitMessageDialog.generateWith' => ({required Object harness}) => 'Generar con ${harness}',
-			'cockpit.commitMessageDialog.generating' => 'Generando…',
-			'cockpit.commitMessageDialog.cancelGeneration' => 'Cancelar generación',
-			'cockpit.tasksPanel.reloadTasksTooltip' => 'Recargar tasks',
-			'cockpit.tasksPanel.restartTooltip' => 'Reiniciar',
-			'cockpit.tasksPanel.stopTooltip' => 'Detener',
-			'cockpit.tasksPanel.runTooltip' => 'Ejecutar',
-			'cockpit.tasksPanel.sendsKeyTooltip' => ({required Object label, required Object key}) => '${label} (envía \'${key}\')',
-			'cockpit.tasksPanel.startingTooltip' => 'Iniciando…',
-			'cockpit.tasksPanel.stoppingTooltip' => 'Deteniendo…',
-			'cockpit.tasksPanel.switchProfileTooltip' => 'Cambiar perfil',
-			'cockpit.tasksPanel.moreKeysTooltip' => 'Más teclas',
-			'cockpit.tasksPanel.sectionTasks' => 'TAREAS',
-			'cockpit.tasksPanel.noTasks' => 'No se detectaron tareas en este proyecto.',
-			'cockpit.tasksPanel.createTasksJson' => 'Crear tasks.json',
-			'cockpit.tasksPanel.generateComposeTasks' => 'Generar tareas de Compose',
-			'cockpit.tasksPanel.selectComposeEngine' => 'Elige un motor de Compose',
-			'cockpit.tasksPanel.noComposeEngine' => 'No se encontró Docker Compose ni Podman Compose.',
-			'cockpit.tasksPanel.invalidComposeFile' => 'El archivo activo no es un Compose válido con servicios.',
-			'cockpit.tasksPanel.invalidTasksJson' => 'tasks.json no es válido. No se guardaron cambios.',
-			'cockpit.tasksPanel.composeConflicts' => ({required Object labels}) => 'Se conservaron tareas que no son Compose con etiquetas en conflicto: ${labels}',
-			'cockpit.cockpitPage.chooseProjectFolderDialogTitle' => 'Elige la carpeta del proyecto',
-			'cockpit.cockpitPage.chooseWorkspaceFolderDialogTitle' => 'Elige la carpeta del workspace',
-			'cockpit.cockpitPage.workspaceRenamedTitle' => 'Workspace renombrado',
-			'cockpit.cockpitPage.workspaceRenamedMessage' => ({required Object name}) => 'El nuevo nombre "${name}" solo se enviará a los agentes tras reiniciar el workspace o la aplicación.',
-			'cockpit.cockpitPage.syncTitle' => ({required Object label}) => 'Sync — ${label}',
-			'cockpit.cockpitPage.pullTitle' => ({required Object label}) => 'Pull — ${label}',
-			'cockpit.cockpitPage.pushTitle' => ({required Object label}) => 'Push — ${label}',
-			'cockpit.cockpitPage.updateFromParentTitle' => ({required Object name}) => 'Actualizar desde el Padre — ${name}',
-			'cockpit.cockpitPage.mergeToParentTitle' => ({required Object name}) => 'Merge al Padre — ${name}',
-			'cockpit.cockpitPage.worktreeMergedAndRemoved' => 'Worktree fusionado y eliminado.',
-			'cockpit.cockpitPage.nothingWasChanged' => 'No se realizaron cambios.',
-			'cockpit.cockpitPage.newRealmTitle' => 'Nuevo realm',
-			'cockpit.cockpitPage.closeWorkspaceTitle' => 'Cerrar workspace',
-			'cockpit.cockpitPage.closeWorkspaceMessage' => ({required Object name}) => '¿Cerrar "${name}"? Los agentes de este workspace se cerrarán. La carpeta en el disco se conserva.',
-			'cockpit.cockpitPage.closeAction' => 'Cerrar',
-			'cockpit.cockpitPage.removeWorktreeTitle' => 'Quitar worktree',
-			'cockpit.cockpitPage.removeWorktreeMessage' => ({required Object name, required Object warn}) => '¿Quitar "${name}"? La carpeta del worktree y la branch se eliminarán y los agentes de este fork se cerrarán.${warn}',
-			'cockpit.cockpitPage.removeWorktreeWarning' => ({required Object name}) => '\n\nAdvertencia: la branch "${name}" aún no se ha fusionado — eliminarla (git branch -D) descarta el trabajo no fusionado.',
-			'cockpit.cockpitPage.failedToRemoveWorktreeTitle' => 'No se pudo quitar el worktree',
-			'cockpit.cockpitPage.openLayoutTitle' => 'Abrir layout',
-			'cockpit.cockpitPage.replaceLayoutTitle' => '¿Reemplazar el layout actual?',
-			'cockpit.cockpitPage.replaceLayoutMessage' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: 'Se cerrará 1 pestaña, y tiene un proceso en ejecución.', other: 'Se cerrarán ${n} pestañas, incluidas las que tienen procesos en ejecución.', ), 
-			'cockpit.cockpitPage.replaceLayoutConfirm' => 'Reemplazar',
-			'cockpit.cockpitPage.restartServerTooltip' => 'Reiniciar servidor',
-			'cockpit.cockpitPage.noLspAvailable' => 'Ningún LSP disponible',
-			'cockpit.cockpitPage.lspRunning' => 'en ejecución',
-			'cockpit.cockpitPage.lspStopped' => 'detenido',
-			'cockpit.welcomeView.title' => 'Bienvenido a Cockpit',
-			'cockpit.welcomeView.subtitle' => 'Abre una carpeta o conéctate a un host remoto para empezar.',
-			'cockpit.welcomeView.createWorkspace' => 'Crear workspace',
-			'cockpit.welcomeView.openLocalFolder' => 'Abrir carpeta local',
-			'cockpit.welcomeView.connectHost' => 'Conectar a un host',
-			'cockpit.welcomeView.configureHost' => 'Configurar host',
-			'cockpit.welcomeView.addWorkspace' => 'Añadir workspace',
-			'cockpit.paneView.closePaneTitle' => '¿Cerrar panel?',
-			'cockpit.paneView.closePaneMessage' => ({required Object count}) => 'Esto cierra todas las ${count} pestaña(s) de este panel y finaliza los agentes/terminales en él.',
-			'cockpit.paneView.close' => 'Cerrar',
-			'cockpit.paneView.closeOtherTabs' => 'Cerrar las otras',
-			'cockpit.paneView.closeTabsToTheRight' => 'Cerrar a la derecha',
-			'cockpit.paneView.closeAllTabs' => 'Cerrar todas',
-			'cockpit.paneView.closeTabsTitle' => '¿Cerrar pestañas?',
-			'cockpit.paneView.closeTabsMessage' => ({required Object count}) => 'Esto cierra ${count} pestaña(s) y finaliza los agentes/terminales en ellas.',
-			'cockpit.paneView.allTabs' => 'Todas las pestañas',
-			'cockpit.paneView.pinTab' => 'Fijar pestaña',
-			'cockpit.paneView.openInNewWindow' => 'Abrir en ventana nueva',
-			'cockpit.paneView.rename' => 'Renombrar',
-			'cockpit.paneView.openAsMarkdown' => 'Abrir como markdown',
-			'cockpit.paneView.openAsBoard' => 'Abrir como tablero',
-			'cockpit.paneView.resetTitle' => 'Restablecer título',
-			'cockpit.paneView.copyId' => 'Copiar Id',
-			'cockpit.paneView.restartTab' => 'Reiniciar',
-			'cockpit.paneView.newTab' => 'Nueva pestaña',
-			'cockpit.paneView.newTerminal' => 'Nueva terminal…',
-			'cockpit.paneView.splitRight' => 'Dividir a la derecha',
-			'cockpit.paneView.splitDown' => 'Dividir abajo',
-			'cockpit.paneView.closePane' => 'Cerrar panel',
-			'cockpit.paneView.dropHereToMove' => 'Suelta aquí para mover la pestaña',
-			'cockpit.paneView.dockAsTab' => 'Acoplar como pestaña',
-			'cockpit.paneView.openBrowser' => 'Abrir navegador',
-			'cockpit.paneView.openTerminal' => 'Abrir terminal',
-			'cockpit.paneView.openAsLayout' => 'Abrir como diseño',
-			'cockpit.paneView.openAsYaml' => 'Abrir como YAML',
-			'cockpit.paneView.openAsPanel' => 'Abrir como panel',
-			'cockpit.paneView.openAsHtml' => 'Abrir como HTML',
-			'cockpit.fileTreePanel.viewDiff' => 'Ver Diff',
-			'cockpit.fileTreePanel.commit' => 'Commit',
-			'cockpit.fileTreePanel.stageAndCommit' => 'Stage y Commit',
-			'cockpit.fileTreePanel.unstage' => 'Quitar del stage',
-			'cockpit.fileTreePanel.stageChanges' => 'Poner en stage',
-			'cockpit.fileTreePanel.discardChanges' => 'Descartar cambios',
-			'cockpit.fileTreePanel.enterCommitMessage' => 'Escribe un mensaje de commit.',
-			'cockpit.fileTreePanel.commitUnavailable' => 'Commit no disponible para este workspace.',
-			'cockpit.fileTreePanel.gitErrorTitle' => 'Error de Git',
-			'cockpit.fileTreePanel.deleteNewFileTitle' => '¿Eliminar archivo nuevo?',
-			'cockpit.fileTreePanel.discardChangesTitle' => '¿Descartar cambios?',
-			'cockpit.fileTreePanel.deleteNewFileMessage' => ({required Object name}) => '"${name}" es un archivo nuevo y no se puede restaurar. ¿Eliminarlo?',
-			'cockpit.fileTreePanel.discardOneMessage' => ({required Object name}) => '¿Descartar todos los cambios en "${name}"? Los archivos eliminados se restaurarán.',
-			'cockpit.fileTreePanel.discard' => 'Descartar',
-			'cockpit.fileTreePanel.deleteAllNewFilesTitle' => '¿Eliminar todos los archivos nuevos?',
-			'cockpit.fileTreePanel.allNewFilesMessage' => ({required Object count}) => 'Los ${count} archivos son nuevos y se eliminarán. Esto no se puede deshacer.',
-			'cockpit.fileTreePanel.discardTrackedMessage' => ({required Object count, required Object extra}) => '¿Descartar cambios en ${count} archivo(s) rastreado(s)?${extra}',
-			'cockpit.fileTreePanel.discardTrackedExtra' => ({required Object count}) => ' Se mantendrán ${count} archivo(s) nuevo(s).',
-			'cockpit.fileTreePanel.deleteAll' => 'Eliminar todo',
-			'cockpit.fileTreePanel.deleteQuestionTitle' => '¿Eliminar?',
-			'cockpit.fileTreePanel.moveToTrash' => ({required Object name}) => '¿Mover “${name}” a la Papelera?',
-			'cockpit.fileTreePanel.permanentlyDelete' => ({required Object name}) => '¿Eliminar “${name}” de forma permanente? Esto no se puede deshacer.',
-			'cockpit.fileTreePanel.couldNotDeleteTitle' => 'No se pudo eliminar',
-			'cockpit.fileTreePanel.moveQuestionTitle' => '¿Mover?',
-			'cockpit.fileTreePanel.moveMessage' => ({required Object name, required Object dest}) => '¿Mover “${name}” a “${dest}”?',
-			'cockpit.fileTreePanel.moveAction' => 'Mover',
-			'cockpit.fileTreePanel.couldNotMoveTitle' => 'No se pudo mover',
-			'cockpit.fileTreePanel.couldNotPasteTitle' => 'No se pudo pegar',
-			'cockpit.fileTreePanel.filesTooltip' => 'Archivos',
-			'cockpit.fileTreePanel.searchTooltip' => 'Buscar',
-			'cockpit.fileTreePanel.sourceControlTooltip' => 'Control de versiones',
-			'cockpit.fileTreePanel.databaseTooltip' => 'Base de datos',
-			'cockpit.fileTreePanel.sectionFiles' => 'ARCHIVOS',
-			'cockpit.fileTreePanel.newFile' => 'Nuevo archivo',
-			'cockpit.fileTreePanel.newFolder' => 'Nueva carpeta',
-			'cockpit.fileTreePanel.refreshTooltip' => 'Actualizar',
-			'cockpit.fileTreePanel.collapseAll' => 'Contraer todas las carpetas',
-			'cockpit.fileTreePanel.sectionSourceControl' => 'CONTROL DE VERSIONES',
-			'cockpit.fileTreePanel.viewAsList' => 'Ver como lista',
-			'cockpit.fileTreePanel.viewAsTree' => 'Ver como árbol',
-			'cockpit.fileTreePanel.noFolderMessage' => 'Ninguna carpeta — abre un workspace.',
-			'cockpit.fileTreePanel.amend' => 'Amend',
-			'cockpit.fileTreePanel.commitMessagePlaceholder' => 'Mensaje del commit',
-			'cockpit.fileTreePanel.amendCommit' => 'Amend del commit',
-			'cockpit.fileTreePanel.lastCommit' => 'último commit',
-			'cockpit.fileTreePanel.openInFinder' => 'Abrir en Finder',
-			'cockpit.fileTreePanel.openInExplorer' => 'Abrir en el Explorador',
-			'cockpit.fileTreePanel.openInFileManager' => 'Abrir en el gestor de archivos',
-			'cockpit.fileTreePanel.open' => 'Abrir',
-			'cockpit.fileTreePanel.openWith' => 'Abrir con',
-			'cockpit.fileTreePanel.openInNewWindow' => 'Abrir en ventana nueva',
-			'cockpit.fileTreePanel.openLayout' => 'Abrir layout',
-			'cockpit.fileTreePanel.openAsMarkdown' => 'Abrir como markdown',
-			'cockpit.fileTreePanel.showGitDiff' => 'Mostrar diff de git',
-			'cockpit.fileTreePanel.createTerminal' => 'Abrir en terminal',
-			'cockpit.fileTreePanel.rename' => 'Renombrar',
-			'cockpit.fileTreePanel.copy' => 'Copiar',
-			'cockpit.fileTreePanel.cut' => 'Cortar',
-			'cockpit.fileTreePanel.paste' => 'Pegar',
-			'cockpit.fileTreePanel.copyRelativePath' => 'Copiar ruta relativa',
-			'cockpit.fileTreePanel.copyAbsolutePath' => 'Copiar ruta absoluta',
-			'cockpit.fileTreePanel.renameFailed' => 'No se pudo renombrar.',
-			'cockpit.fileTreePanel.noChanges' => 'Sin cambios.',
-			'cockpit.fileTreePanel.stagedChangesHeader' => ({required Object count}) => 'CAMBIOS EN STAGE (${count})',
-			'cockpit.fileTreePanel.changesHeader' => ({required Object count}) => 'CAMBIOS (${count})',
-			'cockpit.fileTreePanel.discardAllChanges' => 'Descartar todos los cambios',
-			'cockpit.fileTreePanel.unstageAllChanges' => 'Quitar todo del stage',
-			'cockpit.fileTreePanel.stageAllChanges' => 'Poner todo en stage',
-			'cockpit.fileTreePanel.discardFolderChanges' => 'Descartar cambios de la carpeta',
-			'cockpit.fileTreePanel.unstageFolderChanges' => 'Quitar carpeta del stage',
-			'cockpit.fileTreePanel.stageFolderChanges' => 'Poner carpeta en stage',
-			'cockpit.fileTreePanel.generateCommitMessage' => 'Generar mensaje de commit',
-			'cockpit.fileTreePanel.generateWith' => ({required Object harness}) => 'Generar con ${harness}',
-			'cockpit.fileTreePanel.generateUnavailableWhileAmending' => 'No disponible mientras se enmienda un commit',
-			'cockpit.fileTreePanel.cancelGeneration' => 'Cancelar generación',
-			'cockpit.fileTreePanel.changes' => 'Cambios',
-			'cockpit.fileTreePanel.history' => 'Historial',
-			'cockpit.fileTreePanel.historyRepository' => 'Repositorio',
-			'cockpit.fileTreePanel.historyNoRepository' => 'No hay ningun repositorio Git disponible.',
-			'cockpit.fileTreePanel.historyEmpty' => 'No se encontraron commits.',
-			'cockpit.fileTreePanel.historyLoadFailed' => 'No se pudo cargar el historial de Git.',
-			'cockpit.fileTreePanel.historyUntitledCommit' => 'Commit sin titulo',
-			'cockpit.fileTreePanel.historyNow' => 'ahora',
-			'cockpit.fileTreePanel.historyMinutesAgo' => ({required Object count}) => 'hace ${count} min',
-			'cockpit.fileTreePanel.historyHoursAgo' => ({required Object count}) => 'hace ${count} h',
-			'cockpit.fileTreePanel.historyYesterday' => 'ayer',
-			'cockpit.fileTreePanel.historyDayAgo' => 'hace 1 dia',
-			'cockpit.fileTreePanel.historyDaysAgo' => ({required Object count}) => 'hace ${count} dias',
-			'cockpit.fileTreePanel.historyFiles' => 'Archivos modificados',
-			'cockpit.fileTreePanel.historyFilesEmpty' => 'No hay archivos modificados.',
-			'cockpit.fileTreePanel.historyFilesLoadFailed' => 'No se pudieron cargar los archivos modificados.',
-			'cockpit.fileTreePanel.diffEmptyTree' => 'Arbol vacio',
-			'cockpit.fileTreePanel.diffOriginal' => ({required Object ref}) => 'Original ${ref}',
-			'cockpit.fileTreePanel.diffModified' => ({required Object ref}) => 'Modificado ${ref}',
-			'cockpit.fileTreePanel.diffWorkingTree' => 'Directorio de trabajo',
-			'cockpit.fileTreePanel.diffBinaryFile' => 'Archivo binario - sin diff de texto.',
-			'cockpit.fileTreePanel.diffNoChanges' => 'Sin cambios.',
-			'cockpit.fileTreePanel.diffError' => ({required Object detail}) => 'No se pudo leer el diff: ${detail}',
-			'cockpit.fileTreePanel.galleryTooltip' => 'Galería',
-			'cockpit.fileTreePanel.sectionGallery' => 'GALERÍA',
-			'cockpit.fileTreePanel.openAsHtml' => 'Abrir como HTML',
-			'cockpit.fileTreePanel.importQuestionTitle' => '¿Copiar aquí?',
-			'cockpit.fileTreePanel.importMessage' => ({required Object count, required Object dest}) => '¿Copiar ${count} elementos en “${dest}”?',
-			'cockpit.fileTreePanel.importAction' => 'Copiar',
-			'cockpit.fileTreePanel.couldNotImportTitle' => 'No se pudo copiar',
-			'cockpit.fileTreePanel.openInAgent' => ({required Object harness}) => 'Abrir en ${harness}',
-			'cockpit.fileViewer.cantOpen' => 'No se puede abrir este archivo.',
-			'cockpit.fileViewer.couldNotLoadImage' => 'No se pudo cargar la imagen.',
-			'cockpit.fileViewer.preview' => 'Vista previa',
-			'cockpit.fileViewer.source' => 'Código fuente',
-			'cockpit.fileViewer.reload' => 'Recargar',
-			'cockpit.workspaceSettingsDialog.choosePhotoTitle' => 'Elegir foto del workspace',
-			'cockpit.workspaceSettingsDialog.title' => 'Configuración del workspace',
-			'cockpit.workspaceSettingsDialog.namePlaceholder' => 'Nombre del workspace',
-			'cockpit.workspaceSettingsDialog.addPhoto' => 'Añadir foto',
-			'cockpit.workspaceSettingsDialog.changePhoto' => 'Cambiar foto',
-			'cockpit.workspaceSettingsDialog.remove' => 'Quitar',
-			'cockpit.workspaceSettingsDialog.color' => 'Color',
-			'cockpit.workspaceSettingsDialog.host' => 'Host',
-			'cockpit.workspaceSettingsDialog.folder' => 'Carpeta',
-			'cockpit.realmDialogs.namePlaceholder' => 'Nombre del realm',
-			'cockpit.realmDialogs.duplicateName' => 'Ya existe un realm con ese nombre.',
-			'cockpit.realmDialogs.newRealmTitle' => 'Nuevo realm',
-			'cockpit.realmDialogs.renameRealmTitle' => 'Renombrar realm',
-			'cockpit.realmDialogs.rename' => 'Renombrar',
-			'cockpit.realmDialogs.deleteRealmTitle' => 'Eliminar realm',
-			'cockpit.realmDialogs.deleteMessage' => ({required Object name, required Object suffix}) => '¿Eliminar "${name}"? Ningún workspace se elimina — solo cambia la lista de carpetas.${suffix}',
-			'cockpit.realmDialogs.deleteSuffixOne' => ' Su workspace se moverá a Predeterminado.',
-			'cockpit.realmDialogs.deleteSuffixMany' => ({required Object count}) => ' Sus ${count} workspaces se moverán a Predeterminado.',
-			'cockpit.realmDialogs.manageRealmsTitle' => 'Gestionar realms',
-			'cockpit.realmDialogs.workspaceCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 workspace', other: '${n} workspaces', ), 
-			'cockpit.dbRedisTable.deleteKeyTitle' => 'Eliminar clave',
-			'cockpit.dbRedisTable.deleteKeyMessage' => ({required Object key}) => '¿Eliminar "${key}" de esta base de datos Redis?',
-			'cockpit.dbRedisTable.refresh' => 'Actualizar',
-			'cockpit.dbRedisTable.newKey' => 'Nueva clave',
-			'cockpit.dbRedisTable.columnKey' => 'CLAVE',
-			'cockpit.dbRedisTable.columnValue' => 'VALOR',
-			'cockpit.dbRedisTable.columnType' => 'TIPO',
-			'cockpit.dbRedisTable.columnTtl' => 'TTL',
-			'cockpit.dbRedisTable.keyCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 clave', other: '${n} claves', ), 
-			'cockpit.dbRedisTable.noKeys' => 'No hay claves en esta base de datos.',
-			'cockpit.dbRedisTable.noKeysMatch' => ({required Object pattern}) => 'Ninguna clave coincide con "${pattern}".',
-			'cockpit.dbRedisTable.loadMore' => 'Cargar más',
-			'cockpit.dbRedisTable.loadingFullValue' => 'Cargando valor completo…',
-			'cockpit.dbRedisTable.ttlMustBeNumber' => 'El TTL debe ser un número de segundos.',
-			'cockpit.dbRedisTable.addKey' => 'Añadir clave',
-			'cockpit.dbRedisTable.keyFieldHint' => 'clave',
-			'cockpit.dbRedisTable.ttlFieldHint' => 'ttl (s, opcional)',
-			'cockpit.dbRedisTable.valueFieldHint' => 'valor',
-			'cockpit.dbRedisTable.searchHint' => 'Buscar — patrón, ej.: user:*',
-			'cockpit.dbQueryView.saveQueryAs' => 'Guardar query como',
-			'cockpit.dbQueryView.couldNotSave' => 'No se pudo guardar',
-			'cockpit.dbQueryView.selectDatabase' => 'Seleccionar base de datos',
-			'cockpit.dbQueryView.noSqlConnections' => 'Sin conexiones SQL',
-			'cockpit.dbQueryView.running' => 'Ejecutando…',
-			'cockpit.dbQueryView.runSelection' => 'Ejecutar selección',
-			'cockpit.dbQueryView.run' => 'Ejecutar',
-			'cockpit.dbQueryView.pickDatabaseHint' => 'Elige una base de datos arriba y luego Ejecutar (⌘↵).',
-			'cockpit.dbQueryView.runQueryHint' => 'Ejecuta la query (⌘↵) para ver los resultados aquí.',
-			'cockpit.dbQueryView.noRows' => 'Sin filas.',
-			'cockpit.dbQueryView.rowsAffected' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 fila afectada', other: '${n} filas afectadas', ), 
-			'cockpit.dbQueryView.rowsFooter' => ({required Object n}) => '${n} filas',
-			'cockpit.dbQueryView.truncatedSuffix' => ' · truncado (aumenta -- limit)',
-			'cockpit.dbQueryView.table' => 'Tabla',
-			'cockpit.dbQueryView.json' => 'JSON',
-			'cockpit.dbQueryView.unsaved' => 'sin guardar',
-			'cockpit.dbQueryView.saved' => 'guardado',
-			'cockpit.dbQueryView.copied' => 'Copiado',
-			'cockpit.dbQueryView.copy' => 'Copiar',
-			'cockpit.httpView.saveRequestAs' => 'Guardar request como',
-			'cockpit.httpView.couldNotSave' => 'No se pudo guardar',
-			'cockpit.httpView.run' => 'Ejecutar',
-			'cockpit.httpView.running' => 'Ejecutando…',
-			'cockpit.httpView.noRequests' => 'Ningún request en este archivo — escribe uno, p. ej.: GET https://example.com',
-			'cockpit.httpView.selectRequest' => 'Seleccionar request',
-			'cockpit.httpView.requestCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 request', other: '${n} requests', ), 
-			'cockpit.httpView.runHint' => 'Ejecuta el request (⌘↵) para ver la respuesta aquí.',
-			'cockpit.httpView.emptyBody' => 'Cuerpo de la respuesta vacío.',
-			'cockpit.httpView.body' => 'JSON',
-			'cockpit.httpView.headers' => 'Headers',
-			'cockpit.httpView.raw' => 'Text',
-			'cockpit.httpView.truncatedSuffix' => ' · truncado (respuesta demasiado grande)',
-			'cockpit.httpView.error.title' => 'Falló el request',
-			'cockpit.httpView.error.noRequest' => 'No se encontró ningún request en la posición del cursor.',
-			'cockpit.httpView.error.invalidUrl' => ({required Object url}) => 'URL inválida: ${url}',
-			'cockpit.httpView.error.unresolvedVariable' => ({required Object name}) => 'La variable {{${name}}} no tiene valor. Declárala con @${name} = … en este archivo.',
-			'cockpit.httpView.error.bodyFileMissing' => ({required Object path}) => 'Archivo de cuerpo no encontrado: ${path}',
-			'cockpit.httpView.error.bodyFileUnreadable' => ({required Object path, required Object detail}) => 'No se pudo leer el archivo de cuerpo ${path}: ${detail}',
-			'cockpit.httpView.error.connectionFailed' => ({required Object detail}) => 'No se pudo alcanzar el servidor: ${detail}',
-			'cockpit.httpView.error.connectionFailedNoDetail' => 'No se pudo alcanzar el servidor.',
-			'cockpit.httpView.error.timeout' => ({required Object seconds}) => 'El request superó el tiempo límite de ${seconds}s.',
-			'cockpit.httpView.error.responseTooLarge' => ({required Object bytes}) => 'La respuesta superó el límite de ${bytes} bytes.',
-			'cockpit.kanbanView.filter' => 'Filtrar',
-			'cockpit.kanbanView.filterTitlePlaceholder' => 'Buscar por título',
-			'cockpit.kanbanView.filterLabels' => 'Etiquetas',
+			'orkest.officeWorld.reception' => 'Recepción',
+			'orkest.officeWorld.cafe' => 'Cocina',
+			'orkest.officeWorld.restrooms' => 'Baños',
+			'orkest.officeWorld.lounge' => 'Sala de descanso',
+			'orkest.officeWorld.rosterTitle' => 'Agentes de la oficina',
+			'orkest.officeWorld.rosterSearch' => 'Buscar agentes o proyectos',
+			'orkest.officeWorld.rosterEmpty' => 'No se encontraron agentes activos',
+			'orkest.officeWorld.activityFeed' => 'Actividad',
+			'orkest.officeWorld.activityEmpty' => 'La actividad observada aparecerá aquí.',
+			'orkest.officeWorld.collapseRoster' => 'Contraer lista de agentes',
+			'orkest.officeWorld.collapseFeed' => 'Contraer actividad',
+			'orkest.officeWorld.reopenRoster' => 'Agentes',
+			'orkest.officeWorld.reopenFeed' => 'Actividad',
+			'orkest.officeWorld.working' => 'Trabajando',
+			'orkest.officeWorld.waiting' => 'Esperando',
+			'orkest.officeWorld.idle' => 'Disponible',
+			'orkest.officeWorld.agentProfile' => 'Perfil del agente',
+			'orkest.officeWorld.project' => 'Proyecto',
+			'orkest.officeWorld.provider' => 'Agente',
+			'orkest.officeWorld.currentStatus' => 'Estado actual',
+			'orkest.officeWorld.followAgent' => 'Seguir personaje',
+			'orkest.officeWorld.stopFollowingAgent' => 'Dejar de seguir',
+			'orkest.officeWorld.centerAgent' => 'Centrar personaje',
+			'orkest.officeWorld.sessionDuration' => 'Sesión actual en Orkest Code',
+			'orkest.officeWorld.workingDirectory' => 'Directorio de trabajo',
+			'orkest.officeWorld.statsPending' => 'Orkest Code todavía no recopila estadísticas de modelo, tokens y herramientas.',
+			'orkest.officeWorld.recentActivity' => 'Actividad reciente en esta ejecución',
+			'orkest.officeWorld.promptReceived' => 'Recibió una solicitud',
+			'orkest.officeWorld.agentThinking' => 'Pensando',
+			'orkest.officeWorld.agentResponded' => 'Respuesta enviada',
+			'orkest.officeWorld.activityError' => 'Algo salió mal',
+			'orkest.officeWorld.readingFile' => 'Leyendo archivo',
+			'orkest.officeWorld.searchingCode' => 'Buscando en el código',
+			'orkest.officeWorld.editingFile' => 'Editando archivo',
+			'orkest.officeWorld.writingFile' => 'Escribiendo archivo',
+			'orkest.officeWorld.runningCommand' => 'Comando en terminal',
+			'orkest.officeWorld.runningTests' => 'Ejecutando pruebas',
+			'orkest.officeWorld.browsingWeb' => 'Buscando en la web',
+			'orkest.officeWorld.organizingTasks' => 'Organizando tareas',
+			'orkest.officeWorld.callingSubagents' => 'Llamando subagentes',
+			'orkest.officeWorld.toolCompleted' => 'Herramienta completada',
+			'orkest.officeWorld.usingTool' => 'Usando herramienta',
+			'orkest.officeWorld.editAgentName' => 'Editar nombre del agente',
+			'orkest.officeWorld.agentName' => 'Nombre del agente',
+			'orkest.officeWorld.workingInTerminal' => 'Trabajando en el terminal',
+			'orkest.officeWorld.waitingInTerminal' => 'Te necesita en el terminal',
+			'orkest.officeWorld.waitingBubble' => 'Responder en la terminal',
+			'orkest.officeWorld.respond' => 'Responder',
+			'orkest.officeWorld.dismissNotification' => 'Descartar aviso',
+			'orkest.officeWorld.editAppearance' => 'Editar personaje',
+			'orkest.officeWorld.randomizeAppearance' => 'Sortear',
+			'orkest.officeWorld.resetAppearance' => 'Volver al sorteo',
+			'orkest.officeWorld.skin' => 'Piel',
+			'orkest.officeWorld.hair' => 'Cabello',
+			'orkest.officeWorld.beard' => 'Barba',
+			'orkest.officeWorld.eyes' => 'Ojos',
+			'orkest.officeWorld.top' => 'Parte superior',
+			'orkest.officeWorld.bottom' => 'Parte inferior',
+			'orkest.officeWorld.shoes' => 'Zapatos',
+			'orkest.officeWorld.accessory' => 'Accesorio',
+			'orkest.officeWorld.turnCompleted' => 'Turno terminado',
+			'orkest.officeWorld.subagentFailed' => 'El subagente falló',
+			'orkest.officeWorld.subagentInterrupted' => 'Subagente interrumpido',
+			'orkest.officeWorld.openTerminal' => 'Abrir terminal',
+			'orkest.officeWorld.interactInOffice' => 'Interactuar en Office',
+			'orkest.officeWorld.liveTerminal' => 'Terminal en vivo',
+			'orkest.officeWorld.terminalInputPlaceholder' => 'Escribe en la terminal…',
+			'orkest.officeWorld.terminalOfficeHint' => 'La entrada se envía a la sesión original. Usa las opciones de respuesta que el agente muestre en esta terminal.',
+			'orkest.officeWorld.appearance' => 'Apariencia de la oficina',
+			'orkest.officeWorld.officeTheme' => 'Tema estacional',
+			'orkest.officeWorld.themeAuto' => 'Automático',
+			'orkest.officeWorld.themeNone' => 'Original',
+			'orkest.officeWorld.themeChristmas' => 'Navidad',
+			'orkest.officeWorld.themeHalloween' => 'Halloween',
+			'orkest.officeWorld.showNames' => 'Mostrar nombres de agentes',
+			'orkest.officeWorld.bubbles' => 'Globos de actividad',
+			'orkest.officeWorld.bubblesAll' => 'Todos',
+			'orkest.officeWorld.bubblesImportant' => 'Importantes',
+			'orkest.officeWorld.bubblesNone' => 'Ninguno',
+			'orkest.officeWorld.movement' => 'Movimiento por la oficina',
+			'orkest.officeWorld.movementCalm' => 'Tranquilo',
+			'orkest.officeWorld.movementNormal' => 'Normal',
+			'orkest.officeWorld.movementLively' => 'Animado',
+			'orkest.officeWorld.daylight' => 'Ciclo día/noche',
+			'orkest.officeWorld.sounds' => 'Sonidos de la oficina',
+			'orkest.officeWorld.soundVolume' => 'Volumen',
+			'orkest.officeWorld.soundAlerts' => 'Avisos y tareas completadas',
+			'orkest.officeWorld.soundKeys' => 'Teclado',
+			'orkest.officeWorld.soundElevator' => 'Ascensor',
+			'orkest.officeWorld.soundSocial' => 'Ping-pong y arcade',
+			'orkest.officeWorld.daylightAuto' => 'Automático',
+			'orkest.officeWorld.daylightDay' => 'Siempre de día',
+			'orkest.officeWorld.daylightNight' => 'Siempre de noche',
+			'orkest.officeWorld.socialLife' => 'Vida social',
+			'orkest.officeWorld.gameCoins' => ({required Object count}) => '${count} monedas de la oficina',
+			'orkest.officeWorld.earnedWorking' => ({required Object count}) => '${count} ganadas con actividades',
+			'orkest.officeWorld.matchRecord' => ({required Object wins, required Object losses}) => '${wins} victorias · ${losses} derrotas',
+			'orkest.officeWorld.personality' => 'Personalidad',
+			'orkest.officeWorld.friendships' => 'Amistades',
+			'orkest.officeWorld.rivals' => 'Rivalidades',
+			'orkest.officeWorld.socialLedger' => 'Historial de monedas',
+			'orkest.officeWorld.socialActivity' => 'Vida social de la oficina',
+			'orkest.officeWorld.delegatedBy' => ({required Object name}) => 'Delegado por ${name}',
+			'orkest.officeWorld.shellWaiting' => 'Esperando un comando',
+			'orkest.officeWorld.socialEconomy' => 'Juego de la oficina — sin valor monetario real',
+			'orkest.confirmDialog.unsavedChangesTitle' => 'Cambios sin guardar',
+			'orkest.confirmDialog.unsavedChangesMessage' => ({required Object fileName}) => '“${fileName}” tiene cambios sin guardar. ¿Guardarlos antes de cerrar?',
+			'orkest.confirmDialog.dontSave' => 'No guardar',
+			'orkest.confirmDialog.saveAndClose' => 'Guardar y cerrar',
+			'orkest.neovim.unavailable' => 'Neovim no está disponible. Abriendo en Orkest Code.',
+			'orkest.neovim.openFailed' => 'No se pudo acceder a Neovim. Abriendo en Orkest Code.',
+			'orkest.neovim.unsavedTitle' => 'Búferes de Neovim sin guardar',
+			'orkest.neovim.unsavedMessage' => 'Neovim tiene búferes modificados. ¿Cerrar la pestaña y descartar esos cambios?',
+			'orkest.neovim.closeAnyway' => 'Cerrar de todos modos',
+			'orkest.worktreeCreateDialog.forkTitle' => 'Fork del worktree',
+			'orkest.worktreeCreateDialog.createTitle' => 'Crear worktree',
+			'orkest.worktreeCreateDialog.forkSubtitle' => ({required Object root}) => 'Nueva worktree ramificada desde ${root}.',
+			'orkest.worktreeCreateDialog.createSubtitle' => ({required Object root}) => 'Nueva feature en ${root} — nueva branch desde el HEAD actual.',
+			'orkest.worktreeCreateDialog.namePlaceholder' => 'feat/mi-feature',
+			'orkest.worktreeCreateDialog.errorWhitespace' => 'Sin espacios en el nombre.',
+			'orkest.worktreeCreateDialog.errorInvalidChar' => 'Carácter inválido para un nombre de branch.',
+			'orkest.worktreeCreateDialog.errorInvalidSequence' => 'Secuencia inválida (ej.: "..", "//", empezar/terminar con "/").',
+			'orkest.worktreeCreateDialog.errorReserved' => 'Posición reservada (no empieces con "-"/"." ni termines con ".lock").',
+			'orkest.worktreeCreateDialog.errorDuplicateBranch' => 'Ya existe una branch con ese nombre.',
+			'orkest.worktreeCreateDialog.errorDuplicateWorktree' => 'Ya existe un worktree con ese nombre.',
+			'orkest.worktreeCreateDialog.errorBranchHierarchyConflict' => ({required Object target, required Object existing}) => 'No se puede crear la branch \'${target}\' porque entra en conflicto con la branch \'${existing}\' ya existente.',
+			'orkest.worktreeCreateDialog.errorBranchHierarchicalConflictGeneral' => 'Ya existe una branch con una jerarquía conflictiva.',
+			'orkest.worktreeCreateDialog.fork' => 'Fork',
+			'orkest.worktreeCreateDialog.postCheckoutHint' => 'Este repositorio tiene un hook post-checkout.',
+			'orkest.worktreeCreateDialog.running' => 'Ejecutando…',
+			'orkest.worktreeCreateDialog.advancedSettings' => 'Configuración Avanzada',
+			'orkest.worktreeCreateDialog.copyIgnored' => 'Copiar archivos ignorados (.gitignore)',
+			'orkest.worktreeCreateDialog.copyIgnoredDesc' => 'Copia los archivos ignorados por .gitignore (ej. .env, claves locales) al nuevo worktree.',
+			'orkest.worktreeCreateDialog.copyUntracked' => 'Copiar archivos no rastreados',
+			'orkest.worktreeCreateDialog.copyUntrackedDesc' => 'Copia los archivos nuevos o modificados que aún no se han agregado al stage.',
+			'orkest.worktreeCreateDialog.baseBranch' => 'Branch base',
+			'orkest.worktreeCreateDialog.baseBranchDesc' => 'La branch desde la cual se creará el nuevo worktree y branch.',
+			'orkest.worktreeCreateDialog.fetchRemote' => 'Sincronizar branch remota (fetch)',
+			'orkest.worktreeCreateDialog.fetchRemoteDesc' => 'Ejecuta git fetch para garantizar que la branch base esté confirmada antes de crear el worktree.',
+			'orkest.worktreeCreateDialog.searchBranch' => 'Buscar branch...',
+			'orkest.worktreeCreateDialog.back' => 'Atrás',
+			'orkest.commitMessageDialog.commitTitle' => 'Commit',
+			'orkest.commitMessageDialog.stageAndCommitTitle' => 'Stage y Commit',
+			'orkest.commitMessageDialog.scopeNote' => ({required Object fileName}) => 'Commit solo de "${fileName}".',
+			'orkest.commitMessageDialog.placeholder' => 'fix: resumen breve del cambio',
+			'orkest.commitMessageDialog.errorEmptySubject' => 'La primera línea (asunto) no puede estar vacía.',
+			'orkest.commitMessageDialog.errorTooShort' => ({required Object min}) => 'Asunto demasiado corto (mín. ${min} caracteres).',
+			'orkest.commitMessageDialog.errorTooLong' => ({required Object max}) => 'Asunto demasiado largo (máx. ${max} caracteres).',
+			'orkest.commitMessageDialog.errorTrailingPeriod' => 'El asunto no debe terminar con un punto.',
+			'orkest.commitMessageDialog.errorControlChars' => 'El asunto contiene caracteres de control.',
+			'orkest.commitMessageDialog.errorBlankSecondLine' => 'Deja la segunda línea en blanco (separador entre asunto y cuerpo de git).',
+			'orkest.commitMessageDialog.generate' => 'Generar mensaje de commit',
+			'orkest.commitMessageDialog.generateWith' => ({required Object harness}) => 'Generar con ${harness}',
+			'orkest.commitMessageDialog.generating' => 'Generando…',
+			'orkest.commitMessageDialog.cancelGeneration' => 'Cancelar generación',
+			'orkest.tasksPanel.reloadTasksTooltip' => 'Recargar tasks',
+			'orkest.tasksPanel.restartTooltip' => 'Reiniciar',
+			'orkest.tasksPanel.stopTooltip' => 'Detener',
+			'orkest.tasksPanel.runTooltip' => 'Ejecutar',
+			'orkest.tasksPanel.sendsKeyTooltip' => ({required Object label, required Object key}) => '${label} (envía \'${key}\')',
+			'orkest.tasksPanel.startingTooltip' => 'Iniciando…',
+			'orkest.tasksPanel.stoppingTooltip' => 'Deteniendo…',
+			'orkest.tasksPanel.switchProfileTooltip' => 'Cambiar perfil',
+			'orkest.tasksPanel.moreKeysTooltip' => 'Más teclas',
+			'orkest.tasksPanel.sectionTasks' => 'TAREAS',
+			'orkest.tasksPanel.noTasks' => 'No se detectaron tareas en este proyecto.',
+			'orkest.tasksPanel.createTasksJson' => 'Crear tasks.json',
+			'orkest.tasksPanel.generateComposeTasks' => 'Generar tareas de Compose',
+			'orkest.tasksPanel.selectComposeEngine' => 'Elige un motor de Compose',
+			'orkest.tasksPanel.noComposeEngine' => 'No se encontró Docker Compose ni Podman Compose.',
+			'orkest.tasksPanel.invalidComposeFile' => 'El archivo activo no es un Compose válido con servicios.',
+			'orkest.tasksPanel.invalidTasksJson' => 'tasks.json no es válido. No se guardaron cambios.',
+			'orkest.tasksPanel.composeConflicts' => ({required Object labels}) => 'Se conservaron tareas que no son Compose con etiquetas en conflicto: ${labels}',
+			'orkest.orkestPage.chooseProjectFolderDialogTitle' => 'Elige la carpeta del proyecto',
+			'orkest.orkestPage.chooseWorkspaceFolderDialogTitle' => 'Elige la carpeta del workspace',
+			'orkest.orkestPage.workspaceRenamedTitle' => 'Workspace renombrado',
+			'orkest.orkestPage.workspaceRenamedMessage' => ({required Object name}) => 'El nuevo nombre "${name}" solo se enviará a los agentes tras reiniciar el workspace o la aplicación.',
+			'orkest.orkestPage.syncTitle' => ({required Object label}) => 'Sync — ${label}',
+			'orkest.orkestPage.pullTitle' => ({required Object label}) => 'Pull — ${label}',
+			'orkest.orkestPage.pushTitle' => ({required Object label}) => 'Push — ${label}',
+			'orkest.orkestPage.updateFromParentTitle' => ({required Object name}) => 'Actualizar desde el Padre — ${name}',
+			'orkest.orkestPage.mergeToParentTitle' => ({required Object name}) => 'Merge al Padre — ${name}',
+			'orkest.orkestPage.worktreeMergedAndRemoved' => 'Worktree fusionado y eliminado.',
+			'orkest.orkestPage.nothingWasChanged' => 'No se realizaron cambios.',
+			'orkest.orkestPage.newRealmTitle' => 'Nuevo realm',
+			'orkest.orkestPage.closeWorkspaceTitle' => 'Cerrar workspace',
+			'orkest.orkestPage.closeWorkspaceMessage' => ({required Object name}) => '¿Cerrar "${name}"? Los agentes de este workspace se cerrarán. La carpeta en el disco se conserva.',
+			'orkest.orkestPage.closeAction' => 'Cerrar',
+			'orkest.orkestPage.removeWorktreeTitle' => 'Quitar worktree',
+			'orkest.orkestPage.removeWorktreeMessage' => ({required Object name, required Object warn}) => '¿Quitar "${name}"? La carpeta del worktree y la branch se eliminarán y los agentes de este fork se cerrarán.${warn}',
+			'orkest.orkestPage.removeWorktreeWarning' => ({required Object name}) => '\n\nAdvertencia: la branch "${name}" aún no se ha fusionado — eliminarla (git branch -D) descarta el trabajo no fusionado.',
+			'orkest.orkestPage.failedToRemoveWorktreeTitle' => 'No se pudo quitar el worktree',
+			'orkest.orkestPage.openLayoutTitle' => 'Abrir layout',
+			'orkest.orkestPage.replaceLayoutTitle' => '¿Reemplazar el layout actual?',
+			'orkest.orkestPage.replaceLayoutMessage' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: 'Se cerrará 1 pestaña, y tiene un proceso en ejecución.', other: 'Se cerrarán ${n} pestañas, incluidas las que tienen procesos en ejecución.', ),
+			'orkest.orkestPage.replaceLayoutConfirm' => 'Reemplazar',
+			'orkest.orkestPage.restartServerTooltip' => 'Reiniciar servidor',
+			'orkest.orkestPage.noLspAvailable' => 'Ningún LSP disponible',
+			'orkest.orkestPage.lspRunning' => 'en ejecución',
+			'orkest.orkestPage.lspStopped' => 'detenido',
+			'orkest.welcomeView.title' => 'Bienvenido a Orkest Code',
+			'orkest.welcomeView.subtitle' => 'Abre una carpeta o conéctate a un host remoto para empezar.',
+			'orkest.welcomeView.createWorkspace' => 'Crear workspace',
+			'orkest.welcomeView.openLocalFolder' => 'Abrir carpeta local',
+			'orkest.welcomeView.connectHost' => 'Conectar a un host',
+			'orkest.welcomeView.configureHost' => 'Configurar host',
+			'orkest.welcomeView.addWorkspace' => 'Añadir workspace',
+			'orkest.paneView.closePaneTitle' => '¿Cerrar panel?',
+			'orkest.paneView.closePaneMessage' => ({required Object count}) => 'Esto cierra todas las ${count} pestaña(s) de este panel y finaliza los agentes/terminales en él.',
+			'orkest.paneView.close' => 'Cerrar',
+			'orkest.paneView.closeOtherTabs' => 'Cerrar las otras',
+			'orkest.paneView.closeTabsToTheRight' => 'Cerrar a la derecha',
+			'orkest.paneView.closeAllTabs' => 'Cerrar todas',
+			'orkest.paneView.closeTabsTitle' => '¿Cerrar pestañas?',
+			'orkest.paneView.closeTabsMessage' => ({required Object count}) => 'Esto cierra ${count} pestaña(s) y finaliza los agentes/terminales en ellas.',
+			'orkest.paneView.allTabs' => 'Todas las pestañas',
+			'orkest.paneView.pinTab' => 'Fijar pestaña',
+			'orkest.paneView.openInNewWindow' => 'Abrir en ventana nueva',
+			'orkest.paneView.rename' => 'Renombrar',
+			'orkest.paneView.openAsMarkdown' => 'Abrir como markdown',
+			'orkest.paneView.openAsBoard' => 'Abrir como tablero',
+			'orkest.paneView.resetTitle' => 'Restablecer título',
+			'orkest.paneView.copyId' => 'Copiar Id',
+			'orkest.paneView.restartTab' => 'Reiniciar',
+			'orkest.paneView.newTab' => 'Nueva pestaña',
+			'orkest.paneView.newTerminal' => 'Nueva terminal…',
+			'orkest.paneView.splitRight' => 'Dividir a la derecha',
+			'orkest.paneView.splitDown' => 'Dividir abajo',
+			'orkest.paneView.closePane' => 'Cerrar panel',
+			'orkest.paneView.dropHereToMove' => 'Suelta aquí para mover la pestaña',
+			'orkest.paneView.dockAsTab' => 'Acoplar como pestaña',
+			'orkest.paneView.openBrowser' => 'Abrir navegador',
+			'orkest.paneView.openTerminal' => 'Abrir terminal',
+			'orkest.paneView.openAsLayout' => 'Abrir como diseño',
+			'orkest.paneView.openAsYaml' => 'Abrir como YAML',
+			'orkest.paneView.openAsPanel' => 'Abrir como panel',
+			'orkest.paneView.openAsHtml' => 'Abrir como HTML',
+			'orkest.fileTreePanel.viewDiff' => 'Ver Diff',
+			'orkest.fileTreePanel.commit' => 'Commit',
+			'orkest.fileTreePanel.stageAndCommit' => 'Stage y Commit',
+			'orkest.fileTreePanel.unstage' => 'Quitar del stage',
+			'orkest.fileTreePanel.stageChanges' => 'Poner en stage',
+			'orkest.fileTreePanel.discardChanges' => 'Descartar cambios',
+			'orkest.fileTreePanel.enterCommitMessage' => 'Escribe un mensaje de commit.',
+			'orkest.fileTreePanel.commitUnavailable' => 'Commit no disponible para este workspace.',
+			'orkest.fileTreePanel.gitErrorTitle' => 'Error de Git',
+			'orkest.fileTreePanel.deleteNewFileTitle' => '¿Eliminar archivo nuevo?',
+			'orkest.fileTreePanel.discardChangesTitle' => '¿Descartar cambios?',
+			'orkest.fileTreePanel.deleteNewFileMessage' => ({required Object name}) => '"${name}" es un archivo nuevo y no se puede restaurar. ¿Eliminarlo?',
+			'orkest.fileTreePanel.discardOneMessage' => ({required Object name}) => '¿Descartar todos los cambios en "${name}"? Los archivos eliminados se restaurarán.',
+			'orkest.fileTreePanel.discard' => 'Descartar',
+			'orkest.fileTreePanel.deleteAllNewFilesTitle' => '¿Eliminar todos los archivos nuevos?',
+			'orkest.fileTreePanel.allNewFilesMessage' => ({required Object count}) => 'Los ${count} archivos son nuevos y se eliminarán. Esto no se puede deshacer.',
+			'orkest.fileTreePanel.discardTrackedMessage' => ({required Object count, required Object extra}) => '¿Descartar cambios en ${count} archivo(s) rastreado(s)?${extra}',
+			'orkest.fileTreePanel.discardTrackedExtra' => ({required Object count}) => ' Se mantendrán ${count} archivo(s) nuevo(s).',
+			'orkest.fileTreePanel.deleteAll' => 'Eliminar todo',
+			'orkest.fileTreePanel.deleteQuestionTitle' => '¿Eliminar?',
+			'orkest.fileTreePanel.moveToTrash' => ({required Object name}) => '¿Mover “${name}” a la Papelera?',
+			'orkest.fileTreePanel.permanentlyDelete' => ({required Object name}) => '¿Eliminar “${name}” de forma permanente? Esto no se puede deshacer.',
+			'orkest.fileTreePanel.couldNotDeleteTitle' => 'No se pudo eliminar',
+			'orkest.fileTreePanel.moveQuestionTitle' => '¿Mover?',
+			'orkest.fileTreePanel.moveMessage' => ({required Object name, required Object dest}) => '¿Mover “${name}” a “${dest}”?',
+			'orkest.fileTreePanel.moveAction' => 'Mover',
+			'orkest.fileTreePanel.couldNotMoveTitle' => 'No se pudo mover',
+			'orkest.fileTreePanel.couldNotPasteTitle' => 'No se pudo pegar',
+			'orkest.fileTreePanel.filesTooltip' => 'Archivos',
+			'orkest.fileTreePanel.searchTooltip' => 'Buscar',
+			'orkest.fileTreePanel.sourceControlTooltip' => 'Control de versiones',
+			'orkest.fileTreePanel.databaseTooltip' => 'Base de datos',
+			'orkest.fileTreePanel.sectionFiles' => 'ARCHIVOS',
+			'orkest.fileTreePanel.newFile' => 'Nuevo archivo',
+			'orkest.fileTreePanel.newFolder' => 'Nueva carpeta',
+			'orkest.fileTreePanel.refreshTooltip' => 'Actualizar',
+			'orkest.fileTreePanel.collapseAll' => 'Contraer todas las carpetas',
+			'orkest.fileTreePanel.sectionSourceControl' => 'CONTROL DE VERSIONES',
+			'orkest.fileTreePanel.viewAsList' => 'Ver como lista',
+			'orkest.fileTreePanel.viewAsTree' => 'Ver como árbol',
+			'orkest.fileTreePanel.noFolderMessage' => 'Ninguna carpeta — abre un workspace.',
+			'orkest.fileTreePanel.amend' => 'Amend',
+			'orkest.fileTreePanel.commitMessagePlaceholder' => 'Mensaje del commit',
+			'orkest.fileTreePanel.amendCommit' => 'Amend del commit',
+			'orkest.fileTreePanel.lastCommit' => 'último commit',
+			'orkest.fileTreePanel.openInFinder' => 'Abrir en Finder',
+			'orkest.fileTreePanel.openInExplorer' => 'Abrir en el Explorador',
+			'orkest.fileTreePanel.openInFileManager' => 'Abrir en el gestor de archivos',
+			'orkest.fileTreePanel.open' => 'Abrir',
+			'orkest.fileTreePanel.openWith' => 'Abrir con',
+			'orkest.fileTreePanel.openInNewWindow' => 'Abrir en ventana nueva',
+			'orkest.fileTreePanel.openLayout' => 'Abrir layout',
+			'orkest.fileTreePanel.openAsMarkdown' => 'Abrir como markdown',
+			'orkest.fileTreePanel.showGitDiff' => 'Mostrar diff de git',
+			'orkest.fileTreePanel.createTerminal' => 'Abrir en terminal',
+			'orkest.fileTreePanel.rename' => 'Renombrar',
+			'orkest.fileTreePanel.copy' => 'Copiar',
+			'orkest.fileTreePanel.cut' => 'Cortar',
+			'orkest.fileTreePanel.paste' => 'Pegar',
+			'orkest.fileTreePanel.copyRelativePath' => 'Copiar ruta relativa',
+			'orkest.fileTreePanel.copyAbsolutePath' => 'Copiar ruta absoluta',
+			'orkest.fileTreePanel.renameFailed' => 'No se pudo renombrar.',
+			'orkest.fileTreePanel.noChanges' => 'Sin cambios.',
+			'orkest.fileTreePanel.stagedChangesHeader' => ({required Object count}) => 'CAMBIOS EN STAGE (${count})',
+			'orkest.fileTreePanel.changesHeader' => ({required Object count}) => 'CAMBIOS (${count})',
+			'orkest.fileTreePanel.discardAllChanges' => 'Descartar todos los cambios',
+			'orkest.fileTreePanel.unstageAllChanges' => 'Quitar todo del stage',
+			'orkest.fileTreePanel.stageAllChanges' => 'Poner todo en stage',
+			'orkest.fileTreePanel.discardFolderChanges' => 'Descartar cambios de la carpeta',
+			'orkest.fileTreePanel.unstageFolderChanges' => 'Quitar carpeta del stage',
+			'orkest.fileTreePanel.stageFolderChanges' => 'Poner carpeta en stage',
+			'orkest.fileTreePanel.generateCommitMessage' => 'Generar mensaje de commit',
+			'orkest.fileTreePanel.generateWith' => ({required Object harness}) => 'Generar con ${harness}',
+			'orkest.fileTreePanel.generateUnavailableWhileAmending' => 'No disponible mientras se enmienda un commit',
+			'orkest.fileTreePanel.cancelGeneration' => 'Cancelar generación',
+			'orkest.fileTreePanel.changes' => 'Cambios',
+			'orkest.fileTreePanel.history' => 'Historial',
+			'orkest.fileTreePanel.historyRepository' => 'Repositorio',
+			'orkest.fileTreePanel.historyNoRepository' => 'No hay ningun repositorio Git disponible.',
+			'orkest.fileTreePanel.historyEmpty' => 'No se encontraron commits.',
+			'orkest.fileTreePanel.historyLoadFailed' => 'No se pudo cargar el historial de Git.',
+			'orkest.fileTreePanel.historyUntitledCommit' => 'Commit sin titulo',
+			'orkest.fileTreePanel.historyNow' => 'ahora',
+			'orkest.fileTreePanel.historyMinutesAgo' => ({required Object count}) => 'hace ${count} min',
+			'orkest.fileTreePanel.historyHoursAgo' => ({required Object count}) => 'hace ${count} h',
+			'orkest.fileTreePanel.historyYesterday' => 'ayer',
+			'orkest.fileTreePanel.historyDayAgo' => 'hace 1 dia',
+			'orkest.fileTreePanel.historyDaysAgo' => ({required Object count}) => 'hace ${count} dias',
+			'orkest.fileTreePanel.historyFiles' => 'Archivos modificados',
+			'orkest.fileTreePanel.historyFilesEmpty' => 'No hay archivos modificados.',
+			'orkest.fileTreePanel.historyFilesLoadFailed' => 'No se pudieron cargar los archivos modificados.',
+			'orkest.fileTreePanel.diffEmptyTree' => 'Arbol vacio',
+			'orkest.fileTreePanel.diffOriginal' => ({required Object ref}) => 'Original ${ref}',
+			'orkest.fileTreePanel.diffModified' => ({required Object ref}) => 'Modificado ${ref}',
+			'orkest.fileTreePanel.diffWorkingTree' => 'Directorio de trabajo',
+			'orkest.fileTreePanel.diffBinaryFile' => 'Archivo binario - sin diff de texto.',
+			'orkest.fileTreePanel.diffNoChanges' => 'Sin cambios.',
+			'orkest.fileTreePanel.diffError' => ({required Object detail}) => 'No se pudo leer el diff: ${detail}',
+			'orkest.fileTreePanel.galleryTooltip' => 'Galería',
+			'orkest.fileTreePanel.sectionGallery' => 'GALERÍA',
+			'orkest.fileTreePanel.openAsHtml' => 'Abrir como HTML',
+			'orkest.fileTreePanel.importQuestionTitle' => '¿Copiar aquí?',
+			'orkest.fileTreePanel.importMessage' => ({required Object count, required Object dest}) => '¿Copiar ${count} elementos en “${dest}”?',
+			'orkest.fileTreePanel.importAction' => 'Copiar',
+			'orkest.fileTreePanel.couldNotImportTitle' => 'No se pudo copiar',
+			'orkest.fileTreePanel.openInAgent' => ({required Object harness}) => 'Abrir en ${harness}',
+			'orkest.fileViewer.cantOpen' => 'No se puede abrir este archivo.',
+			'orkest.fileViewer.couldNotLoadImage' => 'No se pudo cargar la imagen.',
+			'orkest.fileViewer.preview' => 'Vista previa',
+			'orkest.fileViewer.source' => 'Código fuente',
+			'orkest.fileViewer.reload' => 'Recargar',
+			'orkest.workspaceSettingsDialog.choosePhotoTitle' => 'Elegir foto del workspace',
+			'orkest.workspaceSettingsDialog.title' => 'Configuración del workspace',
+			'orkest.workspaceSettingsDialog.namePlaceholder' => 'Nombre del workspace',
+			'orkest.workspaceSettingsDialog.addPhoto' => 'Añadir foto',
+			'orkest.workspaceSettingsDialog.changePhoto' => 'Cambiar foto',
+			'orkest.workspaceSettingsDialog.remove' => 'Quitar',
+			'orkest.workspaceSettingsDialog.color' => 'Color',
+			'orkest.workspaceSettingsDialog.host' => 'Host',
+			'orkest.workspaceSettingsDialog.folder' => 'Carpeta',
+			'orkest.realmDialogs.namePlaceholder' => 'Nombre del realm',
+			'orkest.realmDialogs.duplicateName' => 'Ya existe un realm con ese nombre.',
+			'orkest.realmDialogs.newRealmTitle' => 'Nuevo realm',
+			'orkest.realmDialogs.renameRealmTitle' => 'Renombrar realm',
+			'orkest.realmDialogs.rename' => 'Renombrar',
+			'orkest.realmDialogs.deleteRealmTitle' => 'Eliminar realm',
+			'orkest.realmDialogs.deleteMessage' => ({required Object name, required Object suffix}) => '¿Eliminar "${name}"? Ningún workspace se elimina — solo cambia la lista de carpetas.${suffix}',
+			'orkest.realmDialogs.deleteSuffixOne' => ' Su workspace se moverá a Predeterminado.',
+			'orkest.realmDialogs.deleteSuffixMany' => ({required Object count}) => ' Sus ${count} workspaces se moverán a Predeterminado.',
+			'orkest.realmDialogs.manageRealmsTitle' => 'Gestionar realms',
+			'orkest.realmDialogs.workspaceCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 workspace', other: '${n} workspaces', ),
+			'orkest.dbRedisTable.deleteKeyTitle' => 'Eliminar clave',
+			'orkest.dbRedisTable.deleteKeyMessage' => ({required Object key}) => '¿Eliminar "${key}" de esta base de datos Redis?',
+			'orkest.dbRedisTable.refresh' => 'Actualizar',
+			'orkest.dbRedisTable.newKey' => 'Nueva clave',
+			'orkest.dbRedisTable.columnKey' => 'CLAVE',
+			'orkest.dbRedisTable.columnValue' => 'VALOR',
+			'orkest.dbRedisTable.columnType' => 'TIPO',
+			'orkest.dbRedisTable.columnTtl' => 'TTL',
+			'orkest.dbRedisTable.keyCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 clave', other: '${n} claves', ),
+			'orkest.dbRedisTable.noKeys' => 'No hay claves en esta base de datos.',
+			'orkest.dbRedisTable.noKeysMatch' => ({required Object pattern}) => 'Ninguna clave coincide con "${pattern}".',
+			'orkest.dbRedisTable.loadMore' => 'Cargar más',
+			'orkest.dbRedisTable.loadingFullValue' => 'Cargando valor completo…',
+			'orkest.dbRedisTable.ttlMustBeNumber' => 'El TTL debe ser un número de segundos.',
+			'orkest.dbRedisTable.addKey' => 'Añadir clave',
+			'orkest.dbRedisTable.keyFieldHint' => 'clave',
+			'orkest.dbRedisTable.ttlFieldHint' => 'ttl (s, opcional)',
+			'orkest.dbRedisTable.valueFieldHint' => 'valor',
+			'orkest.dbRedisTable.searchHint' => 'Buscar — patrón, ej.: user:*',
+			'orkest.dbQueryView.saveQueryAs' => 'Guardar query como',
+			'orkest.dbQueryView.couldNotSave' => 'No se pudo guardar',
+			'orkest.dbQueryView.selectDatabase' => 'Seleccionar base de datos',
+			'orkest.dbQueryView.noSqlConnections' => 'Sin conexiones SQL',
+			'orkest.dbQueryView.running' => 'Ejecutando…',
+			'orkest.dbQueryView.runSelection' => 'Ejecutar selección',
+			'orkest.dbQueryView.run' => 'Ejecutar',
+			'orkest.dbQueryView.pickDatabaseHint' => 'Elige una base de datos arriba y luego Ejecutar (⌘↵).',
+			'orkest.dbQueryView.runQueryHint' => 'Ejecuta la query (⌘↵) para ver los resultados aquí.',
+			'orkest.dbQueryView.noRows' => 'Sin filas.',
+			'orkest.dbQueryView.rowsAffected' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 fila afectada', other: '${n} filas afectadas', ),
+			'orkest.dbQueryView.rowsFooter' => ({required Object n}) => '${n} filas',
+			'orkest.dbQueryView.truncatedSuffix' => ' · truncado (aumenta -- limit)',
+			'orkest.dbQueryView.table' => 'Tabla',
+			'orkest.dbQueryView.json' => 'JSON',
+			'orkest.dbQueryView.unsaved' => 'sin guardar',
+			'orkest.dbQueryView.saved' => 'guardado',
+			'orkest.dbQueryView.copied' => 'Copiado',
+			'orkest.dbQueryView.copy' => 'Copiar',
+			'orkest.httpView.saveRequestAs' => 'Guardar request como',
+			'orkest.httpView.couldNotSave' => 'No se pudo guardar',
+			'orkest.httpView.run' => 'Ejecutar',
+			'orkest.httpView.running' => 'Ejecutando…',
+			'orkest.httpView.noRequests' => 'Ningún request en este archivo — escribe uno, p. ej.: GET https://example.com',
+			'orkest.httpView.selectRequest' => 'Seleccionar request',
+			'orkest.httpView.requestCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 request', other: '${n} requests', ),
+			'orkest.httpView.runHint' => 'Ejecuta el request (⌘↵) para ver la respuesta aquí.',
+			'orkest.httpView.emptyBody' => 'Cuerpo de la respuesta vacío.',
+			'orkest.httpView.body' => 'JSON',
+			'orkest.httpView.headers' => 'Headers',
+			'orkest.httpView.raw' => 'Text',
+			'orkest.httpView.truncatedSuffix' => ' · truncado (respuesta demasiado grande)',
+			'orkest.httpView.error.title' => 'Falló el request',
+			'orkest.httpView.error.noRequest' => 'No se encontró ningún request en la posición del cursor.',
+			'orkest.httpView.error.invalidUrl' => ({required Object url}) => 'URL inválida: ${url}',
+			'orkest.httpView.error.unresolvedVariable' => ({required Object name}) => 'La variable {{${name}}} no tiene valor. Declárala con @${name} = … en este archivo.',
+			'orkest.httpView.error.bodyFileMissing' => ({required Object path}) => 'Archivo de cuerpo no encontrado: ${path}',
+			'orkest.httpView.error.bodyFileUnreadable' => ({required Object path, required Object detail}) => 'No se pudo leer el archivo de cuerpo ${path}: ${detail}',
+			'orkest.httpView.error.connectionFailed' => ({required Object detail}) => 'No se pudo alcanzar el servidor: ${detail}',
+			'orkest.httpView.error.connectionFailedNoDetail' => 'No se pudo alcanzar el servidor.',
+			'orkest.httpView.error.timeout' => ({required Object seconds}) => 'El request superó el tiempo límite de ${seconds}s.',
+			'orkest.httpView.error.responseTooLarge' => ({required Object bytes}) => 'La respuesta superó el límite de ${bytes} bytes.',
+			'orkest.kanbanView.filter' => 'Filtrar',
+			'orkest.kanbanView.filterTitlePlaceholder' => 'Buscar por título',
+			'orkest.kanbanView.filterLabels' => 'Etiquetas',
 			_ => null,
 		} ?? switch (path) {
-			'cockpit.kanbanView.filterClear' => 'Limpiar',
-			'cockpit.kanbanView.filterDependencies' => 'Dependencias',
-			'cockpit.kanbanView.filterBlocked' => 'Bloqueado',
-			'cockpit.kanbanView.filterReady' => 'Listo',
-			'cockpit.kanbanView.blockedBy' => 'Bloqueado por',
-			'cockpit.kanbanView.addBlocker' => 'Agregar tarjeta bloqueante',
-			'cockpit.kanbanView.searchCards' => 'Buscar tarjetas',
-			'cockpit.kanbanView.unknownCard' => 'desconocida',
-			'cockpit.kanbanView.boardView' => 'Tablero',
-			'cockpit.kanbanView.listView' => 'Lista',
-			'cockpit.kanbanView.refresh' => 'Actualizar desde el disco',
-			'cockpit.kanbanView.manageLabels' => 'Etiquetas',
-			'cockpit.kanbanView.labelsTitle' => 'Etiquetas de este tablero',
-			'cockpit.kanbanView.labelNamePlaceholder' => 'nombre de la etiqueta',
-			'cockpit.kanbanView.labelUsage' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 tarjeta', other: '${n} tarjetas', ), 
-			'cockpit.kanbanView.deleteLabel' => 'Eliminar etiqueta',
-			'cockpit.kanbanView.newCard' => 'nueva tarjeta',
-			'cockpit.kanbanView.newCardTitle' => 'Nueva tarjeta',
-			'cockpit.kanbanView.newColumn' => 'Nueva columna',
-			'cockpit.kanbanView.columnNameTitle' => 'Nombre de la columna',
-			'cockpit.kanbanView.dragColumn' => 'Arrastrar columna',
-			'cockpit.kanbanView.columnOptions' => 'Opciones de la columna',
-			'cockpit.kanbanView.renameColumn' => 'Renombrar columna',
-			'cockpit.kanbanView.moveColumnLeft' => 'Mover a la izquierda',
-			'cockpit.kanbanView.moveColumnRight' => 'Mover a la derecha',
-			'cockpit.kanbanView.deleteColumn' => 'Eliminar columna',
-			'cockpit.kanbanView.newCardHere' => 'Nueva tarjeta aquí',
-			'cockpit.kanbanView.duplicateCard' => 'Duplicar',
-			'cockpit.kanbanView.cardLabels' => 'Etiquetas',
-			'cockpit.kanbanView.deleteCard' => 'Eliminar tarjeta',
-			'cockpit.kanbanView.advance' => 'Pasar a la siguiente columna',
-			'cockpit.kanbanView.advanceHold' => 'Mover a la siguiente columna (mantener: mover a la última)',
-			'cockpit.kanbanView.advanceBack' => 'Volver una columna',
-			'cockpit.kanbanView.emptyColumn' => 'Sin tarjetas',
-			'cockpit.kanbanView.cardCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 tarjeta', other: '${n} tarjetas', ), 
-			'cockpit.kanbanView.notes' => 'Nota',
-			'cockpit.kanbanView.notesPlaceholder' => 'Escribe una nota',
-			'cockpit.kanbanView.comments' => 'Comentarios',
-			'cockpit.kanbanView.addComment' => 'Añadir comentario',
-			'cockpit.kanbanView.commentPlaceholder' => 'Escribe un comentario',
-			'cockpit.kanbanView.noComments' => 'Aún no hay comentarios',
-			'cockpit.kanbanView.closeDetail' => 'Cerrar',
-			'cockpit.kanbanView.notABoard' => 'Este archivo aún no tiene columnas ## — se abre como markdown.',
-			'cockpit.kanbanView.startBoard' => 'Empezar un tablero',
-			'cockpit.kanbanView.couldNotSave' => 'No se pudo guardar el tablero',
-			'cockpit.kanbanView.unrecognizedBlock' => 'No reconocido por el analizador — se arrastra entero, sin edición en línea.',
-			'cockpit.kanbanView.deleteColumnDialog.title' => ({required Object name}) => '¿Eliminar «${name}»?',
-			'cockpit.kanbanView.deleteColumnDialog.message' => ({required Object count}) => 'Esta columna tiene ${count}. Elige qué pasa con ellas.',
-			'cockpit.kanbanView.deleteColumnDialog.moveCards' => 'Mover a la columna anterior',
-			'cockpit.kanbanView.deleteColumnDialog.deleteAll' => 'Eliminar junto con la columna',
-			'cockpit.kanbanView.deleteColumnDialog.emptyMessage' => 'Esta columna está vacía.',
-			'cockpit.dbPanel.sectionDatabase' => 'BASE DE DATOS',
-			'cockpit.dbPanel.edit' => 'Editar…',
-			'cockpit.dbPanel.copyName' => 'Copiar nombre',
-			'cockpit.dbPanel.newQuery' => 'Nueva query',
-			'cockpit.dbPanel.browseKeys' => 'Ver claves',
-			'cockpit.dbPanel.deleteConnectionTitle' => 'Eliminar conexión',
-			'cockpit.dbPanel.deleteConnectionMessage' => ({required Object name}) => '¿Quitar "${name}" de este workspace? Cualquier contraseña guardada se descartará. Los archivos .dbq que la referencian no se modifican.',
-			'cockpit.dbPanel.footer' => ({required Object n}) => '.cockpit/databases.json · ${n} conexiones',
-			'cockpit.dbPanel.footerOne' => '.cockpit/databases.json · 1 conexión',
-			'cockpit.dbPanel.noConnections' => 'Aún no hay conexiones.',
-			'cockpit.dbPanel.passwordRequired' => 'Contraseña no encontrada en el host. Abre esta conexión y vuelve a escribirla — se guarda en la máquina que ejecuta la base de datos, no en esta.',
-			'cockpit.dbMongoView.deleteDocumentTitle' => 'Eliminar documento',
-			'cockpit.dbMongoView.deleteDocumentMessage' => ({required Object id, required Object collection}) => '¿Eliminar el documento con _id ${id} de "${collection}"?',
-			'cockpit.dbMongoView.filterHint' => 'Filtro — JSON, ej.: {"status": "active"}',
-			'cockpit.dbMongoView.docCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 doc', other: '${n} docs', ), 
-			'cockpit.dbMongoView.refresh' => 'Actualizar',
-			'cockpit.dbMongoView.insertDocument' => 'Insertar documento',
-			'cockpit.dbMongoView.noDocuments' => 'No hay documentos en esta colección.',
-			'cockpit.dbMongoView.noDocumentsMatch' => 'Ningún documento coincide con este filtro.',
-			'cockpit.dbMongoView.loadMore' => 'Cargar más',
-			'cockpit.dbMongoView.edit' => 'Editar',
-			'cockpit.dbMongoView.insert' => 'Insertar',
-			'cockpit.dbConnectionDialog.chooseFileTitle' => 'Elegir base de datos SQLite',
-			'cockpit.dbConnectionDialog.file' => 'Archivo',
-			'cockpit.dbConnectionDialog.chooseFilePlaceholder' => 'Elige un archivo SQLite…',
-			'cockpit.dbConnectionDialog.name' => 'Nombre',
-			'cockpit.dbConnectionDialog.password' => 'Contraseña',
-			'cockpit.dbConnectionDialog.savePassword' => 'Guardar contraseña',
-			'cockpit.dbConnectionDialog.allowWrites' => 'Permitir escritura (agentes)',
-			'cockpit.dbConnectionDialog.allowWritesHint' => 'desactivado = los agentes solo leen vía CLI',
-			'cockpit.dbConnectionDialog.visibleToAgents' => 'Visible para agentes',
-			'cockpit.dbConnectionDialog.visibleToAgentsHint' => 'desactivado = oculto en la CLI, solo en la GUI',
-			'cockpit.dbConnectionDialog.testing' => 'Probando conexión…',
-			'cockpit.dbConnectionDialog.connectionOk' => 'Conexión OK',
-			'cockpit.dbConnectionDialog.connectionFailed' => 'Fallo en la conexión',
-			'cockpit.dbConnectionDialog.editTitle' => 'Editar conexión',
-			'cockpit.dbConnectionDialog.newTitle' => 'Nueva conexión',
-			'cockpit.dbConnectionDialog.connectionString' => 'Connection string',
-			'cockpit.dbConnectionDialog.invalidUrl' => 'URL de conexión no válida.',
-			'cockpit.dbConnectionDialog.sshTunnel' => 'Túnel SSH',
-			'cockpit.dbConnectionDialog.sshHost' => 'Host SSH',
-			'cockpit.dbConnectionDialog.sshPort' => 'Puerto SSH',
-			'cockpit.dbConnectionDialog.sshUser' => 'Usuario SSH',
-			'cockpit.dbConnectionDialog.privateKey' => 'Clave privada',
-			'cockpit.dbConnectionDialog.choosePrivateKeyPlaceholder' => 'Elige una clave privada…',
-			'cockpit.dbConnectionDialog.choosePrivateKeyDialogTitle' => 'Elegir clave privada SSH',
-			'cockpit.dbConnectionDialog.keyPassphrase' => 'Frase de contraseña de la clave',
-			'cockpit.dbConnectionDialog.savePassphrase' => 'Guardar frase de contraseña',
-			'cockpit.dbConnectionDialog.passwordOnHost' => 'La contraseña se guarda en el host, no en esta máquina.',
-			'cockpit.sshPrompts.unknownSshHostTitle' => 'Host SSH desconocido',
-			'cockpit.sshPrompts.neverConnected' => ({required Object endpoint}) => 'Cockpit nunca se ha conectado a ${endpoint} antes.',
-			'cockpit.sshPrompts.trustHint' => 'Confía solo si esta fingerprint coincide con el servidor. Puedes verificarla en el servidor con:',
-			'cockpit.sshPrompts.trust' => 'Confiar',
-			'cockpit.sshPrompts.sshKeyPassphraseTitle' => 'Frase de contraseña de la clave SSH',
-			'cockpit.sshPrompts.unlockMessage' => ({required Object keyPath, required Object connectionName}) => 'Desbloquea ${keyPath} para conectar "${connectionName}".',
-			'cockpit.sshPrompts.keptInMemoryHint' => 'Se mantiene en memoria hasta que Cockpit se cierre. Para que los agentes usen esta conexión, activa "Guardar frase de contraseña" en la conexión.',
-			'cockpit.sshPrompts.unlock' => 'Desbloquear',
-			'cockpit.projectsRail.workspaces' => 'Workspaces',
-			'cockpit.projectsRail.keepAwakeOn' => 'Manteniendo este equipo despierto para acceso remoto. Haz clic para dejarlo dormir de nuevo.',
-			'cockpit.projectsRail.keepAwakeOff' => 'Mantener este equipo despierto para acceso remoto. Se apaga solo cuando Cockpit se reinicia.',
-			'cockpit.projectsRail.keepAwakeBattery' => 'Despierto con batería. Esto consume la batería.',
-			'cockpit.projectsRail.keepAwakeLid' => 'Cerrar la tapa del portátil sigue poniéndolo a dormir.',
-			'cockpit.projectsRail.newWorkspace' => 'Nuevo workspace',
-			'cockpit.projectsRail.settings' => 'Configuración',
-			'cockpit.projectsRail.mergeToParent' => 'Fusionar en el padre',
-			'cockpit.projectsRail.updateFromParent' => 'Actualizar desde el padre',
-			'cockpit.projectsRail.forkWorktree' => 'Crear worktree derivada',
-			'cockpit.projectsRail.copyBranch' => 'Copiar branch',
-			'cockpit.projectsRail.remove' => 'Quitar',
-			'cockpit.projectsRail.moveToRealm' => 'Mover a realm',
-			'cockpit.projectsRail.copyWorkspaceId' => 'Copiar id del workspace',
-			'cockpit.projectsRail.rename' => 'Renombrar',
-			'cockpit.projectsRail.close' => 'Cerrar',
-			'cockpit.projectsRail.newRealm' => 'Nuevo realm…',
-			'cockpit.projectsRail.manageRealms' => 'Gestionar realms…',
-			'cockpit.projectsRail.noWorkspaces' => 'Aún no hay workspaces.',
-			'cockpit.projectsRail.sync' => 'Sincronizar',
-			'cockpit.projectsRail.pull' => 'Pull',
-			'cockpit.projectsRail.push' => 'Push',
-			'cockpit.projectsRail.createWorktree' => 'Crear worktree',
-			'cockpit.projectsRail.worktreeCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 worktree', other: '${n} worktrees', ), 
-			'cockpit.projectsRail.expandWorktrees' => 'Expandir worktrees',
-			'cockpit.projectsRail.collapseWorktrees' => 'Contraer worktrees',
-			'cockpit.findBar.find' => 'Buscar',
-			'cockpit.findBar.matchCase' => 'Coincidir mayúsculas',
-			'cockpit.findBar.wholeWord' => 'Palabra completa',
-			'cockpit.findBar.useRegex' => 'Usar expresión regular',
-			'cockpit.findBar.previous' => 'Anterior (⇧⏎)',
-			'cockpit.findBar.next' => 'Siguiente (⏎)',
-			'cockpit.findBar.close' => 'Cerrar (Esc)',
-			'cockpit.findBar.badPattern' => 'Patrón inválido',
-			'cockpit.findBar.counter' => ({required Object current, required Object total}) => '${current} de ${total}',
-			'cockpit.findBar.noResults' => 'Sin resultados',
-			'cockpit.contentSearch.sectionSearch' => 'BÚSQUEDA',
-			'cockpit.contentSearch.searchInFiles' => 'Buscar en los archivos',
-			'cockpit.contentSearch.matchCase' => 'Coincidir mayúsculas',
-			'cockpit.contentSearch.wholeWord' => 'Palabra completa',
-			'cockpit.contentSearch.useRegex' => 'Usar expresión regular',
-			'cockpit.contentSearch.invalidRegex' => 'Expresión regular inválida.',
-			'cockpit.contentSearch.typeToSearch' => 'Escribe para buscar en todos los archivos.',
-			'cockpit.contentSearch.searching' => 'Buscando…',
-			'cockpit.contentSearch.noResults' => 'Sin resultados.',
-			'cockpit.topbar.collapseSidebar' => 'Contraer barra lateral',
-			'cockpit.topbar.toggleFiles' => 'Mostrar/ocultar archivos',
-			'cockpit.topbar.filesUnavailable' => 'Archivos no disponibles en Cockpit',
-			'cockpit.topbar.hideKeyboard' => 'Ocultar teclado',
-			'cockpit.topbar.showOffice' => 'Mostrar oficina',
-			'cockpit.topbar.showTerminals' => 'Mostrar terminales',
-			'cockpit.tasks.hotReload' => 'Hot reload',
-			'cockpit.tasks.hotRestart' => 'Hot restart',
-			'cockpit.tasks.toggleDebugPaint' => 'Alternar debug paint',
-			'cockpit.tasks.togglePlatform' => 'Alternar plataforma',
-			'cockpit.tasks.quit' => 'Salir',
-			'cockpit.notifications.agentFinished' => 'El agente terminó',
-			'cockpit.notifications.open' => 'Abrir',
-			'cockpit.notifications.agentNeedsAction' => 'El agente necesita tu acción',
-			'cockpit.terminalLink.open' => 'Abrir',
-			'cockpit.terminalLink.revealFinder' => 'Mostrar en Finder',
-			'cockpit.terminalLink.revealExplorer' => 'Mostrar en el Explorador',
-			'cockpit.terminalLink.revealFolder' => 'Abrir carpeta contenedora',
-			'cockpit.terminalLink.copyPath' => 'Copiar ruta',
-			'cockpit.terminalLink.openLink' => 'Abrir enlace',
-			'cockpit.terminalLink.copyLink' => 'Copiar enlace',
-			'cockpit.terminal.cwdFallbackWarning' => ({required Object requested, required Object path}) => 'Aviso: la carpeta "${requested}" no existe. Esta terminal se abrió en "${path}".',
-			'cockpit.terminal.workspaceEnvTracked' => ({required Object keys}) => 'Aviso: el .env.cockpit está rastreado por git (vino con el repositorio). Inyectado: ${keys}',
-			'cockpit.remoteHost.addHost' => 'Añadir host remoto',
-			'cockpit.remoteHost.hostName' => 'Nombre',
-			'cockpit.remoteHost.sshTarget' => 'Destino SSH (usuario@host)',
-			'cockpit.remoteHost.connecting' => ({required Object host}) => 'Conectando a ${host}…',
-			'cockpit.remoteHost.openingTunnel' => 'Túnel SSH',
-			'cockpit.remoteHost.installingServer' => 'Instalando servidor',
-			'cockpit.remoteHost.handshake' => ({required Object version}) => 'Servidor ${version}',
-			'cockpit.remoteHost.loadingWorkspace' => 'Cargando workspace…',
-			'cockpit.remoteHost.reconnecting' => ({required Object host}) => 'Reconectando a ${host}…',
-			'cockpit.remoteHost.offline' => ({required Object host}) => '${host} sin conexión',
-			'cockpit.remoteHost.remove' => 'Quitar',
-			'cockpit.remoteHost.reconnect' => 'Reconectar',
-			'cockpit.remoteHost.installServer' => 'Instalar servidor',
-			'cockpit.remoteHost.errSshUnreachable' => ({required Object host}) => 'No se puede llegar a ${host} por SSH. ¿Está encendido y con Inicio de sesión remoto activado?',
-			'cockpit.remoteHost.errInstallFailed' => ({required Object host}) => 'No se pudo instalar el servidor en ${host}.',
-			'cockpit.remoteHost.errVersionMismatch' => 'Versión del servidor incompatible; actualízalo.',
-			'cockpit.remoteHost.errDetail' => ({required Object detail}) => 'Detalles: ${detail}',
-			'cockpit.remoteHost.pickFolderTitle' => ({required Object host}) => 'Abrir carpeta en ${host}',
-			'cockpit.remoteHost.openHere' => 'Abrir aquí',
-			'cockpit.remoteHost.emptyFolder' => 'Sin subcarpetas',
-			'cockpit.remoteHost.newLocal' => 'Local',
-			'cockpit.remoteHost.newRemote' => 'Remoto',
-			'cockpit.remoteHost.chooseHost' => 'Elegir un host',
-			'cockpit.remoteHost.newHostEntry' => 'Nuevo host…',
-			'cockpit.remoteHost.editHost' => 'Editar host',
-			'cockpit.remoteHost.userLabel' => 'Usuario',
-			'cockpit.remoteHost.hostLabel' => 'Host / IP',
-			'cockpit.remoteHost.portLabel' => 'Puerto',
-			'cockpit.remoteHost.authLabel' => 'Autenticación',
-			'cockpit.remoteHost.authKey' => 'Clave SSH',
-			'cockpit.remoteHost.authPassword' => 'Contraseña',
-			'cockpit.remoteHost.passwordLabel' => 'Contraseña',
-			'cockpit.remoteHost.passwordKeep' => 'Deja en blanco para mantener la actual',
-			'cockpit.remoteHost.errUser' => 'Usuario obligatorio',
-			'cockpit.remoteHost.errHost' => 'Host obligatorio',
-			'cockpit.remoteHost.errPassword' => 'Contraseña obligatoria',
-			'cockpit.remoteHost.identityChoose' => 'Elegir…',
-			'cockpit.remoteHost.identityEmpty' => 'Ninguna clave seleccionada',
-			'cockpit.remoteHost.identityDialogTitle' => 'Selecciona la clave privada SSH',
-			'cockpit.remoteHost.errIdentity' => 'Elige la clave privada para autenticarte.',
-			'cockpit.remoteHost.errHostKeyUnknown' => ({required Object host}) => 'Cockpit todavía no confía en ${host}. Conecta de nuevo y confirma la huella.',
-			'cockpit.remoteHost.errHostKeyChanged' => ({required Object host}) => '${host} presenta una clave SSH distinta de la guardada. Si no reinstalaste esa máquina, detente y compruébalo; si la reinstalaste, elimina la entrada antigua de ~/.ssh/known_hosts.',
-			'cockpit.remoteHost.errHostBundleMissing' => ({required Object host}) => '${host} es Windows pero no tiene Cockpit instalado. El servidor remoto se instala desde el bundle de Cockpit que ya está en esa máquina — instálalo allí e inténtalo de nuevo.',
-			'cockpit.remoteHost.errHostUnknownOs' => ({required Object host}) => 'No se pudo identificar el sistema de ${host}. La cuenta puede tener un shell restringido, o ninguno.',
-			'cockpit.remoteHost.errIdentityPublic' => 'Solo está la clave pública. Eso funciona solo si la privada está en tu agente SSH; si no, elige la privada (mismo nombre, sin .pub).',
-			'cockpit.remoteHost.errIdentityNotKey' => 'Ese archivo no parece una clave privada.',
-			'cockpit.remoteHost.errIdentityMissingFile' => 'Ese archivo ya no existe.',
-			'cockpit.remoteHost.errIdentityUnreadable' => 'No se pudo leer ese archivo.',
-			'cockpit.browserPane.back' => 'Atrás',
-			'cockpit.browserPane.forward' => 'Adelante',
-			'cockpit.browserPane.reload' => 'Recargar',
-			'cockpit.browserPane.urlHint' => 'Escribe la URL o dirección',
-			'cockpit.browserPane.go' => 'Ir',
-			'cockpit.documentWindow.mediaNotSupported' => 'Audio y video se abren en la ventana principal de Cockpit.',
-			'cockpit.documentWindow.fileNotFound' => ({required Object path}) => 'Archivo no encontrado: ${path}',
-			'cockpit.gallery.intro' => 'Documentos especiales de Cockpit para que veas lo que el agente de IA está haciendo.',
-			'cockpit.gallery.createErrorTitle' => 'No se pudo crear el archivo',
-			'cockpit.gallery.dbQuery.title' => 'Consulta de base de datos',
-			'cockpit.gallery.dbQuery.description' => 'Editor SQL con grilla de resultados, usando una de las conexiones registradas.',
-			'cockpit.gallery.kanban.title' => 'Tablero kanban',
-			'cockpit.gallery.kanban.description' => 'Columnas y tarjetas guardadas como markdown puro. Arrastra, edita y comenta.',
-			'cockpit.gallery.layout.title' => 'Layout de paneles',
-			'cockpit.gallery.layout.description' => 'Terminales y splits para abrir de una vez, estilo tmuxinator. Puede ejecutarse solo en worktrees nuevos.',
-			'cockpit.gallery.httpRequest.title' => 'Requests HTTP',
-			'cockpit.gallery.httpRequest.description' => 'Escribe requests en un archivo y ejecútalos con la respuesta al lado.',
-			'cockpit.gallery.html.title' => 'Vista HTML',
-			'cockpit.gallery.html.description' => 'Una página que el agente escribe y Cockpit renderiza directo: mapa mental, diagrama, gráfico, lo que necesites.',
-			'cockpit.gallery.tasks.title' => 'Tareas',
-			'cockpit.gallery.tasks.description' => 'Comandos para ejecutar desde el panel de Tasks, como dev server, tests y build. Vive en .cockpit/tasks.json.',
-			'cockpit.gallery.notebook.title' => 'Cuaderno',
-			'cockpit.gallery.notebook.description' => 'Una carpeta de notas cortas con tags. El agente escribe, tú lees y editas. También abre en Obsidian.',
-			'cockpit.gallery.workspaceEnv.title' => 'Env del workspace',
-			'cockpit.gallery.workspaceEnv.description' => 'Variables inyectadas en cada terminal de este workspace. Pon tokens o credenciales de API aquí en vez de pegarlos en el prompt del agente. Queda fuera de git.',
-			'cockpit.gallery.panel.title' => 'Panel',
-			'cockpit.gallery.panel.description' => 'Una página HTML con puente a la app: sus botones ejecutan comandos de la CLI de Cockpit y del shell en esta máquina. Un playground para dashboards rápidos.',
-			'cockpit.notebook.notes' => 'Notas',
-			'cockpit.notebook.newNote' => 'Nueva nota',
-			'cockpit.notebook.searchPlaceholder' => 'Buscar notas',
-			'cockpit.notebook.empty' => 'Aún no hay notas. Crea una, o pídele al agente que escriba aquí.',
-			'cockpit.notebook.noMatch' => 'Ninguna nota coincide.',
-			'cockpit.notebook.selectNote' => 'Selecciona una nota',
-			'cockpit.notebook.reload' => 'Recargar del disco',
-			'cockpit.notebook.untagged' => 'sin tag',
-			'cockpit.notebook.saveFailed' => 'No se pudo guardar la nota',
-			'cockpit.notebook.createFailed' => 'No se pudo crear la nota',
-			'cockpit.notebook.addTag' => 'añadir tag',
-			'cockpit.notebook.untitled' => 'Sin título',
-			'cockpit.notebook.deleteNote' => 'Eliminar nota',
-			'cockpit.notebook.deleteConfirm' => ({required Object name}) => '¿Mover “${name}” a la papelera?',
-			'cockpit.notebook.imageFailed' => 'No se pudo guardar la imagen',
-			'cockpit.notebook.format.bold' => 'Negrita (⌘B)',
-			'cockpit.notebook.format.italic' => 'Cursiva (⌘I)',
-			'cockpit.notebook.format.strike' => 'Tachado',
-			'cockpit.notebook.format.heading1' => 'Título 1',
-			'cockpit.notebook.format.heading2' => 'Título 2',
-			'cockpit.notebook.format.heading3' => 'Título 3',
-			'cockpit.notebook.format.bullets' => 'Lista',
-			'cockpit.notebook.format.numbered' => 'Lista numerada',
-			'cockpit.notebook.format.checklist' => 'Checklist',
-			'cockpit.notebook.format.quote' => 'Cita',
-			'cockpit.notebook.format.code' => 'Código inline (⌘E)',
-			'cockpit.notebook.format.codeBlock' => 'Bloque de código',
-			'cockpit.notebook.format.link' => 'Enlace (⌘K)',
-			'cockpit.notebook.format.rule' => 'Divisor',
-			'cockpit.notebook.format.noteLink' => 'Enlace a una nota ([[…]])',
-			'cockpit.notebook.format.noteLinkSearch' => 'Buscar notas',
-			'cockpit.notebook.format.image' => 'Insertar imagen…',
-			'cockpit.notebook.backlinks' => 'Enlazada desde',
-			'cockpit.notebook.renameTag' => 'Renombrar tag',
-			'cockpit.notebook.deleteTag' => 'Eliminar tag',
-			'cockpit.notebook.deleteTagConfirm' => ({required Object name, required Object count}) => '¿Quitar “${name}” de ${count} notas? Las notas se conservan.',
-			'cockpit.notebook.showList' => 'Mostrar lista de notas',
-			'cockpit.notebook.hideList' => 'Ocultar lista de notas',
-			'cockpit.layoutPreview.applyFailedTitle' => 'No se pudo aplicar el diseño',
-			'cockpit.layoutPreview.applyInCockpit' => 'Aplicar en Cockpit',
-			'cockpit.layoutPreview.applyNewWorkspace' => 'Abrir como nuevo espacio de trabajo',
-			'cockpit.layoutPreview.applyTo' => ({required Object workspace}) => 'Aplicar en ${workspace}',
-			'cockpit.layoutPreview.autorunWorktree' => 'autorun: worktree. Este diseño también se aplica solo al crear un worktree del espacio de trabajo que lo contiene.',
-			'cockpit.layoutPreview.command' => 'Comando',
-			'cockpit.layoutPreview.folder' => 'Carpeta',
-			'cockpit.layoutPreview.noCommand' => 'sin comando, abre un shell',
-			'cockpit.layoutPreview.replaceConfirm' => 'Reemplazar diseño',
-			'cockpit.layoutPreview.replaceMessage' => ({required Object n}) => 'Se cerrarán ${n} pestañas abiertas de este espacio de trabajo, incluidas las que tienen trabajo en curso.',
-			'cockpit.layoutPreview.replaceTitle' => ({required Object workspace}) => '¿Reemplazar el diseño de ${workspace}?',
-			'cockpit.layoutPreview.skippedTitle' => 'No se crean en este sistema',
-			'cockpit.layoutPreview.splitDown' => 'divide abajo',
-			'cockpit.layoutPreview.splitRight' => 'divide a la derecha',
-			'cockpit.layoutPreview.splitTab' => 'pestaña',
-			'cockpit.layoutPreview.subtitle' => ({required Object n}) => 'Este diseño abre ${n} terminales. Lee los comandos antes de aplicarlo.',
-			'cockpit.telemetry.tooltip' => 'Telemetría',
-			'cockpit.telemetry.title' => 'Telemetría',
-			'cockpit.telemetry.liveRuns' => ({required Object n}) => '${n} activos',
-			'cockpit.telemetry.noWorkspace' => 'Abre un workspace para ver su telemetría.',
-			'cockpit.telemetry.empty' => 'Nada por aquí todavía.',
-			'cockpit.telemetry.emptyFiltered' => 'Nada por aquí todavía.',
-			'cockpit.telemetry.searchHint' => 'Filtrar casos',
-			'cockpit.telemetry.chipOpen' => 'Abiertos',
-			'cockpit.telemetry.chipNew' => 'Nuevos',
-			'cockpit.telemetry.chipResolved' => 'Resueltos',
-			'cockpit.telemetry.chipIgnored' => 'Ignorados',
-			'cockpit.telemetry.chipWarnings' => 'Avisos',
-			'cockpit.telemetry.tagNew' => 'nuevo',
-			'cockpit.telemetry.tagRegression' => 'regresión',
-			'cockpit.telemetry.tagResolved' => 'resuelto',
-			'cockpit.telemetry.tagIgnored' => 'ignorado',
-			'cockpit.telemetry.srcTask' => 'task',
-			'cockpit.telemetry.srcWrapper' => 'cockpit telemetry',
-			'cockpit.telemetry.run' => ({required Object id}) => 'run ${id}',
-			'cockpit.telemetry.resolve' => 'Marcar resuelto',
-			'cockpit.telemetry.ignore' => 'Ignorar (también se oculta a los agentes)',
-			'cockpit.telemetry.reopen' => 'Reabrir',
-			'cockpit.telemetry.clear' => 'Limpiar ocurrencias',
-			'cockpit.telemetry.clearRun' => 'Limpiar este run',
-			'cockpit.telemetry.clearProject' => 'Limpiar proyecto',
-			'cockpit.telemetry.openFile' => ({required Object location}) => 'Abrir ${location}',
-			'cockpit.telemetry.showInTerminal' => 'Ver en la terminal',
-			'cockpit.telemetry.copyCommand' => 'Copiar comando de la CLI',
-			'cockpit.telemetry.copied' => 'Copiado',
-			'cockpit.telemetry.statusOpen' => 'Abierto',
-			'cockpit.telemetry.statusResolved' => 'Resuelto',
-			'cockpit.telemetry.statusIgnored' => 'Ignorado',
-			'cockpit.telemetry.occurrences' => 'Ocurrencias',
-			'cockpit.telemetry.inRuns' => ({required Object n}) => 'en ${n} runs',
-			'cockpit.telemetry.first' => 'Primera',
-			'cockpit.telemetry.last' => 'Última',
-			'cockpit.telemetry.origin' => 'Origen',
-			'cockpit.telemetry.sectionStack' => 'Stack',
-			'cockpit.telemetry.stackHint' => 'frames del proyecto destacados · clic abre el archivo',
-			'cockpit.telemetry.sectionCorrelated' => 'Log correlacionado',
-			'cockpit.telemetry.correlatedHint' => 'el JSON más cercano antes del error, en el mismo run',
-			'cockpit.telemetry.none' => 'ninguno',
-			'cockpit.telemetry.sectionRuns' => 'Ocurrencias por run',
-			'cockpit.telemetry.runsHint' => 'misma clave (cwd, comando): así se calculan nuevo y regresión',
-			'cockpit.telemetry.sectionContext' => 'Contexto crudo',
-			'cockpit.telemetry.contextHint' => 'líneas de la terminal alrededor de la última ocurrencia',
-			'cockpit.telemetry.current' => 'actual',
-			'cockpit.telemetry.fingerprintHint' => ({required Object location}) => 'fingerprint = tipo + mensaje normalizado + ${location}',
-			'cockpit.telemetry.blameUncommitted' => 'cambiado en el working tree',
-			'cockpit.telemetry.blameCommit' => ({required Object ago, required Object sha}) => 'cambiado ${ago} (${sha})',
-			'cockpit.telemetry.justNow' => 'ahora',
-			'cockpit.telemetry.minutesAgo' => ({required Object n}) => 'hace ${n} min',
-			'cockpit.telemetry.hoursAgo' => ({required Object n}) => 'hace ${n} h',
-			'cockpit.telemetry.daysAgo' => ({required Object n}) => 'hace ${n} d',
-			'cockpit.telemetry.resolvedToast' => 'Resuelto. Si vuelve en un run futuro, reaparece como regresión.',
-			'cockpit.telemetry.ignoredToast' => 'Ignorado. Los agentes ya no lo ven (salvo --include-ignored).',
-			'cockpit.telemetry.clearedToast' => 'Ocurrencias borradas. Las reglas de triaje se mantienen.',
-			'cockpit.telemetry.byHuman' => 'por ti',
-			'cockpit.telemetry.byAgent' => 'por el agente',
-			'cockpit.telemetry.caseTabTitle' => ({required Object type, required Object file}) => '${type} · ${file}',
-			'cockpit.telemetry.srcApp' => 'App',
-			'cockpit.telemetry.chipApp' => 'Cockpit',
-			'cockpit.panelView.unavailable' => 'Los paneles necesitan la web view integrada, que todavía no existe en Linux.',
-			'cockpit.panelView.openInBrowser' => 'Abrir en el navegador',
-			'cockpit.panelView.openAsHtml' => 'Abrir como HTML',
+			'orkest.kanbanView.filterClear' => 'Limpiar',
+			'orkest.kanbanView.filterDependencies' => 'Dependencias',
+			'orkest.kanbanView.filterBlocked' => 'Bloqueado',
+			'orkest.kanbanView.filterReady' => 'Listo',
+			'orkest.kanbanView.blockedBy' => 'Bloqueado por',
+			'orkest.kanbanView.addBlocker' => 'Agregar tarjeta bloqueante',
+			'orkest.kanbanView.searchCards' => 'Buscar tarjetas',
+			'orkest.kanbanView.unknownCard' => 'desconocida',
+			'orkest.kanbanView.boardView' => 'Tablero',
+			'orkest.kanbanView.listView' => 'Lista',
+			'orkest.kanbanView.refresh' => 'Actualizar desde el disco',
+			'orkest.kanbanView.manageLabels' => 'Etiquetas',
+			'orkest.kanbanView.labelsTitle' => 'Etiquetas de este tablero',
+			'orkest.kanbanView.labelNamePlaceholder' => 'nombre de la etiqueta',
+			'orkest.kanbanView.labelUsage' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 tarjeta', other: '${n} tarjetas', ),
+			'orkest.kanbanView.deleteLabel' => 'Eliminar etiqueta',
+			'orkest.kanbanView.newCard' => 'nueva tarjeta',
+			'orkest.kanbanView.newCardTitle' => 'Nueva tarjeta',
+			'orkest.kanbanView.newColumn' => 'Nueva columna',
+			'orkest.kanbanView.columnNameTitle' => 'Nombre de la columna',
+			'orkest.kanbanView.dragColumn' => 'Arrastrar columna',
+			'orkest.kanbanView.columnOptions' => 'Opciones de la columna',
+			'orkest.kanbanView.renameColumn' => 'Renombrar columna',
+			'orkest.kanbanView.moveColumnLeft' => 'Mover a la izquierda',
+			'orkest.kanbanView.moveColumnRight' => 'Mover a la derecha',
+			'orkest.kanbanView.deleteColumn' => 'Eliminar columna',
+			'orkest.kanbanView.newCardHere' => 'Nueva tarjeta aquí',
+			'orkest.kanbanView.duplicateCard' => 'Duplicar',
+			'orkest.kanbanView.cardLabels' => 'Etiquetas',
+			'orkest.kanbanView.deleteCard' => 'Eliminar tarjeta',
+			'orkest.kanbanView.advance' => 'Pasar a la siguiente columna',
+			'orkest.kanbanView.advanceHold' => 'Mover a la siguiente columna (mantener: mover a la última)',
+			'orkest.kanbanView.advanceBack' => 'Volver una columna',
+			'orkest.kanbanView.emptyColumn' => 'Sin tarjetas',
+			'orkest.kanbanView.cardCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 tarjeta', other: '${n} tarjetas', ),
+			'orkest.kanbanView.notes' => 'Nota',
+			'orkest.kanbanView.notesPlaceholder' => 'Escribe una nota',
+			'orkest.kanbanView.comments' => 'Comentarios',
+			'orkest.kanbanView.addComment' => 'Añadir comentario',
+			'orkest.kanbanView.commentPlaceholder' => 'Escribe un comentario',
+			'orkest.kanbanView.noComments' => 'Aún no hay comentarios',
+			'orkest.kanbanView.closeDetail' => 'Cerrar',
+			'orkest.kanbanView.notABoard' => 'Este archivo aún no tiene columnas ## — se abre como markdown.',
+			'orkest.kanbanView.startBoard' => 'Empezar un tablero',
+			'orkest.kanbanView.couldNotSave' => 'No se pudo guardar el tablero',
+			'orkest.kanbanView.unrecognizedBlock' => 'No reconocido por el analizador — se arrastra entero, sin edición en línea.',
+			'orkest.kanbanView.deleteColumnDialog.title' => ({required Object name}) => '¿Eliminar «${name}»?',
+			'orkest.kanbanView.deleteColumnDialog.message' => ({required Object count}) => 'Esta columna tiene ${count}. Elige qué pasa con ellas.',
+			'orkest.kanbanView.deleteColumnDialog.moveCards' => 'Mover a la columna anterior',
+			'orkest.kanbanView.deleteColumnDialog.deleteAll' => 'Eliminar junto con la columna',
+			'orkest.kanbanView.deleteColumnDialog.emptyMessage' => 'Esta columna está vacía.',
+			'orkest.dbPanel.sectionDatabase' => 'BASE DE DATOS',
+			'orkest.dbPanel.edit' => 'Editar…',
+			'orkest.dbPanel.copyName' => 'Copiar nombre',
+			'orkest.dbPanel.newQuery' => 'Nueva query',
+			'orkest.dbPanel.browseKeys' => 'Ver claves',
+			'orkest.dbPanel.deleteConnectionTitle' => 'Eliminar conexión',
+			'orkest.dbPanel.deleteConnectionMessage' => ({required Object name}) => '¿Quitar "${name}" de este workspace? Cualquier contraseña guardada se descartará. Los archivos .dbq que la referencian no se modifican.',
+			'orkest.dbPanel.footer' => ({required Object n}) => '.orkest/databases.json · ${n} conexiones',
+			'orkest.dbPanel.footerOne' => '.orkest/databases.json · 1 conexión',
+			'orkest.dbPanel.noConnections' => 'Aún no hay conexiones.',
+			'orkest.dbPanel.passwordRequired' => 'Contraseña no encontrada en el host. Abre esta conexión y vuelve a escribirla — se guarda en la máquina que ejecuta la base de datos, no en esta.',
+			'orkest.dbMongoView.deleteDocumentTitle' => 'Eliminar documento',
+			'orkest.dbMongoView.deleteDocumentMessage' => ({required Object id, required Object collection}) => '¿Eliminar el documento con _id ${id} de "${collection}"?',
+			'orkest.dbMongoView.filterHint' => 'Filtro — JSON, ej.: {"status": "active"}',
+			'orkest.dbMongoView.docCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 doc', other: '${n} docs', ),
+			'orkest.dbMongoView.refresh' => 'Actualizar',
+			'orkest.dbMongoView.insertDocument' => 'Insertar documento',
+			'orkest.dbMongoView.noDocuments' => 'No hay documentos en esta colección.',
+			'orkest.dbMongoView.noDocumentsMatch' => 'Ningún documento coincide con este filtro.',
+			'orkest.dbMongoView.loadMore' => 'Cargar más',
+			'orkest.dbMongoView.edit' => 'Editar',
+			'orkest.dbMongoView.insert' => 'Insertar',
+			'orkest.dbConnectionDialog.chooseFileTitle' => 'Elegir base de datos SQLite',
+			'orkest.dbConnectionDialog.file' => 'Archivo',
+			'orkest.dbConnectionDialog.chooseFilePlaceholder' => 'Elige un archivo SQLite…',
+			'orkest.dbConnectionDialog.name' => 'Nombre',
+			'orkest.dbConnectionDialog.password' => 'Contraseña',
+			'orkest.dbConnectionDialog.savePassword' => 'Guardar contraseña',
+			'orkest.dbConnectionDialog.allowWrites' => 'Permitir escritura (agentes)',
+			'orkest.dbConnectionDialog.allowWritesHint' => 'desactivado = los agentes solo leen vía CLI',
+			'orkest.dbConnectionDialog.visibleToAgents' => 'Visible para agentes',
+			'orkest.dbConnectionDialog.visibleToAgentsHint' => 'desactivado = oculto en la CLI, solo en la GUI',
+			'orkest.dbConnectionDialog.testing' => 'Probando conexión…',
+			'orkest.dbConnectionDialog.connectionOk' => 'Conexión OK',
+			'orkest.dbConnectionDialog.connectionFailed' => 'Fallo en la conexión',
+			'orkest.dbConnectionDialog.editTitle' => 'Editar conexión',
+			'orkest.dbConnectionDialog.newTitle' => 'Nueva conexión',
+			'orkest.dbConnectionDialog.connectionString' => 'Connection string',
+			'orkest.dbConnectionDialog.invalidUrl' => 'URL de conexión no válida.',
+			'orkest.dbConnectionDialog.sshTunnel' => 'Túnel SSH',
+			'orkest.dbConnectionDialog.sshHost' => 'Host SSH',
+			'orkest.dbConnectionDialog.sshPort' => 'Puerto SSH',
+			'orkest.dbConnectionDialog.sshUser' => 'Usuario SSH',
+			'orkest.dbConnectionDialog.privateKey' => 'Clave privada',
+			'orkest.dbConnectionDialog.choosePrivateKeyPlaceholder' => 'Elige una clave privada…',
+			'orkest.dbConnectionDialog.choosePrivateKeyDialogTitle' => 'Elegir clave privada SSH',
+			'orkest.dbConnectionDialog.keyPassphrase' => 'Frase de contraseña de la clave',
+			'orkest.dbConnectionDialog.savePassphrase' => 'Guardar frase de contraseña',
+			'orkest.dbConnectionDialog.passwordOnHost' => 'La contraseña se guarda en el host, no en esta máquina.',
+			'orkest.sshPrompts.unknownSshHostTitle' => 'Host SSH desconocido',
+			'orkest.sshPrompts.neverConnected' => ({required Object endpoint}) => 'Orkest Code nunca se ha conectado a ${endpoint} antes.',
+			'orkest.sshPrompts.trustHint' => 'Confía solo si esta fingerprint coincide con el servidor. Puedes verificarla en el servidor con:',
+			'orkest.sshPrompts.trust' => 'Confiar',
+			'orkest.sshPrompts.sshKeyPassphraseTitle' => 'Frase de contraseña de la clave SSH',
+			'orkest.sshPrompts.unlockMessage' => ({required Object keyPath, required Object connectionName}) => 'Desbloquea ${keyPath} para conectar "${connectionName}".',
+			'orkest.sshPrompts.keptInMemoryHint' => 'Se mantiene en memoria hasta que Orkest Code se cierre. Para que los agentes usen esta conexión, activa "Guardar frase de contraseña" en la conexión.',
+			'orkest.sshPrompts.unlock' => 'Desbloquear',
+			'orkest.projectsRail.workspaces' => 'Workspaces',
+			'orkest.projectsRail.keepAwakeOn' => 'Manteniendo este equipo despierto para acceso remoto. Haz clic para dejarlo dormir de nuevo.',
+			'orkest.projectsRail.keepAwakeOff' => 'Mantener este equipo despierto para acceso remoto. Se apaga solo cuando Orkest Code se reinicia.',
+			'orkest.projectsRail.keepAwakeBattery' => 'Despierto con batería. Esto consume la batería.',
+			'orkest.projectsRail.keepAwakeLid' => 'Cerrar la tapa del portátil sigue poniéndolo a dormir.',
+			'orkest.projectsRail.newWorkspace' => 'Nuevo workspace',
+			'orkest.projectsRail.settings' => 'Configuración',
+			'orkest.projectsRail.mergeToParent' => 'Fusionar en el padre',
+			'orkest.projectsRail.updateFromParent' => 'Actualizar desde el padre',
+			'orkest.projectsRail.forkWorktree' => 'Crear worktree derivada',
+			'orkest.projectsRail.copyBranch' => 'Copiar branch',
+			'orkest.projectsRail.remove' => 'Quitar',
+			'orkest.projectsRail.moveToRealm' => 'Mover a realm',
+			'orkest.projectsRail.copyWorkspaceId' => 'Copiar id del workspace',
+			'orkest.projectsRail.rename' => 'Renombrar',
+			'orkest.projectsRail.close' => 'Cerrar',
+			'orkest.projectsRail.newRealm' => 'Nuevo realm…',
+			'orkest.projectsRail.manageRealms' => 'Gestionar realms…',
+			'orkest.projectsRail.noWorkspaces' => 'Aún no hay workspaces.',
+			'orkest.projectsRail.sync' => 'Sincronizar',
+			'orkest.projectsRail.pull' => 'Pull',
+			'orkest.projectsRail.push' => 'Push',
+			'orkest.projectsRail.createWorktree' => 'Crear worktree',
+			'orkest.projectsRail.worktreeCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 worktree', other: '${n} worktrees', ),
+			'orkest.projectsRail.expandWorktrees' => 'Expandir worktrees',
+			'orkest.projectsRail.collapseWorktrees' => 'Contraer worktrees',
+			'orkest.findBar.find' => 'Buscar',
+			'orkest.findBar.matchCase' => 'Coincidir mayúsculas',
+			'orkest.findBar.wholeWord' => 'Palabra completa',
+			'orkest.findBar.useRegex' => 'Usar expresión regular',
+			'orkest.findBar.previous' => 'Anterior (⇧⏎)',
+			'orkest.findBar.next' => 'Siguiente (⏎)',
+			'orkest.findBar.close' => 'Cerrar (Esc)',
+			'orkest.findBar.badPattern' => 'Patrón inválido',
+			'orkest.findBar.counter' => ({required Object current, required Object total}) => '${current} de ${total}',
+			'orkest.findBar.noResults' => 'Sin resultados',
+			'orkest.contentSearch.sectionSearch' => 'BÚSQUEDA',
+			'orkest.contentSearch.searchInFiles' => 'Buscar en los archivos',
+			'orkest.contentSearch.matchCase' => 'Coincidir mayúsculas',
+			'orkest.contentSearch.wholeWord' => 'Palabra completa',
+			'orkest.contentSearch.useRegex' => 'Usar expresión regular',
+			'orkest.contentSearch.invalidRegex' => 'Expresión regular inválida.',
+			'orkest.contentSearch.typeToSearch' => 'Escribe para buscar en todos los archivos.',
+			'orkest.contentSearch.searching' => 'Buscando…',
+			'orkest.contentSearch.noResults' => 'Sin resultados.',
+			'orkest.topbar.collapseSidebar' => 'Contraer barra lateral',
+			'orkest.topbar.toggleFiles' => 'Mostrar/ocultar archivos',
+			'orkest.topbar.filesUnavailable' => 'Archivos no disponibles en Orkest Code',
+			'orkest.topbar.hideKeyboard' => 'Ocultar teclado',
+			'orkest.topbar.showOffice' => 'Mostrar oficina',
+			'orkest.topbar.showTerminals' => 'Mostrar terminales',
+			'orkest.tasks.hotReload' => 'Hot reload',
+			'orkest.tasks.hotRestart' => 'Hot restart',
+			'orkest.tasks.toggleDebugPaint' => 'Alternar debug paint',
+			'orkest.tasks.togglePlatform' => 'Alternar plataforma',
+			'orkest.tasks.quit' => 'Salir',
+			'orkest.notifications.agentFinished' => 'El agente terminó',
+			'orkest.notifications.open' => 'Abrir',
+			'orkest.notifications.agentNeedsAction' => 'El agente necesita tu acción',
+			'orkest.terminalLink.open' => 'Abrir',
+			'orkest.terminalLink.revealFinder' => 'Mostrar en Finder',
+			'orkest.terminalLink.revealExplorer' => 'Mostrar en el Explorador',
+			'orkest.terminalLink.revealFolder' => 'Abrir carpeta contenedora',
+			'orkest.terminalLink.copyPath' => 'Copiar ruta',
+			'orkest.terminalLink.openLink' => 'Abrir enlace',
+			'orkest.terminalLink.copyLink' => 'Copiar enlace',
+			'orkest.terminal.cwdFallbackWarning' => ({required Object requested, required Object path}) => 'Aviso: la carpeta "${requested}" no existe. Esta terminal se abrió en "${path}".',
+			'orkest.terminal.workspaceEnvTracked' => ({required Object keys}) => 'Aviso: el .env.orkest está rastreado por git (vino con el repositorio). Inyectado: ${keys}',
+			'orkest.remoteHost.addHost' => 'Añadir host remoto',
+			'orkest.remoteHost.hostName' => 'Nombre',
+			'orkest.remoteHost.sshTarget' => 'Destino SSH (usuario@host)',
+			'orkest.remoteHost.connecting' => ({required Object host}) => 'Conectando a ${host}…',
+			'orkest.remoteHost.openingTunnel' => 'Túnel SSH',
+			'orkest.remoteHost.installingServer' => 'Instalando servidor',
+			'orkest.remoteHost.handshake' => ({required Object version}) => 'Servidor ${version}',
+			'orkest.remoteHost.loadingWorkspace' => 'Cargando workspace…',
+			'orkest.remoteHost.reconnecting' => ({required Object host}) => 'Reconectando a ${host}…',
+			'orkest.remoteHost.offline' => ({required Object host}) => '${host} sin conexión',
+			'orkest.remoteHost.remove' => 'Quitar',
+			'orkest.remoteHost.reconnect' => 'Reconectar',
+			'orkest.remoteHost.installServer' => 'Instalar servidor',
+			'orkest.remoteHost.errSshUnreachable' => ({required Object host}) => 'No se puede llegar a ${host} por SSH. ¿Está encendido y con Inicio de sesión remoto activado?',
+			'orkest.remoteHost.errInstallFailed' => ({required Object host}) => 'No se pudo instalar el servidor en ${host}.',
+			'orkest.remoteHost.errVersionMismatch' => 'Versión del servidor incompatible; actualízalo.',
+			'orkest.remoteHost.errDetail' => ({required Object detail}) => 'Detalles: ${detail}',
+			'orkest.remoteHost.pickFolderTitle' => ({required Object host}) => 'Abrir carpeta en ${host}',
+			'orkest.remoteHost.openHere' => 'Abrir aquí',
+			'orkest.remoteHost.emptyFolder' => 'Sin subcarpetas',
+			'orkest.remoteHost.newLocal' => 'Local',
+			'orkest.remoteHost.newRemote' => 'Remoto',
+			'orkest.remoteHost.chooseHost' => 'Elegir un host',
+			'orkest.remoteHost.newHostEntry' => 'Nuevo host…',
+			'orkest.remoteHost.editHost' => 'Editar host',
+			'orkest.remoteHost.userLabel' => 'Usuario',
+			'orkest.remoteHost.hostLabel' => 'Host / IP',
+			'orkest.remoteHost.portLabel' => 'Puerto',
+			'orkest.remoteHost.authLabel' => 'Autenticación',
+			'orkest.remoteHost.authKey' => 'Clave SSH',
+			'orkest.remoteHost.authPassword' => 'Contraseña',
+			'orkest.remoteHost.passwordLabel' => 'Contraseña',
+			'orkest.remoteHost.passwordKeep' => 'Deja en blanco para mantener la actual',
+			'orkest.remoteHost.errUser' => 'Usuario obligatorio',
+			'orkest.remoteHost.errHost' => 'Host obligatorio',
+			'orkest.remoteHost.errPassword' => 'Contraseña obligatoria',
+			'orkest.remoteHost.identityChoose' => 'Elegir…',
+			'orkest.remoteHost.identityEmpty' => 'Ninguna clave seleccionada',
+			'orkest.remoteHost.identityDialogTitle' => 'Selecciona la clave privada SSH',
+			'orkest.remoteHost.errIdentity' => 'Elige la clave privada para autenticarte.',
+			'orkest.remoteHost.errHostKeyUnknown' => ({required Object host}) => 'Orkest Code todavía no confía en ${host}. Conecta de nuevo y confirma la huella.',
+			'orkest.remoteHost.errHostKeyChanged' => ({required Object host}) => '${host} presenta una clave SSH distinta de la guardada. Si no reinstalaste esa máquina, detente y compruébalo; si la reinstalaste, elimina la entrada antigua de ~/.ssh/known_hosts.',
+			'orkest.remoteHost.errHostBundleMissing' => ({required Object host}) => '${host} es Windows pero no tiene Orkest Code instalado. El servidor remoto se instala desde el bundle de Orkest Code que ya está en esa máquina — instálalo allí e inténtalo de nuevo.',
+			'orkest.remoteHost.errHostUnknownOs' => ({required Object host}) => 'No se pudo identificar el sistema de ${host}. La cuenta puede tener un shell restringido, o ninguno.',
+			'orkest.remoteHost.errIdentityPublic' => 'Solo está la clave pública. Eso funciona solo si la privada está en tu agente SSH; si no, elige la privada (mismo nombre, sin .pub).',
+			'orkest.remoteHost.errIdentityNotKey' => 'Ese archivo no parece una clave privada.',
+			'orkest.remoteHost.errIdentityMissingFile' => 'Ese archivo ya no existe.',
+			'orkest.remoteHost.errIdentityUnreadable' => 'No se pudo leer ese archivo.',
+			'orkest.browserPane.back' => 'Atrás',
+			'orkest.browserPane.forward' => 'Adelante',
+			'orkest.browserPane.reload' => 'Recargar',
+			'orkest.browserPane.urlHint' => 'Escribe la URL o dirección',
+			'orkest.browserPane.go' => 'Ir',
+			'orkest.documentWindow.mediaNotSupported' => 'Audio y video se abren en la ventana principal de Orkest Code.',
+			'orkest.documentWindow.fileNotFound' => ({required Object path}) => 'Archivo no encontrado: ${path}',
+			'orkest.gallery.intro' => 'Documentos especiales de Orkest Code para que veas lo que el agente de IA está haciendo.',
+			'orkest.gallery.createErrorTitle' => 'No se pudo crear el archivo',
+			'orkest.gallery.dbQuery.title' => 'Consulta de base de datos',
+			'orkest.gallery.dbQuery.description' => 'Editor SQL con grilla de resultados, usando una de las conexiones registradas.',
+			'orkest.gallery.kanban.title' => 'Tablero kanban',
+			'orkest.gallery.kanban.description' => 'Columnas y tarjetas guardadas como markdown puro. Arrastra, edita y comenta.',
+			'orkest.gallery.layout.title' => 'Layout de paneles',
+			'orkest.gallery.layout.description' => 'Terminales y splits para abrir de una vez, estilo tmuxinator. Puede ejecutarse solo en worktrees nuevos.',
+			'orkest.gallery.httpRequest.title' => 'Requests HTTP',
+			'orkest.gallery.httpRequest.description' => 'Escribe requests en un archivo y ejecútalos con la respuesta al lado.',
+			'orkest.gallery.html.title' => 'Vista HTML',
+			'orkest.gallery.html.description' => 'Una página que el agente escribe y Orkest Code renderiza directo: mapa mental, diagrama, gráfico, lo que necesites.',
+			'orkest.gallery.tasks.title' => 'Tareas',
+			'orkest.gallery.tasks.description' => 'Comandos para ejecutar desde el panel de Tasks, como dev server, tests y build. Vive en .orkest/tasks.json.',
+			'orkest.gallery.notebook.title' => 'Cuaderno',
+			'orkest.gallery.notebook.description' => 'Una carpeta de notas cortas con tags. El agente escribe, tú lees y editas. También abre en Obsidian.',
+			'orkest.gallery.workspaceEnv.title' => 'Env del workspace',
+			'orkest.gallery.workspaceEnv.description' => 'Variables inyectadas en cada terminal de este workspace. Pon tokens o credenciales de API aquí en vez de pegarlos en el prompt del agente. Queda fuera de git.',
+			'orkest.gallery.panel.title' => 'Panel',
+			'orkest.gallery.panel.description' => 'Una página HTML con puente a la app: sus botones ejecutan comandos de la CLI de Orkest Code y del shell en esta máquina. Un playground para dashboards rápidos.',
+			'orkest.notebook.notes' => 'Notas',
+			'orkest.notebook.newNote' => 'Nueva nota',
+			'orkest.notebook.searchPlaceholder' => 'Buscar notas',
+			'orkest.notebook.empty' => 'Aún no hay notas. Crea una, o pídele al agente que escriba aquí.',
+			'orkest.notebook.noMatch' => 'Ninguna nota coincide.',
+			'orkest.notebook.selectNote' => 'Selecciona una nota',
+			'orkest.notebook.reload' => 'Recargar del disco',
+			'orkest.notebook.untagged' => 'sin tag',
+			'orkest.notebook.saveFailed' => 'No se pudo guardar la nota',
+			'orkest.notebook.createFailed' => 'No se pudo crear la nota',
+			'orkest.notebook.addTag' => 'añadir tag',
+			'orkest.notebook.untitled' => 'Sin título',
+			'orkest.notebook.deleteNote' => 'Eliminar nota',
+			'orkest.notebook.deleteConfirm' => ({required Object name}) => '¿Mover “${name}” a la papelera?',
+			'orkest.notebook.imageFailed' => 'No se pudo guardar la imagen',
+			'orkest.notebook.format.bold' => 'Negrita (⌘B)',
+			'orkest.notebook.format.italic' => 'Cursiva (⌘I)',
+			'orkest.notebook.format.strike' => 'Tachado',
+			'orkest.notebook.format.heading1' => 'Título 1',
+			'orkest.notebook.format.heading2' => 'Título 2',
+			'orkest.notebook.format.heading3' => 'Título 3',
+			'orkest.notebook.format.bullets' => 'Lista',
+			'orkest.notebook.format.numbered' => 'Lista numerada',
+			'orkest.notebook.format.checklist' => 'Checklist',
+			'orkest.notebook.format.quote' => 'Cita',
+			'orkest.notebook.format.code' => 'Código inline (⌘E)',
+			'orkest.notebook.format.codeBlock' => 'Bloque de código',
+			'orkest.notebook.format.link' => 'Enlace (⌘K)',
+			'orkest.notebook.format.rule' => 'Divisor',
+			'orkest.notebook.format.noteLink' => 'Enlace a una nota ([[…]])',
+			'orkest.notebook.format.noteLinkSearch' => 'Buscar notas',
+			'orkest.notebook.format.image' => 'Insertar imagen…',
+			'orkest.notebook.backlinks' => 'Enlazada desde',
+			'orkest.notebook.renameTag' => 'Renombrar tag',
+			'orkest.notebook.deleteTag' => 'Eliminar tag',
+			'orkest.notebook.deleteTagConfirm' => ({required Object name, required Object count}) => '¿Quitar “${name}” de ${count} notas? Las notas se conservan.',
+			'orkest.notebook.showList' => 'Mostrar lista de notas',
+			'orkest.notebook.hideList' => 'Ocultar lista de notas',
+			'orkest.layoutPreview.applyFailedTitle' => 'No se pudo aplicar el diseño',
+			'orkest.layoutPreview.applyInOrkest' => 'Aplicar en Orkest Code',
+			'orkest.layoutPreview.applyNewWorkspace' => 'Abrir como nuevo espacio de trabajo',
+			'orkest.layoutPreview.applyTo' => ({required Object workspace}) => 'Aplicar en ${workspace}',
+			'orkest.layoutPreview.autorunWorktree' => 'autorun: worktree. Este diseño también se aplica solo al crear un worktree del espacio de trabajo que lo contiene.',
+			'orkest.layoutPreview.command' => 'Comando',
+			'orkest.layoutPreview.folder' => 'Carpeta',
+			'orkest.layoutPreview.noCommand' => 'sin comando, abre un shell',
+			'orkest.layoutPreview.replaceConfirm' => 'Reemplazar diseño',
+			'orkest.layoutPreview.replaceMessage' => ({required Object n}) => 'Se cerrarán ${n} pestañas abiertas de este espacio de trabajo, incluidas las que tienen trabajo en curso.',
+			'orkest.layoutPreview.replaceTitle' => ({required Object workspace}) => '¿Reemplazar el diseño de ${workspace}?',
+			'orkest.layoutPreview.skippedTitle' => 'No se crean en este sistema',
+			'orkest.layoutPreview.splitDown' => 'divide abajo',
+			'orkest.layoutPreview.splitRight' => 'divide a la derecha',
+			'orkest.layoutPreview.splitTab' => 'pestaña',
+			'orkest.layoutPreview.subtitle' => ({required Object n}) => 'Este diseño abre ${n} terminales. Lee los comandos antes de aplicarlo.',
+			'orkest.telemetry.tooltip' => 'Telemetría',
+			'orkest.telemetry.title' => 'Telemetría',
+			'orkest.telemetry.liveRuns' => ({required Object n}) => '${n} activos',
+			'orkest.telemetry.noWorkspace' => 'Abre un workspace para ver su telemetría.',
+			'orkest.telemetry.empty' => 'Nada por aquí todavía.',
+			'orkest.telemetry.emptyFiltered' => 'Nada por aquí todavía.',
+			'orkest.telemetry.searchHint' => 'Filtrar casos',
+			'orkest.telemetry.chipOpen' => 'Abiertos',
+			'orkest.telemetry.chipNew' => 'Nuevos',
+			'orkest.telemetry.chipResolved' => 'Resueltos',
+			'orkest.telemetry.chipIgnored' => 'Ignorados',
+			'orkest.telemetry.chipWarnings' => 'Avisos',
+			'orkest.telemetry.tagNew' => 'nuevo',
+			'orkest.telemetry.tagRegression' => 'regresión',
+			'orkest.telemetry.tagResolved' => 'resuelto',
+			'orkest.telemetry.tagIgnored' => 'ignorado',
+			'orkest.telemetry.srcTask' => 'task',
+			'orkest.telemetry.srcWrapper' => 'orkest telemetry',
+			'orkest.telemetry.run' => ({required Object id}) => 'run ${id}',
+			'orkest.telemetry.resolve' => 'Marcar resuelto',
+			'orkest.telemetry.ignore' => 'Ignorar (también se oculta a los agentes)',
+			'orkest.telemetry.reopen' => 'Reabrir',
+			'orkest.telemetry.clear' => 'Limpiar ocurrencias',
+			'orkest.telemetry.clearRun' => 'Limpiar este run',
+			'orkest.telemetry.clearProject' => 'Limpiar proyecto',
+			'orkest.telemetry.openFile' => ({required Object location}) => 'Abrir ${location}',
+			'orkest.telemetry.showInTerminal' => 'Ver en la terminal',
+			'orkest.telemetry.copyCommand' => 'Copiar comando de la CLI',
+			'orkest.telemetry.copied' => 'Copiado',
+			'orkest.telemetry.statusOpen' => 'Abierto',
+			'orkest.telemetry.statusResolved' => 'Resuelto',
+			'orkest.telemetry.statusIgnored' => 'Ignorado',
+			'orkest.telemetry.occurrences' => 'Ocurrencias',
+			'orkest.telemetry.inRuns' => ({required Object n}) => 'en ${n} runs',
+			'orkest.telemetry.first' => 'Primera',
+			'orkest.telemetry.last' => 'Última',
+			'orkest.telemetry.origin' => 'Origen',
+			'orkest.telemetry.sectionStack' => 'Stack',
+			'orkest.telemetry.stackHint' => 'frames del proyecto destacados · clic abre el archivo',
+			'orkest.telemetry.sectionCorrelated' => 'Log correlacionado',
+			'orkest.telemetry.correlatedHint' => 'el JSON más cercano antes del error, en el mismo run',
+			'orkest.telemetry.none' => 'ninguno',
+			'orkest.telemetry.sectionRuns' => 'Ocurrencias por run',
+			'orkest.telemetry.runsHint' => 'misma clave (cwd, comando): así se calculan nuevo y regresión',
+			'orkest.telemetry.sectionContext' => 'Contexto crudo',
+			'orkest.telemetry.contextHint' => 'líneas de la terminal alrededor de la última ocurrencia',
+			'orkest.telemetry.current' => 'actual',
+			'orkest.telemetry.fingerprintHint' => ({required Object location}) => 'fingerprint = tipo + mensaje normalizado + ${location}',
+			'orkest.telemetry.blameUncommitted' => 'cambiado en el working tree',
+			'orkest.telemetry.blameCommit' => ({required Object ago, required Object sha}) => 'cambiado ${ago} (${sha})',
+			'orkest.telemetry.justNow' => 'ahora',
+			'orkest.telemetry.minutesAgo' => ({required Object n}) => 'hace ${n} min',
+			'orkest.telemetry.hoursAgo' => ({required Object n}) => 'hace ${n} h',
+			'orkest.telemetry.daysAgo' => ({required Object n}) => 'hace ${n} d',
+			'orkest.telemetry.resolvedToast' => 'Resuelto. Si vuelve en un run futuro, reaparece como regresión.',
+			'orkest.telemetry.ignoredToast' => 'Ignorado. Los agentes ya no lo ven (salvo --include-ignored).',
+			'orkest.telemetry.clearedToast' => 'Ocurrencias borradas. Las reglas de triaje se mantienen.',
+			'orkest.telemetry.byHuman' => 'por ti',
+			'orkest.telemetry.byAgent' => 'por el agente',
+			'orkest.telemetry.caseTabTitle' => ({required Object type, required Object file}) => '${type} · ${file}',
+			'orkest.telemetry.srcApp' => 'App',
+			'orkest.telemetry.chipApp' => 'Orkest Code',
+			'orkest.panelView.unavailable' => 'Los paneles necesitan la web view integrada, que todavía no existe en Linux.',
+			'orkest.panelView.openInBrowser' => 'Abrir en el navegador',
+			'orkest.panelView.openAsHtml' => 'Abrir como HTML',
 			'settings.language.title' => 'Idioma',
 			'settings.language.system' => 'Sistema',
 			'settings.language.english' => 'Inglés',
@@ -2921,24 +2921,24 @@ extension on TranslationsEs {
 			'settings.page.nav.remoteHosts' => 'Hosts remotos',
 			'settings.page.general.sectionEditor' => 'Editor',
 			'settings.page.general.editorEngineTitle' => 'Motor',
-			'settings.page.general.editorEngineCockpit' => 'Cockpit (predeterminado)',
+			'settings.page.general.editorEngineOrkest' => 'Orkest Code (predeterminado)',
 			'settings.page.general.editorEngineNeovim' => 'Neovim',
 			'settings.page.general.neovimChecking' => 'Buscando Neovim…',
 			'settings.page.general.neovimNotFound' => 'Neovim no se encontró en la PATH de tu shell.',
 			'settings.page.general.neovimRefresh' => 'Comprobar de nuevo',
-			'settings.page.general.showCockpitTitle' => 'Mostrar terminal de Cockpit',
-			'settings.page.general.showCockpitDesc' => 'Mantiene un workspace sin carpeta, solo de terminal, fijado en la parte superior de la barra lateral. Desactivarlo cierra sus terminales.',
+			'settings.page.general.showOrkestTitle' => 'Mostrar terminal de Orkest Code',
+			'settings.page.general.showOrkestDesc' => 'Mantiene un workspace sin carpeta, solo de terminal, fijado en la parte superior de la barra lateral. Desactivarlo cierra sus terminales.',
 			'settings.page.general.launchAtStartupTitle' => 'Iniciar al arrancar',
-			'settings.page.general.launchAtStartupDesc' => 'Inicia Cockpit automáticamente cuando inicias sesión en tu computadora.',
+			'settings.page.general.launchAtStartupDesc' => 'Inicia Orkest Code automáticamente cuando inicias sesión en tu computadora.',
 			'settings.page.general.sectionUpdates' => 'Actualizaciones',
 			'settings.page.general.checkUpdatesTitle' => 'Buscar actualizaciones',
-			'settings.page.general.checkUpdatesDesc' => 'Con qué frecuencia Cockpit debe buscar nuevas versiones.',
+			'settings.page.general.checkUpdatesDesc' => 'Con qué frecuencia Orkest Code debe buscar nuevas versiones.',
 			'settings.page.general.updateFrequency.daily' => 'Diariamente',
 			'settings.page.general.updateFrequency.weekly' => 'Semanalmente',
 			'settings.page.general.updateFrequency.monthly' => 'Mensualmente',
 			'settings.page.general.updateFrequency.never' => 'Nunca',
 			'settings.page.general.developerModeTitle' => 'Modo desarrollador',
-			'settings.page.general.developerModeDesc' => 'Registra los errores y avisos del propio Cockpit en una base aparte de la Telemetría (chip “Cockpit”) y activa las métricas de rendimiento. Solo sirve a quien mantiene la app.',
+			'settings.page.general.developerModeDesc' => 'Registra los errores y avisos del propio Orkest Code en una base aparte de la Telemetría (chip “Orkest Code”) y activa las métricas de rendimiento. Solo sirve a quien mantiene la app.',
 			'settings.page.diagnostics.sectionTitle' => 'Diagnóstico',
 			'settings.page.diagnostics.logFileTitle' => 'Archivo de registro',
 			'settings.page.diagnostics.logFileDesc' => ({required Object days, required Object path}) => 'Los errores y eventos de inicio se registran aquí, y se conservan durante ${days} días.\n${path}',
@@ -2952,29 +2952,29 @@ extension on TranslationsEs {
 			'settings.page.diagnostics.reportDialogDescription' => 'Describe qué salió mal en el issue. El registro reciente está incluido abajo y en "Copiar detalles".',
 			'settings.page.storage.sectionTitle' => 'Almacenamiento',
 			'settings.page.storage.locationTitle' => 'Ubicación de almacenamiento',
-			'settings.page.storage.locationDesc' => ({required Object root}) => 'Cockpit guarda aquí sus proyectos, diseños y configuración. Apúntalo a una carpeta sincronizada para respaldarlo.\n${root}',
+			'settings.page.storage.locationDesc' => ({required Object root}) => 'Orkest Code guarda aquí sus proyectos, diseños y configuración. Apúntalo a una carpeta sincronizada para respaldarlo.\n${root}',
 			'settings.page.storage.useDefault' => 'Usar predeterminado',
 			'settings.page.storage.working' => 'Procesando…',
 			'settings.page.storage.change' => 'Cambiar…',
-			'settings.page.storage.resetTitle' => 'Restablecer Cockpit',
+			'settings.page.storage.resetTitle' => 'Restablecer Orkest Code',
 			'settings.page.storage.resetDesc' => 'Elimina todos los datos locales — proyectos, diseños, configuración e historial de terminal — y vuelve a la ubicación predeterminada.',
 			'settings.page.storage.resetButton' => 'Restablecer…',
 			'settings.page.storage.resetConfirm' => 'Restablecer',
-			'settings.page.storage.resetDialogTitle' => '¿Restablecer Cockpit?',
-			'settings.page.storage.resetDialogContent' => 'Esto elimina permanentemente todos los datos locales de Cockpit — proyectos, diseños, configuración e historial de terminal. Esto no se puede deshacer. Cockpit se cerrará para que puedas empezar de nuevo.',
+			'settings.page.storage.resetDialogTitle' => '¿Restablecer Orkest Code?',
+			'settings.page.storage.resetDialogContent' => 'Esto elimina permanentemente todos los datos locales de Orkest Code — proyectos, diseños, configuración e historial de terminal. Esto no se puede deshacer. Orkest Code se cerrará para que puedas empezar de nuevo.',
 			'settings.page.storage.restartRequiredTitle' => 'Reinicio necesario',
-			'settings.page.storage.restartChangeFolderMessage' => ({required Object path}) => 'Cockpit usará esta carpeta a partir del próximo inicio:\n${path}',
-			'settings.page.storage.restartUseDefaultMessage' => 'Cockpit usará la ubicación predeterminada del sistema a partir del próximo inicio. Tus datos en la carpeta personalizada permanecen intactos.',
-			'settings.page.storage.restartResetMessage' => 'Se borraron todos los datos de Cockpit. Reinicia para empezar de nuevo.',
+			'settings.page.storage.restartChangeFolderMessage' => ({required Object path}) => 'Orkest Code usará esta carpeta a partir del próximo inicio:\n${path}',
+			'settings.page.storage.restartUseDefaultMessage' => 'Orkest Code usará la ubicación predeterminada del sistema a partir del próximo inicio. Tus datos en la carpeta personalizada permanecen intactos.',
+			'settings.page.storage.restartResetMessage' => 'Se borraron todos los datos de Orkest Code. Reinicia para empezar de nuevo.',
 			'settings.page.storage.later' => 'Más tarde',
-			'settings.page.storage.quitCockpit' => 'Salir de Cockpit',
-			'settings.page.storage.chooseFolderDialogTitle' => 'Elige una carpeta para los datos de Cockpit',
+			'settings.page.storage.quitOrkest' => 'Salir de Orkest Code',
+			'settings.page.storage.chooseFolderDialogTitle' => 'Elige una carpeta para los datos de Orkest Code',
 			'settings.page.terminal.sectionDefaultTerminal' => 'Terminal predeterminado',
 			'settings.page.terminal.engineTitle' => 'Motor',
 			'settings.page.terminal.engineDesc' => 'Usado por nuevas pestañas de terminal y buffers de salida de tasks. Las pestañas abiertas mantienen su motor actual.',
 			'settings.page.terminal.shellTitle' => 'Shell',
 			'settings.page.terminal.shellDesc' => 'Qué shell abren las nuevas pestañas de terminal. La flecha junto al + sigue abriendo cualquier otro, solo para esa pestaña.',
-			'settings.page.terminal.noWslMessage' => 'No se encontraron distros de WSL. Instala una (wsl.exe --install) y reinicia Cockpit para verla listada aquí.',
+			'settings.page.terminal.noWslMessage' => 'No se encontraron distros de WSL. Instala una (wsl.exe --install) y reinicia Orkest Code para verla listada aquí.',
 			'settings.page.terminal.sectionBehavior' => 'Comportamiento',
 			'settings.page.terminal.closeOnExitTitle' => 'Cerrar la pestaña cuando el shell termine',
 			'settings.page.terminal.closeOnExitDesc' => 'Cuando un shell termina por sí solo (exit, Ctrl-D), cierra su pestaña en lugar de dejar un terminal muerto.',
@@ -3038,7 +3038,7 @@ extension on TranslationsEs {
 			'settings.page.notifications.enableTitle' => 'Activar notificaciones',
 			'settings.page.notifications.enableDesc' => 'Avisarme cuando un agente termine un turno y la ventana no esté enfocada.',
 			'settings.page.notifications.systemPermissionTitle' => 'Permiso del sistema',
-			'settings.page.notifications.grantedDesc' => 'Cockpit tiene permiso para enviar notificaciones.',
+			'settings.page.notifications.grantedDesc' => 'Orkest Code tiene permiso para enviar notificaciones.',
 			'settings.page.notifications.notGrantedDesc' => 'macOS aún no ha concedido acceso a las notificaciones.',
 			'settings.page.notifications.granted' => 'Concedido',
 			'settings.page.notifications.requestPermission' => 'Solicitar permiso',
@@ -3061,7 +3061,7 @@ extension on TranslationsEs {
 			'settings.page.languages.formatOnSaveTitle' => 'Formatear al guardar',
 			'settings.page.languages.formatOnSaveDesc' => 'Formatea el archivo automáticamente al guardar (⌘S).',
 			'settings.page.languages.sectionLanguageServers' => 'SERVIDORES DE LENGUAJE',
-			'settings.page.languages.footerNote' => 'Los errores y el formato usan el language server de cada lenguaje. Cockpit no instala servidores — usa lo que ya está en tu máquina. ● responde · ○ no encontrado o comando inválido (instala el servidor o ajusta el comando).',
+			'settings.page.languages.footerNote' => 'Los errores y el formato usan el language server de cada lenguaje. Orkest Code no instala servidores — usa lo que ya está en tu máquina. ● responde · ○ no encontrado o comando inválido (instala el servidor o ajusta el comando).',
 			'settings.page.languages.serverCommandLabel' => 'Comando del language server',
 			'settings.page.languages.formatterCommandLabel' => 'Comando del formateador (opcional)',
 			'settings.page.languages.formatterHint' => 'Formateador externo con el marcador %FILE%. Tiene prioridad sobre el formateador del LSP cuando está definido.',
@@ -3086,7 +3086,7 @@ extension on TranslationsEs {
 			'settings.page.automations.modelAutoRouted' => 'Este harness elige el modelo automáticamente.',
 			'settings.page.automations.modelAccountOnly' => 'Solo se muestran los modelos disponibles en tu cuenta.',
 			'settings.page.automations.generateFromSourceControl' => 'Generar desde Control de versiones',
-			'settings.page.automations.generateFromSourceControlDescription' => 'Cockpit envía solo el diff seleccionado y los asuntos de los commits recientes. Los patrones habituales de credenciales y los archivos sensibles se redactan antes de ejecutar el harness.',
+			'settings.page.automations.generateFromSourceControlDescription' => 'Orkest Code envía solo el diff seleccionado y los asuntos de los commits recientes. Los patrones habituales de credenciales y los archivos sensibles se redactan antes de ejecutar el harness.',
 			'settings.page.automations.discoveryFailed' => 'No se pudieron descubrir los harnesses de automatización instalados.',
 			'settings.page.automations.staleModel' => ({required Object model, required Object harness}) => 'El modelo "${model}" ya no está disponible para ${harness}. Se usará el predeterminado de la CLI; elige otro modelo en Configuración si lo necesitas.',
 			'settings.page.automations.recommendedSuffix' => 'Recomendado',
@@ -3110,7 +3110,7 @@ extension on TranslationsEs {
 			'settings.remoteHosts.statusOffline' => 'Sin conexión',
 			'settings.remoteHosts.statusIdle' => 'No conectado',
 			'settings.remoteHosts.helpTitle' => 'Cómo funciona',
-			'settings.remoteHosts.helpBody' => 'Cockpit se conecta a tu máquina por SSH y habla con un pequeño servidor que ejecuta las terminales, archivos y git allí. El host debe tener Cockpit (escritorio) o el cockpit-server instalado y en ejecución, y la clave pública de este dispositivo añadida en su ~/.ssh/authorized_keys.',
+			'settings.remoteHosts.helpBody' => 'Orkest Code se conecta a tu máquina por SSH y habla con un pequeño servidor que ejecuta las terminales, archivos y git allí. El host debe tener Orkest Code (escritorio) o el orkest-server instalado y en ejecución, y la clave pública de este dispositivo añadida en su ~/.ssh/authorized_keys.',
 			'automation.error.unavailable' => ({required Object harness}) => '${harness} no está instalado o no está en el PATH.',
 			'automation.error.modelUnavailable' => ({required Object model, required Object harness}) => 'El modelo "${model}" no está disponible para ${harness}. Elige otro modelo en Configuración.',
 			'automation.error.authentication' => ({required Object harness, required Object detail}) => '${harness}: ${detail}',

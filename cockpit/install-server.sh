@@ -1,35 +1,35 @@
 #!/usr/bin/env bash
 #
-# Remote Pi Cockpit — cockpit-server installer for Linux hosts (VPS)
+# Remote Pi Orkest — orkest-server installer for Linux hosts (VPS)
 # ==================================================================
 #
-#   curl -fsSL https://remote-pi.jacobmoura.work/cockpit-server.sh | bash
-#   curl -fsSL https://remote-pi.jacobmoura.work/cockpit-server.sh | bash -s -- --service
-#   COCKPIT_VERSION=2.0.0 curl -fsSL ... | bash
+#   curl -fsSL https://raw.githubusercontent.com/flavioacv/remote_pi/main/cockpit/install-server.sh | bash
+#   curl -fsSL https://raw.githubusercontent.com/flavioacv/remote_pi/main/cockpit/install-server.sh | bash -s -- --service
+#   ORKEST_VERSION=2.0.0 curl -fsSL ... | bash
 #
-# Canonical file: cockpit/install-server.sh in the repo; the site URL above
+# Canonical file: orkest/install-server.sh in the repo; the site URL above
 # redirects to the GitHub raw of this file:
-#   https://raw.githubusercontent.com/jacobaraujo7/remote_pi/main/cockpit/install-server.sh
+#   https://raw.githubusercontent.com/flavioacv/remote_pi/main/cockpit/install-server.sh
 #
 # What it does (user-space, NO sudo, idempotent):
 #   1. Detects the architecture (x86_64 or arm64; Linux only).
-#   2. Resolves the version: $COCKPIT_VERSION, else the latest
-#      `cockpit-server-v*` GitHub release.
-#   3. Downloads cockpit-server-<version>-linux-<arch>.zip + SHA256SUMS from
+#   2. Resolves the version: $ORKEST_VERSION, else the latest
+#      `orkest-server-v*` GitHub release.
+#   3. Downloads orkest-server-<version>-linux-<arch>.zip + SHA256SUMS from
 #      that release and verifies the checksum.
 #   4. Unzips (unzip, else python3, else installs unzip via the package
 #      manager when sudo is passwordless) and runs the install.sh inside,
-#      which installs to ~/.cockpit/server (same layout the desktop app uses).
+#      which installs to ~/.orkest/server (same layout the desktop app uses).
 #   --service: also registers a systemd --user unit so the server starts at
-#      boot (`cockpit-server service install`; may print one sudo command for
+#      boot (`orkest-server service install`; may print one sudo command for
 #      `loginctl enable-linger`). Without it the app starts the server on
 #      demand over SSH, which is enough for most hosts.
 #
-# The server version must match the Cockpit app you connect from.
+# The server version must match the Orkest app you connect from.
 # Trust: plain readable script, no privileges. Read it before piping to bash.
 set -euo pipefail
 
-REPO="${COCKPIT_REPO:-jacobaraujo7/remote_pi}"
+REPO="${ORKEST_REPO:-flavioacv/remote_pi}"
 GH_API="https://api.github.com/repos/$REPO"
 GH_DL="https://github.com/$REPO/releases/download"
 INSTALL_ARGS=()
@@ -50,7 +50,7 @@ step() { printf '%s\n' "${BOLD}==> $*${RST}"; }
 ok()   { printf '%s\n' "    ${GRN}ok${RST} $*"; }
 die()  { printf '%s\n' "${RED}${BOLD}error:${RST} $*" >&2; exit 1; }
 
-[ "$(uname -s)" = Linux ] || die "cockpit-server runs on Linux hosts only (macOS hosts are set up by the app over SSH)"
+[ "$(uname -s)" = Linux ] || die "orkest-server runs on Linux hosts only (macOS hosts are set up by the app over SSH)"
 case "$(uname -m)" in
   x86_64|amd64)  ARCH=x86_64 ;;
   aarch64|arm64) ARCH=arm64 ;;
@@ -105,18 +105,18 @@ ensure_extractor() {
 ensure_extractor
 
 step "Resolving version"
-if [ -n "${COCKPIT_VERSION:-}" ]; then
-  VERSION="${COCKPIT_VERSION#v}"
+if [ -n "${ORKEST_VERSION:-}" ]; then
+  VERSION="${ORKEST_VERSION#v}"
 else
-  # Latest cockpit-server-v* tag (the repo has other release families).
+  # Latest orkest-server-v* tag (the repo has other release families).
   VERSION="$(curl -fsSL "$GH_API/releases?per_page=30" \
-    | grep -o '"tag_name": *"cockpit-server-v[^"]*"' \
-    | head -1 | sed 's/.*cockpit-server-v//; s/"//')"
-  [ -n "$VERSION" ] || die "could not find a cockpit-server release on GitHub; set COCKPIT_VERSION=x.y.z"
+    | grep -o '"tag_name": *"orkest-server-v[^"]*"' \
+    | head -1 | sed 's/.*orkest-server-v//; s/"//')"
+  [ -n "$VERSION" ] || die "could not find a orkest-server release on GitHub; set ORKEST_VERSION=x.y.z"
 fi
-TAG="cockpit-server-v$VERSION"
-ZIP="cockpit-server-$VERSION-linux-$ARCH.zip"
-ok "cockpit-server $VERSION ($ARCH)"
+TAG="orkest-server-v$VERSION"
+ZIP="orkest-server-$VERSION-linux-$ARCH.zip"
+ok "orkest-server $VERSION ($ARCH)"
 
 TMP="$(mktemp -d)"
 trap 'rm -rf "$TMP"' EXIT
@@ -131,4 +131,4 @@ ok "checksum verified"
 
 step "Installing"
 extract_zip "$TMP/$ZIP" "$TMP" || die "could not extract $ZIP"
-"$TMP/cockpit-server/install.sh" "${INSTALL_ARGS[@]+"${INSTALL_ARGS[@]}"}"
+"$TMP/orkest-server/install.sh" "${INSTALL_ARGS[@]+"${INSTALL_ARGS[@]}"}"

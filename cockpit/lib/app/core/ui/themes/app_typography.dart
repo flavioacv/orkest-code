@@ -2,7 +2,7 @@ import 'package:flutter/foundation.dart' show listEquals;
 import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Tipografia do Cockpit — espelha o design: Space Grotesk (display/títulos),
+/// Tipografia do Orkest — espelha o design: Space Grotesk (display/títulos),
 /// Hanken Grotesk (UI/texto), JetBrains Mono (código). Servidas via
 /// `google_fonts` (runtime + cache), sem bundle de .ttf.
 @immutable
@@ -34,7 +34,7 @@ class AppTypography {
   /// JetBrains Mono — código, args de tool, métricas.
   final TextStyle mono;
 
-  /// Igualdade por valor, pela mesma razão do [AppColors]: o `CockpitTheme`
+  /// Igualdade por valor, pela mesma razão do [AppColors]: o `OrkestTheme`
   /// compara estes objetos para decidir se repinta a árvore.
   List<Object?> get _props => [display, title, body, label, tab, mono];
 

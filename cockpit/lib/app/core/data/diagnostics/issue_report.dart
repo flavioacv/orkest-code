@@ -4,7 +4,7 @@ import 'dart:io';
 /// issue já preenchida no repositório do Remote Pi.
 ///
 /// Não há envio automático nem telemetria: o relatório só sai da máquina se o
-/// usuário clicar. É o que mantém o Cockpit local-only — ele enxerga caminhos de
+/// usuário clicar. É o que mantém o Orkest local-only — ele enxerga caminhos de
 /// arquivo, connection strings e prompts de agente, e nada disso deve viajar sem
 /// o usuário ter visto o texto antes.
 class IssueReport {
@@ -17,7 +17,7 @@ class IssueReport {
   });
 
   /// Repositório de destino das issues.
-  static const String repoUrl = 'https://github.com/jacobaraujo7/remote_pi';
+  static const String repoUrl = 'https://github.com/flavioacv/remote_pi';
 
   /// Teto prático da URL de issue do GitHub. Acima disso o servidor recusa, então
   /// o corpo é truncado e o usuário é instruído a colar o resto (que já vai
@@ -39,7 +39,7 @@ class IssueReport {
       ..writeln()
       ..writeln('### Environment')
       ..writeln()
-      ..writeln('- Cockpit: $appVersion')
+      ..writeln('- Orkest: $appVersion')
       ..writeln(
         '- OS: ${Platform.operatingSystem} '
         '${Platform.operatingSystemVersion}',

@@ -1,4 +1,4 @@
-import 'package:cockpit/app/cockpit/domain/contracts/terminal_status_server.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/terminal_status_server.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

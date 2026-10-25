@@ -1,18 +1,18 @@
-import 'package:cockpit/app/core/ui/keep_awake_controller.dart';
-import 'package:cockpit_keepawake/cockpit_keepawake.dart';
-import 'package:cockpit/app/cockpit/domain/contracts/dismissed_update_store.dart';
-import 'package:cockpit/app/cockpit/domain/contracts/self_updater.dart';
-import 'package:cockpit/app/cockpit/domain/contracts/update_checker.dart';
-import 'package:cockpit/app/cockpit/domain/contracts/url_opener.dart';
-import 'package:cockpit/app/cockpit/domain/entities/git_info.dart';
-import 'package:cockpit/app/cockpit/domain/entities/project.dart';
-import 'package:cockpit/app/cockpit/domain/entities/realm.dart';
-import 'package:cockpit/app/cockpit/domain/entities/update_info.dart';
-import 'package:cockpit/app/cockpit/domain/value_objects/update_target.dart';
-import 'package:cockpit/app/cockpit/ui/viewmodels/update_viewmodel.dart';
-import 'package:cockpit/app/cockpit/ui/widgets/projects_rail.dart';
-import 'package:cockpit/app/core/ui/themes/themes.dart';
-import 'package:cockpit/i18n/strings.g.dart';
+import 'package:orkest_code/app/core/ui/keep_awake_controller.dart';
+import 'package:orkest_keepawake/orkest_keepawake.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/dismissed_update_store.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/self_updater.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/update_checker.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/url_opener.dart';
+import 'package:orkest_code/app/orkest/domain/entities/git_info.dart';
+import 'package:orkest_code/app/orkest/domain/entities/project.dart';
+import 'package:orkest_code/app/orkest/domain/entities/realm.dart';
+import 'package:orkest_code/app/orkest/domain/entities/update_info.dart';
+import 'package:orkest_code/app/orkest/domain/value_objects/update_target.dart';
+import 'package:orkest_code/app/orkest/ui/viewmodels/update_viewmodel.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/projects_rail.dart';
+import 'package:orkest_code/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/i18n/strings.g.dart';
 import 'package:flutter/gestures.dart' show PointerDeviceKind, kSecondaryButton;
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -154,7 +154,7 @@ Widget _rail({
           onManageRealms: () {},
           moveTargetsOf: (_) => const [],
           onMoveToRealm: (_, _) {},
-          onSelectCockpit: () {},
+          onSelectOrkest: () {},
           onNewWorkspace: (_) {},
           onSelectRemote: (_) {},
           remoteGitInfoOf: (_) => null,
@@ -179,7 +179,7 @@ Widget _rail({
 /// Rótulo traduzido de "N worktrees", lido da árvore já montada.
 String _countLabel(WidgetTester tester, int n) => TranslationProvider.of(
   tester.element(find.text('Remote Pi')),
-).translations.cockpit.projectsRail.worktreeCount(n: n);
+).translations.orkest.projectsRail.worktreeCount(n: n);
 
 /// Clique-direito no centro de [finder].
 Future<void> _secondaryTap(WidgetTester tester, Finder finder) async {
@@ -252,7 +252,7 @@ void main() {
 
     final tr = TranslationProvider.of(
       tester.element(find.text('Remote Pi')),
-    ).translations.cockpit.projectsRail;
+    ).translations.orkest.projectsRail;
 
     expect(find.text(tr.settings), findsNothing);
     await _secondaryTap(tester, find.text('Remote Pi'));
@@ -266,7 +266,7 @@ void main() {
 
     final tr = TranslationProvider.of(
       tester.element(find.text('Remote Pi')),
-    ).translations.cockpit.projectsRail;
+    ).translations.orkest.projectsRail;
 
     await _secondaryTap(tester, find.text('feat/x'));
     expect(find.text(tr.mergeToParent), findsOneWidget);

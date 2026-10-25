@@ -1,4 +1,4 @@
-import 'package:cockpit/app/cockpit/data/remote/remote_worktree_gateway.dart';
+import 'package:orkest_code/app/orkest/data/remote/remote_worktree_gateway.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -11,13 +11,13 @@ worktree /home/jacob/proj
 HEAD aaaa
 branch refs/heads/main
 
-worktree /home/jacob/proj/.cockpit/worktrees/feature
+worktree /home/jacob/proj/.orkest/worktrees/feature
 HEAD bbbb
 branch refs/heads/feature
 ''';
       final entries = RemoteWorktreeGateway.parsePorcelain(out, repo);
       expect(entries.length, 1);
-      expect(entries.single.path, '$repo/.cockpit/worktrees/feature');
+      expect(entries.single.path, '$repo/.orkest/worktrees/feature');
       expect(entries.single.branch, 'feature');
     });
 
@@ -27,7 +27,7 @@ worktree /home/jacob/proj
 HEAD aaaa
 branch refs/heads/main
 
-worktree /home/jacob/proj/.cockpit/worktrees/wip
+worktree /home/jacob/proj/.orkest/worktrees/wip
 HEAD cccc
 detached
 ''';

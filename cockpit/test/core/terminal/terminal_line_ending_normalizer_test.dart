@@ -1,4 +1,4 @@
-import 'package:cockpit/app/core/terminal/terminal_line_ending_normalizer.dart';
+import 'package:orkest_code/app/core/terminal/terminal_line_ending_normalizer.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

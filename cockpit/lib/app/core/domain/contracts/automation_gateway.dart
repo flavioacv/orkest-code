@@ -1,4 +1,4 @@
-import 'package:cockpit/app/core/domain/entities/automation.dart';
+import 'package:orkest_code/app/core/domain/entities/automation.dart';
 
 abstract class AutomationGateway {
   Future<List<AutomationHarness>> discover();

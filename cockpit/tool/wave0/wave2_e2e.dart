@@ -1,12 +1,12 @@
 // Wave 2 (plano 58) — E2E MANUAL do transporte SSH. Requer um host real
 // alcançável por `ssh <target>` sem senha interativa (chave/agent).
 //
-// Uso (da pasta cockpit/):
+// Uso (da pasta orkest/):
 //   ./tool/build-sidecar.sh
 //   dart run tool/wave0/wave2_e2e.dart jacob@imac.local
 //
 // O script faz o fluxo completo do RemoteHostConnector, standalone:
-// 1. instala o cockpit-server no host via ssh (binário local → stdin → arquivo)
+// 1. instala o orkest-server no host via ssh (binário local → stdin → arquivo)
 // 2. inicia o servidor remoto (nohup, --exit-on-idle 0)
 // 3. abre túnel UDS→UDS e fala o protocolo: shell remoto, eco, detach,
 //    reattach com scrollback (a sessão sobrevive à queda do túnel).
@@ -15,8 +15,8 @@ import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:cockpit_core/cockpit_core.dart';
-import 'package:cockpit_remote/cockpit_remote.dart';
+import 'package:orkest_core/orkest_core.dart';
+import 'package:orkest_remote/orkest_remote.dart';
 
 Future<void> main(List<String> args) async {
   if (args.isEmpty) {
@@ -25,8 +25,8 @@ Future<void> main(List<String> args) async {
   }
   final target = args.first;
   final root = Directory.current.path;
-  final binary = '$root/build/wave0/cockpit-server';
-  final dylib = '$root/build/wave0/libcockpit_pty.dylib';
+  final binary = '$root/build/wave0/orkest-server';
+  final dylib = '$root/build/wave0/liborkest_pty.dylib';
   if (!File(binary).existsSync()) {
     stderr.writeln('rode ./tool/build-sidecar.sh antes');
     exit(2);
@@ -36,8 +36,8 @@ Future<void> main(List<String> args) async {
   Process? tunnel;
   try {
     // 1. Install server via ssh (mesmo mecanismo do RemoteHostConnector).
-    await _push(target, binary, '~/.cockpit/bin/cockpit-server');
-    await _push(target, dylib, '~/.cockpit/bin/libcockpit_pty.dylib');
+    await _push(target, binary, '~/.orkest/bin/orkest-server');
+    await _push(target, dylib, '~/.orkest/bin/liborkest_pty.dylib');
     _check('install server (binário + dylib via ssh)', true);
 
     // 2. (Re)inicia o servidor remoto.
@@ -46,9 +46,9 @@ Future<void> main(List<String> args) async {
     await _ssh(target, 'pkill -f "[c]ockpit-server --socket" || true');
     await _ssh(
       target,
-      'COCKPIT_PTY_DYLIB=\$HOME/.cockpit/bin/libcockpit_pty.dylib '
-      'nohup \$HOME/.cockpit/bin/cockpit-server '
-      '--socket \$HOME/.cockpit/cockpit-server.sock --exit-on-idle 0 '
+      'ORKEST_PTY_DYLIB=\$HOME/.orkest/bin/liborkest_pty.dylib '
+      'nohup \$HOME/.orkest/bin/orkest-server '
+      '--socket \$HOME/.orkest/orkest-server.sock --exit-on-idle 0 '
       '>/dev/null 2>&1 & echo ok',
     );
     _check('servidor remoto iniciado', true);
@@ -62,7 +62,7 @@ Future<void> main(List<String> args) async {
       r'printf %s "$HOME"',
     ]);
     final remoteHome = (homeResult.stdout as String).trim();
-    final remoteSock = '$remoteHome/.cockpit/cockpit-server.sock';
+    final remoteSock = '$remoteHome/.orkest/orkest-server.sock';
     final localSock =
         '${Directory.systemTemp.path}/wave2-${DateTime.now().millisecondsSinceEpoch}.sock';
     tunnel = await Process.start('ssh', [
@@ -175,7 +175,7 @@ Future<void> _push(String target, String local, String remote) async {
     '-o',
     'BatchMode=yes',
     target,
-    'mkdir -p ~/.cockpit/bin && cat > $remote && chmod +x $remote',
+    'mkdir -p ~/.orkest/bin && cat > $remote && chmod +x $remote',
   ]);
   process.stdin.add(await File(local).readAsBytes());
   await process.stdin.close();

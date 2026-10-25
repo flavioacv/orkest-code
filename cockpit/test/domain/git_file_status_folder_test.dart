@@ -1,4 +1,4 @@
-import 'package:cockpit/app/cockpit/domain/entities/git_file_status.dart';
+import 'package:orkest_code/app/orkest/domain/entities/git_file_status.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

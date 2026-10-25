@@ -1,5 +1,5 @@
 import 'package:flutter/widgets.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/ui/terminal_theme.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/ui/terminal_theme.dart';
 
 class TerminalThemes {
   static const defaultTheme = TerminalTheme(

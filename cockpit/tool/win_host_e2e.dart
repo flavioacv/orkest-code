@@ -6,23 +6,23 @@
 // servidor iniciado por WMI nasce na **sessão 0**, e ConPTY nessa sessão não
 // tinha sido exercitado.
 //
-// Uso (a partir de `cockpit/`):
+// Uso (a partir de `orkest/`):
 //   dart run tool/win_host_e2e.dart <user@host> [--identity <chave>] [--port 22]
 //
-// O host precisa ter o Cockpit instalado (decisão D2) — ver
+// O host precisa ter o Orkest instalado (decisão D2) — ver
 // docs/windows-host-setup.md.
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
 
-import 'package:cockpit/app/cockpit/data/remote/host_shell/host_shell.dart';
-import 'package:cockpit/app/cockpit/data/remote/host_shell/windows_host_shell.dart';
-import 'package:cockpit/app/cockpit/data/remote/dartssh_host_connection.dart';
-import 'package:cockpit/app/cockpit/data/remote/ssh_worker_connection.dart';
-import 'package:cockpit/app/cockpit/data/remote/ssh_tunnel.dart';
-import 'package:cockpit_core/cockpit_core.dart' hide SshTunnel;
-import 'package:cockpit_remote/cockpit_remote.dart';
+import 'package:orkest_code/app/orkest/data/remote/host_shell/host_shell.dart';
+import 'package:orkest_code/app/orkest/data/remote/host_shell/windows_host_shell.dart';
+import 'package:orkest_code/app/orkest/data/remote/dartssh_host_connection.dart';
+import 'package:orkest_code/app/orkest/data/remote/ssh_worker_connection.dart';
+import 'package:orkest_code/app/orkest/data/remote/ssh_tunnel.dart';
+import 'package:orkest_core/orkest_core.dart' hide SshTunnel;
+import 'package:orkest_remote/orkest_remote.dart';
 
 var _failures = 0;
 List<String> _mobileArgs = const [];
@@ -72,7 +72,7 @@ Future<void> main(List<String> args) async {
   _check('bundle do host copiado (sem tráfego SSH)', installed);
   if (!installed) {
     stdout.writeln(
-      '       host sem Cockpit instalado; ver docs/windows-host-setup.md',
+      '       host sem Orkest instalado; ver docs/windows-host-setup.md',
     );
     exit(1);
   }
@@ -249,7 +249,7 @@ Future<void> _runMobile(
 
   final connection = await RemoteConnection.connectOn(
     duplex,
-    clientName: 'cockpit-ipad',
+    clientName: 'orkest-ipad',
     token: endpoint.token,
   );
   _check('mobile: handshake aceito', connection.isOpen);

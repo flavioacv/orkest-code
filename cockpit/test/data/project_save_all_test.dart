@@ -1,8 +1,8 @@
 import 'dart:io';
 
-import 'package:cockpit/app/cockpit/data/repositories/json_project_repository.dart';
-import 'package:cockpit/app/cockpit/domain/entities/project.dart';
-import 'package:cockpit/app/core/data/setup/json_state_store.dart';
+import 'package:orkest_code/app/orkest/data/repositories/json_project_repository.dart';
+import 'package:orkest_code/app/orkest/domain/entities/project.dart';
+import 'package:orkest_code/app/core/data/setup/json_state_store.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Reordenar o rail salvava um workspace por vez, e cada `save` só resolve
@@ -12,7 +12,7 @@ import 'package:flutter_test/flutter_test.dart';
 void main() {
   late Directory dir;
 
-  setUp(() => dir = Directory.systemTemp.createTempSync('cockpit-projects'));
+  setUp(() => dir = Directory.systemTemp.createTempSync('orkest-projects'));
   tearDown(() => dir.deleteSync(recursive: true));
 
   Project project(String id, int order) => Project(

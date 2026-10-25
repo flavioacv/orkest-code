@@ -1,9 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:cockpit/app/cockpit/data/telemetry/otlp_receiver.dart';
-import 'package:cockpit/app/cockpit/data/telemetry/telemetry_workspace_config.dart';
-import 'package:cockpit/app/cockpit/domain/entities/telemetry_event.dart';
+import 'package:orkest_code/app/orkest/data/telemetry/otlp_receiver.dart';
+import 'package:orkest_code/app/orkest/data/telemetry/telemetry_workspace_config.dart';
+import 'package:orkest_code/app/orkest/domain/entities/telemetry_event.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _Sink implements OtlpSink {
@@ -41,6 +41,13 @@ Map<String, Object?> kv(String k, Object v) => {
 };
 
 void main() {
+  // These integration-style tests talk only to their own loopback server.
+  // The global widget binding otherwise replaces HttpClient with HTTP 400.
+  setUpAll(() {
+    final previous = HttpOverrides.current;
+    HttpOverrides.global = null;
+    addTearDown(() => HttpOverrides.global = previous);
+  });
   group('OTLP receiver', () {
     late OtlpReceiver rx;
     late _Sink sink;
@@ -53,13 +60,13 @@ void main() {
     });
     tearDown(() => rx.stop());
 
-    test('logs: roteia por cockpit.run, mapeia severidade e exceção', () async {
+    test('logs: roteia por orkest.run, mapeia severidade e exceção', () async {
       final code = await post(rx.endpoint, '/v1/logs', {
         'resourceLogs': [
           {
             'resource': {
               'attributes': [
-                kv('cockpit.run', 'r_1'),
+                kv('orkest.run', 'r_1'),
                 kv('service.name', 'api'),
               ],
             },

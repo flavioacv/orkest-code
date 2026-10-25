@@ -1,11 +1,11 @@
 import 'dart:typed_data';
 
-import 'package:cockpit/app/cockpit/domain/contracts/http_request_runner.dart';
-import 'package:cockpit/app/cockpit/domain/entities/http_document.dart';
-import 'package:cockpit/app/cockpit/domain/entities/http_response_result.dart';
-import 'package:cockpit/app/cockpit/domain/exceptions/http_request_error.dart';
-import 'package:cockpit/app/cockpit/ui/viewmodels/http_viewmodel.dart';
-import 'package:cockpit/app/core/domain/result.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/http_request_runner.dart';
+import 'package:orkest_code/app/orkest/domain/entities/http_document.dart';
+import 'package:orkest_code/app/orkest/domain/entities/http_response_result.dart';
+import 'package:orkest_code/app/orkest/domain/exceptions/http_request_error.dart';
+import 'package:orkest_code/app/orkest/ui/viewmodels/http_viewmodel.dart';
+import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _StubRunner implements HttpRequestRunner {

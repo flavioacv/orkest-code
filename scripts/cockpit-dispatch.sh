@@ -9,12 +9,12 @@ set -euo pipefail
 # (cwd-only, sem commit, grava result file no fim).
 #
 # Uso:
-#   scripts/cockpit-dispatch.sh [--wait [--timeout <s>]] <Pane|tab-id> <task-id> <prompt>
+#   scripts/orkest-dispatch.sh [--wait [--timeout <s>]] <Pane|tab-id> <task-id> <prompt>
 #
 # Exemplos:
-#   scripts/cockpit-dispatch.sh Extension 03-ts-codec "Implemente passo 3 do plan/03-protocol.md"
-#   scripts/cockpit-dispatch.sh --wait Extension 03-ts-codec "Implemente..."
-#   scripts/cockpit-dispatch.sh t319 quick-check "roda os testes"   # tab-id direto
+#   scripts/orkest-dispatch.sh Extension 03-ts-codec "Implemente passo 3 do plan/03-protocol.md"
+#   scripts/orkest-dispatch.sh --wait Extension 03-ts-codec "Implemente..."
+#   scripts/orkest-dispatch.sh t319 quick-check "roda os testes"   # tab-id direto
 #
 # Argumentos:
 #   --wait              (opcional) bloqueia até o agente concluir. Detecção
@@ -95,7 +95,7 @@ command -v cockpit >/dev/null || {
 }
 
 panes_json=$(cockpit list-panes --json 2>/dev/null) || {
-  echo "erro: falha ao listar panes (COCKPIT_STATUS_SOCK unset? fora de pane Cockpit?)" >&2
+  echo "erro: falha ao listar panes (ORKEST_STATUS_SOCK unset? fora de pane Cockpit?)" >&2
   exit 1
 }
 
@@ -151,14 +151,14 @@ else:
 fi
 
 # Push de conclusão (worker → orquestrador): se estamos dentro de um pane do
-# Cockpit, COCKPIT_PANE_ID é o nosso próprio tab-id — embuta-o num segundo
+# Cockpit, ORKEST_PANE_ID é o nosso próprio tab-id — embuta-o num segundo
 # marker. O INSTRUCTIONS.md instrui o worker a mandar `cockpit send --tab-id
 # <id> "[ORCH:<task-id>] <status> — <resumo>"` ao terminar, além do result
 # file (que continua sendo o contrato; o --wait segue funcionando como
 # fallback pra worker que esquecer o push).
 reply_marker=""
-if [ -n "${COCKPIT_PANE_ID:-}" ]; then
-  reply_marker="[ORCH-REPLY:${COCKPIT_PANE_ID}] "
+if [ -n "${ORKEST_PANE_ID:-}" ]; then
+  reply_marker="[ORCH-REPLY:${ORKEST_PANE_ID}] "
 fi
 
 full_prompt="[ORCH:${task_id}] ${reply_marker}${prompt}"

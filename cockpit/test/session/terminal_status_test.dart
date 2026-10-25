@@ -1,9 +1,9 @@
 import 'dart:async';
 
-import 'package:cockpit/app/cockpit/domain/contracts/terminal_gateway.dart';
-import 'package:cockpit/app/core/utils/spawn_directory.dart';
-import 'package:cockpit/app/core/domain/entities/terminal_profile.dart';
-import 'package:cockpit/app/cockpit/ui/session/terminal_session.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/terminal_gateway.dart';
+import 'package:orkest_code/app/core/utils/spawn_directory.dart';
+import 'package:orkest_code/app/core/domain/entities/terminal_profile.dart';
+import 'package:orkest_code/app/orkest/ui/session/terminal_session.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// [TerminalGateway] inerte — não sobe PTY nenhum; só satisfaz o construtor da

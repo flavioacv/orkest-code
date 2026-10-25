@@ -1,4 +1,4 @@
-import 'package:cockpit/app/core/terminal/xterm/src/core/mouse/mode.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/core/mouse/mode.dart';
 
 abstract class EscapeHandler {
   void writeChar(int char);

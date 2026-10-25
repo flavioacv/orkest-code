@@ -1,4 +1,4 @@
-import 'package:cockpit/app/cockpit/domain/entities/gallery_template.dart';
+import 'package:orkest_code/app/orkest/domain/entities/gallery_template.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -19,8 +19,8 @@ void main() {
     });
   });
 
-  test('tasks lives under .cockpit with a fixed name', () {
-    expect(GalleryTemplate.tasks.relativePath, '.cockpit/tasks.json');
+  test('tasks lives under .orkest with a fixed name', () {
+    expect(GalleryTemplate.tasks.relativePath, '.orkest/tasks.json');
     expect(GalleryTemplate.tasks.fixedName, isTrue);
     expect(GalleryTemplate.html.relativePath, 'view.html');
   });

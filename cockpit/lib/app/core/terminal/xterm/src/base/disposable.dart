@@ -1,4 +1,4 @@
-import 'package:cockpit/app/core/terminal/xterm/src/base/event.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/base/event.dart';
 
 mixin Disposable {
   final _disposables = <Disposable>[];

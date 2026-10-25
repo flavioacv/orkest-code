@@ -1,4 +1,4 @@
-//! Os verbos da CLI. Porte fiel do `tool/cockpit_cli.dart`: mesmos comandos de
+//! Os verbos da CLI. Porte fiel do `tool/orkest_cli.dart`: mesmos comandos de
 //! wire, mesmas mensagens de erro, mesmos exit codes e mesmo layout de saída.
 
 use std::time::Duration;
@@ -34,7 +34,7 @@ pub fn send(args: &[String]) -> ! {
     let parsed = Flags::parse(args);
     let text = parsed.positionals.join(" ");
     if text.is_empty() {
-        die("cockpit send: missing text to send", 2);
+        die("orkest send: missing text to send", 2);
     }
     let tab_id = resolve_target(parsed.effective_tab_id());
     write_once(&tab_id, &text);
@@ -54,13 +54,13 @@ pub fn send(args: &[String]) -> ! {
 pub fn send_key(args: &[String]) -> ! {
     let parsed = Flags::parse(args);
     if parsed.positionals.is_empty() {
-        die("cockpit send-key: missing key (e.g. Enter, C-c, Escape)", 2);
+        die("orkest send-key: missing key (e.g. Enter, C-c, Escape)", 2);
     }
     let mut buf = String::new();
     for name in &parsed.positionals {
         match keys::resolve(name) {
             Some(seq) => buf.push_str(&seq),
-            None => die(&format!("cockpit send-key: unknown key \"{name}\""), 2),
+            None => die(&format!("orkest send-key: unknown key \"{name}\""), 2),
         }
     }
     write_to_tab(parsed.effective_tab_id(), &buf)
@@ -73,14 +73,14 @@ fn write_to_tab(tab_id: Option<String>, text: &str) -> ! {
 }
 
 /// Alvo efetivo, ou encerra explicando. Nunca chuta uma aba: sem `--tab-id` e
-/// fora de um terminal do Cockpit (onde o app injeta `COCKPIT_TAB_ID`), digitar
+/// fora de um terminal do Orkest (onde o app injeta `ORKEST_TAB_ID`), digitar
 /// num pane arbitrário seria pior que falhar.
 fn resolve_target(tab_id: Option<String>) -> String {
     match tab_id {
         Some(id) if !id.is_empty() => id,
         _ => die(
-            "cockpit: no target — pass --tab-id <id> or run inside a Cockpit \
-terminal (COCKPIT_TAB_ID is unset). Use `cockpit list-tabs`.",
+            "orkest: no target — pass --tab-id <id> or run inside a Orkest \
+terminal (ORKEST_TAB_ID is unset). Use `orkest list-tabs`.",
             2,
         ),
     }
@@ -106,7 +106,7 @@ fn write_once(tab_id: &str, text: &str) {
 pub fn open(args: &[String]) -> ! {
     let parsed = Flags::parse(args);
     if parsed.positionals.is_empty() {
-        die("cockpit open: missing file path", 2);
+        die("orkest open: missing file path", 2);
     }
     // O app tem cwd próprio — resolve pro caminho absoluto no cwd desta tab
     // (onde a CLI está rodando) antes de mandar.
@@ -122,7 +122,7 @@ pub fn open(args: &[String]) -> ! {
 
 // ---- new-tab ----------------------------------------------------------------
 
-const NEW_TAB_HELP: &str = "cockpit new-tab [--cwd <dir>] [--title <name>] [--split h|v] [--parent-tab <id> | --independent]
+const NEW_TAB_HELP: &str = "orkest new-tab [--cwd <dir>] [--title <name>] [--split h|v] [--parent-tab <id> | --independent]
   --cwd    working directory (default: current directory)
   --title  stable tab label (read-tab/send can target it)
   --split  h|right = side by side, v|down = stacked; omit = new tab
@@ -177,7 +177,7 @@ pub fn new_tab(args: &[String]) -> ! {
         Some(ref s) if s == "v" || s == "vertical" || s == "down" => Some("down"),
         Some(_) => die(
             &format!(
-                "cockpit new-tab: invalid --split \"{}\" (use h|right or v|down)",
+                "orkest new-tab: invalid --split \"{}\" (use h|right or v|down)",
                 split.unwrap_or_default()
             ),
             2,
@@ -225,10 +225,10 @@ pub fn new_tab(args: &[String]) -> ! {
 
 // ---- close-tab --------------------------------------------------------------
 
-const CLOSE_TAB_HELP: &str = "cockpit close-tab [<label|tab-id>] [--json]
+const CLOSE_TAB_HELP: &str = "orkest close-tab [<label|tab-id>] [--json]
   Closes a tab (the counterpart of `new-tab`). Without a target, closes the
   CURRENT tab — which ends the shell you are typing in.
-  A target may be a stable tab label or a tab-id (see `cockpit list-tabs`).
+  A target may be a stable tab label or a tab-id (see `orkest list-tabs`).
   Same behaviour as the tab's \"x\" in the UI: closing the last tab of a split
   removes the split; closing the last tab of a workspace leaves an empty tab.
   Prints the id of the closed tab.";
@@ -245,7 +245,7 @@ pub fn close_tab(args: &[String]) -> ! {
         cmd_args.insert("target".into(), json!(target));
     }
     let mut req = json!({"cmd": "close-tab", "args": Value::Object(cmd_args)});
-    // Sem alvo posicional, o server cai na própria tab ($COCKPIT_TAB_ID).
+    // Sem alvo posicional, o server cai na própria tab ($ORKEST_TAB_ID).
     with_tab_id(&mut req, parsed.effective_tab_id());
 
     let resp = transport::request(req, DEFAULT_TIMEOUT);
@@ -264,15 +264,15 @@ pub fn close_tab(args: &[String]) -> ! {
 
 // ---- workspaces -------------------------------------------------------------
 
-const NEW_WORKSPACE_HELP: &str = "cockpit new-workspace <path> [--host <ssh-target>] [--name <title>] [--json]
-  Adds a top-level workspace in Cockpit's sidebar (local or remote), selects it,
+const NEW_WORKSPACE_HELP: &str = "orkest new-workspace <path> [--host <ssh-target>] [--name <title>] [--json]
+  Adds a top-level workspace in Orkest's sidebar (local or remote), selects it,
   and ensures an initial terminal tab is opened.
-  Aliases: `cockpit open-workspace`, `cockpit new-remote-workspace`
+  Aliases: `orkest open-workspace`, `orkest new-remote-workspace`
   If the directory is already open, focuses it and returns the existing workspace.
   --host <target> SSH host or alias from ~/.ssh/config (creates a remote workspace)
   --path <path>   path (alternative to positional <path>)
   --name <title>  custom display title (default: folder name)
-  --tab-id <id>   caller tab (default: this tab / $COCKPIT_TAB_ID)
+  --tab-id <id>   caller tab (default: this tab / $ORKEST_TAB_ID)
   --json          output workspace as JSON: {\"id\": \"...\", \"name\": \"...\", \"path\": \"...\", \"tabs\": N}
   Prints the workspace id.";
 
@@ -297,7 +297,7 @@ pub fn new_workspace(args: &[String]) -> ! {
         }
         if a == "--host" || a == "--remote" {
             if i + 1 >= args.len() {
-                die("cockpit new-workspace: --host requires a value", 2);
+                die("orkest new-workspace: --host requires a value", 2);
             }
             i += 1;
             host = Some(args[i].clone());
@@ -313,7 +313,7 @@ pub fn new_workspace(args: &[String]) -> ! {
         }
         if a == "--path" {
             if i + 1 >= args.len() {
-                die("cockpit new-workspace: --path requires a value", 2);
+                die("orkest new-workspace: --path requires a value", 2);
             }
             i += 1;
             path = Some(args[i].clone());
@@ -326,7 +326,7 @@ pub fn new_workspace(args: &[String]) -> ! {
         }
         if a == "--name" {
             if i + 1 >= args.len() {
-                die("cockpit new-workspace: --name requires a value", 2);
+                die("orkest new-workspace: --name requires a value", 2);
             }
             i += 1;
             name = Some(args[i].clone());
@@ -339,7 +339,7 @@ pub fn new_workspace(args: &[String]) -> ! {
         }
         if a == "--tab-id" || a == "-t" {
             if i + 1 >= args.len() {
-                die("cockpit: --tab-id requires a value", 2);
+                die("orkest: --tab-id requires a value", 2);
             }
             i += 1;
             tab_id = Some(args[i].clone());
@@ -351,7 +351,7 @@ pub fn new_workspace(args: &[String]) -> ! {
             continue;
         }
         if a.starts_with('-') {
-            die(&format!("cockpit: unknown flag \"{a}\""), 2);
+            die(&format!("orkest: unknown flag \"{a}\""), 2);
         }
         if path.is_none() {
             path = Some(a.to_string());
@@ -362,7 +362,7 @@ pub fn new_workspace(args: &[String]) -> ! {
     let raw_path = match path {
         Some(p) if !p.is_empty() => p,
         _ => die(
-            "cockpit new-workspace: missing <path> (or --path <path>)",
+            "orkest new-workspace: missing <path> (or --path <path>)",
             2,
         ),
     };
@@ -400,13 +400,13 @@ pub fn new_workspace(args: &[String]) -> ! {
     std::process::exit(0)
 }
 
-const CLOSE_WORKSPACE_HELP: &str = "cockpit close-workspace [<id|path>] [--tab-id <id>] [--json]
-  Closes a top-level project from Cockpit (ends its agents/tabs; folder on
+const CLOSE_WORKSPACE_HELP: &str = "orkest close-workspace [<id|path>] [--tab-id <id>] [--json]
+  Closes a top-level project from Orkest (ends its agents/tabs; folder on
   disk is kept).
   Without a target, closes the workspace owning the current tab (or currently
   selected workspace).
   Target may be a workspace UUID, directory path, or unique name.
-  --tab-id <id>   caller tab (default: this tab / $COCKPIT_TAB_ID)
+  --tab-id <id>   caller tab (default: this tab / $ORKEST_TAB_ID)
   --json          output as JSON: {\"id\": \"...\", \"path\": \"...\", \"closed\": true}
   Prints the closed workspace id.";
 
@@ -429,7 +429,7 @@ pub fn close_workspace(args: &[String]) -> ! {
         }
         if a == "--tab-id" || a == "-t" {
             if i + 1 >= args.len() {
-                die("cockpit: --tab-id requires a value", 2);
+                die("orkest: --tab-id requires a value", 2);
             }
             i += 1;
             tab_id = Some(args[i].clone());
@@ -441,7 +441,7 @@ pub fn close_workspace(args: &[String]) -> ! {
             continue;
         }
         if a.starts_with('-') {
-            die(&format!("cockpit: unknown flag \"{a}\""), 2);
+            die(&format!("orkest: unknown flag \"{a}\""), 2);
         }
         if target.is_none() {
             target = Some(a.to_string());
@@ -477,11 +477,11 @@ pub fn close_workspace(args: &[String]) -> ! {
 }
 
 const RENAME_WORKSPACE_HELP: &str =
-    "cockpit rename-workspace [<id|path>] <new-name> [--tab-id <id>] [--json]
-  Renames the display title of a workspace in Cockpit's rail.
+    "orkest rename-workspace [<id|path>] <new-name> [--tab-id <id>] [--json]
+  Renames the display title of a workspace in Orkest's rail.
   Target may be a workspace UUID, directory path, or unique name.
   Without target, renames the workspace owning the current tab.
-  --tab-id <id>   caller tab (default: this tab / $COCKPIT_TAB_ID)
+  --tab-id <id>   caller tab (default: this tab / $ORKEST_TAB_ID)
   --json          output as JSON: {\"id\": \"...\", \"name\": \"...\", \"path\": \"...\"}
   Prints the updated workspace id.";
 
@@ -505,7 +505,7 @@ pub fn rename_workspace(args: &[String]) -> ! {
         }
         if a == "--tab-id" || a == "-t" {
             if i + 1 >= args.len() {
-                die("cockpit: --tab-id requires a value", 2);
+                die("orkest: --tab-id requires a value", 2);
             }
             i += 1;
             tab_id = Some(args[i].clone());
@@ -517,7 +517,7 @@ pub fn rename_workspace(args: &[String]) -> ! {
             continue;
         }
         if a.starts_with('-') {
-            die(&format!("cockpit: unknown flag \"{a}\""), 2);
+            die(&format!("orkest: unknown flag \"{a}\""), 2);
         }
         if target.is_none() {
             target = Some(a.to_string());
@@ -530,7 +530,7 @@ pub fn rename_workspace(args: &[String]) -> ! {
     let (target_val, raw_name) = match (target, new_name) {
         (Some(t), Some(n)) => (Some(t), n),
         (Some(n), None) => (None, n),
-        _ => die("cockpit rename-workspace: missing workspace name", 2),
+        _ => die("orkest rename-workspace: missing workspace name", 2),
     };
 
     let mut cmd_args = Map::new();
@@ -564,7 +564,7 @@ pub fn rename_workspace(args: &[String]) -> ! {
 
 // ---- browse -----------------------------------------------------------------
 
-const BROWSE_HELP: &str = "cockpit browse <url> [--json]
+const BROWSE_HELP: &str = "orkest browse <url> [--json]
   Opens the built-in browser tab at <url> (reuses a browser tab already
   open on the same host:port). On platforms without an inline webview
   (Linux) the app opens the URL in the system browser instead.
@@ -597,7 +597,7 @@ pub fn browse_url(args: &[String]) -> ! {
 
     let Some(url) = url.filter(|u| !u.is_empty()) else {
         die(
-            &format!("cockpit browse: missing <url>\n\n{BROWSE_HELP}"),
+            &format!("orkest browse: missing <url>\n\n{BROWSE_HELP}"),
             2,
         )
     };
@@ -621,7 +621,7 @@ pub fn browse_url(args: &[String]) -> ! {
 
 // ---- orchestrate ------------------------------------------------------------
 
-const ORCHESTRATE_HELP: &str = "cockpit orchestrate <file.ckp> [--append] [--json]
+const ORCHESTRATE_HELP: &str = "orkest orchestrate <file.ckp> [--append] [--json]
   Applies a .ckp pane layout to the current workspace.
   By default the workspace becomes the layout: every open tab is closed
   first (no confirmation), then the panes are created. The tab you run
@@ -659,7 +659,7 @@ pub fn orchestrate(args: &[String]) -> ! {
 
     let file = match file {
         Some(f) if !f.is_empty() => f,
-        _ => die("cockpit orchestrate: missing <file.ckp>", 2),
+        _ => die("orkest orchestrate: missing <file.ckp>", 2),
     };
     let mut req = json!({
         "cmd": "orchestrate",
@@ -843,14 +843,14 @@ fn value_to_display(v: &Value) -> String {
 
 // ---- run-task / stop-task / restart-task / send-task-key -------------------
 
-const TASK_HELP: &str = "cockpit run-task <task-id> [--profile <name>] [--restart] [--json]
-cockpit stop-task <task-id> [--json]
-cockpit restart-task <task-id> [--json]
-cockpit send-task-key <task-id> <key> [--json]
+const TASK_HELP: &str = "orkest run-task <task-id> [--profile <name>] [--restart] [--json]
+orkest stop-task <task-id> [--json]
+orkest restart-task <task-id> [--json]
+orkest send-task-key <task-id> <key> [--json]
 
 Drive the Tasks panel from a tab: start, stop or restart a task, or write an
 interactive key (e.g. `r` = hot reload on Flutter) to a running task's stdin.
-Task ids and their profiles/keys come from `cockpit list-tasks --json`.
+Task ids and their profiles/keys come from `orkest list-tasks --json`.
 Works on local and remote workspaces (the task runs where the workspace is).
 `run-task` on a task that is already running fails unless `--restart`.
 Prints `{\"taskId\":…,\"running\":…}`.";
@@ -877,7 +877,7 @@ pub fn task(cmd: &str, args: &[String]) -> ! {
     }
     let target = positionals.first().cloned().unwrap_or_default();
     if target.is_empty() {
-        die(&format!("cockpit {cmd}: missing task id"), 2);
+        die(&format!("orkest {cmd}: missing task id"), 2);
     }
     let mut cmd_args = Map::new();
     cmd_args.insert("target".into(), json!(target));
@@ -886,7 +886,7 @@ pub fn task(cmd: &str, args: &[String]) -> ! {
             Some(k) if !k.is_empty() => {
                 cmd_args.insert("key".into(), json!(k));
             }
-            _ => die("cockpit send-task-key: missing key", 2),
+            _ => die("orkest send-task-key: missing key", 2),
         }
     }
     // `--profile <name>`: o parser genérico não conhece a flag, então o valor
@@ -896,14 +896,14 @@ pub fn task(cmd: &str, args: &[String]) -> ! {
             Some(p) if !p.is_empty() && !p.starts_with("--") => {
                 cmd_args.insert("profile".into(), json!(p));
             }
-            _ => die("cockpit run-task: --profile needs a name", 2),
+            _ => die("orkest run-task: --profile needs a name", 2),
         }
     }
     if args.iter().any(|a| a == "--restart") {
         cmd_args.insert("restart".into(), json!(true));
     }
     let mut req = json!({"cmd": cmd, "args": Value::Object(cmd_args)});
-    // O workspace da task é o da tab emissora ($COCKPIT_TAB_ID ou --tab-id).
+    // O workspace da task é o da tab emissora ($ORKEST_TAB_ID ou --tab-id).
     with_tab_id(&mut req, parsed.effective_tab_id());
     let resp = transport::request(req, DEFAULT_TIMEOUT);
     if !is_ok(&resp) {
@@ -928,7 +928,7 @@ pub fn read(cmd: &str, args: &[String]) -> ! {
     let parsed = Flags::parse(args);
     let target = parsed.positionals.first().cloned().unwrap_or_default();
     if cmd == "read-task" && target.is_empty() {
-        die("cockpit read-task: missing task id", 2);
+        die("orkest read-task: missing task id", 2);
     }
     let mut cmd_args = Map::new();
     if !target.is_empty() {
@@ -944,7 +944,7 @@ pub fn read(cmd: &str, args: &[String]) -> ! {
         cmd_args.insert("fromStart".into(), json!(true));
     }
     let mut req = json!({"cmd": cmd, "args": Value::Object(cmd_args)});
-    // Sem alvo posicional, o server cai na própria tab ($COCKPIT_TAB_ID).
+    // Sem alvo posicional, o server cai na própria tab ($ORKEST_TAB_ID).
     with_tab_id(&mut req, parsed.effective_tab_id());
 
     let resp = transport::request(req, DEFAULT_TIMEOUT);
@@ -956,15 +956,15 @@ pub fn read(cmd: &str, args: &[String]) -> ! {
     let text = match b64().decode(encoded.as_bytes()) {
         Ok(bytes) => match String::from_utf8(bytes) {
             Ok(s) => s,
-            Err(_) => die("cockpit: malformed payload", 1),
+            Err(_) => die("orkest: malformed payload", 1),
         },
-        Err(_) => die("cockpit: malformed payload", 1),
+        Err(_) => die("orkest: malformed payload", 1),
     };
     if !text.is_empty() {
         println!("{text}");
     }
     if data.get("truncated") == Some(&Value::Bool(true)) {
-        eprintln!("cockpit: output truncated (server cap 2000 lines/read — page with --offset)");
+        eprintln!("orkest: output truncated (server cap 2000 lines/read — page with --offset)");
     }
     std::process::exit(0)
 }
@@ -1051,7 +1051,7 @@ pub fn db(args: &[String]) -> ! {
                     "--tab-id" => tab_id = Some(value),
                     _ => db_fail(
                         "error",
-                        &format!("unknown flag \"{key}\" (see `cockpit db --help`)"),
+                        &format!("unknown flag \"{key}\" (see `orkest db --help`)"),
                     ),
                 }
                 continue;
@@ -1108,7 +1108,7 @@ pub fn db(args: &[String]) -> ! {
         }
         other => db_fail(
             "error",
-            &format!("unknown subcommand \"{other}\" (see `cockpit db --help`)"),
+            &format!("unknown subcommand \"{other}\" (see `orkest db --help`)"),
         ),
     };
 
@@ -1177,7 +1177,7 @@ pub fn http(args: &[String]) -> ! {
                     "--tab-id" => tab_id = Some(value),
                     _ => db_fail(
                         "error",
-                        &format!("unknown flag \"{key}\" (see `cockpit http --help`)"),
+                        &format!("unknown flag \"{key}\" (see `orkest http --help`)"),
                     ),
                 }
                 continue;
@@ -1211,7 +1211,7 @@ pub fn http(args: &[String]) -> ! {
         }
         other => db_fail(
             "error",
-            &format!("unknown subcommand \"{other}\" (see `cockpit http --help`)"),
+            &format!("unknown subcommand \"{other}\" (see `orkest http --help`)"),
         ),
     };
 
@@ -1242,10 +1242,10 @@ fn http_request(wire: &str, cmd_args: Map<String, Value>, tab_id: Option<String>
 
 // ---- redis / mongo ----------------------------------------------------------
 
-const REDIS_HELP: &str = "cockpit redis --db <conn> <COMMAND> [args...]
-  e.g. cockpit redis --db cache GET session:42
+const REDIS_HELP: &str = "orkest redis --db <conn> <COMMAND> [args...]
+  e.g. orkest redis --db cache GET session:42
   Output: one JSON line. Connection registered in the Database panel.
-cockpit redis browse --db <conn> [--pattern 'user:*']
+orkest redis browse --db <conn> [--pattern 'user:*']
   Opens the key table in the app, pre-filtered. Opens a view — returns no data.";
 
 pub fn redis(args: &[String]) -> ! {
@@ -1296,8 +1296,8 @@ pub fn redis(args: &[String]) -> ! {
 }
 
 const MONGO_HELP: &str = concat!(
-    "cockpit mongo --db <conn> [--database <name>] --command '<json>'\n",
-    "  e.g. cockpit mongo --db app --command '{\"find\":\"users\",\"filter\":{}}'\n",
+    "orkest mongo --db <conn> [--database <name>] --command '<json>'\n",
+    "  e.g. orkest mongo --db app --command '{\"find\":\"users\",\"filter\":{}}'\n",
     "  The command is a MongoDB runCommand document. Output: one JSON line.\n",
     "  --database <name>  which database to run against, for this call only.\n",
     "                     Needed when the connection URL has no database in\n",
@@ -1306,7 +1306,7 @@ const MONGO_HELP: &str = concat!(
     "                     used; if none was ever picked, the command fails\n",
     "                     and lists the databases available.\n",
     "                     List them anytime with --command '{\"listDatabases\":1}'.\n",
-    "cockpit mongo browse --db <conn> [--database <name>] <collection> [--filter '<json>']\n",
+    "orkest mongo browse --db <conn> [--database <name>] <collection> [--filter '<json>']\n",
     "  Opens the collection browser in the app, pre-filtered. Opens a view — returns no documents.\n",
     "  Here --database also becomes the connection's current database (the tab is what the human sees)."
 );
@@ -1378,9 +1378,9 @@ fn browse(wire: &str, args: &[String]) -> ! {
             println!(
                 "{}",
                 if wire == "redis-browse" {
-                    "cockpit redis browse --db <conn> [--pattern 'user:*']"
+                    "orkest redis browse --db <conn> [--pattern 'user:*']"
                 } else {
-                    "cockpit mongo browse --db <conn> [--database <name>] <collection> [--filter '<json>']"
+                    "orkest mongo browse --db <conn> [--database <name>] <collection> [--filter '<json>']"
                 }
             );
             std::process::exit(0);
@@ -1482,7 +1482,7 @@ fn take<'a>(
 
 // ---- note ---------------------------------------------------------------------
 
-const NOTE_HELP: &str = "cockpit note <add|list> <folder.notebook> [flags]
+const NOTE_HELP: &str = "orkest note <add|list> <folder.notebook> [flags]
   add   --title <text> [--tag <name>]... [--body <text> | --body -]
         create a note in the notebook (prints its path). `--body -` reads
         the body from stdin. The `agent` tag is always added — it marks
@@ -1521,7 +1521,7 @@ pub fn note(args: &[String]) -> ! {
             "--json" => as_json = true,
             "--title" | "--tag" | "--body" | "--tab-id" => {
                 if i + 1 >= rest.len() {
-                    die(&format!("cockpit note: {a} requires a value"), 2);
+                    die(&format!("orkest note: {a} requires a value"), 2);
                 }
                 i += 1;
                 let v = rest[i].clone();
@@ -1542,7 +1542,7 @@ pub fn note(args: &[String]) -> ! {
                 } else if let Some(v) = a.strip_prefix("--tab-id=") {
                     tab_id = Some(v.to_string());
                 } else if a.starts_with("--") {
-                    die(&format!("cockpit note: unknown flag {a}"), 2);
+                    die(&format!("orkest note: unknown flag {a}"), 2);
                 } else {
                     positionals.push(a.to_string());
                 }
@@ -1551,25 +1551,25 @@ pub fn note(args: &[String]) -> ! {
         i += 1;
     }
     if positionals.is_empty() {
-        die("cockpit note: missing <folder.notebook>", 2);
+        die("orkest note: missing <folder.notebook>", 2);
     }
     let notebook = resolve_path(&positionals[0]);
     if !notebook.to_lowercase().ends_with(".notebook") {
-        die("cockpit note: the folder name must end in .notebook", 2);
+        die("orkest note: the folder name must end in .notebook", 2);
     }
-    let tab_id = tab_id.or_else(|| std::env::var("COCKPIT_TAB_ID").ok());
+    let tab_id = tab_id.or_else(|| std::env::var("ORKEST_TAB_ID").ok());
 
     match sub.as_str() {
         "add" => {
             let title = match title {
                 Some(t) if !t.trim().is_empty() => t,
-                _ => die("cockpit note add: --title is required", 2),
+                _ => die("orkest note add: --title is required", 2),
             };
             let body = match body {
                 Some(b) if b == "-" => {
                     let mut buf = String::new();
                     if std::io::Read::read_to_string(&mut std::io::stdin(), &mut buf).is_err() {
-                        die("cockpit note add: could not read stdin", 2);
+                        die("orkest note add: could not read stdin", 2);
                     }
                     buf
                 }
@@ -1622,13 +1622,13 @@ pub fn note(args: &[String]) -> ! {
             }
             std::process::exit(0)
         }
-        _ => die(&format!("cockpit note: unknown subcommand \"{sub}\""), 2),
+        _ => die(&format!("orkest note: unknown subcommand \"{sub}\""), 2),
     }
 }
 
 // ---- exec (plano 67) --------------------------------------------------------
 
-const EXEC_HELP: &str = "cockpit exec [--cwd <dir>] [--timeout <s>] [--json] [--] <command...>
+const EXEC_HELP: &str = "orkest exec [--cwd <dir>] [--timeout <s>] [--json] [--] <command...>
   Runs <command> through the app (a login shell on this machine) and prints
   its output. Everything after the flags (or after `--`) is the command line,
   passed to the shell as-is, so pipes and quotes work like in a terminal.
@@ -1656,7 +1656,7 @@ pub fn exec(args: &[String]) -> ! {
                 cwd = Some(
                     args.get(i)
                         .cloned()
-                        .unwrap_or_else(|| die("cockpit exec: --cwd requires a value", 2)),
+                        .unwrap_or_else(|| die("orkest exec: --cwd requires a value", 2)),
                 );
             }
             "--timeout" => {
@@ -1664,10 +1664,10 @@ pub fn exec(args: &[String]) -> ! {
                 let raw = args
                     .get(i)
                     .cloned()
-                    .unwrap_or_else(|| die("cockpit exec: --timeout requires a value", 2));
+                    .unwrap_or_else(|| die("orkest exec: --timeout requires a value", 2));
                 timeout = Some(match raw.parse::<u64>() {
                     Ok(v) => v,
-                    Err(_) => die("cockpit exec: --timeout requires a non-negative integer", 2),
+                    Err(_) => die("orkest exec: --timeout requires a non-negative integer", 2),
                 });
             }
             "--json" => json_out = true,
@@ -1676,7 +1676,7 @@ pub fn exec(args: &[String]) -> ! {
                 tab_id = Some(
                     args.get(i)
                         .cloned()
-                        .unwrap_or_else(|| die("cockpit exec: --tab-id requires a value", 2)),
+                        .unwrap_or_else(|| die("orkest exec: --tab-id requires a value", 2)),
                 );
             }
             "--" => {
@@ -1684,7 +1684,7 @@ pub fn exec(args: &[String]) -> ! {
                 break;
             }
             _ if a.starts_with("--") => {
-                die(&format!("cockpit exec: unknown flag {a}\n{EXEC_HELP}"), 2)
+                die(&format!("orkest exec: unknown flag {a}\n{EXEC_HELP}"), 2)
             }
             _ => {
                 command.extend(args[i..].iter().cloned());
@@ -1694,7 +1694,7 @@ pub fn exec(args: &[String]) -> ! {
         i += 1;
     }
     if command.is_empty() {
-        die(&format!("cockpit exec: missing command\n{EXEC_HELP}"), 2);
+        die(&format!("orkest exec: missing command\n{EXEC_HELP}"), 2);
     }
     let line = command.join(" ");
     let dir = cwd.map(|d| resolve_path(&d)).or_else(|| {
@@ -1741,18 +1741,18 @@ pub fn exec(args: &[String]) -> ! {
         }
     }
     if data.get("timedOut") == Some(&Value::Bool(true)) {
-        eprintln!("cockpit exec: timed out");
+        eprintln!("orkest exec: timed out");
     }
     std::process::exit(code)
 }
 
 // ---- panel ------------------------------------------------------------------
 
-const PANEL_HELP: &str = "cockpit panel <new|screenshot> …
-  cockpit panel new --template <dashboard|list-detail|form> <file.panel>
+const PANEL_HELP: &str = "orkest panel <new|screenshot> …
+  orkest panel new --template <dashboard|list-detail|form> <file.panel>
       Writes the embedded template to <file.panel> (refuses to overwrite) and
-      opens it in the app. Templates ship with the cockpit-design skill.
-  cockpit panel screenshot [<label|tab-id>] [--out <file.png>]
+      opens it in the app. Templates ship with the orkest-design skill.
+  orkest panel screenshot [<label|tab-id>] [--out <file.png>]
       PNG of an open .panel tab's web view (default: the tab you are in, or
       the one holding the file you passed). Without --out, writes a temp file
       and prints its path, so you can look at your own panel and iterate.";
@@ -1760,7 +1760,7 @@ const PANEL_HELP: &str = "cockpit panel <new|screenshot> …
 pub fn panel(args: &[String]) -> ! {
     let Some(sub) = args.first() else {
         die(
-            &format!("cockpit panel: missing subcommand\n{PANEL_HELP}"),
+            &format!("orkest panel: missing subcommand\n{PANEL_HELP}"),
             2,
         )
     };
@@ -1772,7 +1772,7 @@ pub fn panel(args: &[String]) -> ! {
             std::process::exit(0)
         }
         other => die(
-            &format!("cockpit panel: unknown subcommand {other}\n{PANEL_HELP}"),
+            &format!("orkest panel: unknown subcommand {other}\n{PANEL_HELP}"),
             2,
         ),
     }
@@ -1790,7 +1790,7 @@ fn panel_new(args: &[String]) -> ! {
             std::process::exit(0)
         } else if args[i].starts_with("--") {
             die(
-                &format!("cockpit panel new: unknown flag {}\n{PANEL_HELP}", args[i]),
+                &format!("orkest panel new: unknown flag {}\n{PANEL_HELP}", args[i]),
                 2,
             )
         } else {
@@ -1801,20 +1801,20 @@ fn panel_new(args: &[String]) -> ! {
     let template = template.unwrap_or_else(|| "dashboard".to_string());
     let file = file.unwrap_or_else(|| {
         die(
-            &format!("cockpit panel new: missing <file.panel>\n{PANEL_HELP}"),
+            &format!("orkest panel new: missing <file.panel>\n{PANEL_HELP}"),
             2,
         )
     });
-    let key = format!("cockpit-design/templates/{template}.panel");
+    let key = format!("orkest-design/templates/{template}.panel");
     let Some((_, bytes)) = crate::skills::SKILLS.iter().find(|(rel, _)| *rel == key) else {
         let available: Vec<&str> = crate::skills::SKILLS
             .iter()
-            .filter_map(|(rel, _)| rel.strip_prefix("cockpit-design/templates/"))
+            .filter_map(|(rel, _)| rel.strip_prefix("orkest-design/templates/"))
             .filter_map(|n| n.strip_suffix(".panel"))
             .collect();
         die(
             &format!(
-                "cockpit panel new: unknown template {template} (available: {})",
+                "orkest panel new: unknown template {template} (available: {})",
                 available.join(", ")
             ),
             2,
@@ -1823,7 +1823,7 @@ fn panel_new(args: &[String]) -> ! {
     let path = resolve_path(&file);
     if std::path::Path::new(&path).exists() {
         die(
-            &format!("cockpit panel new: {path} already exists (refusing to overwrite)"),
+            &format!("orkest panel new: {path} already exists (refusing to overwrite)"),
             1,
         );
     }
@@ -1831,13 +1831,13 @@ fn panel_new(args: &[String]) -> ! {
         let _ = std::fs::create_dir_all(parent);
     }
     if let Err(e) = std::fs::write(&path, bytes) {
-        die(&format!("cockpit panel new: {e}"), 1);
+        die(&format!("orkest panel new: {e}"), 1);
     }
     let mut req = json!({"cmd": "open", "args": {"path": path}});
     with_tab_id(&mut req, self_tab_id());
     let resp = transport::request(req, DEFAULT_TIMEOUT);
     if !is_ok(&resp) {
-        eprintln!("cockpit panel new: written, but could not open it in the app");
+        eprintln!("orkest panel new: written, but could not open it in the app");
         fail_with(&resp);
     }
     println!("{path}");
@@ -1857,7 +1857,7 @@ fn panel_screenshot(args: &[String]) -> ! {
         } else if args[i].starts_with("--") {
             die(
                 &format!(
-                    "cockpit panel screenshot: unknown flag {}\n{PANEL_HELP}",
+                    "orkest panel screenshot: unknown flag {}\n{PANEL_HELP}",
                     args[i]
                 ),
                 2,
@@ -1917,9 +1917,9 @@ mod tests {
 
     #[test]
     fn label_manual_vence_titulo() {
-        let data = vec![json!({"id": "t2", "label": "Cockpit", "title": "zsh"})];
+        let data = vec![json!({"id": "t2", "label": "Orkest", "title": "zsh"})];
         let lines = format_list("list-panes", &data);
-        assert!(lines[0].ends_with("⚲ Cockpit"), "{}", lines[0]);
+        assert!(lines[0].ends_with("⚲ Orkest"), "{}", lines[0]);
     }
 
     #[test]

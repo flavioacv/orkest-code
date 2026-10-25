@@ -1,4 +1,4 @@
-import 'package:cockpit/app/core/terminal/xterm/src/utils/hash_values.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/utils/hash_values.dart';
 
 class CellData {
   CellData({

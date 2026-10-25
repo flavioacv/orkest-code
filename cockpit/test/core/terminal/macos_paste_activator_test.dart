@@ -1,6 +1,6 @@
 // The regression requires the native event modifiers, which KeyEvent omits.
 // ignore_for_file: deprecated_member_use
-import 'package:cockpit/app/core/terminal/macos_paste_activator.dart';
+import 'package:orkest_code/app/core/terminal/macos_paste_activator.dart';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';

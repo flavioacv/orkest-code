@@ -1,9 +1,9 @@
-import 'package:cockpit/app/cockpit/domain/contracts/db_connection_store.dart';
-import 'package:cockpit/app/cockpit/domain/contracts/db_driver.dart';
-import 'package:cockpit/app/cockpit/domain/contracts/nosql_runner.dart';
-import 'package:cockpit/app/cockpit/domain/entities/db_connection.dart';
-import 'package:cockpit/app/cockpit/domain/services/db_query_service.dart';
-import 'package:cockpit/app/cockpit/domain/services/mongo_browse_service.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/db_connection_store.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/db_driver.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/nosql_runner.dart';
+import 'package:orkest_code/app/orkest/domain/entities/db_connection.dart';
+import 'package:orkest_code/app/orkest/domain/services/db_query_service.dart';
+import 'package:orkest_code/app/orkest/domain/services/mongo_browse_service.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'fakes/mongo_database_store_fake.dart';

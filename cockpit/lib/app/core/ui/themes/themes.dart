@@ -1,7 +1,7 @@
 export 'app_colors.dart';
 export 'app_theme.dart';
 export 'app_typography.dart';
-export 'cockpit_theme.dart';
+export 'orkest_theme.dart';
 export 'color_contrast.dart';
 export 'syntax_colors.dart';
 export 'terminal_theme.dart';

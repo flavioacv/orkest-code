@@ -96,13 +96,13 @@ BEGIN
     BEGIN
         BLOCK "040904e4"
         BEGIN
-            VALUE "CompanyName", "Jacob Moura" "\0"
-            VALUE "FileDescription", "Remote Pi Cockpit" "\0"
+            VALUE "CompanyName", "Flavio ACV" "\0"
+            VALUE "FileDescription", "Orkest Code" "\0"
             VALUE "FileVersion", VERSION_AS_STRING "\0"
-            VALUE "InternalName", "Cockpit" "\0"
-            VALUE "LegalCopyright", "Copyright (C) 2026 Jacob Moura. All rights reserved." "\0"
-            VALUE "OriginalFilename", "Cockpit.exe" "\0"
-            VALUE "ProductName", "Remote Pi Cockpit" "\0"
+            VALUE "InternalName", "Orkest" "\0"
+            VALUE "LegalCopyright", "Copyright (C) 2026 Flavio ACV. All rights reserved." "\0"
+            VALUE "OriginalFilename", "Orkest.exe" "\0"
+            VALUE "ProductName", "Orkest Code" "\0"
             VALUE "ProductVersion", VERSION_AS_STRING "\0"
         END
     END
@@ -125,7 +125,7 @@ END
 // (verificado: sign_update e PyNaCl produzem assinatura idêntica). A privada
 // vive no iCloud + secret SPARKLE_PRIVATE_KEY. VALIDAR no Windows real.
 //
-EdDSAPub EDDSA {"WoJTWryr48pWiAnDPqqt/Iu9f6gAsU7A1zBb5mBLruI="}
+// Orkest updates disabled until a publisher-owned EdDSA key is configured.
 /////////////////////////////////////////////////////////////////////////////
 
 

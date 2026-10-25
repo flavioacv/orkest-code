@@ -47,7 +47,7 @@ app.*.map.json
 /android/app/profile
 /android/app/release
 
-# Plano 51 — dylibs do anakiORM copiados pro cwd em dev/teste (staging: ~/.cockpit/anaki)
+# Plano 51 — dylibs do anakiORM copiados pro cwd em dev/teste (staging: ~/.orkest/anaki)
 libanaki_*.dylib
 
 # CLI interna (crate Rust em cli/)
@@ -62,3 +62,6 @@ android/key.properties
 android/keystore/
 *.jks
 *.keystore
+
+# Office build tools
+node_modules/

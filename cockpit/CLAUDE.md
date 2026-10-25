@@ -1,11 +1,11 @@
-# Remote Pi — Cockpit (Flutter Desktop)
+# Remote Pi — Orkest (Flutter Desktop)
 
 Cliente **desktop** (macOS first) do Remote Pi. GUI multi-pane **terminal-first**:
 workspaces à esquerda, panes de terminal/arquivos/bancos no centro, árvore de
 arquivos à direita. Os agentes (Claude Code, Codex, Pi) rodam **como processos
 dentro de terminais**, com status de turno via hooks. Plano de origem:
-[`../plan/37-desktop-cockpit.md`](../plan/37-desktop-cockpit.md); remoto:
-[`../plan/58-cockpit-remote.md`](../plan/58-cockpit-remote.md).
+[`../plan/37-desktop-orkest.md`](../plan/37-desktop-orkest.md); remoto:
+[`../plan/58-orkest-remote.md`](../plan/58-orkest-remote.md).
 
 ## Escopo atual
 
@@ -20,7 +20,7 @@ Decisões fechadas que continuam valendo (plano 37, 2026-06-05):
 
 | # | Decisão |
 |---|---|
-| **A** | Código mora aqui em `cockpit/` (não dentro de `app/`). Motor compartilhado com o `cockpit-server` via `packages/cockpit_*` |
+| **A** | Código mora aqui em `orkest/` (não dentro de `app/`). Motor compartilhado com o `orkest-server` via `packages/orkest_*` |
 
 ## Stack
 
@@ -37,13 +37,13 @@ Decisões fechadas que continuam valendo (plano 37, 2026-06-05):
 - i18n: **`slang`** (codegen tipado) — en/pt-BR/es em `lib/i18n/*.i18n.json`,
   consumo via `context.t`. Regra completa na seção "i18n" abaixo
 - Subprocesso: `dart:io` `Process.start` (git, LSP, harnesses de automação) e
-  PTY nativo via `plugins/cockpit_pty`
+  PTY nativo via `plugins/orkest_pty`
 - Menu de app: abstração em `core/ui/menu/` — modelo declarativo único
   (`menu_model.dart`), renderizado nativo no macOS (`PlatformMenuBar`) e
   desenhado na barra de título no Windows/Linux (`Menubar` do shadcn, via
   `WindowMenuBar`). Fonte de verdade em `buildAppMenus()`
 
-> **Diverge do `app/` de propósito**: o cockpit é organizado em **fatias verticais
+> **Diverge do `app/` de propósito**: o orkest é organizado em **fatias verticais
 > por feature** (`lib/app/<feature>/{domain,data,ui}`), não em camadas globais. A
 > motivação foi matar os god classes `router.dart`/`dependencies.dart` e deixar
 > cada feature auto-contida (cresce sem editar arquivos compartilhados). O `app/`
@@ -51,25 +51,25 @@ Decisões fechadas que continuam valendo (plano 37, 2026-06-05):
 
 ## Motores (onde mora cada engine)
 
-Mapa dos motores que o Cockpit usa — quem é **nosso** (no repo, manutenção
+Mapa dos motores que o Orkest usa — quem é **nosso** (no repo, manutenção
 nossa) e quem é pacote externo:
 
 | Motor | Onde | Origem / nota |
 |---|---|---|
 | **Emulador de terminal** (VT/ANSI) | `libghostty` + `lib/app/core/terminal/xterm/` | Ghostty é o padrão de buffers novos; o xterm absorvido continua disponível e é usado por layouts legados |
-| **Render do terminal** | `flterm` + `lib/app/core/terminal/cockpit_terminal*.dart` | `flterm` renderiza Ghostty; a view/painter interna permanece integral para xterm. Ver `core/terminal/CLAUDE.md` |
-| **PTY** (spawn nativo de shell — forkpty/ConPTY) | `plugins/cockpit_pty/` | **Nosso** — plugin C/FFI absorvido do `kyroon_pty` v1.0.6, renomeado; não publicado |
+| **Render do terminal** | `flterm` + `lib/app/core/terminal/orkest_terminal*.dart` | `flterm` renderiza Ghostty; a view/painter interna permanece integral para xterm. Ver `core/terminal/CLAUDE.md` |
+| **PTY** (spawn nativo de shell — forkpty/ConPTY) | `plugins/orkest_pty/` | **Nosso** — plugin C/FFI absorvido do `kyroon_pty` v1.0.6, renomeado; não publicado |
 | **Markdown** (GFM + code do agente/viewer) | pacote `gpt_markdown` ^1.1.8 (pub.dev) | Externo (upstream ativo). O **frontmatter** YAML é nosso: `core/ui/widgets/markdown_frontmatter.dart` (pré-processamento no `AgentMarkdown`) |
 | **Syntax highlight** (léxico, ~190 linguagens) | pacote `highlight` ^0.7.0 + `core/ui/widgets/code_highlight.dart` (tema/integração) | Externo; decisão do plano LSP: highlight léxico mantido (LSP não colore) |
 | **LSP** (diagnostics/formatação — a camada "IDE") | `lib/app/core/data/lsp/` (cliente JSON-RPC genérico + pool por (lang, raiz)) | **Nosso** — fala com servidores externos achados no PATH |
-| **Status de turno dos agentes** | `lib/app/cockpit/data/hooks/` (hooks do harness + `cockpit-hook` + socket) | **Nosso** — agentes rodam em terminais; ver `docs/turn-status-hooks.md` |
-| **Painéis `.panel`** (HTML vivo + ponte `window.cockpit`) | `lib/app/cockpit/ui/widgets/panel_view.dart` + `assets/panel/bridge.js` + verbo `exec` | **Nosso** — sobre a mesma webview do plano 58; cada `cockpit("<linha>")` spawna a CLI interna (paridade com o terminal); ver `../plan/67-cockpit-panel.md` |
+| **Status de turno dos agentes** | `lib/app/orkest/data/hooks/` (hooks do harness + `orkest-hook` + socket) | **Nosso** — agentes rodam em terminais; ver `docs/turn-status-hooks.md` |
+| **Painéis `.panel`** (HTML vivo + ponte `window.orkest`) | `lib/app/orkest/ui/widgets/panel_view.dart` + `assets/panel/bridge.js` + verbo `exec` | **Nosso** — sobre a mesma webview do plano 58; cada `orkest("<linha>")` spawna a CLI interna (paridade com o terminal); ver `../plan/67-orkest-panel.md` |
 | **Drop nativo do SO** (arrastar arquivos do Finder/Explorer) | `plugins/desktop_drop/` | **Nosso** — `desktop_drop` 0.5.0 absorvido com 1 patch macOS (`hitTest` nil fora de drag, senão o WebKit das platform views perde o hover); nome mantido de propósito; plano 70 |
-| **Keep awake** | `packages/cockpit_keepawake/` (caffeinate / SetThreadExecutionState / systemd-inhibit) | **Nosso** — Dart puro, desktop-only |
-| **DB drivers** (SQLite/Postgres/MySQL/MSSQL/Mongo/Redis) | pacotes `anaki_*` (Rust/FFI, do Jacob) + `lib/app/cockpit/data/db/` (Isolate workers + serviços) | Externo-mas-nosso (mantido pelo Jacob fora do repo) |
-| **Git** | `lib/app/cockpit/data/filesystem/git_*` (roda o binário `git`) | Motor é o git do sistema; nosso é o parser/orquestração |
+| **Keep awake** | `packages/orkest_keepawake/` (caffeinate / SetThreadExecutionState / systemd-inhibit) | **Nosso** — Dart puro, desktop-only |
+| **DB drivers** (SQLite/Postgres/MySQL/MSSQL/Mongo/Redis) | pacotes `anaki_*` (Rust/FFI, do Jacob) + `lib/app/orkest/data/db/` (Isolate workers + serviços) | Externo-mas-nosso (mantido pelo Jacob fora do repo) |
+| **Git** | `lib/app/orkest/data/filesystem/git_*` (roda o binário `git`) | Motor é o git do sistema; nosso é o parser/orquestração |
 | **Mídia** (áudio/vídeo no viewer) | pacote `media_kit` (libmpv) | Externo |
-| **Self-update** | pacote `auto_updater` (Sparkle/WinSparkle) + `lib/app/cockpit/data/update/` | Externo + integração nossa (plano 47) |
+| **Self-update** | pacote `auto_updater` (Sparkle/WinSparkle) + `lib/app/orkest/data/update/` | Externo + integração nossa (plano 47) |
 
 Zero `dependency_overrides` git no pubspec (limpeza 2026-07-19): o que era fork
 virou módulo/plugin interno; o resto vem do pub.dev.
@@ -83,7 +83,7 @@ sem eles o `flutter run/build` falha antes de chegar no app:
 
 | Ferramenta | Por quê | Sem ela |
 |---|---|---|
-| **Rust** (`cargo`, via [rustup](https://rustup.rs)) | a CLI interna (`cli/`) é um crate Rust, compilado por macOS/Linux/Windows e empacotado ao lado do binário | build para no alvo `cockpit-cli` |
+| **Rust** (`cargo`, via [rustup](https://rustup.rs)) | a CLI interna (`cli/`) é um crate Rust, compilado por macOS/Linux/Windows e empacotado ao lado do binário | build para no alvo `orkest-cli` |
 | **Zig 0.16.0** | `hooks.user_defines.libghostty.source: compile` no pubspec compila a dylib do Ghostty (0.15.x não serve) | falha no build hook do `libghostty` |
 
 O `cargo` é resolvido pelo PATH e, como fallback, em `~/.cargo/bin` — o mesmo
@@ -91,7 +91,7 @@ lugar onde o rustup instala. Isso cobre IDE/launcher que não herda o PATH do
 shell de login; se faltar mesmo, o CMake para no configure com a causa.
 
 - `rustup target add aarch64-unknown-linux-gnu` — uma vez; o build macOS usa
-  esse target + Zig para embarcar o cockpit-server/CLI dos hosts Linux arm64
+  esse target + Zig para embarcar o orkest-server/CLI dos hosts Linux arm64
 - `flutter pub get` — instala deps
 - `flutter analyze` — lint estático (deve passar zero issues)
 - `flutter test` — testes
@@ -119,9 +119,9 @@ lib/
     │   ├── routes.dart  app_intents.dart
     │   ├── domain/  data/    # markers (Service/Disposable), Result, contratos/impls compartilhados
     │   └── ui/               # themes/  widgets/  file_icons/  settings_controller.dart (app-scoped)
-    ├── cockpit/              # FEATURE: o shell (projetos | panes/terminal/viewers | arquivos)
-    │   ├── cockpit_module.dart   # path '/', binds + route('/', provide: Cockpit/Tasks/Update VMs)
-    │   └── domain/  data/  ui/   # ui/ = cockpit_page + viewmodels/ session/ states/ widgets/
+    ├── orkest/              # FEATURE: o shell (projetos | panes/terminal/viewers | arquivos)
+    │   ├── orkest_module.dart   # path '/', binds + route('/', provide: Orkest/Tasks/Update VMs)
+    │   └── domain/  data/  ui/   # ui/ = orkest_page + viewmodels/ session/ states/ widgets/
     └── settings/             # FEATURE: preferências (geral, aparência, terminal, LSP, automações, hosts remotos)
         ├── settings_module.dart  # path '/settings', route('/', provide: Notifications/Neovim VMs)
         └── domain/  data/  ui/
@@ -146,7 +146,7 @@ ui ──► domain ◄── data
 ## Convenções
 
 - **Naming**: arquivos `snake_case.dart`, classes `PascalCase`, widgets `PascalCase`
-- **Imports**: relativos dentro do mesmo feature; absolutos via `package:cockpit/...`
+- **Imports**: relativos dentro do mesmo feature; absolutos via `package:orkest_code/...`
   quando cruzando features ou camadas
 - **Barrel files**: cada feature/módulo pode expor um `<nome>.dart` agregando os
   símbolos públicos; consumidores externos importam só o barrel
@@ -177,14 +177,14 @@ ui ──► domain ◄── data
     `X Function()` — o parser quebra no `=>` e funde dois params factory seguidos.
     Ver `PairingGatewayFactory` + `ConnectivityViewModel`.
   - **vários primitivos ambíguos** (vários `String`): troque por um **value object
-    injetável** (ex.: `UpdateTarget` no `cockpit_module`).
+    injetável** (ex.: `UpdateTarget` no `orkest_module`).
 - **Tema**: nunca hardcode `Color(0x…)` / `TextStyle(fontFamily:…)`; leia via
   `context.colors.<token>` / `context.typo.<estilo>` (barrel `app/core/ui/themes`)
 - **i18n**: nenhuma string user-facing literal no código. Ver a seção abaixo.
 
 ## Regra crítica: i18n — toda feature nova nasce traduzida
 
-O cockpit é internacionalizado com [`slang`](https://pub.dev/packages/slang)
+O orkest é internacionalizado com [`slang`](https://pub.dev/packages/slang)
 (codegen tipado). **Feature sem tradução é feature incompleta** — não é polimento
 posterior, entra no mesmo PR.
 
@@ -196,7 +196,7 @@ placeholder `${...}` divergir entre locales.
 
 ```dart
 // SEMPRE context.t — reconstrói na troca de idioma em runtime.
-final tr = context.t.cockpit.fileTreePanel;
+final tr = context.t.orkest.fileTreePanel;
 Text(tr.commit)
 Text(tr.generateWith(harness: label))   // interpolação é parâmetro nomeado
 ```
@@ -254,11 +254,11 @@ Regras que caem disso:
 
 Nem toda string em inglês é bug de i18n. Ficam em inglês de propósito:
 
-- **Saída da CLI interna** (`cockpit send`, `orchestrate`, `db`, e o parser
+- **Saída da CLI interna** (`orkest send`, `orchestrate`, `db`, e o parser
   `.ckp` em `data/layout/ckp_layout_loader.dart`). A CLI fala com agentes e
   scripts em terminal; traduzir quebraria quem faz parse da saída. Os erros de
   `applyLayoutFile` e das operações de terminal chamadas pelo
-  `cockpit_cli_handler` seguem `Result<_, String>` **por decisão**, não por
+  `orkest_cli_handler` seguem `Result<_, String>` **por decisão**, não por
   esquecimento.
 - **Nomes próprios**: harnesses (`Pi`, `Claude Code`, `Codex CLI`), linguagens
   do LSP (`Dart`, `TypeScript`), perfis de terminal (`PowerShell 7`), ids de
@@ -304,10 +304,10 @@ await viewModel.spawnAgent().onSuccess((_) {
 
 ## NÃO fazer
 
-- Editar arquivos fora de `cockpit/`
+- Editar arquivos fora de `orkest/`
 - Reintroduzir o agente nativo (`pi --mode rpc`), o composer/transcript ou as
   abas de Settings do `remote-pi`: saíram na 2.0, agente é processo em terminal
-- Usar o relay do Remote Pi no Cockpit: o remoto é SSH + `cockpit-server`
+- Usar o relay do Remote Pi no Orkest: o remoto é SSH + `orkest-server`
   (plano 58)
 - Implementar crypto manual (SSH cuida de auth e cifragem)
 - Comitar `build/`, `.dart_tool/`, `macos/Pods/`

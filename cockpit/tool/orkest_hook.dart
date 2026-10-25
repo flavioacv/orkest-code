@@ -1,0 +1,133 @@
+// Helper instalado nos hooks do Claude Code (~/.claude/settings.json) pelo
+// `ClaudeHookInstaller` do Orkest. O Claude o invoca a cada evento de ciclo de
+// vida, passando um JSON pelo stdin. Traduzimos o evento num status de turno
+// (working / waiting / idle) e mandamos pro Orkest por um **socket Unix**.
+//
+// Por que socket e não OSC na PTY: o Claude roda os hooks SEM terminal
+// controlador (escrever em /dev/tty falha com ENXIO). Então o app injeta no env
+// da PTY o `ORKEST_PANE_ID` (roteamento) e o `ORKEST_STATUS_SOCK` (caminho do
+// socket); o hook herda os dois e reporta o status por ali. Sessões `claude`
+// fora do Orkest não têm essas envs → o hook é no-op (gate natural).
+//
+// LEGADO — o helper foi absorvido pela CLI em Rust como `orkest hook`
+// (orkest/cli/src/hook.rs), que é o que o instalador registra hoje. Este
+// binário continua sendo empacotado só como rede de segurança: se a CLI do
+// bundle não responder `--version` com o sufixo `r` (ex.: build antigo), o
+// ClaudeHookInstaller cai aqui em vez de deixar o status de turno morto. Some
+// quando as três plataformas estiverem validadas com a CLI nova.
+//
+// Compilar: dart compile exe tool/orkest_hook.dart -o <dest>/orkest-hook
+// NÃO escreve no stdout (participa do protocolo de hook). Nunca falha barulhento.
+
+import 'dart:convert';
+import 'dart:io';
+
+Future<void> main() async {
+  try {
+    final env = Platform.environment;
+    final paneId = env['ORKEST_PANE_ID'];
+    if (paneId == null || paneId.isEmpty) {
+      return; // não é uma sessão hospedada pelo Orkest
+    }
+    // Transporte: socket Unix no POSIX; TCP loopback (+token) no Windows, que
+    // não tem UDS no Dart. O servidor injeta a env certa por plataforma.
+    final sock = env['ORKEST_STATUS_SOCK'];
+    final port = int.tryParse(env['ORKEST_STATUS_PORT'] ?? '');
+    if ((sock == null || sock.isEmpty) && port == null) return;
+
+    final raw = await stdin.transform(utf8.decoder).join();
+    if (raw.trim().isEmpty) return;
+    final decoded = jsonDecode(raw);
+    if (decoded is! Map) return;
+
+    final event = (decoded['hook_event_name'] ?? '').toString();
+    final isSubagent = event == 'SubagentStart' || event == 'SubagentStop';
+    final subagentId = _safeHookValue(decoded['agent_id'], 120);
+    final status = isSubagent
+        ? (subagentId == null ? null : 'subagent')
+        : _statusFor(event, decoded);
+    if (status == null) return; // evento que não nos interessa
+
+    final payload = jsonEncode(<String, dynamic>{
+      'paneId': paneId,
+      'st': status,
+      // Evento cru — o app usa pra distinguir INÍCIO de turno (UserPromptSubmit)
+      // de atividade mid-turn (Pre/PostToolUse) e descartar um 'working' tardio
+      // que chega fora de ordem depois do 'idle' (Stop), evitando o spinner
+      // eterno. Cada hook é um processo separado abrindo seu próprio socket, sem
+      // ordem garantida entre eles.
+      'ev': event,
+      if (event == 'PreToolUse' || event == 'PostToolUse')
+        'tool': _safeToolName(decoded['tool_name']),
+      'sid': (decoded['session_id'] ?? '').toString(),
+      'tx': (decoded['transcript_path'] ?? '').toString(),
+      if (isSubagent) 'sub': subagentId,
+      if (isSubagent)
+        if (_safeHookValue(decoded['agent_type'], 80) case final String type)
+          'subType': type,
+      // Token só importa no TCP (loopback é acessível por qualquer processo
+      // local); no UDS a permissão do socket já protege.
+      if (env['ORKEST_STATUS_TOKEN'] != null)
+        'tok': env['ORKEST_STATUS_TOKEN'],
+    });
+
+    final socket = sock != null && sock.isNotEmpty
+        ? await Socket.connect(
+            InternetAddress(sock, type: InternetAddressType.unix),
+            0,
+          )
+        : await Socket.connect(InternetAddress.loopbackIPv4, port!);
+    socket.add(utf8.encode('$payload\n'));
+    await socket.flush();
+    await socket.close();
+    socket.destroy();
+  } catch (_) {
+    // Silencioso de propósito: não atrapalhar o turno do claude.
+  }
+}
+
+String? _safeHookValue(Object? value, int maxLength) {
+  final safe = (value ?? '')
+      .toString()
+      .replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '')
+      .trim();
+  if (safe.isEmpty) return null;
+  return safe.length > maxLength ? safe.substring(0, maxLength) : safe;
+}
+
+String? _safeToolName(Object? value) {
+  final raw = value?.toString() ?? '';
+  final safe = raw.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '').trim();
+  if (safe.isEmpty) return null;
+  return safe.length > 80 ? safe.substring(0, 80) : safe;
+}
+
+/// Mapeia o evento de hook do Claude Code num status de turno, ou `null` se o
+/// evento não deve mover o indicador.
+String? _statusFor(String event, Map<dynamic, dynamic> json) {
+  switch (event) {
+    case 'UserPromptSubmit':
+    case 'PostToolUse':
+      return 'working';
+    case 'PreToolUse':
+      // Ferramentas que por definição BLOQUEIAM esperando o usuário (formulário
+      // do plan mode, aprovação de plano) não emitem `Notification` — o último
+      // hook antes do bloqueio é este PreToolUse. Sem este desvio o app fica em
+      // `working` (spinner eterno) sem chime/notificação. O `PostToolUse` que
+      // chega quando o usuário responde volta pra `working` normalmente.
+      final tool = (json['tool_name'] ?? '').toString();
+      const blockingTools = <String>{'AskUserQuestion', 'ExitPlanMode'};
+      return blockingTools.contains(tool) ? 'waiting' : 'working';
+    case 'Notification':
+      // Notification cobre "precisa de aprovação" e "ocioso esperando input".
+      final hint = '${json['notification_type'] ?? ''} ${json['message'] ?? ''}'
+          .toLowerCase();
+      return hint.contains('idle') ? 'idle' : 'waiting';
+    case 'Stop':
+    case 'SessionStart':
+    case 'SessionEnd':
+      return 'idle';
+    default:
+      return null;
+  }
+}

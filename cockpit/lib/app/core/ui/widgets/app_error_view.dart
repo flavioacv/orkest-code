@@ -1,6 +1,6 @@
-import 'package:cockpit/app/core/ui/themes/themes.dart';
-import 'package:cockpit/app/core/ui/widgets/error_report_dialog.dart';
-import 'package:cockpit/i18n/strings.g.dart';
+import 'package:orkest_code/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/app/core/ui/widgets/error_report_dialog.dart';
+import 'package:orkest_code/i18n/strings.g.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 /// Substitui a caixa cinza (release) / faixa vermelha (debug) que o Flutter

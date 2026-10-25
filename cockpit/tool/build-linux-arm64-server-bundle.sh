@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Cross-compiles the cockpit-server bundle deployed by a macOS client to Linux
+# Cross-compiles the orkest-server bundle deployed by a macOS client to Linux
 # arm64 remote hosts. The Dart AOT executable and anaki native assets are built
 # by `dart build cli`; the PTY library and Rust CLI use Zig as the cross linker.
 #
@@ -44,7 +44,7 @@ rm -rf "$DEST"
 mkdir -p "$DEST"
 
 (
-  cd "$ROOT/packages/cockpit_server"
+  cd "$ROOT/packages/orkest_server"
   "$DART" pub get >/dev/null
   "$DART" build cli \
     --target-os linux \
@@ -52,19 +52,19 @@ mkdir -p "$DEST"
     -o "$TMP/dart" >/dev/null
 )
 mv "$TMP/dart/bundle"/* "$DEST"/
-mv "$DEST/bin/cockpit_server" "$DEST/bin/cockpit-server"
+mv "$DEST/bin/orkest_server" "$DEST/bin/orkest-server"
 # Dart >= 3.14 (host Linux): snapshot separado em lib/, nomeado pelo exe.
 # Cross-compilado do macOS o exe é auto-contido e o .so não existe.
-if [ -f "$DEST/lib/libdartaotcockpit_server.so" ]; then
-  mv "$DEST/lib/libdartaotcockpit_server.so" "$DEST/lib/libdartaotcockpit-server.so"
+if [ -f "$DEST/lib/libdartaotorkest_server.so" ]; then
+  mv "$DEST/lib/libdartaotorkest_server.so" "$DEST/lib/libdartaotorkest-server.so"
 fi
 
-# cockpit_pty is intentionally not a Dart native asset yet. Build the same C
+# orkest_pty is intentionally not a Dart native asset yet. Build the same C
 # source as the native sidecar, but against Zig's Linux aarch64 sysroot.
 "$ZIG" cc -target aarch64-linux-gnu -shared -O2 -DDART_SHARED_LIB \
-  -o "$DEST/lib/libcockpit_pty.so" \
-  "$ROOT/plugins/cockpit_pty/src/cockpit_pty.c" \
-  -I"$ROOT/plugins/cockpit_pty/src" -lpthread
+  -o "$DEST/lib/liborkest_pty.so" \
+  "$ROOT/plugins/orkest_pty/src/orkest_pty.c" \
+  -I"$ROOT/plugins/orkest_pty/src" -lpthread
 
 # Cargo accepts a linker executable, not a command with arguments, so wrap Zig.
 # Rust >= 1.98 passes `-Wl,--fix-cortex-a53-843419` (a GNU ld/lld erratum
@@ -87,7 +87,7 @@ chmod +x "$ZIG_LINKER"
   CARGO_TARGET_AARCH64_UNKNOWN_LINUX_GNU_LINKER="$ZIG_LINKER" \
     "$CARGO" build --release --target "$TARGET" >/dev/null
 )
-cp "$ROOT/cli/target/$TARGET/release/cockpit" "$DEST/bin/cockpit"
-chmod +x "$DEST/bin/cockpit-server" "$DEST/bin/cockpit"
+cp "$ROOT/cli/target/$TARGET/release/orkest" "$DEST/bin/orkest"
+chmod +x "$DEST/bin/orkest-server" "$DEST/bin/orkest"
 
 echo "[linux-server] bundle OK -> $DEST"

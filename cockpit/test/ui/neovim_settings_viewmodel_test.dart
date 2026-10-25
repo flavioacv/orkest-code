@@ -1,7 +1,7 @@
-import 'package:cockpit/app/core/domain/contracts/neovim_gateway.dart';
-import 'package:cockpit/app/core/domain/exceptions/neovim_error.dart';
-import 'package:cockpit/app/core/domain/result.dart';
-import 'package:cockpit/app/settings/ui/neovim_settings_viewmodel.dart';
+import 'package:orkest_code/app/core/domain/contracts/neovim_gateway.dart';
+import 'package:orkest_code/app/core/domain/exceptions/neovim_error.dart';
+import 'package:orkest_code/app/core/domain/result.dart';
+import 'package:orkest_code/app/settings/ui/neovim_settings_viewmodel.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 class _Gateway implements NeovimGateway {

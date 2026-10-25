@@ -1,7 +1,7 @@
-import 'package:cockpit/app/core/terminal/xterm/src/core/buffer/cell_offset.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/core/mouse/mode.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/core/mouse/button.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/core/mouse/button_state.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/core/buffer/cell_offset.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/core/mouse/mode.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/core/mouse/button.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/core/mouse/button_state.dart';
 
 abstract class MouseReporter {
   static String report(

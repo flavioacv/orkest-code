@@ -1,5 +1,5 @@
 import 'package:flutter_test/flutter_test.dart';
-import 'package:cockpit/app/core/terminal/xterm/xterm.dart';
+import 'package:orkest_code/app/core/terminal/xterm/xterm.dart';
 
 void main() {
   group('Buffer.getText()', () {

@@ -26,7 +26,7 @@
 	<key>CFBundleName</key>
 	<string>$(PRODUCT_NAME)</string>
 	<key>CFBundleDisplayName</key>
-	<string>Remote Pi Cockpit</string>
+	<string>Orkest Code</string>
 	<key>CFBundlePackageType</key>
 	<string>APPL</string>
 	<key>CFBundleShortVersionString</key>
@@ -50,33 +50,31 @@
 	     houver delegate de feed E SUFeedURL juntos. Auto-check + auto-update
 	     silencioso (decisões B/C): baixa em background e instala no próximo
 	     quit; o nosso card reflete o estado. -->
-	<key>SUPublicEDKey</key>
-	<string>WoJTWryr48pWiAnDPqqt/Iu9f6gAsU7A1zBb5mBLruI=</string>
 	<key>SUEnableAutomaticChecks</key>
-	<true/>
+	<false/>
 	<key>SUAutomaticallyUpdate</key>
-	<true/>
+	<false/>
 	<key>SUScheduledCheckInterval</key>
 	<integer>86400</integer>
 	<!-- Tipos de documento (janela de documento, 2.0): os formatos PRÓPRIOS
-	     são "Owner" (duplo clique abre no Cockpit); markdown e .http ficam
+	     são "Owner" (duplo clique abre no Orkest); markdown e .http ficam
 	     como "Alternate" (aparecem em "Abrir com", sem roubar o padrão de
 	     quem usa Obsidian/Typora). O .notebook é uma PASTA-pacote. -->
 	<key>CFBundleDocumentTypes</key>
 	<array>
 		<dict>
 			<key>CFBundleTypeName</key>
-			<string>Cockpit Kanban Board</string>
+			<string>Orkest Kanban Board</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSHandlerRank</key>
 			<string>Owner</string>
 			<key>LSItemContentTypes</key>
-			<array><string>work.jacobmoura.cockpit.kanban</string></array>
+			<array><string>com.flavioacv.orkestcode.kanban</string></array>
 		</dict>
 		<dict>
 			<key>CFBundleTypeName</key>
-			<string>Cockpit Notebook</string>
+			<string>Orkest Notebook</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSHandlerRank</key>
@@ -84,27 +82,27 @@
 			<key>LSTypeIsPackage</key>
 			<true/>
 			<key>LSItemContentTypes</key>
-			<array><string>work.jacobmoura.cockpit.notebook</string></array>
+			<array><string>com.flavioacv.orkestcode.notebook</string></array>
 		</dict>
 		<dict>
 			<key>CFBundleTypeName</key>
-			<string>Cockpit Pane Layout</string>
+			<string>Orkest Pane Layout</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSHandlerRank</key>
 			<string>Owner</string>
 			<key>LSItemContentTypes</key>
-			<array><string>work.jacobmoura.cockpit.layout</string></array>
+			<array><string>com.flavioacv.orkestcode.layout</string></array>
 		</dict>
 		<dict>
 			<key>CFBundleTypeName</key>
-			<string>Cockpit Database Query</string>
+			<string>Orkest Database Query</string>
 			<key>CFBundleTypeRole</key>
 			<string>Editor</string>
 			<key>LSHandlerRank</key>
 			<string>Owner</string>
 			<key>LSItemContentTypes</key>
-			<array><string>work.jacobmoura.cockpit.dbquery</string></array>
+			<array><string>com.flavioacv.orkestcode.dbquery</string></array>
 		</dict>
 		<dict>
 			<key>CFBundleTypeName</key>
@@ -131,9 +129,9 @@
 	<array>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>work.jacobmoura.cockpit.kanban</string>
+			<string>com.flavioacv.orkestcode.kanban</string>
 			<key>UTTypeDescription</key>
-			<string>Cockpit Kanban Board</string>
+			<string>Orkest Kanban Board</string>
 			<key>UTTypeConformsTo</key>
 			<array><string>net.daringfireball.markdown</string><string>public.plain-text</string></array>
 			<key>UTTypeTagSpecification</key>
@@ -144,9 +142,9 @@
 		</dict>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>work.jacobmoura.cockpit.notebook</string>
+			<string>com.flavioacv.orkestcode.notebook</string>
 			<key>UTTypeDescription</key>
-			<string>Cockpit Notebook</string>
+			<string>Orkest Notebook</string>
 			<key>UTTypeConformsTo</key>
 			<array><string>com.apple.package</string></array>
 			<key>UTTypeTagSpecification</key>
@@ -157,9 +155,9 @@
 		</dict>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>work.jacobmoura.cockpit.layout</string>
+			<string>com.flavioacv.orkestcode.layout</string>
 			<key>UTTypeDescription</key>
-			<string>Cockpit Pane Layout</string>
+			<string>Orkest Pane Layout</string>
 			<key>UTTypeConformsTo</key>
 			<array><string>public.yaml</string><string>public.plain-text</string></array>
 			<key>UTTypeTagSpecification</key>
@@ -170,9 +168,9 @@
 		</dict>
 		<dict>
 			<key>UTTypeIdentifier</key>
-			<string>work.jacobmoura.cockpit.dbquery</string>
+			<string>com.flavioacv.orkestcode.dbquery</string>
 			<key>UTTypeDescription</key>
-			<string>Cockpit Database Query</string>
+			<string>Orkest Database Query</string>
 			<key>UTTypeConformsTo</key>
 			<array><string>public.plain-text</string></array>
 			<key>UTTypeTagSpecification</key>

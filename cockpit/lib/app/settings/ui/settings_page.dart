@@ -3,54 +3,54 @@ import 'dart:io';
 
 // Hosts remotos (plano 58): RemoteHostsController é infra compartilhada (como
 // AutomationController), provida app-scoped no bootstrapper. A aba os gerencia.
-import 'package:cockpit/app/cockpit/data/remote/remote_host_connector.dart'
+import 'package:orkest_code/app/orkest/data/remote/remote_host_connector.dart'
     show RemoteHostPhase;
-import 'package:cockpit/app/cockpit/domain/entities/remote_host.dart';
-import 'package:cockpit/app/cockpit/ui/remote/add_remote_host_dialog.dart';
-import 'package:cockpit/app/cockpit/ui/remote/remote_hosts_controller.dart';
-import 'package:cockpit/app/cockpit/ui/widgets/confirm_dialog.dart';
-import 'package:cockpit/app/core/domain/contracts/terminal_profile_resolver.dart';
-import 'package:cockpit/app/core/domain/entities/setup_check.dart';
-import 'package:cockpit/app/core/domain/entities/terminal_profile.dart';
-import 'package:cockpit/app/core/domain/entities/automation.dart';
-import 'package:cockpit/app/core/domain/services/automation_model_catalog.dart';
-import 'package:cockpit/app/core/ui/automation_controller.dart';
-import 'package:cockpit/app/core/ui/automation_error_message.dart';
-import 'package:cockpit/app/core/ui/widgets/macos_notification_instructions_dialog.dart';
-import 'package:cockpit/app/core/data/diagnostics/diagnostics_log.dart';
-import 'package:cockpit/app/core/ui/widgets/error_report_dialog.dart';
-import 'package:cockpit/app/core/data/lsp/lsp_command.dart';
-import 'package:cockpit/app/core/data/lsp/lsp_launchers.dart';
-import 'package:cockpit/app/core/data/setup/storage_location.dart';
+import 'package:orkest_code/app/orkest/domain/entities/remote_host.dart';
+import 'package:orkest_code/app/orkest/ui/remote/add_remote_host_dialog.dart';
+import 'package:orkest_code/app/orkest/ui/remote/remote_hosts_controller.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/confirm_dialog.dart';
+import 'package:orkest_code/app/core/domain/contracts/terminal_profile_resolver.dart';
+import 'package:orkest_code/app/core/domain/entities/setup_check.dart';
+import 'package:orkest_code/app/core/domain/entities/terminal_profile.dart';
+import 'package:orkest_code/app/core/domain/entities/automation.dart';
+import 'package:orkest_code/app/core/domain/services/automation_model_catalog.dart';
+import 'package:orkest_code/app/core/ui/automation_controller.dart';
+import 'package:orkest_code/app/core/ui/automation_error_message.dart';
+import 'package:orkest_code/app/core/ui/widgets/macos_notification_instructions_dialog.dart';
+import 'package:orkest_code/app/core/data/diagnostics/diagnostics_log.dart';
+import 'package:orkest_code/app/core/ui/widgets/error_report_dialog.dart';
+import 'package:orkest_code/app/core/data/lsp/lsp_command.dart';
+import 'package:orkest_code/app/core/data/lsp/lsp_launchers.dart';
+import 'package:orkest_code/app/core/data/setup/storage_location.dart';
 import 'package:flutter/services.dart';
-import 'package:cockpit/app/core/utils/native_folder_picker.dart';
-import 'package:cockpit/app/core/utils/platform_kind.dart';
-import 'package:cockpit/app/core/domain/entities/app_settings.dart';
-import 'package:cockpit/app/core/terminal/terminal_controller.dart'
+import 'package:orkest_code/app/core/utils/native_folder_picker.dart';
+import 'package:orkest_code/app/core/utils/platform_kind.dart';
+import 'package:orkest_code/app/core/domain/entities/app_settings.dart';
+import 'package:orkest_code/app/core/terminal/terminal_controller.dart'
     show terminalEngineIsSelectable;
-import 'package:cockpit/app/core/ui/widgets/app_menu.dart';
-import 'package:cockpit/app/core/ui/widgets/code_highlight.dart';
-import 'package:cockpit/app/core/ui/widgets/window_controls.dart';
-import 'package:cockpit/app/settings/ui/notifications_viewmodel.dart';
-import 'package:cockpit/app/settings/ui/neovim_settings_viewmodel.dart';
-import 'package:cockpit/app/settings/domain/editor_appearance_policy.dart';
-import 'package:cockpit/app/settings/ui/shortcut_catalog.dart';
-import 'package:cockpit/app/core/ui/settings_controller.dart';
-import 'package:cockpit/app/core/ui/theme_store_error_message.dart';
-import 'package:cockpit/app/core/ui/themes/themes.dart';
-import 'package:cockpit/app/core/domain/entities/sound_event.dart';
+import 'package:orkest_code/app/core/ui/widgets/app_menu.dart';
+import 'package:orkest_code/app/core/ui/widgets/code_highlight.dart';
+import 'package:orkest_code/app/core/ui/widgets/window_controls.dart';
+import 'package:orkest_code/app/settings/ui/notifications_viewmodel.dart';
+import 'package:orkest_code/app/settings/ui/neovim_settings_viewmodel.dart';
+import 'package:orkest_code/app/settings/domain/editor_appearance_policy.dart';
+import 'package:orkest_code/app/settings/ui/shortcut_catalog.dart';
+import 'package:orkest_code/app/core/ui/settings_controller.dart';
+import 'package:orkest_code/app/core/ui/theme_store_error_message.dart';
+import 'package:orkest_code/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/app/core/domain/entities/sound_event.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:media_kit/media_kit.dart' show Media, Player;
 import 'package:path/path.dart' as p;
-import 'package:cockpit/app/core/ui/font_catalog.dart';
-import 'package:cockpit/app/core/ui/widgets/hover_tap.dart';
-import 'package:cockpit/app/settings/ui/font_picker_dialog.dart';
-import 'package:cockpit/i18n/strings.g.dart';
-import 'package:cockpit/app/core/routes.dart';
+import 'package:orkest_code/app/core/ui/font_catalog.dart';
+import 'package:orkest_code/app/core/ui/widgets/hover_tap.dart';
+import 'package:orkest_code/app/settings/ui/font_picker_dialog.dart';
+import 'package:orkest_code/i18n/strings.g.dart';
+import 'package:orkest_code/app/core/routes.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:flutter_svg/flutter_svg.dart';
-import 'package:cockpit/app/core/ui/widgets/app_tooltip.dart';
+import 'package:orkest_code/app/core/ui/widgets/app_tooltip.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 /// Tela cheia de Configurações (push). Categorias à esquerda (Aparência ·
@@ -315,7 +315,7 @@ class _CategoryNav extends StatelessWidget {
   }
 }
 
-/// Rodapé do nav: "Cockpit `version`" no canto inferior esquerdo, pra
+/// Rodapé do nav: "Orkest `version`" no canto inferior esquerdo, pra
 /// identificar visualmente qual build está rodando. A versão vem do
 /// `PackageInfo` (mesma fonte do self-update), carregada de forma assíncrona.
 class _VersionFooter extends StatefulWidget {
@@ -344,7 +344,7 @@ class _VersionFooterState extends State<_VersionFooter> {
       child: Align(
         alignment: Alignment.centerLeft,
         child: Text(
-          _version == null ? 'Cockpit' : 'Cockpit $_version',
+          _version == null ? 'Orkest' : 'Orkest $_version',
           style: context.typo.label.copyWith(color: colors.text4),
         ),
       ),
@@ -418,19 +418,19 @@ class _GeneralPanel extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Cockpit / Updates: motor-local + self-update = desktop.
+              // Orkest / Updates: motor-local + self-update = desktop.
               // No mobile some tudo; sobram Idioma/Storage/Diagnostics.
               if (!isMobilePlatform) ...[
                 _Section(
-                  label: 'Cockpit',
+                  label: 'Orkest',
                   child: _Card(
                     children: [
                       _Row(
-                        title: tr.showCockpitTitle,
-                        description: tr.showCockpitDesc,
+                        title: tr.showOrkestTitle,
+                        description: tr.showOrkestDesc,
                         trailing: Switch(
-                          value: s.showCockpit,
-                          onChanged: controller.setShowCockpit,
+                          value: s.showOrkest,
+                          onChanged: controller.setShowOrkest,
                         ),
                       ),
                       _Row(
@@ -795,7 +795,7 @@ class _HarnessIcon extends StatelessWidget {
 // Storage (General) — pasta de dados escolhível + reset
 // ---------------------------------------------------------------------------
 
-/// Seção "Storage": mostra onde o Cockpit guarda seu estado, deixa o usuário
+/// Seção "Storage": mostra onde o Orkest guarda seu estado, deixa o usuário
 /// apontar pra outra pasta (ex.: um diretório sincronizado) e oferece um reset
 /// de fábrica. Trocar a pasta ou resetar **exige reiniciar** — a UI informa e
 /// oferece fechar o app na hora.
@@ -846,7 +846,7 @@ class _DiagnosticsSection extends StatelessWidget {
   ///
   /// **Windows**: o Explorer só entende `\` — passar `C:/Users/...` faz ele
   /// abrir a pasta Documentos em silêncio, sem erro. Como os caminhos internos
-  /// do Cockpit são montados com `/`, a conversão precisa acontecer aqui, na
+  /// do Orkest são montados com `/`, a conversão precisa acontecer aqui, na
   /// fronteira com o SO. (O Explorer também sai com código != 0 mesmo quando dá
   /// certo, então o exit code é ignorado de propósito.)
   Future<void> _revealFolder(String path) async {
@@ -898,7 +898,7 @@ class _StorageSectionState extends State<_StorageSection> {
     final tr = context.t.settings.page.storage;
     final picked = await NativeFolderPicker.pick(
       dialogTitle: tr.chooseFolderDialogTitle,
-      initialDirectory: _root, // abre na pasta atual do Cockpit
+      initialDirectory: _root, // abre na pasta atual do Orkest
     );
     if (picked == null || !mounted) return;
     setState(() => _busy = true);
@@ -1065,7 +1065,7 @@ class _StorageSectionState extends State<_StorageSection> {
                 DiagnosticsLog.instance.markCleanExit();
                 exit(0);
               },
-              child: Text(tr.quitCockpit),
+              child: Text(tr.quitOrkest),
             ),
           ],
         );
@@ -1221,7 +1221,7 @@ class _FileEditorEngineDropdown extends StatelessWidget {
   Widget build(BuildContext context) {
     final tr = context.t.settings.page.general;
     String label(FileEditorEngine engine) => switch (engine) {
-      FileEditorEngine.cockpit => tr.editorEngineCockpit,
+      FileEditorEngine.orkest => tr.editorEngineOrkest,
       FileEditorEngine.neovim => tr.editorEngineNeovim,
     };
 
@@ -1787,7 +1787,7 @@ class _ThemePreview extends StatelessWidget {
 
   static const String _sample =
       '{\n'
-      '  "name": "cockpit",\n'
+      '  "name": "orkest",\n'
       '  "version": 2,\n'
       '  "active": true,\n'
       '  "tags": ["dev", "ui"]\n'
@@ -1892,7 +1892,7 @@ class _TerminalPreviewLines extends StatelessWidget {
           TextSpan(
             children: [
               span('➜  ', term.green),
-              span('cockpit ', term.blue),
+              span('orkest ', term.blue),
               span('git:', term.brightBlack),
               span('(main) ', term.magenta),
               span('flutter test', term.foreground),
@@ -2037,8 +2037,8 @@ class _RemoteHostsPanel extends StatelessWidget {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Ajuda: a pessoa precisa saber que o host tem que ter o Cockpit
-              // (desktop) ou o cockpit-server instalado + a chave autorizada.
+              // Ajuda: a pessoa precisa saber que o host tem que ter o Orkest
+              // (desktop) ou o orkest-server instalado + a chave autorizada.
               _Section(
                 label: tr.helpTitle,
                 child: _Card(
@@ -2692,14 +2692,14 @@ class _ThemeDropdown extends StatelessWidget {
     final themes = controller.availableThemes;
     final current = themes.firstWhere(
       (t) => t.id == value,
-      orElse: () => cockpitDefaultTheme,
+      orElse: () => orkestDefaultTheme,
     );
     // `availableThemes` já entrega os nativos primeiro; separar aqui mantém
     // essa ordem sendo a única fonte da divisão.
     final builtIn = themes.where((t) => !controller.isCustomTheme(t.id));
     final imported = themes.where((t) => controller.isCustomTheme(t.id));
 
-    AppMenuItem<String> itemFor(CockpitThemeSpec theme, {required bool own}) =>
+    AppMenuItem<String> itemFor(OrkestThemeSpec theme, {required bool own}) =>
         AppMenuItem(
           value: theme.id,
           label: theme.name,
@@ -2973,7 +2973,7 @@ class _SizeStepper extends StatelessWidget {
 /// pré-preenchido com o default do catálogo; o usuário pode sobrescrever (ex.:
 /// caminho custom do binário). Um indicador mostra se o executável está no PATH
 /// — comunica por que uma linguagem mostra erros e outra não, sem prometer
-/// mágica (Cockpit não instala servidores; só usa o que está na máquina).
+/// mágica (Orkest não instala servidores; só usa o que está na máquina).
 class _LanguagesPanel extends StatelessWidget {
   const _LanguagesPanel();
 

@@ -1,7 +1,7 @@
 import 'dart:convert';
 import 'dart:io';
 
-import 'package:cockpit/app/cockpit/data/hooks/codex_hook_installer_impl.dart';
+import 'package:orkest_code/app/orkest/data/hooks/codex_hook_installer_impl.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// Instalador com o passo de materialização da CLI curto-circuitado: os testes
@@ -13,7 +13,7 @@ class _FakeInstaller extends CodexHookInstallerImpl {
   final String command;
 
   @override
-  Future<String?> ensureCli() async => '/fake/cockpit';
+  Future<String?> ensureCli() async => '/fake/orkest';
 
   @override
   Future<String?> resolveHookCommand(String? cliPath) async => command;
@@ -94,18 +94,19 @@ void main() {
   });
 
   group('writeConfig', () {
-    test('instala os sete eventos com trust correspondente', () async {
-      const installer = _FakeInstaller('/bin/cockpit hook');
+    test('instala os nove eventos com trust correspondente', () async {
+      const installer = _FakeInstaller('/bin/orkest hook');
       await installer.writeConfig(
         home: home.path,
-        command: '/bin/cockpit hook',
+        command: '/bin/orkest hook',
       );
 
       final hooks = readHooks()['hooks'] as Map<String, dynamic>;
-      expect(hooks.keys, hasLength(7));
+      expect(hooks.keys, hasLength(9));
       expect(hooks.keys, contains('PermissionRequest'));
-      // Subagente e compactação ficam de fora de propósito.
-      expect(hooks.keys, isNot(contains('SubagentStart')));
+      // Lifecycle de subagentes é incluído; compactação permanece fora.
+      expect(hooks.keys, contains('SubagentStart'));
+      expect(hooks.keys, contains('SubagentStop'));
       expect(hooks.keys, isNot(contains('PreCompact')));
 
       final config = readConfig();
@@ -117,35 +118,37 @@ void main() {
         'stop',
         'session_start',
         'session_end',
+        'subagent_start',
+        'subagent_stop',
       ]) {
         expect(
           config,
           contains('[hooks.state."${codex.path}/hooks.json:$label:0:0"]'),
         );
       }
-      expect('trusted_hash'.allMatches(config).length, 7);
+      expect('trusted_hash'.allMatches(config).length, 9);
     });
 
     test('marca o comando com --harness codex', () async {
       // É o que permite ao app retomar a aba com `codex resume <id>`: o
       // session-id sozinho não diz de que harness veio.
-      const installer = _FakeInstaller('/bin/cockpit hook');
+      const installer = _FakeInstaller('/bin/orkest hook');
       await installer.writeConfig(
         home: home.path,
-        command: '/bin/cockpit hook',
+        command: '/bin/orkest hook',
       );
 
       final stop = ((readHooks()['hooks'] as Map)['Stop'] as List).first as Map;
       final handler = (stop['hooks'] as List).first as Map;
-      expect(handler['command'], '/bin/cockpit hook --harness codex');
+      expect(handler['command'], '/bin/orkest hook --harness codex');
     });
 
     test('re-rodar não duplica entries nem blocos de trust', () async {
-      const installer = _FakeInstaller('/bin/cockpit hook');
+      const installer = _FakeInstaller('/bin/orkest hook');
       for (var i = 0; i < 3; i++) {
         await installer.writeConfig(
           home: home.path,
-          command: '/bin/cockpit hook',
+          command: '/bin/orkest hook',
         );
       }
 
@@ -153,8 +156,8 @@ void main() {
       expect((hooks['Stop'] as List).length, 1);
 
       final config = readConfig();
-      expect('# >>> cockpit hooks'.allMatches(config).length, 1);
-      expect('trusted_hash'.allMatches(config).length, 7);
+      expect('# >>> orkest hooks'.allMatches(config).length, 1);
+      expect('trusted_hash'.allMatches(config).length, 9);
     });
 
     test('preserva hooks de terceiros e reindexa o trust', () async {
@@ -174,10 +177,10 @@ void main() {
         }),
       );
 
-      const installer = _FakeInstaller('/bin/cockpit hook');
+      const installer = _FakeInstaller('/bin/orkest hook');
       await installer.writeConfig(
         home: home.path,
-        command: '/bin/cockpit hook',
+        command: '/bin/orkest hook',
       );
 
       final stop =
@@ -199,23 +202,23 @@ void main() {
             'trust_level = "trusted"\n',
           );
 
-        const installer = _FakeInstaller('/bin/cockpit hook');
+        const installer = _FakeInstaller('/bin/orkest hook');
         await installer.writeConfig(
           home: home.path,
-          command: '/bin/cockpit hook',
+          command: '/bin/orkest hook',
         );
         await installer.writeConfig(
           home: home.path,
-          command: '/bin/cockpit hook',
+          command: '/bin/orkest hook',
         );
 
         final content = config.readAsStringSync();
         expect(content, contains('model = "gpt-5.6"'));
         expect(content, contains('trust_level = "trusted"'));
-        expect('# >>> cockpit hooks'.allMatches(content).length, 1);
+        expect('# >>> orkest hooks'.allMatches(content).length, 1);
         // O que é nosso vem no fim, depois do conteúdo do usuário.
         expect(
-          content.indexOf('# >>> cockpit hooks'),
+          content.indexOf('# >>> orkest hooks'),
           greaterThan(content.indexOf('trust_level')),
         );
       },
@@ -223,22 +226,22 @@ void main() {
 
     test('sem ~/.codex não cria nada (Codex não instalado)', () async {
       await codex.delete(recursive: true);
-      const installer = _FakeInstaller('/bin/cockpit hook');
+      const installer = _FakeInstaller('/bin/orkest hook');
       await installer.writeConfig(
         home: home.path,
-        command: '/bin/cockpit hook',
+        command: '/bin/orkest hook',
       );
       expect(Directory('${home.path}/.codex').existsSync(), isFalse);
     });
 
     test('hooks.json corrompido não impede a instalação', () async {
       File('${codex.path}/hooks.json').writeAsStringSync('{ nao é json');
-      const installer = _FakeInstaller('/bin/cockpit hook');
+      const installer = _FakeInstaller('/bin/orkest hook');
       await installer.writeConfig(
         home: home.path,
-        command: '/bin/cockpit hook',
+        command: '/bin/orkest hook',
       );
-      expect((readHooks()['hooks'] as Map).keys, hasLength(7));
+      expect((readHooks()['hooks'] as Map).keys, hasLength(9));
     });
   });
 }

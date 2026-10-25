@@ -1,4 +1,4 @@
-import 'package:cockpit/app/cockpit/domain/entities/http_document.dart';
+import 'package:orkest_code/app/orkest/domain/entities/http_document.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 const _source = '''

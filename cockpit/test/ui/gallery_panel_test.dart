@@ -1,7 +1,7 @@
-import 'package:cockpit/app/cockpit/domain/entities/gallery_template.dart';
-import 'package:cockpit/app/cockpit/ui/widgets/gallery_panel.dart';
-import 'package:cockpit/app/core/ui/themes/themes.dart';
-import 'package:cockpit/i18n/strings.g.dart';
+import 'package:orkest_code/app/orkest/domain/entities/gallery_template.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/gallery_panel.dart';
+import 'package:orkest_code/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/i18n/strings.g.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 

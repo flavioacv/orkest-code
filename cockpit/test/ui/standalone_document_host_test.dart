@@ -1,9 +1,9 @@
 import 'dart:io';
 
-import 'package:cockpit/app/cockpit/data/filesystem/disk_file_change_watcher.dart';
-import 'package:cockpit/app/cockpit/ui/document/document_windows.dart';
-import 'package:cockpit/app/cockpit/ui/document/standalone_document_host.dart';
-import 'package:cockpit/app/core/domain/result.dart';
+import 'package:orkest_code/app/orkest/data/filesystem/disk_file_change_watcher.dart';
+import 'package:orkest_code/app/orkest/ui/document/document_windows.dart';
+import 'package:orkest_code/app/orkest/ui/document/standalone_document_host.dart';
+import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

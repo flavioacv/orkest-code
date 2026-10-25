@@ -1,10 +1,10 @@
-import 'package:cockpit/app/cockpit/domain/entities/scm_line_decorations.dart';
-import 'package:cockpit/app/cockpit/ui/widgets/code_editor.dart';
-import 'package:cockpit/app/cockpit/ui/widgets/editor_overview_ruler.dart';
-import 'package:cockpit/app/core/domain/entities/lsp_diagnostic.dart';
-import 'package:cockpit/app/core/ui/themes/themes.dart';
-import 'package:cockpit/app/core/ui/widgets/code_editing_controller.dart';
-import 'package:cockpit/app/core/ui/widgets/code_highlight.dart';
+import 'package:orkest_code/app/orkest/domain/entities/scm_line_decorations.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/code_editor.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/editor_overview_ruler.dart';
+import 'package:orkest_code/app/core/domain/entities/lsp_diagnostic.dart';
+import 'package:orkest_code/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/app/core/ui/widgets/code_editing_controller.dart';
+import 'package:orkest_code/app/core/ui/widgets/code_highlight.dart';
 import 'package:flutter/material.dart'
     as m
     show Scrollbar, ScrollbarOrientation;

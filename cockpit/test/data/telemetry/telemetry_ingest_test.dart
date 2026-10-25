@@ -1,11 +1,11 @@
-import 'package:cockpit/app/cockpit/data/telemetry/line_parser/telemetry_line_parser_impl.dart';
-import 'package:cockpit/app/cockpit/data/telemetry/sqlite_telemetry_store.dart';
-import 'package:cockpit/app/cockpit/data/telemetry/telemetry_ingest_impl.dart';
-import 'package:cockpit/app/cockpit/data/telemetry/telemetry_store_registry.dart';
-import 'package:cockpit/app/cockpit/domain/contracts/telemetry_ingest.dart';
-import 'package:cockpit/app/cockpit/domain/contracts/telemetry_store.dart';
-import 'package:cockpit/app/cockpit/domain/entities/task_definition.dart';
-import 'package:cockpit/app/cockpit/domain/entities/telemetry_event.dart';
+import 'package:orkest_code/app/orkest/data/telemetry/line_parser/telemetry_line_parser_impl.dart';
+import 'package:orkest_code/app/orkest/data/telemetry/sqlite_telemetry_store.dart';
+import 'package:orkest_code/app/orkest/data/telemetry/telemetry_ingest_impl.dart';
+import 'package:orkest_code/app/orkest/data/telemetry/telemetry_store_registry.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/telemetry_ingest.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/telemetry_store.dart';
+import 'package:orkest_code/app/orkest/domain/entities/task_definition.dart';
+import 'package:orkest_code/app/orkest/domain/entities/telemetry_event.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {
@@ -74,11 +74,11 @@ void main() {
       ))!;
       expect(opened, ['ws-mono']);
       expect(session.runId, startsWith('r_'));
-      expect(session.childEnvironment['COCKPIT_RUN_ID'], session.runId);
+      expect(session.childEnvironment['ORKEST_RUN_ID'], session.runId);
       expect(session.childEnvironment['OTEL_SERVICE_NAME'], 'app');
       expect(
         session.childEnvironment['OTEL_RESOURCE_ATTRIBUTES'],
-        contains('cockpit.project=app'),
+        contains('orkest.project=app'),
       );
       expect(
         session.childEnvironment.containsKey('OTEL_EXPORTER_OTLP_ENDPOINT'),

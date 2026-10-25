@@ -1,18 +1,18 @@
-import 'package:cockpit/app/core/domain/entities/app_settings.dart';
-import 'package:cockpit/app/core/ui/themes/app_colors.dart';
-import 'package:cockpit/app/core/ui/themes/color_contrast.dart';
-import 'package:cockpit/app/core/ui/themes/app_typography.dart';
-import 'package:cockpit/app/core/terminal/xterm/xterm.dart';
-import 'package:cockpit/app/core/ui/themes/syntax_colors.dart';
-import 'package:cockpit/app/core/ui/themes/theme_registry.dart';
-import 'package:cockpit/app/core/ui/themes/theme_spec.dart';
+import 'package:orkest_code/app/core/domain/entities/app_settings.dart';
+import 'package:orkest_code/app/core/ui/themes/app_colors.dart';
+import 'package:orkest_code/app/core/ui/themes/color_contrast.dart';
+import 'package:orkest_code/app/core/ui/themes/app_typography.dart';
+import 'package:orkest_code/app/core/terminal/xterm/xterm.dart';
+import 'package:orkest_code/app/core/ui/themes/syntax_colors.dart';
+import 'package:orkest_code/app/core/ui/themes/theme_registry.dart';
+import 'package:orkest_code/app/core/ui/themes/theme_spec.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 /// Bundle dos tokens bespoke (cores/tipografia/syntax) calculado para uma
-/// `brightness` + `settings`. Instalado na árvore via `CockpitTheme` (a raiz o
+/// `brightness` + `settings`. Instalado na árvore via `OrkestTheme` (a raiz o
 /// monta no `builder`, já com a brightness efetiva). Consumido por
 /// `context.colors`/`context.typo`/`context.syntax`.
-typedef CockpitTokens = ({
+typedef OrkestTokens = ({
   AppColors colors,
   AppTypography typo,
   SyntaxColors syntax,
@@ -21,12 +21,12 @@ typedef CockpitTokens = ({
 
 /// Calcula os tokens bespoke para [brightness]/[settings], a partir de [theme]
 /// (o tema ativo — built-in ou importado). Sem [theme], usa o tema nativo.
-CockpitTokens buildTokens({
+OrkestTokens buildTokens({
   required Brightness brightness,
   AppSettings settings = const AppSettings(),
-  CockpitThemeSpec? theme,
+  OrkestThemeSpec? theme,
 }) {
-  final variant = (theme ?? cockpitDefaultTheme).variantFor(brightness);
+  final variant = (theme ?? orkestDefaultTheme).variantFor(brightness);
   final typo = AppTypography.build(
     uiFont: settings.interfaceFont,
     monoFont: settings.codeFont,
@@ -44,16 +44,16 @@ CockpitTokens buildTokens({
 /// derivada de [AppColors] — a **mesma** fonte das cores bespoke — então os
 /// componentes shadcn e os widgets custom ficam coerentes. As `settings` entram
 /// só onde o shadcn tem slot equivalente; o resto (fontes/syntax) viaja pelo
-/// `CockpitTheme`.
+/// `OrkestTheme`.
 ThemeData buildTheme({
   required Brightness brightness,
   AppSettings settings = const AppSettings(),
-  CockpitThemeSpec? theme,
+  OrkestThemeSpec? theme,
 }) {
-  final colors = (theme ?? cockpitDefaultTheme).variantFor(brightness).ui;
+  final colors = (theme ?? orkestDefaultTheme).variantFor(brightness).ui;
   // Reaproveita a resolução de fontes do AppTypography (Hanken/JetBrains ou as
   // custom das settings) e extrai só a FAMÍLIA para alimentar a Typography do
-  // shadcn — assim todo componente shadcn herda a tipografia do Cockpit (o
+  // shadcn — assim todo componente shadcn herda a tipografia do Orkest (o
   // ShadcnApp instala `typography.sans` no DefaultTextStyle raiz; os
   // modificadores .h3/.base/etc. só ajustam tamanho/peso e herdam a família).
   final appTypo = AppTypography.build(
@@ -78,7 +78,7 @@ ThemeData buildTheme({
   );
 }
 
-/// Mapeia os 19 tokens do Cockpit nos slots semânticos do `ColorScheme` do
+/// Mapeia os 19 tokens do Orkest nos slots semânticos do `ColorScheme` do
 /// shadcn. Os tokens excedentes (panel2/panel3 extras, text3/text4, border2,
 /// online/edited/warn…) não têm slot aqui e seguem disponíveis via
 /// `context.colors`. `chart1..5` herdam da paleta base (zinc).

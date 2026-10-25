@@ -1,4 +1,4 @@
-import 'package:cockpit/app/core/utils/native_folder_picker.dart';
+import 'package:orkest_code/app/core/utils/native_folder_picker.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 void main() {

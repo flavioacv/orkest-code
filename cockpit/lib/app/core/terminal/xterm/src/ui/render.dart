@@ -3,19 +3,19 @@ import 'dart:ui';
 
 import 'package:flutter/rendering.dart';
 import 'package:flutter/widgets.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/core/buffer/cell_offset.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/core/buffer/range.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/core/buffer/segment.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/core/mouse/button.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/core/mouse/button_state.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/terminal.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/ui/controller.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/ui/cursor_type.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/ui/painter.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/ui/selection_mode.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/ui/terminal_size.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/ui/terminal_text_style.dart';
-import 'package:cockpit/app/core/terminal/xterm/src/ui/terminal_theme.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/core/buffer/cell_offset.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/core/buffer/range.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/core/buffer/segment.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/core/mouse/button.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/core/mouse/button_state.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/terminal.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/ui/controller.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/ui/cursor_type.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/ui/painter.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/ui/selection_mode.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/ui/terminal_size.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/ui/terminal_text_style.dart';
+import 'package:orkest_code/app/core/terminal/xterm/src/ui/terminal_theme.dart';
 
 typedef EditableRectCallback = void Function(Rect rect, Rect caretRect);
 

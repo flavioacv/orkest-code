@@ -1,6 +1,6 @@
 # Binário X86_64
 
-O Cockpit.app é uma versão para a arquitetura x86_64, compilado a partir de um hardware Intel.
+O Orkest.app é uma versão para a arquitetura x86_64, compilado a partir de um hardware Intel.
 
 Processador: Intel(R) Core(TM) i7-14700K
 Placa de vídeo: AMD Radeon RX 6800 XT 16GB
@@ -13,17 +13,17 @@ Engine • hash 04efd7c093d4e9281d5526ebcad6ecc60ba8badf (revision 77e2e94772) (
 months ago) • 2026-06-10 19:59:06.000Z
 Tools • Dart 3.12.2 • DevTools 2.57.0
 
-Download [Cockpit.app](https://drive.google.com/drive/folders/14-dNbEAlk3LvVPS2tzT3tcsk02J8qpXJ?usp=sharing)
+Download [Orkest.app](https://drive.google.com/drive/folders/14-dNbEAlk3LvVPS2tzT3tcsk02J8qpXJ?usp=sharing)
 https://drive.google.com/drive/folders/14-dNbEAlk3LvVPS2tzT3tcsk02J8qpXJ?usp=sharing
 
 [Video Testando Compilação](https://drive.google.com/file/d/1ofxiLO84ZQu3fN4-7iXUMdU9j5fsC2Xb/view?usp=sharing)
 https://drive.google.com/file/d/1ofxiLO84ZQu3fN4-7iXUMdU9j5fsC2Xb/view?usp=sharing
 
-Precisei executar os comandos abaixo após a compilação para conseguir executar o Cockpit.app sem a assinatura oficial, sem esses passos o app dava crash:
+Precisei executar os comandos abaixo após a compilação para conseguir executar o Orkest.app sem a assinatura oficial, sem esses passos o app dava crash:
 
 ```bash
 # Seta path do arquivo à variável APP
-APP="build/macos/Build/Products/Release/Cockpit.app"
+APP="build/macos/Build/Products/Release/Orkest.app"
 # Seta path do mktemp à variável ENT
 ENT="$(mktemp)"
 # Copia o arquivo Release.entitlements para a variável ENT

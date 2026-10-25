@@ -1,5 +1,5 @@
-import 'package:cockpit/app/core/domain/exceptions/file_operation_error.dart';
-import 'package:cockpit/i18n/strings.g.dart';
+import 'package:orkest_code/app/core/domain/exceptions/file_operation_error.dart';
+import 'package:orkest_code/i18n/strings.g.dart';
 import 'package:flutter/widgets.dart';
 
 /// Traduz um [FileOperationError] para a frase mostrada ao usuário.

@@ -1,8 +1,8 @@
-import 'package:cockpit/app/cockpit/domain/entities/file_view.dart';
-import 'package:cockpit/app/cockpit/ui/actions/tab_actions.dart';
-import 'package:cockpit/app/cockpit/ui/session/file_viewer_session.dart';
-import 'package:cockpit/app/core/ui/themes/themes.dart';
-import 'package:cockpit/i18n/strings.g.dart';
+import 'package:orkest_code/app/orkest/domain/entities/file_view.dart';
+import 'package:orkest_code/app/orkest/ui/actions/tab_actions.dart';
+import 'package:orkest_code/app/orkest/ui/session/file_viewer_session.dart';
+import 'package:orkest_code/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/i18n/strings.g.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
@@ -66,7 +66,7 @@ void main() {
     expect(closed, 0, reason: 'não pode fechar antes da resposta');
 
     // "Descartar" fecha sem salvar.
-    await tester.tap(find.text(ctx.t.cockpit.confirmDialog.dontSave));
+    await tester.tap(find.text(ctx.t.orkest.confirmDialog.dontSave));
     await tester.pumpAndSettle();
 
     expect(await pending, isTrue);

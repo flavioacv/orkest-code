@@ -1,18 +1,19 @@
+import 'package:orkest_code/app/core/brand/app_identity.dart';
 import 'dart:io' show Platform;
 
-import 'package:cockpit/app/core/domain/entities/app_settings.dart';
-import 'package:cockpit/app/core/ui/menu/app_menu_bar.dart';
-import 'package:cockpit/app/core/ui/menu/editor_menu_bridge.dart';
-import 'package:cockpit/app/core/ui/menu/menu_model.dart';
-import 'package:cockpit/app/core/ui/menu/workspace_menu_bridge.dart';
-import 'package:cockpit/app/core/ui/app_zoom.dart';
-import 'package:cockpit/app/core/ui/clamping_scroll_behavior.dart';
-import 'package:cockpit/app/core/ui/widgets/devtools_inspector.dart';
-import 'package:cockpit/app/core/ui/overlay/app_popover_handler.dart';
-import 'package:cockpit/app/core/ui/settings_controller.dart';
-import 'package:cockpit/app/core/ui/themes/themes.dart';
-import 'package:cockpit/app/core/utils/platform_kind.dart';
-import 'package:cockpit/i18n/strings.g.dart';
+import 'package:orkest_code/app/core/domain/entities/app_settings.dart';
+import 'package:orkest_code/app/core/ui/menu/app_menu_bar.dart';
+import 'package:orkest_code/app/core/ui/menu/editor_menu_bridge.dart';
+import 'package:orkest_code/app/core/ui/menu/menu_model.dart';
+import 'package:orkest_code/app/core/ui/menu/workspace_menu_bridge.dart';
+import 'package:orkest_code/app/core/ui/app_zoom.dart';
+import 'package:orkest_code/app/core/ui/clamping_scroll_behavior.dart';
+import 'package:orkest_code/app/core/ui/widgets/devtools_inspector.dart';
+import 'package:orkest_code/app/core/ui/overlay/app_popover_handler.dart';
+import 'package:orkest_code/app/core/ui/settings_controller.dart';
+import 'package:orkest_code/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/app/core/utils/platform_kind.dart';
+import 'package:orkest_code/i18n/strings.g.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
@@ -41,7 +42,7 @@ class AppRoot extends StatelessWidget {
     final workspace = context.watch<WorkspaceMenuBridge>();
     final menus = buildAppMenus(context.t, controller, editor, workspace);
     final app = ShadcnApp.router(
-      title: 'Cockpit',
+      title: AppIdentity.name,
       debugShowCheckedModeBanner: false,
       // Todos os overlays ancorados (popover/menu/tooltip) passam pelo nosso
       // handler: o do shadcn mede a âncora no espaço da JANELA e insere o
@@ -66,7 +67,7 @@ class AppRoot extends StatelessWidget {
       routerConfig: ModularApp.routerConfigOf(context),
       builder: (context, child) {
         // Brightness efetiva (já resolvida pelo ShadcnApp via themeMode): monta os
-        // tokens bespoke e os instala via CockpitTheme — alimenta
+        // tokens bespoke e os instala via OrkestTheme — alimenta
         // context.colors/typo/syntax em toda a árvore de rotas.
         final tokens = buildTokens(
           brightness: Theme.of(context).brightness,
@@ -91,7 +92,7 @@ class AppRoot extends StatelessWidget {
           cursorColor: tokens.colors.accent,
           child: AppZoom(
             scale: uiScale,
-            child: CockpitTheme(
+            child: OrkestTheme(
               colors: tokens.colors,
               typo: tokens.typo,
               syntax: tokens.syntax,

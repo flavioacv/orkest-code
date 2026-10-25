@@ -1,0 +1,12 @@
+[Desktop Entry]
+Type=Application
+Name=Orkest Code
+GenericName=Orkest Code
+Comment=Orkest Code — orchestrate AI agents with terminals and an interactive Office
+Exec=orkest %F
+Icon=com.flavioacv.orkestcode
+Terminal=false
+Categories=Development;IDE;
+StartupWMClass=com.flavioacv.orkestcode
+Keywords=pi;remote-pi;agent;orkest;
+MimeType=application/x-orkest-kanban;application/x-orkest-layout;application/x-orkest-dbq;application/x-orkest-http;text/markdown;
