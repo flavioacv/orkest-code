@@ -1,3 +1,21 @@
+# Changelog — Orkest Code
+
+## 0.1.1 (build 2) — 2026-10-24
+
+- CLI 0.7.1r diferencia bloqueio de socket por sandbox de app desconectado.
+- Skills ensinam descoberta por caminho absoluto e uso sem variáveis herdadas.
+- Pedidos de agentes em terminais Orkest não devem virar colaboração interna silenciosamente.
+- Orientação para aprovação pontual de execução, sem alterar configurações globais.
+- Diagnóstico validado no aplicativo instalado; 78 testes do CLI passaram.
+
+## 0.1.0 (build 1) — 2026-10-24
+
+- Primeira prévia independente: marca Orkest Code, CLI orkest, namespace e dados próprios.
+- Office interativo, marca de fita azul/violeta e DMG privado para Apple Silicon.
+- Atualizações originais desativadas; licenças e atribuições preservadas.
+
+## Histórico da base Cockpit / Remote Pi
+
 # Changelog — Remote Pi Cockpit
 
 Formato baseado em [Keep a Changelog](https://keepachangelog.com/pt-BR/1.1.0/).
