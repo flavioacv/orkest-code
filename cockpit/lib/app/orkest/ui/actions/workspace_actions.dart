@@ -149,6 +149,35 @@ Future<void> pushProject(
   title: (label) => context.t.orkest.orkestPage.pushTitle(label: label),
 );
 
+/// Fetch (all remotes) do workspace, com a saída ao vivo num dialog.
+Future<void> fetchProject(
+  BuildContext context,
+  Project project,
+  String rootPath,
+) => _gitOpDialog(
+  context,
+  project,
+  rootPath,
+  run: (vm) => vm.gitFetch(rootPath),
+  title: (label) => context.t.orkest.branchPicker.fetchTitle(label: label),
+);
+
+/// Executa uma operação Git avançada que já recebeu argumentos estruturados da
+/// interface (nunca uma linha de shell).
+Future<void> runGitProject(
+  BuildContext context,
+  Project project,
+  String rootPath,
+  List<String> args,
+  String title,
+) => _gitOpDialog(
+  context,
+  project,
+  rootPath,
+  run: (vm) => vm.git.run(rootPath, args),
+  title: (label) => '$title — $label',
+);
+
 /// Forma comum de sync/pull/push: roda o comando, mostra a saída ao vivo e
 /// re-lê o estado git do workspace no fim.
 Future<void> _gitOpDialog(

@@ -753,6 +753,29 @@ class _Translations$orkest$fileTreePanel$es extends Translations$orkest$fileTree
 	@override String get historyFiles => 'Archivos modificados';
 	@override String get historyFilesEmpty => 'No hay archivos modificados.';
 	@override String get historyFilesLoadFailed => 'No se pudieron cargar los archivos modificados.';
+	@override String get historyCopyHash => 'Copiar hash del commit';
+	@override String get historyRevertCommit => 'Revertir commit';
+	@override String get historyUndoLastCommit => 'Deshacer último commit';
+	@override String historyRevertConfirm({required Object hash}) => '¿Revertir el commit ${hash}? Git creará un nuevo commit que deshace sus cambios.';
+	@override String historyUndoConfirm({required Object hash}) => '¿Deshacer el commit ${hash}? Sus cambios permanecerán en el directorio de trabajo.';
+	@override String get historyGitActionFailed => 'No se pudo completar la operación Git.';
+	@override String get pullPushMenu => 'Pull, Push';
+	@override String get branchMenu => 'Rama';
+	@override String get mergeBranch => 'Fusionar rama…';
+	@override String get rebaseBranch => 'Rebase de rama…';
+	@override String get renameBranch => 'Renombrar rama…';
+	@override String get deleteBranch => 'Eliminar rama…';
+	@override String get publishBranch => 'Publicar rama';
+	@override String get stashMenu => 'Stash';
+	@override String get stashChanges => 'Guardar cambios…';
+	@override String get stashPop => 'Aplicar último stash';
+	@override String get tagsMenu => 'Etiquetas';
+	@override String get createTag => 'Crear etiqueta…';
+	@override String get deleteTag => 'Eliminar etiqueta…';
+	@override String get branchReferencePlaceholder => 'Rama o referencia';
+	@override String get branchNamePlaceholder => 'Nuevo nombre de rama';
+	@override String get stashMessagePlaceholder => 'Mensaje (opcional)';
+	@override String get tagNamePlaceholder => 'Nombre de etiqueta';
 	@override String get diffEmptyTree => 'Arbol vacio';
 	@override String diffOriginal({required Object ref}) => 'Original ${ref}';
 	@override String diffModified({required Object ref}) => 'Modificado ${ref}';
@@ -2478,6 +2501,29 @@ extension on TranslationsEs {
 			'orkest.fileTreePanel.historyFiles' => 'Archivos modificados',
 			'orkest.fileTreePanel.historyFilesEmpty' => 'No hay archivos modificados.',
 			'orkest.fileTreePanel.historyFilesLoadFailed' => 'No se pudieron cargar los archivos modificados.',
+			'orkest.fileTreePanel.historyCopyHash' => 'Copiar hash del commit',
+			'orkest.fileTreePanel.historyRevertCommit' => 'Revertir commit',
+			'orkest.fileTreePanel.historyUndoLastCommit' => 'Deshacer último commit',
+			'orkest.fileTreePanel.historyRevertConfirm' => ({required Object hash}) => '¿Revertir el commit ${hash}? Git creará un nuevo commit que deshace sus cambios.',
+			'orkest.fileTreePanel.historyUndoConfirm' => ({required Object hash}) => '¿Deshacer el commit ${hash}? Sus cambios permanecerán en el directorio de trabajo.',
+			'orkest.fileTreePanel.historyGitActionFailed' => 'No se pudo completar la operación Git.',
+			'orkest.fileTreePanel.pullPushMenu' => 'Pull, Push',
+			'orkest.fileTreePanel.branchMenu' => 'Rama',
+			'orkest.fileTreePanel.mergeBranch' => 'Fusionar rama…',
+			'orkest.fileTreePanel.rebaseBranch' => 'Rebase de rama…',
+			'orkest.fileTreePanel.renameBranch' => 'Renombrar rama…',
+			'orkest.fileTreePanel.deleteBranch' => 'Eliminar rama…',
+			'orkest.fileTreePanel.publishBranch' => 'Publicar rama',
+			'orkest.fileTreePanel.stashMenu' => 'Stash',
+			'orkest.fileTreePanel.stashChanges' => 'Guardar cambios…',
+			'orkest.fileTreePanel.stashPop' => 'Aplicar último stash',
+			'orkest.fileTreePanel.tagsMenu' => 'Etiquetas',
+			'orkest.fileTreePanel.createTag' => 'Crear etiqueta…',
+			'orkest.fileTreePanel.deleteTag' => 'Eliminar etiqueta…',
+			'orkest.fileTreePanel.branchReferencePlaceholder' => 'Rama o referencia',
+			'orkest.fileTreePanel.branchNamePlaceholder' => 'Nuevo nombre de rama',
+			'orkest.fileTreePanel.stashMessagePlaceholder' => 'Mensaje (opcional)',
+			'orkest.fileTreePanel.tagNamePlaceholder' => 'Nombre de etiqueta',
 			'orkest.fileTreePanel.diffEmptyTree' => 'Arbol vacio',
 			'orkest.fileTreePanel.diffOriginal' => ({required Object ref}) => 'Original ${ref}',
 			'orkest.fileTreePanel.diffModified' => ({required Object ref}) => 'Modificado ${ref}',
@@ -2539,6 +2585,8 @@ extension on TranslationsEs {
 			'orkest.dbRedisTable.searchHint' => 'Buscar — patrón, ej.: user:*',
 			'orkest.dbQueryView.saveQueryAs' => 'Guardar query como',
 			'orkest.dbQueryView.couldNotSave' => 'No se pudo guardar',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.dbQueryView.selectDatabase' => 'Seleccionar base de datos',
 			'orkest.dbQueryView.noSqlConnections' => 'Sin conexiones SQL',
 			'orkest.dbQueryView.running' => 'Ejecutando…',
@@ -2562,8 +2610,6 @@ extension on TranslationsEs {
 			'orkest.httpView.running' => 'Ejecutando…',
 			'orkest.httpView.noRequests' => 'Ningún request en este archivo — escribe uno, p. ej.: GET https://example.com',
 			'orkest.httpView.selectRequest' => 'Seleccionar request',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.httpView.requestCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 request', other: '${n} requests', ), 
 			'orkest.httpView.runHint' => 'Ejecuta el request (⌘↵) para ver la respuesta aquí.',
 			'orkest.httpView.emptyBody' => 'Cuerpo de la respuesta vacío.',
@@ -3053,6 +3099,8 @@ extension on TranslationsEs {
 			'settings.page.appearance.terminalFontDesc' => 'Solo la terminal. Vacío = predeterminado del sistema.',
 			'settings.page.appearance.terminalSizeTitle' => 'Tamaño de la terminal',
 			'settings.page.appearance.terminalSizeDesc' => 'Apagado = sigue el tamaño del código.',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.appearance.terminalSizeInherit' => 'Seguir el código',
 			'settings.page.appearance.terminalWeightTitle' => 'Grosor de la terminal',
 			'settings.page.appearance.terminalWeightDesc' => 'Las pantallas de baja densidad engrosan los trazos. El automático los afina solo ahí y no toca la Retina.',
@@ -3076,8 +3124,6 @@ extension on TranslationsEs {
 			'settings.page.appearance.fontPickerSearch' => 'Buscar fuentes',
 			'settings.page.appearance.fontPickerEmpty' => 'No hay ninguna fuente coincidente en esta máquina.',
 			'settings.page.appearance.fontPickerBundled' => 'incluida',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.appearance.fontPickerCustom' => '¿No está en la lista? Escribe el nombre exacto de la familia.',
 			'settings.page.appearance.fontPickerCustomHint' => 'Nombre de la familia',
 			'settings.page.appearance.fontPickerUse' => 'Usar',

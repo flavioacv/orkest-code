@@ -11,6 +11,7 @@ import 'package:orkest_code/app/orkest/domain/entities/git_info.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/commit_message_dialog.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/confirm_dialog.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/git_history_panel.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/git_text_input_dialog.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/panel_resize_handle.dart';
 import 'package:orkest_code/app/core/domain/entities/app_settings.dart';
 import 'package:orkest_code/app/core/domain/entities/automation.dart';
@@ -138,6 +139,11 @@ class FileTreePanel extends StatefulWidget {
     this.onLoadGitHistory,
     this.onLoadGitHistoryFiles,
     this.onOpenGitHistoryDiff,
+    this.onRevertGitCommit,
+    this.onUndoLastGitCommit,
+    this.onGitAction,
+    this.onCheckoutBranch,
+    this.onGitCommand,
     this.gitHistoryRevision = 0,
     this.onUnstageFile,
     this.onUnstageFiles,
@@ -172,7 +178,7 @@ class FileTreePanel extends StatefulWidget {
   final Future<List<GitCommit>> Function()? onLoadCommits;
   final Future<String?> Function(String hash)? onLoadCommitMessage;
 
-  /// Historico read-only de uma root. Mantem o contrato separado de
+  /// Histórico de uma root. Mantém o contrato separado de
   /// [GitCommit], que e exclusivo do fluxo de amend.
   final Future<Result<List<GitHistoryCommit>, GitHistoryError>> Function(
     String root,
@@ -189,6 +195,20 @@ class FileTreePanel extends StatefulWidget {
     GitHistoryFileChange change,
   )?
   onOpenGitHistoryDiff;
+  final Future<Result<void, GitHistoryError>> Function(
+    String root,
+    String hash,
+  )?
+  onRevertGitCommit;
+  final Future<Result<void, GitHistoryError>> Function(
+    String root,
+    String hash,
+  )?
+  onUndoLastGitCommit;
+  final Future<void> Function(String root, String action)? onGitAction;
+  final Future<void> Function(String root)? onCheckoutBranch;
+  final Future<void> Function(String root, List<String> args, String title)?
+  onGitCommand;
   final int gitHistoryRevision;
 
   /// Source Control: gera uma mensagem a partir do diff isolado do arquivo.
@@ -729,6 +749,297 @@ class _FileTreePanelState extends State<FileTreePanel> {
       _committing = false;
       _commitError = error;
       if (error == null) _commitMessage.clear();
+    });
+  }
+
+  Future<void> _showSourceControlMenu(BuildContext context) async {
+    final tr = context.t.orkest.fileTreePanel;
+    final gitRoots = widget.roots.where((root) => root.git != null).toList();
+    AppMenuItem<String> rootAction(String action, String label, IconData icon) {
+      if (gitRoots.length == 1) {
+        return AppMenuItem(
+          value: '$action|${gitRoots.single.path}',
+          label: label,
+          icon: icon,
+        );
+      }
+      return AppMenuItem(
+        value: action,
+        label: label,
+        icon: icon,
+        children: [
+          for (final root in gitRoots)
+            AppMenuItem(
+              value: '$action|${root.path}',
+              label: root.name,
+              icon: Icons.folder_outlined,
+            ),
+        ],
+      );
+    }
+
+    final choice = await showAppMenu<String>(
+      context,
+      items: [
+        if (widget.onCommitStaged != null)
+          AppMenuItem(value: 'commit', label: tr.commit, icon: Icons.check),
+        if (widget.unstagedPaths.isNotEmpty || widget.stagedPaths.isNotEmpty)
+          AppMenuItem(
+            value: 'changes',
+            label: tr.changes,
+            icon: Icons.edit_note_outlined,
+            children: [
+              if (widget.unstagedPaths.isNotEmpty)
+                AppMenuItem(
+                  value: 'stage-all',
+                  label: tr.stageAllChanges,
+                  icon: Icons.add,
+                ),
+              if (widget.stagedPaths.isNotEmpty)
+                AppMenuItem(
+                  value: 'unstage-all',
+                  label: tr.unstageAllChanges,
+                  icon: Icons.remove,
+                ),
+              if (widget.unstagedPaths.isNotEmpty &&
+                  widget.onDiscardFile != null)
+                AppMenuItem(
+                  value: 'discard-all',
+                  label: tr.discardAllChanges,
+                  icon: Icons.undo,
+                  danger: true,
+                ),
+            ],
+          ),
+        if (gitRoots.isNotEmpty && widget.onGitAction != null)
+          if (gitRoots.length == 1)
+            AppMenuItem(
+              value: 'pull-push',
+              label: tr.pullPushMenu,
+              icon: Icons.sync,
+              children: [
+                rootAction(
+                  'sync',
+                  context.t.orkest.projectsRail.sync,
+                  Icons.sync,
+                ),
+                rootAction(
+                  'pull',
+                  context.t.orkest.projectsRail.pull,
+                  Icons.arrow_downward,
+                ),
+                rootAction(
+                  'push',
+                  context.t.orkest.projectsRail.push,
+                  Icons.arrow_upward,
+                ),
+                rootAction(
+                  'fetch',
+                  context.t.orkest.branchPicker.fetch,
+                  Icons.cloud_download_outlined,
+                ),
+              ],
+            )
+          else ...[
+            rootAction('sync', context.t.orkest.projectsRail.sync, Icons.sync),
+            rootAction(
+              'pull',
+              context.t.orkest.projectsRail.pull,
+              Icons.arrow_downward,
+            ),
+            rootAction(
+              'push',
+              context.t.orkest.projectsRail.push,
+              Icons.arrow_upward,
+            ),
+            rootAction(
+              'fetch',
+              context.t.orkest.branchPicker.fetch,
+              Icons.cloud_download_outlined,
+            ),
+          ],
+        if (gitRoots.isNotEmpty && widget.onCheckoutBranch != null)
+          rootAction(
+            'checkout',
+            context.t.orkest.branchPicker.title,
+            Icons.account_tree_outlined,
+          ),
+        if (gitRoots.isNotEmpty && widget.onGitCommand != null) ...[
+          AppMenuItem(
+            value: 'branch',
+            label: tr.branchMenu,
+            icon: Icons.account_tree_outlined,
+            children: [
+              rootAction('merge', tr.mergeBranch, Icons.call_merge),
+              rootAction(
+                'rebase',
+                tr.rebaseBranch,
+                Icons.account_tree_outlined,
+              ),
+              rootAction('rename-branch', tr.renameBranch, Icons.edit_outlined),
+              rootAction(
+                'delete-branch',
+                tr.deleteBranch,
+                Icons.delete_outline,
+              ),
+              rootAction(
+                'publish-branch',
+                tr.publishBranch,
+                Icons.publish_outlined,
+              ),
+            ],
+          ),
+          AppMenuItem(
+            value: 'stash',
+            label: tr.stashMenu,
+            icon: Icons.inventory_2_outlined,
+            children: [
+              rootAction('stash-push', tr.stashChanges, Icons.archive_outlined),
+              rootAction('stash-pop', tr.stashPop, Icons.unarchive_outlined),
+            ],
+          ),
+          AppMenuItem(
+            value: 'tags',
+            label: tr.tagsMenu,
+            icon: Icons.sell_outlined,
+            children: [
+              rootAction('tag-create', tr.createTag, Icons.add),
+              rootAction('tag-delete', tr.deleteTag, Icons.delete_outline),
+            ],
+          ),
+        ],
+        AppMenuItem(value: 'history', label: tr.history, icon: Icons.history),
+      ],
+    );
+    if (!mounted || !context.mounted || choice == null) return;
+    final separator = choice.indexOf('|');
+    if (separator > 0) {
+      final action = choice.substring(0, separator);
+      final root = choice.substring(separator + 1);
+      if (action == 'checkout') {
+        await widget.onCheckoutBranch?.call(root);
+      } else if (widget.onGitCommand != null &&
+          {
+            'merge',
+            'rebase',
+            'rename-branch',
+            'delete-branch',
+            'publish-branch',
+            'stash-push',
+            'stash-pop',
+            'tag-create',
+            'tag-delete',
+          }.contains(action)) {
+        await _runAdvancedGitAction(context, root, action);
+      } else {
+        await widget.onGitAction?.call(root, action);
+      }
+      return;
+    }
+    switch (choice) {
+      case 'commit':
+        setState(() => _sourceControlView = _SourceControlView.changes);
+        await _commitStaged();
+      case 'stage-all':
+        await _toggleStageAll(widget.unstagedPaths, false);
+      case 'unstage-all':
+        await _toggleStageAll(widget.stagedPaths, true);
+      case 'discard-all':
+        await _discardAll(widget.unstagedPaths);
+      case 'history':
+        setState(() => _sourceControlView = _SourceControlView.history);
+    }
+  }
+
+  Future<void> _runAdvancedGitAction(
+    BuildContext context,
+    String root,
+    String action,
+  ) async {
+    final tr = context.t.orkest.fileTreePanel;
+    final prompt = switch (action) {
+      'merge' => (
+        tr.mergeBranch,
+        tr.branchReferencePlaceholder,
+        tr.mergeBranch,
+        false,
+      ),
+      'rebase' => (
+        tr.rebaseBranch,
+        tr.branchReferencePlaceholder,
+        tr.rebaseBranch,
+        false,
+      ),
+      'rename-branch' => (
+        tr.renameBranch,
+        tr.branchNamePlaceholder,
+        tr.renameBranch,
+        false,
+      ),
+      'delete-branch' => (
+        tr.deleteBranch,
+        tr.branchReferencePlaceholder,
+        tr.deleteBranch,
+        false,
+      ),
+      'stash-push' => (
+        tr.stashChanges,
+        tr.stashMessagePlaceholder,
+        tr.stashChanges,
+        true,
+      ),
+      'tag-create' => (
+        tr.createTag,
+        tr.tagNamePlaceholder,
+        tr.createTag,
+        false,
+      ),
+      'tag-delete' => (
+        tr.deleteTag,
+        tr.tagNamePlaceholder,
+        tr.deleteTag,
+        false,
+      ),
+      _ => null,
+    };
+    final input = prompt == null
+        ? ''
+        : await showGitTextInputDialog(
+            context,
+            title: prompt.$1,
+            placeholder: prompt.$2,
+            confirmLabel: prompt.$3,
+            allowEmpty: prompt.$4,
+          );
+    if (!mounted || input == null) return;
+    final args = switch (action) {
+      'merge' => ['merge', input],
+      'rebase' => ['rebase', input],
+      'rename-branch' => ['branch', '-m', input],
+      'delete-branch' => ['branch', '-d', input],
+      'publish-branch' => ['push', '-u', 'origin', 'HEAD'],
+      'stash-push' => [
+        'stash',
+        'push',
+        if (input.isNotEmpty) ...['-m', input],
+      ],
+      'stash-pop' => ['stash', 'pop'],
+      'tag-create' => ['tag', input],
+      'tag-delete' => ['tag', '-d', input],
+      _ => const <String>[],
+    };
+    if (args.isEmpty) return;
+    await widget.onGitCommand!(root, args, switch (action) {
+      'merge' => tr.mergeBranch,
+      'rebase' => tr.rebaseBranch,
+      'rename-branch' => tr.renameBranch,
+      'delete-branch' => tr.deleteBranch,
+      'publish-branch' => tr.publishBranch,
+      'stash-push' => tr.stashChanges,
+      'stash-pop' => tr.stashPop,
+      'tag-create' => tr.createTag,
+      'tag-delete' => tr.deleteTag,
+      _ => '',
     });
   }
 
@@ -1279,6 +1590,15 @@ class _FileTreePanelState extends State<FileTreePanel> {
             _PanelHeader(
               title: context.t.orkest.fileTreePanel.sectionSourceControl,
               actions: [
+                Builder(
+                  builder: (menuContext) => _PanelHeaderAction(
+                    key: const ValueKey('source-control-menu'),
+                    icon: Icons.more_horiz,
+                    tooltip:
+                        context.t.orkest.fileTreePanel.sectionSourceControl,
+                    onTap: () => _showSourceControlMenu(menuContext),
+                  ),
+                ),
                 _PanelHeaderAction(
                   key: const ValueKey('source-control-changes-tab'),
                   icon: Icons.edit_note_outlined,
@@ -1335,6 +1655,8 @@ class _FileTreePanelState extends State<FileTreePanel> {
                               (_, _) async => const Success([]),
                           onOpenFileDiff:
                               widget.onOpenGitHistoryDiff ?? (_, _, _) async {},
+                          onRevertCommit: widget.onRevertGitCommit,
+                          onUndoLastCommit: widget.onUndoLastGitCommit,
                           refreshToken: widget.gitHistoryRevision,
                         )
                       : _ChangedTree(

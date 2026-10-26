@@ -202,6 +202,14 @@ Future<void> handleRemoteWorkspaceAction(
         title: page.pushTitle(label: label),
         root: root,
       );
+    case 'fetch':
+      await _runRemoteGitDialog(
+        context,
+        wsId,
+        const ['fetch', '--all', '--prune'],
+        title: context.t.orkest.branchPicker.fetchTitle(label: label),
+        root: root,
+      );
     case 'sync':
       // pull e, se OK, push — mesma semântica do sync local, num só dialog.
       await _runRemoteGitDialog(
@@ -220,6 +228,15 @@ Future<void> handleRemoteWorkspaceAction(
       await vm.removeRemoteWorkspace(wsId);
   }
 }
+
+/// Executa no host remoto uma operação Git que já foi estruturada pela UI.
+Future<void> runRemoteGitCommand(
+  BuildContext context,
+  String workspaceId,
+  String root,
+  List<String> args,
+  String title,
+) => _runRemoteGitDialog(context, workspaceId, args, title: title, root: root);
 
 /// "Create worktree" de um workspace remoto: mesmo dialog do local, mas o
 /// `git worktree add` roda no host.

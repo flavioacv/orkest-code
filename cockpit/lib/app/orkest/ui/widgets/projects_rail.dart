@@ -81,6 +81,7 @@ class ProjectsRail extends StatefulWidget {
     required this.onSync,
     required this.onPull,
     required this.onPush,
+    this.onFetch,
     required this.onOpenSettings,
     required this.onReorder,
     required this.realms,
@@ -194,6 +195,7 @@ class ProjectsRail extends StatefulWidget {
   final void Function(Project project, String rootPath) onSync;
   final void Function(Project project, String rootPath) onPull;
   final void Function(Project project, String rootPath) onPush;
+  final void Function(Project project, String rootPath)? onFetch;
 
   /// Abre a tela de Configurações (engrenagem no rodapé).
   final VoidCallback onOpenSettings;
@@ -347,6 +349,9 @@ class _ProjectsRailState extends State<ProjectsRail> {
             onSync: (r) => widget.onSync(project, r),
             onPull: (r) => widget.onPull(project, r),
             onPush: (r) => widget.onPush(project, r),
+            onFetch: widget.onFetch == null
+                ? null
+                : (r) => widget.onFetch!(project, r),
             moveTargetsOf: () => widget.moveTargetsOf(id),
             onMoveToRealm: (realmId) => widget.onMoveToRealm(id, realmId),
           ),
@@ -860,6 +865,12 @@ class _RemoteSlot extends StatelessWidget {
       items: [
         if (hasGit) ...[
           gitMenuItem(roots, 'sync', tr.sync, Icons.sync),
+          gitMenuItem(
+            roots,
+            'fetch',
+            context.t.orkest.branchPicker.fetch,
+            Icons.cloud_download_outlined,
+          ),
           gitMenuItem(roots, 'pull', tr.pull, Icons.arrow_downward),
           gitMenuItem(roots, 'push', tr.push, Icons.arrow_upward),
           gitMenuItem(roots, 'worktree', tr.createWorktree, Icons.call_split),
@@ -963,7 +974,12 @@ class _RemoteSlot extends StatelessWidget {
                       // o agregado "N roots"; pasta sem git não mostra nada.
                       if (git != null) ...[
                         const SizedBox(height: 4),
-                        _AbsorbCardTap(child: _GitBadge(info: git!)),
+                        _AbsorbCardTap(
+                          child: _GitBadge(
+                            info: git!,
+                            onMenu: (pos) => _showMenu(context, pos),
+                          ),
+                        ),
                       ] else if (rootsSummary.$1 > 1) ...[
                         const SizedBox(height: 4),
                         _MultiRootBadge(
@@ -1045,6 +1061,7 @@ class _ProjectItem extends StatelessWidget {
     required this.onSync,
     required this.onPull,
     required this.onPush,
+    this.onFetch,
     required this.moveTargetsOf,
     required this.onMoveToRealm,
   });
@@ -1083,6 +1100,7 @@ class _ProjectItem extends StatelessWidget {
   final void Function(String rootPath) onSync;
   final void Function(String rootPath) onPull;
   final void Function(String rootPath) onPush;
+  final void Function(String rootPath)? onFetch;
 
   /// Realms de destino do "Move to realm" (vazio esconde o item). Thunk pela
   /// mesma razão de [rootsOf] — e este ainda varre a lista de workspaces por
@@ -1104,6 +1122,8 @@ class _ProjectItem extends StatelessWidget {
       onSync: onSync,
       onPull: onPull,
       onPush: onPush,
+      onFetch: onFetch,
+      onCheckout: (root) => showGitBranchPicker(context, root),
       moveTargetsOf: moveTargetsOf,
       onMoveToRealm: onMoveToRealm,
     );
@@ -1156,8 +1176,7 @@ class _ProjectItem extends StatelessWidget {
                           _AbsorbCardTap(
                             child: _GitBadge(
                               info: gitInfo,
-                              onTap: () =>
-                                  showGitBranchPicker(context, project.path),
+                              onMenu: (pos) => menu.show(context, pos),
                             ),
                           ),
                         ] else if (rootsSummary.$1 > 1) ...[
@@ -1706,9 +1725,9 @@ class _RootStatusRow extends StatelessWidget {
 }
 
 class _GitBadge extends StatelessWidget {
-  const _GitBadge({required this.info, this.onTap, this.locked = false});
+  const _GitBadge({required this.info, this.onMenu, this.locked = false});
   final GitInfo info;
-  final VoidCallback? onTap;
+  final ValueChanged<Offset>? onMenu;
   final bool locked;
 
   @override
@@ -1778,13 +1797,15 @@ class _GitBadge extends StatelessWidget {
         ],
       ),
     );
-    if (onTap == null && !locked) return badge;
-    return AppTooltip(
+    if (onMenu == null && !locked) return badge;
+    final content = AppTooltip(
       message: locked
           ? context.t.orkest.branchPicker.worktreeFixed
           : context.t.orkest.branchPicker.tooltip(branch: info.branch),
-      child: GestureDetector(onTap: locked ? null : onTap, child: badge),
+      child: badge,
     );
+    if (onMenu == null) return content;
+    return ContextMenuGesture(onMenu: onMenu!, child: content);
   }
 }
 
@@ -1826,6 +1847,8 @@ class _WorkspaceMenu {
     required this.onSync,
     required this.onPull,
     required this.onPush,
+    this.onFetch,
+    required this.onCheckout,
     required this.moveTargetsOf,
     required this.onMoveToRealm,
   });
@@ -1845,6 +1868,8 @@ class _WorkspaceMenu {
   final void Function(String rootPath) onSync;
   final void Function(String rootPath) onPull;
   final void Function(String rootPath) onPush;
+  final void Function(String rootPath)? onFetch;
+  final void Function(String rootPath) onCheckout;
 
   /// Realms de destino do "Move to realm" (vazio = 0/1 realm → item oculto).
   /// Destino com o mesmo path já presente vem desabilitado (um path por realm).
@@ -1862,6 +1887,19 @@ class _WorkspaceMenu {
       items: [
         // Ações de sincronização só quando há git (single ou multi-root).
         if (canCreateWorktree) ...[
+          gitMenuItem(
+            roots,
+            'checkout',
+            context.t.orkest.branchPicker.title,
+            Icons.account_tree_outlined,
+          ),
+          if (onFetch != null)
+            gitMenuItem(
+              roots,
+              'fetch',
+              context.t.orkest.branchPicker.fetch,
+              Icons.cloud_download_outlined,
+            ),
           gitMenuItem(
             roots,
             'sync',
@@ -1941,6 +1979,8 @@ class _WorkspaceMenu {
       if (action == 'sync') onSync(arg);
       if (action == 'pull') onPull(arg);
       if (action == 'push') onPush(arg);
+      if (action == 'fetch') onFetch?.call(arg);
+      if (action == 'checkout') onCheckout(arg);
       if (action == 'worktree') onCreateWorktree(arg);
       if (action == 'realm') onMoveToRealm(arg);
       if (action == 'copy-branch') {

@@ -753,6 +753,29 @@ class _Translations$orkest$fileTreePanel$pt_BR extends Translations$orkest$fileT
 	@override String get historyFiles => 'Arquivos alterados';
 	@override String get historyFilesEmpty => 'Nenhum arquivo alterado.';
 	@override String get historyFilesLoadFailed => 'Nao foi possivel carregar os arquivos alterados.';
+	@override String get historyCopyHash => 'Copiar hash do commit';
+	@override String get historyRevertCommit => 'Reverter commit';
+	@override String get historyUndoLastCommit => 'Desfazer último commit';
+	@override String historyRevertConfirm({required Object hash}) => 'Reverter o commit ${hash}? O Git criará um novo commit que desfaz suas alterações.';
+	@override String historyUndoConfirm({required Object hash}) => 'Desfazer o commit ${hash}? As alterações permanecerão no diretório de trabalho.';
+	@override String get historyGitActionFailed => 'Não foi possível concluir a operação Git.';
+	@override String get pullPushMenu => 'Pull, Push';
+	@override String get branchMenu => 'Branch';
+	@override String get mergeBranch => 'Mesclar branch…';
+	@override String get rebaseBranch => 'Rebase da branch…';
+	@override String get renameBranch => 'Renomear branch…';
+	@override String get deleteBranch => 'Excluir branch…';
+	@override String get publishBranch => 'Publicar branch';
+	@override String get stashMenu => 'Stash';
+	@override String get stashChanges => 'Guardar alterações…';
+	@override String get stashPop => 'Aplicar último stash';
+	@override String get tagsMenu => 'Tags';
+	@override String get createTag => 'Criar tag…';
+	@override String get deleteTag => 'Excluir tag…';
+	@override String get branchReferencePlaceholder => 'Branch ou referência';
+	@override String get branchNamePlaceholder => 'Novo nome da branch';
+	@override String get stashMessagePlaceholder => 'Mensagem (opcional)';
+	@override String get tagNamePlaceholder => 'Nome da tag';
 	@override String get diffEmptyTree => 'Arvore vazia';
 	@override String diffOriginal({required Object ref}) => 'Original ${ref}';
 	@override String diffModified({required Object ref}) => 'Modificado ${ref}';
@@ -2478,6 +2501,29 @@ extension on TranslationsPtBr {
 			'orkest.fileTreePanel.historyFiles' => 'Arquivos alterados',
 			'orkest.fileTreePanel.historyFilesEmpty' => 'Nenhum arquivo alterado.',
 			'orkest.fileTreePanel.historyFilesLoadFailed' => 'Nao foi possivel carregar os arquivos alterados.',
+			'orkest.fileTreePanel.historyCopyHash' => 'Copiar hash do commit',
+			'orkest.fileTreePanel.historyRevertCommit' => 'Reverter commit',
+			'orkest.fileTreePanel.historyUndoLastCommit' => 'Desfazer último commit',
+			'orkest.fileTreePanel.historyRevertConfirm' => ({required Object hash}) => 'Reverter o commit ${hash}? O Git criará um novo commit que desfaz suas alterações.',
+			'orkest.fileTreePanel.historyUndoConfirm' => ({required Object hash}) => 'Desfazer o commit ${hash}? As alterações permanecerão no diretório de trabalho.',
+			'orkest.fileTreePanel.historyGitActionFailed' => 'Não foi possível concluir a operação Git.',
+			'orkest.fileTreePanel.pullPushMenu' => 'Pull, Push',
+			'orkest.fileTreePanel.branchMenu' => 'Branch',
+			'orkest.fileTreePanel.mergeBranch' => 'Mesclar branch…',
+			'orkest.fileTreePanel.rebaseBranch' => 'Rebase da branch…',
+			'orkest.fileTreePanel.renameBranch' => 'Renomear branch…',
+			'orkest.fileTreePanel.deleteBranch' => 'Excluir branch…',
+			'orkest.fileTreePanel.publishBranch' => 'Publicar branch',
+			'orkest.fileTreePanel.stashMenu' => 'Stash',
+			'orkest.fileTreePanel.stashChanges' => 'Guardar alterações…',
+			'orkest.fileTreePanel.stashPop' => 'Aplicar último stash',
+			'orkest.fileTreePanel.tagsMenu' => 'Tags',
+			'orkest.fileTreePanel.createTag' => 'Criar tag…',
+			'orkest.fileTreePanel.deleteTag' => 'Excluir tag…',
+			'orkest.fileTreePanel.branchReferencePlaceholder' => 'Branch ou referência',
+			'orkest.fileTreePanel.branchNamePlaceholder' => 'Novo nome da branch',
+			'orkest.fileTreePanel.stashMessagePlaceholder' => 'Mensagem (opcional)',
+			'orkest.fileTreePanel.tagNamePlaceholder' => 'Nome da tag',
 			'orkest.fileTreePanel.diffEmptyTree' => 'Arvore vazia',
 			'orkest.fileTreePanel.diffOriginal' => ({required Object ref}) => 'Original ${ref}',
 			'orkest.fileTreePanel.diffModified' => ({required Object ref}) => 'Modificado ${ref}',
@@ -2539,6 +2585,8 @@ extension on TranslationsPtBr {
 			'orkest.dbRedisTable.searchHint' => 'Buscar — padrão, ex.: user:*',
 			'orkest.dbQueryView.saveQueryAs' => 'Salvar query como',
 			'orkest.dbQueryView.couldNotSave' => 'Não foi possível salvar',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.dbQueryView.selectDatabase' => 'Selecionar banco de dados',
 			'orkest.dbQueryView.noSqlConnections' => 'Nenhuma conexão SQL',
 			'orkest.dbQueryView.running' => 'Executando…',
@@ -2562,8 +2610,6 @@ extension on TranslationsPtBr {
 			'orkest.httpView.running' => 'Executando…',
 			'orkest.httpView.noRequests' => 'Nenhum request neste arquivo — escreva um, ex.: GET https://example.com',
 			'orkest.httpView.selectRequest' => 'Selecionar request',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.httpView.requestCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 request', other: '${n} requests', ), 
 			'orkest.httpView.runHint' => 'Execute o request (⌘↵) para ver a resposta aqui.',
 			'orkest.httpView.emptyBody' => 'Corpo da resposta vazio.',
@@ -3053,6 +3099,8 @@ extension on TranslationsPtBr {
 			'settings.page.appearance.terminalFontDesc' => 'Só o terminal. Vazio = padrão do sistema.',
 			'settings.page.appearance.terminalSizeTitle' => 'Tamanho do terminal',
 			'settings.page.appearance.terminalSizeDesc' => 'Desligado = segue o tamanho do código.',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.appearance.terminalSizeInherit' => 'Seguir o código',
 			'settings.page.appearance.terminalWeightTitle' => 'Peso do terminal',
 			'settings.page.appearance.terminalWeightDesc' => 'Telas de baixa densidade engrossam os traços. O automático afina só nelas e não mexe no Retina.',
@@ -3076,8 +3124,6 @@ extension on TranslationsPtBr {
 			'settings.page.appearance.fontPickerSearch' => 'Buscar fontes',
 			'settings.page.appearance.fontPickerEmpty' => 'Nenhuma fonte correspondente nesta máquina.',
 			'settings.page.appearance.fontPickerBundled' => 'inclusa',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.appearance.fontPickerCustom' => 'Não está na lista? Digite o nome exato da família.',
 			'settings.page.appearance.fontPickerCustomHint' => 'Nome da família',
 			'settings.page.appearance.fontPickerUse' => 'Usar',

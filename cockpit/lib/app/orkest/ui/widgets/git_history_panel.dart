@@ -5,12 +5,16 @@ import 'package:orkest_code/app/orkest/domain/utils/coalescing_single_flight.dar
 import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:orkest_code/app/core/ui/activity_periodic_timer.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/app/core/ui/widgets/app_menu.dart';
+import 'package:orkest_code/app/core/ui/widgets/context_menu_gesture.dart';
 import 'package:orkest_code/app/core/ui/window_activity_controller.dart';
 import 'package:orkest_code/app/core/ui/widgets/hover_tap.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/confirm_dialog.dart';
 import 'package:orkest_code/i18n/strings.g.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 
-/// Visualizacao read-only de commits estruturados de uma root git.
+/// Histórico estruturado de commits, com ações no menu de cada commit.
 class GitHistoryPanel extends StatefulWidget {
   const GitHistoryPanel({
     super.key,
@@ -19,6 +23,8 @@ class GitHistoryPanel extends StatefulWidget {
     required this.loadFiles,
     required this.onOpenFileDiff,
     required this.refreshToken,
+    this.onRevertCommit,
+    this.onUndoLastCommit,
   });
 
   final List<GitHistoryRoot> roots;
@@ -37,6 +43,16 @@ class GitHistoryPanel extends StatefulWidget {
     GitHistoryFileChange change,
   )
   onOpenFileDiff;
+  final Future<Result<void, GitHistoryError>> Function(
+    String root,
+    String hash,
+  )?
+  onRevertCommit;
+  final Future<Result<void, GitHistoryError>> Function(
+    String root,
+    String hash,
+  )?
+  onUndoLastCommit;
   final int refreshToken;
 
   @override
@@ -170,6 +186,71 @@ class _GitHistoryPanelState extends State<GitHistoryPanel> {
     });
   }
 
+  Future<void> _showCommitMenu(Offset at, GitHistoryCommit commit) async {
+    final tr = context.t.orkest.fileTreePanel;
+    final root = _root;
+    if (root == null) return;
+    final choice = await showAppMenu<String>(
+      context,
+      globalPosition: at,
+      items: [
+        AppMenuItem(
+          value: 'copy',
+          label: tr.historyCopyHash,
+          icon: Icons.content_copy,
+        ),
+        if (widget.onRevertCommit != null && commit.parents.length <= 1)
+          AppMenuItem(
+            value: 'revert',
+            label: tr.historyRevertCommit,
+            icon: Icons.undo,
+          ),
+        if (widget.onUndoLastCommit != null &&
+            commit.isHead &&
+            commit.parents.length == 1)
+          AppMenuItem(
+            value: 'undo',
+            label: tr.historyUndoLastCommit,
+            icon: Icons.history,
+          ),
+      ],
+    );
+    if (!mounted || choice == null || root != _root) return;
+    if (choice == 'copy') {
+      await Clipboard.setData(ClipboardData(text: commit.hash));
+      return;
+    }
+    final confirmed = await showConfirmDialog(
+      context,
+      title: choice == 'revert'
+          ? tr.historyRevertCommit
+          : tr.historyUndoLastCommit,
+      message: choice == 'revert'
+          ? tr.historyRevertConfirm(hash: commit.shortHash)
+          : tr.historyUndoConfirm(hash: commit.shortHash),
+      danger: true,
+    );
+    if (!confirmed || !mounted || root != _root) return;
+    final result = choice == 'revert'
+        ? await widget.onRevertCommit!(root, commit.hash)
+        : await widget.onUndoLastCommit!(root, commit.hash);
+    if (!mounted) return;
+    switch (result) {
+      case Success():
+        _clearSelectedFiles();
+        await _load();
+      case Failure(:final error):
+        await showInfoDialog(
+          context,
+          title: tr.historyGitActionFailed,
+          message: error.detail?.trim().isNotEmpty == true
+              ? error.detail!
+              : tr.historyGitActionFailed,
+        );
+        await _load();
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     final tr = context.t.orkest.fileTreePanel;
@@ -260,6 +341,7 @@ class _GitHistoryPanelState extends State<GitHistoryPanel> {
           error: _fileErrorsByHash[commit.hash],
           loadingFiles: _loadingFilesHash == commit.hash,
           onTap: () => _toggleCommit(commit),
+          onMenu: (at) => _showCommitMenu(at, commit),
           onOpenFile: (change) =>
               widget.onOpenFileDiff(_root!, commit.hash, change),
         );
@@ -338,6 +420,7 @@ class _TimelineCommit extends StatelessWidget {
     required this.error,
     required this.loadingFiles,
     required this.onTap,
+    required this.onMenu,
     required this.onOpenFile,
   });
 
@@ -349,6 +432,7 @@ class _TimelineCommit extends StatelessWidget {
   final GitHistoryError? error;
   final bool loadingFiles;
   final VoidCallback onTap;
+  final ValueChanged<Offset> onMenu;
   final ValueChanged<GitHistoryFileChange> onOpenFile;
 
   @override
@@ -357,75 +441,79 @@ class _TimelineCommit extends StatelessWidget {
     final subject = commit.subject.trim();
     final relativeDate = _relativeCommitDate(context, commit.authoredAt);
     final metadata = <String>[?relativeDate, commit.author, commit.shortHash];
-    return HoverTap(
-      onTap: onTap,
-      color: selected ? colors.accentSoft : Colors.transparent,
-      hoverColor: selected ? colors.accentSoft : colors.panel3,
-      borderRadius: BorderRadius.zero,
-      padding: const EdgeInsets.fromLTRB(8, 4, 10, 5),
-      child: Column(
-        children: [
-          Row(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              _TimelineMarker(first: first, last: last, head: commit.isHead),
-              const SizedBox(width: 7),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      subject.isEmpty
-                          ? context
-                                .t
-                                .orkest
-                                .fileTreePanel
-                                .historyUntitledCommit
-                          : subject,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.typo.label.copyWith(
-                        color: colors.text,
-                        fontWeight: commit.isHead ? FontWeight.w700 : null,
+    return ContextMenuGesture(
+      onMenu: onMenu,
+      child: HoverTap(
+        onTap: onTap,
+        color: selected ? colors.accentSoft : Colors.transparent,
+        hoverColor: selected ? colors.accentSoft : colors.panel3,
+        borderRadius: BorderRadius.zero,
+        padding: const EdgeInsets.fromLTRB(8, 4, 10, 5),
+        child: Column(
+          children: [
+            Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                _TimelineMarker(first: first, last: last, head: commit.isHead),
+                const SizedBox(width: 7),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        subject.isEmpty
+                            ? context
+                                  .t
+                                  .orkest
+                                  .fileTreePanel
+                                  .historyUntitledCommit
+                            : subject,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.typo.label.copyWith(
+                          color: colors.text,
+                          fontWeight: commit.isHead ? FontWeight.w700 : null,
+                        ),
                       ),
-                    ),
-                    if (commit.refs.isNotEmpty) ...[
-                      const SizedBox(height: 3),
-                      Wrap(
-                        spacing: 4,
-                        runSpacing: 3,
-                        children: [
-                          for (final ref in commit.refs)
-                            _RefChip(
-                              label: ref,
-                              head: ref == 'HEAD' || ref.startsWith('HEAD -> '),
-                            ),
-                        ],
+                      if (commit.refs.isNotEmpty) ...[
+                        const SizedBox(height: 3),
+                        Wrap(
+                          spacing: 4,
+                          runSpacing: 3,
+                          children: [
+                            for (final ref in commit.refs)
+                              _RefChip(
+                                label: ref,
+                                head:
+                                    ref == 'HEAD' || ref.startsWith('HEAD -> '),
+                              ),
+                          ],
+                        ),
+                      ],
+                      const SizedBox(height: 2),
+                      Text(
+                        metadata.join(' · '),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: context.typo.mono.copyWith(
+                          fontSize: 10,
+                          color: colors.text3,
+                        ),
                       ),
                     ],
-                    const SizedBox(height: 2),
-                    Text(
-                      metadata.join(' · '),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: context.typo.mono.copyWith(
-                        fontSize: 10,
-                        color: colors.text3,
-                      ),
-                    ),
-                  ],
+                  ),
                 ),
-              ),
-            ],
-          ),
-          if (selected)
-            _CommitFiles(
-              files: files,
-              error: error,
-              loading: loadingFiles,
-              onFileTap: onOpenFile,
+              ],
             ),
-        ],
+            if (selected)
+              _CommitFiles(
+                files: files,
+                error: error,
+                loading: loadingFiles,
+                onFileTap: onOpenFile,
+              ),
+          ],
+        ),
       ),
     );
   }

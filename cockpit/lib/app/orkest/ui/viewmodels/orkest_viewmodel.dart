@@ -4058,6 +4058,78 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
     }
   }
 
+  /// Cria um commit que reverte [hash]. O histórico bloqueia merge commits,
+  /// que exigiriam a escolha explícita de um parent (`-m`).
+  Future<Result<void, GitHistoryError>> revertGitCommit(
+    String root,
+    String hash,
+  ) => _runHistoryGitAction(root, ['revert', '--no-edit', hash], hash: hash);
+
+  /// Desfaz somente o HEAD esperado, preservando as mudanças no working tree.
+  Future<Result<void, GitHistoryError>> undoLastGitCommit(
+    String root,
+    String expectedHash,
+  ) async {
+    try {
+      final head = await _gitHistoryOutput(root, const ['rev-parse', 'HEAD']);
+      if (head.$1 != 0 || head.$2.trim() != expectedHash) {
+        return const Failure(
+          GitHistoryError(GitHistoryErrorKind.commandFailed),
+        );
+      }
+      return await _runHistoryGitAction(root, const ['reset', '--mixed', 'HEAD^']);
+    } catch (error) {
+      return Failure(
+        GitHistoryError(GitHistoryErrorKind.commandFailed, detail: '$error'),
+      );
+    }
+  }
+
+  Future<(int, String)> _gitHistoryOutput(
+    String root,
+    List<String> args,
+  ) async {
+    if (_activeRemoteHost() == null) return git.output(root, args);
+    final result = await (await _activeRemoteGit()).run(root, args);
+    return (result.code, result.code == 0 ? result.stdout : result.stderr);
+  }
+
+  Future<Result<void, GitHistoryError>> _runHistoryGitAction(
+    String root,
+    List<String> args, {
+    String? hash,
+  }) async {
+    if (hash != null && !RegExp(r'^[0-9a-fA-F]{40,64}$').hasMatch(hash)) {
+      return const Failure(GitHistoryError(GitHistoryErrorKind.commandFailed));
+    }
+    try {
+      final (code, output) = await _gitHistoryOutput(root, args);
+      final projectId = _selectedProjectId;
+      try {
+        if (_activeRemoteHost() != null) {
+          await _refreshRemoteGit();
+          git.markHistoryStale();
+        } else if (projectId != null) {
+          await refreshGitProject(projectId);
+        }
+      } catch (_) {
+        // Uma falha de atualização visual não muda o resultado do comando:
+        // sinalizar erro após um revert bem-sucedido sugeriria repetir a ação.
+        git.markHistoryStale();
+      }
+      if (code != 0) {
+        return Failure(
+          GitHistoryError(GitHistoryErrorKind.commandFailed, detail: output),
+        );
+      }
+      return const Success(null);
+    } catch (error) {
+      return Failure(
+        GitHistoryError(GitHistoryErrorKind.commandFailed, detail: '$error'),
+      );
+    }
+  }
+
   /// Atualiza o estado git (e o token do historico) depois de uma operacao
   /// concluida pelo painel de processo.
   Future<void> refreshGitProject(String projectId) async {

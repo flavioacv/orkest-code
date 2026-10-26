@@ -6,6 +6,7 @@ import 'dart:io';
 import 'package:orkest_code/app/orkest/ui/actions/remote_workspace_actions.dart';
 import 'package:orkest_code/app/orkest/ui/actions/tab_actions.dart';
 import 'package:orkest_code/app/orkest/ui/actions/workspace_actions.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/git_branch_picker.dart';
 import 'package:orkest_code/app/orkest/ui/actions/worktree_actions.dart';
 import 'package:orkest_code/app/core/app_intents.dart';
 import 'package:orkest_code/app/orkest/domain/entities/project.dart';
@@ -952,6 +953,8 @@ class _RailPanel extends StatelessWidget {
               pullProject(context, project, rootPath),
           onPush: (project, rootPath) =>
               pushProject(context, project, rootPath),
+          onFetch: (project, rootPath) =>
+              fetchProject(context, project, rootPath),
           onReorder: (moved, target, before) =>
               vm.reorderWorkspace(moved, target, before: before),
           onOpenSettings: () => context.pushNamed(RoutePaths.settings),
@@ -1892,6 +1895,42 @@ class _TreePanel extends StatelessWidget {
           onLoadGitHistory: vm.loadGitHistory,
           onLoadGitHistoryFiles: vm.loadGitHistoryFiles,
           onOpenGitHistoryDiff: vm.openCommitDiff,
+          onRevertGitCommit: vm.revertGitCommit,
+          onUndoLastGitCommit: vm.undoLastGitCommit,
+          onCheckoutBranch: vm.selectedProject?.isRemoteTerminal == true
+              ? null
+              : (root) => showGitBranchPicker(context, root),
+          onGitAction: (root, action) async {
+            final project = vm.selectedProject;
+            if (project == null) return;
+            if (project.isRemoteTerminal) {
+              await handleRemoteWorkspaceAction(
+                context,
+                project.id,
+                '$action|$root',
+              );
+              return;
+            }
+            switch (action) {
+              case 'sync':
+                await syncProject(context, project, root);
+              case 'pull':
+                await pullProject(context, project, root);
+              case 'push':
+                await pushProject(context, project, root);
+              case 'fetch':
+                await fetchProject(context, project, root);
+            }
+          },
+          onGitCommand: (root, args, title) async {
+            final project = vm.selectedProject;
+            if (project == null) return;
+            if (project.isRemoteTerminal) {
+              await runRemoteGitCommand(context, project.id, root, args, title);
+              return;
+            }
+            await runGitProject(context, project, root, args, title);
+          },
           gitHistoryRevision: vm.git.revision,
           commitMessageGeneratorLabel: configuredHarnessId?.label,
           onGenerateCommitMessage: configuredHarnessId != null

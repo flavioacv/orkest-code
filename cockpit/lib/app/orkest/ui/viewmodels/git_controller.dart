@@ -246,6 +246,9 @@ class GitController extends ChangeNotifier {
   GitRun fetch(String repoPath) =>
       _runner.run(repoPath, const ['fetch', '--all', '--prune']);
 
+  /// Executa uma operação Git estruturada pela interface avançada.
+  GitRun run(String repoPath, List<String> args) => _runner.run(repoPath, args);
+
   /// Roda um comando e coleta a saída para consumidores que precisam ler o
   /// resultado (por exemplo, o seletor de commits de amend).
   Future<(int code, String output)> output(

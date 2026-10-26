@@ -1612,6 +1612,75 @@ class Translations$orkest$fileTreePanel$en {
 	/// en: 'Could not load changed files.'
 	String get historyFilesLoadFailed => 'Could not load changed files.';
 
+	/// en: 'Copy commit hash'
+	String get historyCopyHash => 'Copy commit hash';
+
+	/// en: 'Revert commit'
+	String get historyRevertCommit => 'Revert commit';
+
+	/// en: 'Undo last commit'
+	String get historyUndoLastCommit => 'Undo last commit';
+
+	/// en: 'Revert commit ${hash}? Git will create a new commit that reverses its changes.'
+	String historyRevertConfirm({required Object hash}) => 'Revert commit ${hash}? Git will create a new commit that reverses its changes.';
+
+	/// en: 'Undo commit ${hash}? Its changes will remain in the working tree.'
+	String historyUndoConfirm({required Object hash}) => 'Undo commit ${hash}? Its changes will remain in the working tree.';
+
+	/// en: 'Could not complete the Git operation.'
+	String get historyGitActionFailed => 'Could not complete the Git operation.';
+
+	/// en: 'Pull, Push'
+	String get pullPushMenu => 'Pull, Push';
+
+	/// en: 'Branch'
+	String get branchMenu => 'Branch';
+
+	/// en: 'Merge branch…'
+	String get mergeBranch => 'Merge branch…';
+
+	/// en: 'Rebase branch…'
+	String get rebaseBranch => 'Rebase branch…';
+
+	/// en: 'Rename branch…'
+	String get renameBranch => 'Rename branch…';
+
+	/// en: 'Delete branch…'
+	String get deleteBranch => 'Delete branch…';
+
+	/// en: 'Publish branch'
+	String get publishBranch => 'Publish branch';
+
+	/// en: 'Stash'
+	String get stashMenu => 'Stash';
+
+	/// en: 'Stash changes…'
+	String get stashChanges => 'Stash changes…';
+
+	/// en: 'Pop latest stash'
+	String get stashPop => 'Pop latest stash';
+
+	/// en: 'Tags'
+	String get tagsMenu => 'Tags';
+
+	/// en: 'Create tag…'
+	String get createTag => 'Create tag…';
+
+	/// en: 'Delete tag…'
+	String get deleteTag => 'Delete tag…';
+
+	/// en: 'Branch or reference'
+	String get branchReferencePlaceholder => 'Branch or reference';
+
+	/// en: 'New branch name'
+	String get branchNamePlaceholder => 'New branch name';
+
+	/// en: 'Message (optional)'
+	String get stashMessagePlaceholder => 'Message (optional)';
+
+	/// en: 'Tag name'
+	String get tagNamePlaceholder => 'Tag name';
+
 	/// en: 'Empty tree'
 	String get diffEmptyTree => 'Empty tree';
 
@@ -4793,6 +4862,29 @@ extension on Translations {
 			'orkest.fileTreePanel.historyFiles' => 'Files changed',
 			'orkest.fileTreePanel.historyFilesEmpty' => 'No files changed.',
 			'orkest.fileTreePanel.historyFilesLoadFailed' => 'Could not load changed files.',
+			'orkest.fileTreePanel.historyCopyHash' => 'Copy commit hash',
+			'orkest.fileTreePanel.historyRevertCommit' => 'Revert commit',
+			'orkest.fileTreePanel.historyUndoLastCommit' => 'Undo last commit',
+			'orkest.fileTreePanel.historyRevertConfirm' => ({required Object hash}) => 'Revert commit ${hash}? Git will create a new commit that reverses its changes.',
+			'orkest.fileTreePanel.historyUndoConfirm' => ({required Object hash}) => 'Undo commit ${hash}? Its changes will remain in the working tree.',
+			'orkest.fileTreePanel.historyGitActionFailed' => 'Could not complete the Git operation.',
+			'orkest.fileTreePanel.pullPushMenu' => 'Pull, Push',
+			'orkest.fileTreePanel.branchMenu' => 'Branch',
+			'orkest.fileTreePanel.mergeBranch' => 'Merge branch…',
+			'orkest.fileTreePanel.rebaseBranch' => 'Rebase branch…',
+			'orkest.fileTreePanel.renameBranch' => 'Rename branch…',
+			'orkest.fileTreePanel.deleteBranch' => 'Delete branch…',
+			'orkest.fileTreePanel.publishBranch' => 'Publish branch',
+			'orkest.fileTreePanel.stashMenu' => 'Stash',
+			'orkest.fileTreePanel.stashChanges' => 'Stash changes…',
+			'orkest.fileTreePanel.stashPop' => 'Pop latest stash',
+			'orkest.fileTreePanel.tagsMenu' => 'Tags',
+			'orkest.fileTreePanel.createTag' => 'Create tag…',
+			'orkest.fileTreePanel.deleteTag' => 'Delete tag…',
+			'orkest.fileTreePanel.branchReferencePlaceholder' => 'Branch or reference',
+			'orkest.fileTreePanel.branchNamePlaceholder' => 'New branch name',
+			'orkest.fileTreePanel.stashMessagePlaceholder' => 'Message (optional)',
+			'orkest.fileTreePanel.tagNamePlaceholder' => 'Tag name',
 			'orkest.fileTreePanel.diffEmptyTree' => 'Empty tree',
 			'orkest.fileTreePanel.diffOriginal' => ({required Object ref}) => 'Original ${ref}',
 			'orkest.fileTreePanel.diffModified' => ({required Object ref}) => 'Modified ${ref}',
@@ -4854,6 +4946,8 @@ extension on Translations {
 			'orkest.dbRedisTable.searchHint' => 'Search — pattern, e.g. user:*',
 			'orkest.dbQueryView.saveQueryAs' => 'Save query as',
 			'orkest.dbQueryView.couldNotSave' => 'Could not save',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.dbQueryView.selectDatabase' => 'Select database',
 			'orkest.dbQueryView.noSqlConnections' => 'No SQL connections',
 			'orkest.dbQueryView.running' => 'Running…',
@@ -4877,8 +4971,6 @@ extension on Translations {
 			'orkest.httpView.running' => 'Running…',
 			'orkest.httpView.noRequests' => 'No request in this file — write one, e.g. GET https://example.com',
 			'orkest.httpView.selectRequest' => 'Select request',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.httpView.requestCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 request', other: '${n} requests', ), 
 			'orkest.httpView.runHint' => 'Run the request (⌘↵) to see the response here.',
 			'orkest.httpView.emptyBody' => 'Empty response body.',
@@ -5368,6 +5460,8 @@ extension on Translations {
 			'settings.page.appearance.terminalFontDesc' => 'Terminal only. Empty = system default.',
 			'settings.page.appearance.terminalSizeTitle' => 'Terminal size',
 			'settings.page.appearance.terminalSizeDesc' => 'Off = follows the code size.',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.appearance.terminalSizeInherit' => 'Follow code size',
 			'settings.page.appearance.terminalWeightTitle' => 'Terminal weight',
 			'settings.page.appearance.terminalWeightDesc' => 'Low-density screens render strokes heavier. Auto lightens them there and leaves Retina untouched.',
@@ -5391,8 +5485,6 @@ extension on Translations {
 			'settings.page.appearance.fontPickerSearch' => 'Search fonts',
 			'settings.page.appearance.fontPickerEmpty' => 'No matching font found on this machine.',
 			'settings.page.appearance.fontPickerBundled' => 'included',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.appearance.fontPickerCustom' => 'Not listed? Type the exact family name.',
 			'settings.page.appearance.fontPickerCustomHint' => 'Family name',
 			'settings.page.appearance.fontPickerUse' => 'Use',
