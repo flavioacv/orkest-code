@@ -315,6 +315,28 @@
       "lspRunning": "en ejecución",
       "lspStopped": "detenido"
     },
+    "branchPicker": {
+      "title": "Cambiar rama",
+      "tooltip": "Rama actual: ${branch}",
+      "worktreeFixed": "Esta rama es fija para este worktree.",
+      "worktreeFixedShort": "worktree",
+      "usedByWorktree": "La rama ya está siendo usada por un worktree.",
+      "searchPlaceholder": "Buscar ramas",
+      "newBranchPlaceholder": "Nombre de la nueva rama",
+      "createBranch": "Crear rama",
+      "noBranches": "No se encontraron ramas.",
+      "fetch": "Obtener",
+      "pull": "Pull",
+      "push": "Push",
+      "refresh": "Actualizar control de código fuente",
+      "fetchTitle": "Obtener — ${label}",
+      "listFailed": "No se pudieron listar las ramas: ${detail}",
+      "invalidName": "Ingresa un nombre de rama válido.",
+      "alreadyExists": "Ya existe una rama con este nombre.",
+      "dirtyWorktree": "Confirma, guarda o descarta los cambios locales antes de cambiar de rama.",
+      "checkoutFailed": "No se pudo cambiar de rama: ${detail}",
+      "createFailed": "No se pudo crear la rama: ${detail}"
+    },
     "welcomeView": {
       "title": "Bienvenido a Orkest Code",
       "subtitle": "Abre una carpeta o conéctate a un host remoto para empezar.",

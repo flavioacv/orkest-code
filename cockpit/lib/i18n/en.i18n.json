@@ -315,6 +315,28 @@
       "lspRunning": "running",
       "lspStopped": "stopped"
     },
+    "branchPicker": {
+      "title": "Switch branch",
+      "tooltip": "Current branch: ${branch}",
+      "worktreeFixed": "This branch is fixed for this worktree.",
+      "worktreeFixedShort": "worktree",
+      "usedByWorktree": "Branch is already checked out by a worktree.",
+      "searchPlaceholder": "Search branches",
+      "newBranchPlaceholder": "New branch name",
+      "createBranch": "Create branch",
+      "noBranches": "No branches found.",
+      "fetch": "Fetch",
+      "pull": "Pull",
+      "push": "Push",
+      "refresh": "Refresh source control",
+      "fetchTitle": "Fetch — ${label}",
+      "listFailed": "Could not list branches: ${detail}",
+      "invalidName": "Enter a valid branch name.",
+      "alreadyExists": "A branch with this name already exists.",
+      "dirtyWorktree": "Commit, stash, or discard local changes before switching branches.",
+      "checkoutFailed": "Could not switch branch: ${detail}",
+      "createFailed": "Could not create branch: ${detail}"
+    },
     "welcomeView": {
       "title": "Welcome to Orkest Code",
       "subtitle": "Open a folder or connect to a remote host to start.",

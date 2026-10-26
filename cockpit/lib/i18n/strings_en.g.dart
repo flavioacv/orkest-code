@@ -158,6 +158,7 @@ class Translations$orkest$en {
 	late final Translations$orkest$commitMessageDialog$en commitMessageDialog = Translations$orkest$commitMessageDialog$en.internal(_root);
 	late final Translations$orkest$tasksPanel$en tasksPanel = Translations$orkest$tasksPanel$en.internal(_root);
 	late final Translations$orkest$orkestPage$en orkestPage = Translations$orkest$orkestPage$en.internal(_root);
+	late final Translations$orkest$branchPicker$en branchPicker = Translations$orkest$branchPicker$en.internal(_root);
 	late final Translations$orkest$welcomeView$en welcomeView = Translations$orkest$welcomeView$en.internal(_root);
 	late final Translations$orkest$paneView$en paneView = Translations$orkest$paneView$en.internal(_root);
 	late final Translations$orkest$fileTreePanel$en fileTreePanel = Translations$orkest$fileTreePanel$en.internal(_root);
@@ -1130,6 +1131,75 @@ class Translations$orkest$orkestPage$en {
 
 	/// en: 'stopped'
 	String get lspStopped => 'stopped';
+}
+
+// Path: orkest.branchPicker
+class Translations$orkest$branchPicker$en {
+	Translations$orkest$branchPicker$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Switch branch'
+	String get title => 'Switch branch';
+
+	/// en: 'Current branch: ${branch}'
+	String tooltip({required Object branch}) => 'Current branch: ${branch}';
+
+	/// en: 'This branch is fixed for this worktree.'
+	String get worktreeFixed => 'This branch is fixed for this worktree.';
+
+	/// en: 'worktree'
+	String get worktreeFixedShort => 'worktree';
+
+	/// en: 'Branch is already checked out by a worktree.'
+	String get usedByWorktree => 'Branch is already checked out by a worktree.';
+
+	/// en: 'Search branches'
+	String get searchPlaceholder => 'Search branches';
+
+	/// en: 'New branch name'
+	String get newBranchPlaceholder => 'New branch name';
+
+	/// en: 'Create branch'
+	String get createBranch => 'Create branch';
+
+	/// en: 'No branches found.'
+	String get noBranches => 'No branches found.';
+
+	/// en: 'Fetch'
+	String get fetch => 'Fetch';
+
+	/// en: 'Pull'
+	String get pull => 'Pull';
+
+	/// en: 'Push'
+	String get push => 'Push';
+
+	/// en: 'Refresh source control'
+	String get refresh => 'Refresh source control';
+
+	/// en: 'Fetch — ${label}'
+	String fetchTitle({required Object label}) => 'Fetch — ${label}';
+
+	/// en: 'Could not list branches: ${detail}'
+	String listFailed({required Object detail}) => 'Could not list branches: ${detail}';
+
+	/// en: 'Enter a valid branch name.'
+	String get invalidName => 'Enter a valid branch name.';
+
+	/// en: 'A branch with this name already exists.'
+	String get alreadyExists => 'A branch with this name already exists.';
+
+	/// en: 'Commit, stash, or discard local changes before switching branches.'
+	String get dirtyWorktree => 'Commit, stash, or discard local changes before switching branches.';
+
+	/// en: 'Could not switch branch: ${detail}'
+	String checkoutFailed({required Object detail}) => 'Could not switch branch: ${detail}';
+
+	/// en: 'Could not create branch: ${detail}'
+	String createFailed({required Object detail}) => 'Could not create branch: ${detail}';
 }
 
 // Path: orkest.welcomeView
@@ -4569,12 +4639,32 @@ extension on Translations {
 			'orkest.orkestPage.failedToRemoveWorktreeTitle' => 'Failed to remove worktree',
 			'orkest.orkestPage.openLayoutTitle' => 'Open layout',
 			'orkest.orkestPage.replaceLayoutTitle' => 'Replace the current layout?',
-			'orkest.orkestPage.replaceLayoutMessage' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 tab will be closed, including one with a running process.', other: '${n} tabs will be closed, including ones with running processes.', ),
+			'orkest.orkestPage.replaceLayoutMessage' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 tab will be closed, including one with a running process.', other: '${n} tabs will be closed, including ones with running processes.', ), 
 			'orkest.orkestPage.replaceLayoutConfirm' => 'Replace',
 			'orkest.orkestPage.restartServerTooltip' => 'Restart server',
 			'orkest.orkestPage.noLspAvailable' => 'No LSP available',
 			'orkest.orkestPage.lspRunning' => 'running',
 			'orkest.orkestPage.lspStopped' => 'stopped',
+			'orkest.branchPicker.title' => 'Switch branch',
+			'orkest.branchPicker.tooltip' => ({required Object branch}) => 'Current branch: ${branch}',
+			'orkest.branchPicker.worktreeFixed' => 'This branch is fixed for this worktree.',
+			'orkest.branchPicker.worktreeFixedShort' => 'worktree',
+			'orkest.branchPicker.usedByWorktree' => 'Branch is already checked out by a worktree.',
+			'orkest.branchPicker.searchPlaceholder' => 'Search branches',
+			'orkest.branchPicker.newBranchPlaceholder' => 'New branch name',
+			'orkest.branchPicker.createBranch' => 'Create branch',
+			'orkest.branchPicker.noBranches' => 'No branches found.',
+			'orkest.branchPicker.fetch' => 'Fetch',
+			'orkest.branchPicker.pull' => 'Pull',
+			'orkest.branchPicker.push' => 'Push',
+			'orkest.branchPicker.refresh' => 'Refresh source control',
+			'orkest.branchPicker.fetchTitle' => ({required Object label}) => 'Fetch — ${label}',
+			'orkest.branchPicker.listFailed' => ({required Object detail}) => 'Could not list branches: ${detail}',
+			'orkest.branchPicker.invalidName' => 'Enter a valid branch name.',
+			'orkest.branchPicker.alreadyExists' => 'A branch with this name already exists.',
+			'orkest.branchPicker.dirtyWorktree' => 'Commit, stash, or discard local changes before switching branches.',
+			'orkest.branchPicker.checkoutFailed' => ({required Object detail}) => 'Could not switch branch: ${detail}',
+			'orkest.branchPicker.createFailed' => ({required Object detail}) => 'Could not create branch: ${detail}',
 			'orkest.welcomeView.title' => 'Welcome to Orkest Code',
 			'orkest.welcomeView.subtitle' => 'Open a folder or connect to a remote host to start.',
 			'orkest.welcomeView.createWorkspace' => 'Create workspace',
@@ -4742,7 +4832,7 @@ extension on Translations {
 			'orkest.realmDialogs.deleteSuffixOne' => ' Its workspace will move to Default.',
 			'orkest.realmDialogs.deleteSuffixMany' => ({required Object count}) => ' Its ${count} workspaces will move to Default.',
 			'orkest.realmDialogs.manageRealmsTitle' => 'Manage realms',
-			'orkest.realmDialogs.workspaceCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 workspace', other: '${n} workspaces', ),
+			'orkest.realmDialogs.workspaceCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 workspace', other: '${n} workspaces', ), 
 			'orkest.dbRedisTable.deleteKeyTitle' => 'Delete key',
 			'orkest.dbRedisTable.deleteKeyMessage' => ({required Object key}) => 'Delete "${key}" from this Redis database?',
 			'orkest.dbRedisTable.refresh' => 'Refresh',
@@ -4751,7 +4841,7 @@ extension on Translations {
 			'orkest.dbRedisTable.columnValue' => 'VALUE',
 			'orkest.dbRedisTable.columnType' => 'TYPE',
 			'orkest.dbRedisTable.columnTtl' => 'TTL',
-			'orkest.dbRedisTable.keyCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 key', other: '${n} keys', ),
+			'orkest.dbRedisTable.keyCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 key', other: '${n} keys', ), 
 			'orkest.dbRedisTable.noKeys' => 'No keys in this database.',
 			'orkest.dbRedisTable.noKeysMatch' => ({required Object pattern}) => 'No keys match "${pattern}".',
 			'orkest.dbRedisTable.loadMore' => 'Load more',
@@ -4772,7 +4862,7 @@ extension on Translations {
 			'orkest.dbQueryView.pickDatabaseHint' => 'Pick a database above, then Run (⌘↵).',
 			'orkest.dbQueryView.runQueryHint' => 'Run the query (⌘↵) to see results here.',
 			'orkest.dbQueryView.noRows' => 'No rows.',
-			'orkest.dbQueryView.rowsAffected' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 row affected', other: '${n} rows affected', ),
+			'orkest.dbQueryView.rowsAffected' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 row affected', other: '${n} rows affected', ), 
 			'orkest.dbQueryView.rowsFooter' => ({required Object n}) => '${n} rows',
 			'orkest.dbQueryView.truncatedSuffix' => ' · truncated (raise -- limit)',
 			'orkest.dbQueryView.table' => 'Table',
@@ -4787,7 +4877,9 @@ extension on Translations {
 			'orkest.httpView.running' => 'Running…',
 			'orkest.httpView.noRequests' => 'No request in this file — write one, e.g. GET https://example.com',
 			'orkest.httpView.selectRequest' => 'Select request',
-			'orkest.httpView.requestCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 request', other: '${n} requests', ),
+			_ => null,
+		} ?? switch (path) {
+			'orkest.httpView.requestCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 request', other: '${n} requests', ), 
 			'orkest.httpView.runHint' => 'Run the request (⌘↵) to see the response here.',
 			'orkest.httpView.emptyBody' => 'Empty response body.',
 			'orkest.httpView.body' => 'JSON',
@@ -4807,8 +4899,6 @@ extension on Translations {
 			'orkest.kanbanView.filter' => 'Filter',
 			'orkest.kanbanView.filterTitlePlaceholder' => 'Search titles',
 			'orkest.kanbanView.filterLabels' => 'Labels',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.kanbanView.filterClear' => 'Clear',
 			'orkest.kanbanView.filterDependencies' => 'Dependencies',
 			'orkest.kanbanView.filterBlocked' => 'Blocked',
@@ -4823,7 +4913,7 @@ extension on Translations {
 			'orkest.kanbanView.manageLabels' => 'Labels',
 			'orkest.kanbanView.labelsTitle' => 'Labels in this board',
 			'orkest.kanbanView.labelNamePlaceholder' => 'label name',
-			'orkest.kanbanView.labelUsage' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 card', other: '${n} cards', ),
+			'orkest.kanbanView.labelUsage' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 card', other: '${n} cards', ), 
 			'orkest.kanbanView.deleteLabel' => 'Delete label',
 			'orkest.kanbanView.newCard' => 'new card',
 			'orkest.kanbanView.newCardTitle' => 'New card',
@@ -4843,7 +4933,7 @@ extension on Translations {
 			'orkest.kanbanView.advanceHold' => 'Move to next column (hold: move to last column)',
 			'orkest.kanbanView.advanceBack' => 'Move back a column',
 			'orkest.kanbanView.emptyColumn' => 'No cards',
-			'orkest.kanbanView.cardCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 card', other: '${n} cards', ),
+			'orkest.kanbanView.cardCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 card', other: '${n} cards', ), 
 			'orkest.kanbanView.notes' => 'Note',
 			'orkest.kanbanView.notesPlaceholder' => 'Write a note',
 			'orkest.kanbanView.comments' => 'Comments',
@@ -4874,7 +4964,7 @@ extension on Translations {
 			'orkest.dbMongoView.deleteDocumentTitle' => 'Delete document',
 			'orkest.dbMongoView.deleteDocumentMessage' => ({required Object id, required Object collection}) => 'Delete the document with _id ${id} from "${collection}"?',
 			'orkest.dbMongoView.filterHint' => 'Filter — JSON, e.g. {"status": "active"}',
-			'orkest.dbMongoView.docCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 doc', other: '${n} docs', ),
+			'orkest.dbMongoView.docCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 doc', other: '${n} docs', ), 
 			'orkest.dbMongoView.refresh' => 'Refresh',
 			'orkest.dbMongoView.insertDocument' => 'Insert document',
 			'orkest.dbMongoView.noDocuments' => 'No documents in this collection.',
@@ -4940,7 +5030,7 @@ extension on Translations {
 			'orkest.projectsRail.pull' => 'Pull',
 			'orkest.projectsRail.push' => 'Push',
 			'orkest.projectsRail.createWorktree' => 'Create worktree',
-			'orkest.projectsRail.worktreeCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 worktree', other: '${n} worktrees', ),
+			'orkest.projectsRail.worktreeCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 worktree', other: '${n} worktrees', ), 
 			'orkest.projectsRail.expandWorktrees' => 'Expand worktrees',
 			'orkest.projectsRail.collapseWorktrees' => 'Collapse worktrees',
 			'orkest.findBar.find' => 'Find',
@@ -5301,6 +5391,8 @@ extension on Translations {
 			'settings.page.appearance.fontPickerSearch' => 'Search fonts',
 			'settings.page.appearance.fontPickerEmpty' => 'No matching font found on this machine.',
 			'settings.page.appearance.fontPickerBundled' => 'included',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.appearance.fontPickerCustom' => 'Not listed? Type the exact family name.',
 			'settings.page.appearance.fontPickerCustomHint' => 'Family name',
 			'settings.page.appearance.fontPickerUse' => 'Use',
@@ -5321,8 +5413,6 @@ extension on Translations {
 			'settings.page.notifications.soundVolumeTitle' => 'Volume',
 			'settings.page.notifications.soundTurnDone' => 'Turn completed',
 			'settings.page.notifications.soundTurnDoneDesc' => 'An agent finished its turn.',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.notifications.soundActionRequired' => 'Action required',
 			'settings.page.notifications.soundActionRequiredDesc' => 'An agent is waiting for your approval or answer.',
 			'settings.page.notifications.soundDefault' => 'Default',

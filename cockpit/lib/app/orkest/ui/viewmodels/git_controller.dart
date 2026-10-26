@@ -12,7 +12,10 @@ import 'dart:io'
 import 'package:orkest_code/app/orkest/domain/contracts/git_command_runner.dart';
 import 'package:orkest_code/app/orkest/domain/contracts/git_status_reader.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_file_status.dart';
+import 'package:orkest_code/app/orkest/domain/entities/git_branch.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_info.dart';
+import 'package:orkest_code/app/orkest/domain/exceptions/git_branch_error.dart';
+import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:orkest_code/app/core/ui/window_activity_controller.dart';
 import 'package:orkest_code/app/core/data/diagnostics/performance_diagnostics.dart';
 import 'package:flutter/foundation.dart';
@@ -239,6 +242,10 @@ class GitController extends ChangeNotifier {
   /// `git push` no repo em [repoPath].
   GitRun push(String repoPath) => _runner.run(repoPath, const ['push']);
 
+  /// Atualiza refs remotas sem alterar o working tree.
+  GitRun fetch(String repoPath) =>
+      _runner.run(repoPath, const ['fetch', '--all', '--prune']);
+
   /// Roda um comando e coleta a saída para consumidores que precisam ler o
   /// resultado (por exemplo, o seletor de commits de amend).
   Future<(int code, String output)> output(
@@ -261,6 +268,114 @@ class GitController extends ChangeNotifier {
     final code = await run.exitCode;
     await sub.cancel();
     return code == 0 ? null : lines.join('\n');
+  }
+
+  /// Lista refs locais e remotas que podem ser selecionadas no checkout.
+  Future<Result<List<GitBranch>, GitBranchError>> branches(String root) async {
+    final result = await output(root, const [
+      'for-each-ref',
+      '--format=%(refname)\t%(HEAD)',
+      'refs/heads',
+      'refs/remotes',
+    ]);
+    if (result.$1 != 0) {
+      return Failure(
+        GitBranchError(GitBranchErrorKind.listFailed, detail: result.$2),
+      );
+    }
+    final branches = <GitBranch>[];
+    final worktrees = await output(root, const [
+      'worktree',
+      'list',
+      '--porcelain',
+    ]);
+    final used = <String>{};
+    for (final line in worktrees.$2.split('\n')) {
+      if (line.startsWith('branch refs/heads/')) {
+        used.add(line.substring('branch refs/heads/'.length));
+      }
+    }
+    for (final line in result.$2.split('\n')) {
+      final fields = line.split('\t');
+      if (fields.isEmpty ||
+          fields.first.isEmpty ||
+          fields.first.endsWith('/HEAD')) {
+        continue;
+      }
+      final isRemote = fields.first.startsWith('refs/remotes/');
+      final name = fields.first.replaceFirst(
+        RegExp(r'^refs/(heads|remotes)/'),
+        '',
+      );
+      branches.add(
+        GitBranch(
+          name: name,
+          isRemote: isRemote,
+          isCurrent: fields.length > 1 && fields[1] == '*',
+          isUsedByWorktree: used.contains(name),
+        ),
+      );
+    }
+    branches.sort((a, b) {
+      if (a.isCurrent != b.isCurrent) return a.isCurrent ? -1 : 1;
+      if (a.isRemote != b.isRemote) return a.isRemote ? 1 : -1;
+      return a.name.compareTo(b.name);
+    });
+    return Success(branches);
+  }
+
+  /// Troca de branch sem forçar mudanças locais. Para refs remotas, cria a
+  /// branch local rastreada quando ela ainda não existe.
+  Future<Result<void, GitBranchError>> checkoutBranch(
+    String root,
+    GitBranch branch,
+  ) async {
+    final args = branch.isRemote
+        ? [
+            'switch',
+            '--track',
+            '-c',
+            branch.name.substring(branch.name.indexOf('/') + 1),
+            branch.name,
+          ]
+        : ['switch', branch.name];
+    final error = await collect(root, args);
+    if (error == null) return const Success(null);
+    return Failure(_branchError(error, create: false));
+  }
+
+  /// Cria uma branch local a partir do HEAD e já a seleciona.
+  Future<Result<void, GitBranchError>> createBranch(
+    String root,
+    String name,
+  ) async {
+    final normalized = name.trim();
+    if (normalized.isEmpty ||
+        normalized.startsWith('-') ||
+        normalized.contains(' ') ||
+        normalized.contains('..')) {
+      return const Failure(GitBranchError(GitBranchErrorKind.invalidName));
+    }
+    final error = await collect(root, ['switch', '-c', normalized]);
+    if (error == null) return const Success(null);
+    return Failure(_branchError(error, create: true));
+  }
+
+  GitBranchError _branchError(String detail, {required bool create}) {
+    final lower = detail.toLowerCase();
+    if (lower.contains('would be overwritten') ||
+        lower.contains('local changes')) {
+      return GitBranchError(GitBranchErrorKind.dirtyWorktree, detail: detail);
+    }
+    if (lower.contains('already exists')) {
+      return GitBranchError(GitBranchErrorKind.alreadyExists, detail: detail);
+    }
+    return GitBranchError(
+      create
+          ? GitBranchErrorKind.createFailed
+          : GitBranchErrorKind.checkoutFailed,
+      detail: detail,
+    );
   }
 
   // ---- ciclo de vida --------------------------------------------------------

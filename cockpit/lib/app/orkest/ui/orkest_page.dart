@@ -2220,50 +2220,51 @@ class _LspStatusBarState extends State<_LspStatusBar> {
       decoration: BoxDecoration(
         border: Border(top: BorderSide(color: colors.border)),
       ),
-      child: status == null
-          ? Align(
-              alignment: Alignment.centerLeft,
+      child: Row(
+        children: [
+          if (status == null)
+            Expanded(
               child: Text(
                 context.t.orkest.orkestPage.noLspAvailable,
                 style: context.typo.label.copyWith(color: colors.text4),
               ),
             )
-          : Row(
-              children: [
-                Container(
-                  width: 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: status.running ? colors.online : colors.text4,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: Text(
-                    '${status.label} LSP · ${status.running ? context.t.orkest.orkestPage.lspRunning : context.t.orkest.orkestPage.lspStopped}',
-                    overflow: TextOverflow.ellipsis,
-                    style: context.typo.label.copyWith(color: colors.text2),
-                  ),
-                ),
-                AppTooltip(
-                  message: context.t.orkest.orkestPage.restartServerTooltip,
-                  child: HoverTap(
-                    borderRadius: BorderRadius.circular(6),
-                    onTap: _restarting ? () {} : () => _restart(vm),
-                    child: SizedBox(
-                      width: 26,
-                      height: 26,
-                      child: Icon(
-                        Icons.refresh,
-                        size: 15,
-                        color: _restarting ? colors.text4 : colors.text2,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
+          else ...[
+            Container(
+              width: 8,
+              height: 8,
+              decoration: BoxDecoration(
+                color: status.running ? colors.online : colors.text4,
+                shape: BoxShape.circle,
+              ),
             ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: Text(
+                '${status.label} LSP · ${status.running ? context.t.orkest.orkestPage.lspRunning : context.t.orkest.orkestPage.lspStopped}',
+                overflow: TextOverflow.ellipsis,
+                style: context.typo.label.copyWith(color: colors.text2),
+              ),
+            ),
+            AppTooltip(
+              message: context.t.orkest.orkestPage.restartServerTooltip,
+              child: HoverTap(
+                borderRadius: BorderRadius.circular(6),
+                onTap: _restarting ? () {} : () => _restart(vm),
+                child: SizedBox(
+                  width: 26,
+                  height: 26,
+                  child: Icon(
+                    Icons.refresh,
+                    size: 15,
+                    color: _restarting ? colors.text4 : colors.text2,
+                  ),
+                ),
+              ),
+            ),
+          ],
+        ],
+      ),
     );
   }
 }

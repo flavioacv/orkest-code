@@ -4582,6 +4582,9 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
   /// `git push` no repo em [repoPath].
   GitRun gitPush(String repoPath) => git.push(repoPath);
 
+  /// Atualiza refs remotas sem alterar arquivos locais.
+  GitRun gitFetch(String repoPath) => git.fetch(repoPath);
+
   /// "Update from parent": mergeia a branch **do pai** (root de origem) no
   /// checkout do worktree [fork] — o inverso do [mergeWorktreeToParent].
   /// Conflito fica no worktree pro usuário resolver (exit ≠ 0 no dialog);

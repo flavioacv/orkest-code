@@ -315,6 +315,28 @@
       "lspRunning": "em execução",
       "lspStopped": "parado"
     },
+    "branchPicker": {
+      "title": "Trocar branch",
+      "tooltip": "Branch atual: ${branch}",
+      "worktreeFixed": "Esta branch é fixa para esta worktree.",
+      "worktreeFixedShort": "worktree",
+      "usedByWorktree": "A branch já está em uso por uma worktree.",
+      "searchPlaceholder": "Buscar branches",
+      "newBranchPlaceholder": "Nome da nova branch",
+      "createBranch": "Criar branch",
+      "noBranches": "Nenhuma branch encontrada.",
+      "fetch": "Buscar",
+      "pull": "Pull",
+      "push": "Push",
+      "refresh": "Atualizar controle de código-fonte",
+      "fetchTitle": "Buscar — ${label}",
+      "listFailed": "Não foi possível listar branches: ${detail}",
+      "invalidName": "Informe um nome de branch válido.",
+      "alreadyExists": "Já existe uma branch com esse nome.",
+      "dirtyWorktree": "Faça commit, stash ou descarte as mudanças locais antes de trocar de branch.",
+      "checkoutFailed": "Não foi possível trocar a branch: ${detail}",
+      "createFailed": "Não foi possível criar a branch: ${detail}"
+    },
     "welcomeView": {
       "title": "Bem-vindo ao Orkest Code",
       "subtitle": "Abra uma pasta ou conecte a um host remoto para começar.",

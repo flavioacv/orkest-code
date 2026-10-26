@@ -35,7 +35,7 @@ class TranslationsPtBr extends Translations with BaseTranslations<AppLocale, Tra
 
 	late final TranslationsPtBr _root = this; // ignore: unused_field
 
-	@override
+	@override 
 	TranslationsPtBr $copyWith({TranslationMetadata<AppLocale, Translations>? meta}) => TranslationsPtBr(meta: meta ?? this.$meta);
 
 	// Translations
@@ -110,6 +110,7 @@ class _Translations$orkest$pt_BR extends Translations$orkest$en {
 	@override late final _Translations$orkest$commitMessageDialog$pt_BR commitMessageDialog = _Translations$orkest$commitMessageDialog$pt_BR._(_root);
 	@override late final _Translations$orkest$tasksPanel$pt_BR tasksPanel = _Translations$orkest$tasksPanel$pt_BR._(_root);
 	@override late final _Translations$orkest$orkestPage$pt_BR orkestPage = _Translations$orkest$orkestPage$pt_BR._(_root);
+	@override late final _Translations$orkest$branchPicker$pt_BR branchPicker = _Translations$orkest$branchPicker$pt_BR._(_root);
 	@override late final _Translations$orkest$welcomeView$pt_BR welcomeView = _Translations$orkest$welcomeView$pt_BR._(_root);
 	@override late final _Translations$orkest$paneView$pt_BR paneView = _Translations$orkest$paneView$pt_BR._(_root);
 	@override late final _Translations$orkest$fileTreePanel$pt_BR fileTreePanel = _Translations$orkest$fileTreePanel$pt_BR._(_root);
@@ -568,6 +569,35 @@ class _Translations$orkest$orkestPage$pt_BR extends Translations$orkest$orkestPa
 	@override String get noLspAvailable => 'Nenhum LSP disponível';
 	@override String get lspRunning => 'em execução';
 	@override String get lspStopped => 'parado';
+}
+
+// Path: orkest.branchPicker
+class _Translations$orkest$branchPicker$pt_BR extends Translations$orkest$branchPicker$en {
+	_Translations$orkest$branchPicker$pt_BR._(TranslationsPtBr root) : this._root = root, super.internal(root);
+
+	final TranslationsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Trocar branch';
+	@override String tooltip({required Object branch}) => 'Branch atual: ${branch}';
+	@override String get worktreeFixed => 'Esta branch é fixa para esta worktree.';
+	@override String get worktreeFixedShort => 'worktree';
+	@override String get usedByWorktree => 'A branch já está em uso por uma worktree.';
+	@override String get searchPlaceholder => 'Buscar branches';
+	@override String get newBranchPlaceholder => 'Nome da nova branch';
+	@override String get createBranch => 'Criar branch';
+	@override String get noBranches => 'Nenhuma branch encontrada.';
+	@override String get fetch => 'Buscar';
+	@override String get pull => 'Pull';
+	@override String get push => 'Push';
+	@override String get refresh => 'Atualizar controle de código-fonte';
+	@override String fetchTitle({required Object label}) => 'Buscar — ${label}';
+	@override String listFailed({required Object detail}) => 'Não foi possível listar branches: ${detail}';
+	@override String get invalidName => 'Informe um nome de branch válido.';
+	@override String get alreadyExists => 'Já existe uma branch com esse nome.';
+	@override String get dirtyWorktree => 'Faça commit, stash ou descarte as mudanças locais antes de trocar de branch.';
+	@override String checkoutFailed({required Object detail}) => 'Não foi possível trocar a branch: ${detail}';
+	@override String createFailed({required Object detail}) => 'Não foi possível criar a branch: ${detail}';
 }
 
 // Path: orkest.welcomeView
@@ -2294,12 +2324,32 @@ extension on TranslationsPtBr {
 			'orkest.orkestPage.failedToRemoveWorktreeTitle' => 'Falha ao remover a worktree',
 			'orkest.orkestPage.openLayoutTitle' => 'Abrir layout',
 			'orkest.orkestPage.replaceLayoutTitle' => 'Substituir o layout atual?',
-			'orkest.orkestPage.replaceLayoutMessage' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 aba será fechada, e ela tem um processo em execução.', other: '${n} abas serão fechadas, inclusive as com processos em execução.', ),
+			'orkest.orkestPage.replaceLayoutMessage' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 aba será fechada, e ela tem um processo em execução.', other: '${n} abas serão fechadas, inclusive as com processos em execução.', ), 
 			'orkest.orkestPage.replaceLayoutConfirm' => 'Substituir',
 			'orkest.orkestPage.restartServerTooltip' => 'Reiniciar servidor',
 			'orkest.orkestPage.noLspAvailable' => 'Nenhum LSP disponível',
 			'orkest.orkestPage.lspRunning' => 'em execução',
 			'orkest.orkestPage.lspStopped' => 'parado',
+			'orkest.branchPicker.title' => 'Trocar branch',
+			'orkest.branchPicker.tooltip' => ({required Object branch}) => 'Branch atual: ${branch}',
+			'orkest.branchPicker.worktreeFixed' => 'Esta branch é fixa para esta worktree.',
+			'orkest.branchPicker.worktreeFixedShort' => 'worktree',
+			'orkest.branchPicker.usedByWorktree' => 'A branch já está em uso por uma worktree.',
+			'orkest.branchPicker.searchPlaceholder' => 'Buscar branches',
+			'orkest.branchPicker.newBranchPlaceholder' => 'Nome da nova branch',
+			'orkest.branchPicker.createBranch' => 'Criar branch',
+			'orkest.branchPicker.noBranches' => 'Nenhuma branch encontrada.',
+			'orkest.branchPicker.fetch' => 'Buscar',
+			'orkest.branchPicker.pull' => 'Pull',
+			'orkest.branchPicker.push' => 'Push',
+			'orkest.branchPicker.refresh' => 'Atualizar controle de código-fonte',
+			'orkest.branchPicker.fetchTitle' => ({required Object label}) => 'Buscar — ${label}',
+			'orkest.branchPicker.listFailed' => ({required Object detail}) => 'Não foi possível listar branches: ${detail}',
+			'orkest.branchPicker.invalidName' => 'Informe um nome de branch válido.',
+			'orkest.branchPicker.alreadyExists' => 'Já existe uma branch com esse nome.',
+			'orkest.branchPicker.dirtyWorktree' => 'Faça commit, stash ou descarte as mudanças locais antes de trocar de branch.',
+			'orkest.branchPicker.checkoutFailed' => ({required Object detail}) => 'Não foi possível trocar a branch: ${detail}',
+			'orkest.branchPicker.createFailed' => ({required Object detail}) => 'Não foi possível criar a branch: ${detail}',
 			'orkest.welcomeView.title' => 'Bem-vindo ao Orkest Code',
 			'orkest.welcomeView.subtitle' => 'Abra uma pasta ou conecte a um host remoto para começar.',
 			'orkest.welcomeView.createWorkspace' => 'Criar workspace',
@@ -2467,7 +2517,7 @@ extension on TranslationsPtBr {
 			'orkest.realmDialogs.deleteSuffixOne' => ' O workspace dele irá para o Padrão.',
 			'orkest.realmDialogs.deleteSuffixMany' => ({required Object count}) => ' Os ${count} workspaces dele irão para o Padrão.',
 			'orkest.realmDialogs.manageRealmsTitle' => 'Gerenciar realms',
-			'orkest.realmDialogs.workspaceCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 workspace', other: '${n} workspaces', ),
+			'orkest.realmDialogs.workspaceCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 workspace', other: '${n} workspaces', ), 
 			'orkest.dbRedisTable.deleteKeyTitle' => 'Excluir chave',
 			'orkest.dbRedisTable.deleteKeyMessage' => ({required Object key}) => 'Excluir "${key}" deste banco Redis?',
 			'orkest.dbRedisTable.refresh' => 'Atualizar',
@@ -2476,7 +2526,7 @@ extension on TranslationsPtBr {
 			'orkest.dbRedisTable.columnValue' => 'VALOR',
 			'orkest.dbRedisTable.columnType' => 'TIPO',
 			'orkest.dbRedisTable.columnTtl' => 'TTL',
-			'orkest.dbRedisTable.keyCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 chave', other: '${n} chaves', ),
+			'orkest.dbRedisTable.keyCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 chave', other: '${n} chaves', ), 
 			'orkest.dbRedisTable.noKeys' => 'Nenhuma chave neste banco de dados.',
 			'orkest.dbRedisTable.noKeysMatch' => ({required Object pattern}) => 'Nenhuma chave corresponde a "${pattern}".',
 			'orkest.dbRedisTable.loadMore' => 'Carregar mais',
@@ -2497,7 +2547,7 @@ extension on TranslationsPtBr {
 			'orkest.dbQueryView.pickDatabaseHint' => 'Escolha um banco de dados acima e depois Executar (⌘↵).',
 			'orkest.dbQueryView.runQueryHint' => 'Execute a query (⌘↵) para ver os resultados aqui.',
 			'orkest.dbQueryView.noRows' => 'Nenhuma linha.',
-			'orkest.dbQueryView.rowsAffected' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 linha afetada', other: '${n} linhas afetadas', ),
+			'orkest.dbQueryView.rowsAffected' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 linha afetada', other: '${n} linhas afetadas', ), 
 			'orkest.dbQueryView.rowsFooter' => ({required Object n}) => '${n} linhas',
 			'orkest.dbQueryView.truncatedSuffix' => ' · truncado (aumente -- limit)',
 			'orkest.dbQueryView.table' => 'Tabela',
@@ -2512,7 +2562,9 @@ extension on TranslationsPtBr {
 			'orkest.httpView.running' => 'Executando…',
 			'orkest.httpView.noRequests' => 'Nenhum request neste arquivo — escreva um, ex.: GET https://example.com',
 			'orkest.httpView.selectRequest' => 'Selecionar request',
-			'orkest.httpView.requestCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 request', other: '${n} requests', ),
+			_ => null,
+		} ?? switch (path) {
+			'orkest.httpView.requestCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 request', other: '${n} requests', ), 
 			'orkest.httpView.runHint' => 'Execute o request (⌘↵) para ver a resposta aqui.',
 			'orkest.httpView.emptyBody' => 'Corpo da resposta vazio.',
 			'orkest.httpView.body' => 'JSON',
@@ -2532,8 +2584,6 @@ extension on TranslationsPtBr {
 			'orkest.kanbanView.filter' => 'Filtrar',
 			'orkest.kanbanView.filterTitlePlaceholder' => 'Buscar por título',
 			'orkest.kanbanView.filterLabels' => 'Marcadores',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.kanbanView.filterClear' => 'Limpar',
 			'orkest.kanbanView.filterDependencies' => 'Dependências',
 			'orkest.kanbanView.filterBlocked' => 'Bloqueado',
@@ -2548,7 +2598,7 @@ extension on TranslationsPtBr {
 			'orkest.kanbanView.manageLabels' => 'Marcadores',
 			'orkest.kanbanView.labelsTitle' => 'Marcadores deste quadro',
 			'orkest.kanbanView.labelNamePlaceholder' => 'nome do marcador',
-			'orkest.kanbanView.labelUsage' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 card', other: '${n} cards', ),
+			'orkest.kanbanView.labelUsage' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 card', other: '${n} cards', ), 
 			'orkest.kanbanView.deleteLabel' => 'Apagar marcador',
 			'orkest.kanbanView.newCard' => 'novo card',
 			'orkest.kanbanView.newCardTitle' => 'Novo card',
@@ -2568,7 +2618,7 @@ extension on TranslationsPtBr {
 			'orkest.kanbanView.advanceHold' => 'Mover para a próxima coluna (segurar: mover para a última)',
 			'orkest.kanbanView.advanceBack' => 'Voltar uma coluna',
 			'orkest.kanbanView.emptyColumn' => 'Sem cards',
-			'orkest.kanbanView.cardCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 card', other: '${n} cards', ),
+			'orkest.kanbanView.cardCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 card', other: '${n} cards', ), 
 			'orkest.kanbanView.notes' => 'Nota',
 			'orkest.kanbanView.notesPlaceholder' => 'Escreva uma nota',
 			'orkest.kanbanView.comments' => 'Comentários',
@@ -2599,7 +2649,7 @@ extension on TranslationsPtBr {
 			'orkest.dbMongoView.deleteDocumentTitle' => 'Excluir documento',
 			'orkest.dbMongoView.deleteDocumentMessage' => ({required Object id, required Object collection}) => 'Excluir o documento com _id ${id} de "${collection}"?',
 			'orkest.dbMongoView.filterHint' => 'Filtro — JSON, ex.: {"status": "active"}',
-			'orkest.dbMongoView.docCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 doc', other: '${n} docs', ),
+			'orkest.dbMongoView.docCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 doc', other: '${n} docs', ), 
 			'orkest.dbMongoView.refresh' => 'Atualizar',
 			'orkest.dbMongoView.insertDocument' => 'Inserir documento',
 			'orkest.dbMongoView.noDocuments' => 'Nenhum documento nesta coleção.',
@@ -2665,7 +2715,7 @@ extension on TranslationsPtBr {
 			'orkest.projectsRail.pull' => 'Pull',
 			'orkest.projectsRail.push' => 'Push',
 			'orkest.projectsRail.createWorktree' => 'Criar worktree',
-			'orkest.projectsRail.worktreeCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 worktree', other: '${n} worktrees', ),
+			'orkest.projectsRail.worktreeCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 worktree', other: '${n} worktrees', ), 
 			'orkest.projectsRail.expandWorktrees' => 'Expandir worktrees',
 			'orkest.projectsRail.collapseWorktrees' => 'Recolher worktrees',
 			'orkest.findBar.find' => 'Buscar',
@@ -3026,6 +3076,8 @@ extension on TranslationsPtBr {
 			'settings.page.appearance.fontPickerSearch' => 'Buscar fontes',
 			'settings.page.appearance.fontPickerEmpty' => 'Nenhuma fonte correspondente nesta máquina.',
 			'settings.page.appearance.fontPickerBundled' => 'inclusa',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.appearance.fontPickerCustom' => 'Não está na lista? Digite o nome exato da família.',
 			'settings.page.appearance.fontPickerCustomHint' => 'Nome da família',
 			'settings.page.appearance.fontPickerUse' => 'Usar',
@@ -3046,8 +3098,6 @@ extension on TranslationsPtBr {
 			'settings.page.notifications.soundVolumeTitle' => 'Volume',
 			'settings.page.notifications.soundTurnDone' => 'Turno concluído',
 			'settings.page.notifications.soundTurnDoneDesc' => 'Um agente terminou o turno.',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.notifications.soundActionRequired' => 'Ação necessária',
 			'settings.page.notifications.soundActionRequiredDesc' => 'Um agente está esperando sua aprovação ou resposta.',
 			'settings.page.notifications.soundDefault' => 'Padrão',

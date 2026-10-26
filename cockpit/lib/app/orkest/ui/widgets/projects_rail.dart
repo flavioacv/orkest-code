@@ -17,6 +17,7 @@ import 'package:flutter_modular/flutter_modular.dart';
 import 'package:flutter/services.dart' show Clipboard, ClipboardData;
 import 'package:orkest_code/app/core/ui/widgets/app_tooltip.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/git_branch_picker.dart';
 
 /// Root git de um workspace, pra rail (kebab + popup do badge multi-root):
 /// path absoluto + basename + estado git (`null` = pasta sem git). Multi-root
@@ -1152,7 +1153,13 @@ class _ProjectItem extends StatelessWidget {
                         // pasta comum não mostra nada.
                         if (gitInfo != null) ...[
                           const SizedBox(height: 4),
-                          _AbsorbCardTap(child: _GitBadge(info: gitInfo)),
+                          _AbsorbCardTap(
+                            child: _GitBadge(
+                              info: gitInfo,
+                              onTap: () =>
+                                  showGitBranchPicker(context, project.path),
+                            ),
+                          ),
                         ] else if (rootsSummary.$1 > 1) ...[
                           const SizedBox(height: 4),
                           _MultiRootBadge(
@@ -1301,34 +1308,38 @@ class _WorktreeItem extends StatelessWidget {
                       Icon(Icons.call_split, size: 12, color: colors.text3),
                       const SizedBox(width: 7),
                       Expanded(
-                        child: AppTooltip(
-                          message: fullLabel,
-                          child: Text.rich(
-                            TextSpan(
-                              text: worktree.name,
-                              children: [
-                                // Sufixo `(root)` só em pai multi-root: diz de
-                                // qual repo o fork nasceu (branch pode repetir).
-                                if (originName != null)
+                        child: git != null
+                            ? _GitBadge(info: git!, locked: true)
+                            : AppTooltip(
+                                message: fullLabel,
+                                child: Text.rich(
                                   TextSpan(
-                                    text: '  ($originName)',
-                                    style: context.typo.mono.copyWith(
-                                      fontSize: 11,
-                                      color: colors.text3,
-                                    ),
+                                    text: worktree.name,
+                                    children: [
+                                      // Sufixo `(root)` só em pai multi-root: diz de
+                                      // qual repo o fork nasceu (branch pode repetir).
+                                      if (originName != null)
+                                        TextSpan(
+                                          text: '  ($originName)',
+                                          style: context.typo.mono.copyWith(
+                                            fontSize: 11,
+                                            color: colors.text3,
+                                          ),
+                                        ),
+                                    ],
                                   ),
-                              ],
-                            ),
-                            overflow: TextOverflow.ellipsis,
-                            style: context.typo.mono.copyWith(
-                              fontSize: 12,
-                              color: selected ? colors.text : colors.text2,
-                              fontWeight: selected
-                                  ? FontWeight.w500
-                                  : FontWeight.w400,
-                            ),
-                          ),
-                        ),
+                                  overflow: TextOverflow.ellipsis,
+                                  style: context.typo.mono.copyWith(
+                                    fontSize: 12,
+                                    color: selected
+                                        ? colors.text
+                                        : colors.text2,
+                                    fontWeight: selected
+                                        ? FontWeight.w500
+                                        : FontWeight.w400,
+                                  ),
+                                ),
+                              ),
                       ),
                       const SizedBox(width: 6),
                       _WorktreeSignal(
@@ -1695,8 +1706,10 @@ class _RootStatusRow extends StatelessWidget {
 }
 
 class _GitBadge extends StatelessWidget {
-  const _GitBadge({required this.info});
+  const _GitBadge({required this.info, this.onTap, this.locked = false});
   final GitInfo info;
+  final VoidCallback? onTap;
+  final bool locked;
 
   @override
   Widget build(BuildContext context) {
@@ -1705,7 +1718,7 @@ class _GitBadge extends StatelessWidget {
     final dirty = info.isDirty;
     final fg = dirty ? colors.warn : colors.text3;
     final bg = dirty ? colors.editedBg : colors.panel3;
-    return Container(
+    final badge = Container(
       padding: const EdgeInsets.fromLTRB(4, 1, 5, 1),
       decoration: BoxDecoration(
         color: bg,
@@ -1714,7 +1727,11 @@ class _GitBadge extends StatelessWidget {
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(Icons.call_split, size: 9, color: fg),
+          Icon(
+            locked ? Icons.lock_outline : Icons.call_split,
+            size: 9,
+            color: fg,
+          ),
           const SizedBox(width: 3),
           Flexible(
             child: Text(
@@ -1739,6 +1756,14 @@ class _GitBadge extends StatelessWidget {
               color: colors.accentText,
             ),
           ],
+          if (locked)
+            Padding(
+              padding: const EdgeInsets.only(left: 4),
+              child: Text(
+                context.t.orkest.branchPicker.worktreeFixedShort,
+                style: typo.mono.copyWith(fontSize: 9, color: colors.text4),
+              ),
+            ),
           if (dirty) ...[
             const SizedBox(width: 4),
             Text(
@@ -1752,6 +1777,13 @@ class _GitBadge extends StatelessWidget {
           ],
         ],
       ),
+    );
+    if (onTap == null && !locked) return badge;
+    return AppTooltip(
+      message: locked
+          ? context.t.orkest.branchPicker.worktreeFixed
+          : context.t.orkest.branchPicker.tooltip(branch: info.branch),
+      child: GestureDetector(onTap: locked ? null : onTap, child: badge),
     );
   }
 }
