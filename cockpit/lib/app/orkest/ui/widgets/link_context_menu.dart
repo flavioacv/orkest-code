@@ -102,6 +102,9 @@ Future<void> openTerminalLink({
   if (filePath != null) {
     final target = _expandHome(resolvedFilePath ?? filePath);
     if (await _looksBinary(target)) {
+      // Artefatos de build (IPA/APK/DMG etc.) abrem no SO, mas ainda precisam
+      // selecionar e expandir sua posição na árvore do workspace.
+      onOpenFile?.call(_expandHome(filePath), line: fileLine);
       _osOpen(target);
     } else {
       onOpenFile?.call(_expandHome(filePath), line: fileLine);

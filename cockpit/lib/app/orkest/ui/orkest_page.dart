@@ -1838,6 +1838,9 @@ class _TreePanel extends StatelessWidget {
           stagedPaths: vm.stagedAbsolutePaths(),
           unstagedPaths: vm.unstagedAbsolutePaths(),
           onOpenWith: vm.openWithDefaultApp,
+          onRevealInFileManager: vm.canRevealInFileManager
+              ? vm.revealInFileManager
+              : null,
           // Janela de documento própria: só no desktop (engine extra por
           // janela) e em workspace local (a janela lê do disco daqui).
           onOpenInWindow:

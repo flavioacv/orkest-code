@@ -104,6 +104,7 @@ class FileTreePanel extends StatefulWidget {
     this.stagedPaths = const <String>[],
     this.unstagedPaths = const <String>[],
     required this.onOpenWith,
+    this.onRevealInFileManager,
     this.onOpenInWindow,
     this.onOpenLayout,
     this.onOpenAsSource,
@@ -294,6 +295,9 @@ class FileTreePanel extends StatefulWidget {
 
   /// "Open with" → abre o arquivo/pasta no app/explorador padrão do SO.
   final ValueChanged<String> onOpenWith;
+
+  /// Revela o item no gerenciador de arquivos do SO.
+  final ValueChanged<String>? onRevealInFileManager;
 
   /// Abre o arquivo numa janela de documento própria (desktop). `null` =
   /// item ausente no menu (mobile).
@@ -1119,6 +1123,7 @@ class _FileTreePanelState extends State<FileTreePanel> {
       onTapFile: widget.onTapFile,
       onSelectFile: widget.onSelectFile,
       onOpenWith: widget.onOpenWith,
+      onRevealInFileManager: widget.onRevealInFileManager,
       onOpenInWindow: widget.onOpenInWindow,
       onOpenLayout: widget.onOpenLayout,
       onOpenAsSource: widget.onOpenAsSource,
@@ -1768,6 +1773,7 @@ class _TreeEdit {
     required this.onTapFile,
     required this.onSelectFile,
     required this.onOpenWith,
+    this.onRevealInFileManager,
     this.onOpenInWindow,
     this.onOpenLayout,
     this.onOpenAsSource,
@@ -1812,6 +1818,7 @@ class _TreeEdit {
   /// "Show git diff" (menu de contexto) → abre o diff do arquivo.
   final ValueChanged<String> onShowDiff;
   final ValueChanged<String> onOpenWith;
+  final ValueChanged<String>? onRevealInFileManager;
   final ValueChanged<String>? onOpenInWindow;
   final ValueChanged<String>? onOpenLayout;
   final ValueChanged<String>? onOpenAsSource;
@@ -1970,6 +1977,9 @@ class _DirViewState extends State<_DirView> {
                   },
                   onDoubleTap: () => edit.onOpenFile(node.path),
                   onOpenWith: () => edit.onOpenWith(node.path),
+                  onRevealInFileManager: edit.onRevealInFileManager == null
+                      ? null
+                      : () => edit.onRevealInFileManager!(node.path),
                   onOpenInWindow: edit.onOpenInWindow == null
                       ? null
                       : () => edit.onOpenInWindow!(node.path),
@@ -2144,6 +2154,9 @@ class _FolderState extends State<_Folder> {
           onNewFile: () => edit.onStartCreate(widget.node.path, false),
           onNewFolder: () => edit.onStartCreate(widget.node.path, true),
           onOpenWith: () => edit.onOpenWith(widget.node.path),
+          onRevealInFileManager: edit.onRevealInFileManager == null
+              ? null
+              : () => edit.onRevealInFileManager!(widget.node.path),
           onOpenInWindow: edit.onOpenInWindow == null
               ? null
               : () => edit.onOpenInWindow!(widget.node.path),
@@ -2216,6 +2229,9 @@ _Row _folderMenuSpec(
   onNewFile: () => edit.onStartCreate(path, false),
   onNewFolder: () => edit.onStartCreate(path, true),
   onOpenWith: () => edit.onOpenWith(path),
+  onRevealInFileManager: edit.onRevealInFileManager == null
+      ? null
+      : () => edit.onRevealInFileManager!(path),
   onOpenInWindow: edit.onOpenInWindow == null
       ? null
       : () => edit.onOpenInWindow!(path),
@@ -2223,12 +2239,12 @@ _Row _folderMenuSpec(
   canPaste: edit.canPaste,
 );
 
-String _fileExplorerLabel(BuildContext context) {
-  if (Platform.isMacOS) return context.t.orkest.fileTreePanel.openInFinder;
+String _revealInFileManagerLabel(BuildContext context) {
+  if (Platform.isMacOS) return context.t.orkest.terminalLink.revealFinder;
   if (Platform.isWindows) {
-    return context.t.orkest.fileTreePanel.openInExplorer;
+    return context.t.orkest.terminalLink.revealExplorer;
   }
-  return context.t.orkest.fileTreePanel.openInFileManager;
+  return context.t.orkest.terminalLink.revealFolder;
 }
 
 /// Menu de contexto de um nó da árvore. [spec] é um [_Row] usado só como
@@ -2323,10 +2339,10 @@ void _showNodeMenu(BuildContext context, Offset globalPosition, _Row widget) {
             ),
           ),
       ],
-      if (isFolder)
+      if (widget.onRevealInFileManager != null)
         AppMenuItem(
           value: 'reveal',
-          label: _fileExplorerLabel(context),
+          label: _revealInFileManagerLabel(context),
           icon: Icons.folder_open_outlined,
         ),
       // Sem callback (raiz do workspace via área vazia) o item não aparece:
@@ -2375,8 +2391,10 @@ void _showNodeMenu(BuildContext context, Offset globalPosition, _Row widget) {
       case 'diff':
         widget.onShowDiff?.call();
       case 'openwith':
-      case 'reveal':
         widget.onOpenWith?.call();
+        break;
+      case 'reveal':
+        widget.onRevealInFileManager?.call();
       case 'open-window':
         widget.onOpenInWindow?.call();
       case 'layout':
@@ -2426,6 +2444,7 @@ class _Row extends StatefulWidget {
     this.onTap,
     this.onDoubleTap,
     this.onOpenWith,
+    this.onRevealInFileManager,
     this.onOpenInWindow,
     this.onOpenLayout,
     this.onOpenAsSource,
@@ -2458,8 +2477,9 @@ class _Row extends StatefulWidget {
   final VoidCallback? onTap;
   final VoidCallback? onDoubleTap;
 
-  /// "Open with" (arquivo) / "Open in Finder" (pasta).
+  /// Abre o arquivo/pasta no app padrão do SO.
   final VoidCallback? onOpenWith;
+  final VoidCallback? onRevealInFileManager;
   final VoidCallback? onOpenInWindow;
 
   /// "Open layout" (só arquivos `.ckp`). `null` = item não aparece.

@@ -8,7 +8,8 @@ import 'dart:io'
         FileSystemEntity,
         FileSystemEntityType,
         FileSystemException,
-        Platform;
+        Platform,
+        Process;
 import 'dart:math' show max;
 
 import 'package:orkest_code/app/core/data/diagnostics/diagnostics_log.dart';
@@ -1298,9 +1299,7 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
     );
   }
 
-  Future<FileOpenOutcome> _openWithOrkestEditor(
-    FileOpenRequest request,
-  ) async {
+  Future<FileOpenOutcome> _openWithOrkestEditor(FileOpenRequest request) async {
     if (request.isNotebook) {
       openNotebook(request.path);
       return FileOpenOutcome.opened;
@@ -2463,6 +2462,14 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
           : null,
     );
     if (abs == null) return;
+    // Caminhos abertos pelo terminal devem aparecer na árvore como arquivos
+    // selecionados, mesmo que seus diretórios ancestrais estejam recolhidos.
+    if (projectId != null && isInsideProject(projectId, abs)) {
+      _selectedFileInTree = abs;
+      _treeRevealPath = abs;
+      _treeRevealGen++;
+      notifyListeners();
+    }
     await openFile(abs, isPreview: false, revealLine: line);
   }
 
@@ -3361,6 +3368,25 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
   /// Abre [path] no app padrão do SO ("Open with" do menu do file tree).
   Future<void> openWithDefaultApp(String path) =>
       _launcher.openWithDefaultApp(path);
+
+  /// O gerenciador de arquivos local não enxerga caminhos que pertencem a um
+  /// host remoto. Esses itens devem primeiro ser baixados pelo usuário.
+  bool get canRevealInFileManager {
+    final projectId = _selectedProjectId;
+    return projectId != null && !_isRemote(projectId);
+  }
+
+  /// Revela [path] no gerenciador de arquivos do SO, selecionando-o quando a
+  /// plataforma suporta seleção direta.
+  Future<void> revealInFileManager(String path) async {
+    if (Platform.isMacOS) {
+      await Process.run('open', ['-R', path]);
+    } else if (Platform.isWindows) {
+      await Process.run('explorer', ['/select,', path]);
+    } else {
+      await Process.run('xdg-open', [File(path).parent.path]);
+    }
+  }
 
   // ---- realms ---------------------------------------------------------------
   /// Troca o recorte do rail pro realm [id], **sem reiniciar nada**: sessões de
