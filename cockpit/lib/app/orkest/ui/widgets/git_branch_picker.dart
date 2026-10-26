@@ -8,16 +8,19 @@ import 'package:orkest_code/i18n/strings.g.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
-Future<void> showGitBranchPicker(BuildContext context, String root) =>
-    showDialog<void>(
-      context: context,
-      barrierColor: context.colors.scrim,
-      builder: (_) => _GitBranchPicker(root: root),
-    );
+Future<void> showGitBranchPicker(BuildContext context, String root) {
+  final vm = context.read<OrkestViewModel>();
+  return showDialog<void>(
+    context: context,
+    barrierColor: context.colors.scrim,
+    builder: (_) => _GitBranchPicker(root: root, vm: vm),
+  );
+}
 
 class _GitBranchPicker extends StatefulWidget {
-  const _GitBranchPicker({required this.root});
+  const _GitBranchPicker({required this.root, required this.vm});
   final String root;
+  final OrkestViewModel vm;
   @override
   State<_GitBranchPicker> createState() => _GitBranchPickerState();
 }
@@ -29,7 +32,7 @@ class _GitBranchPickerState extends State<_GitBranchPicker> {
   GitBranchError? _error;
   bool _loading = true;
 
-  OrkestViewModel get _vm => context.read<OrkestViewModel>();
+  OrkestViewModel get _vm => widget.vm;
 
   @override
   void initState() {
@@ -45,17 +48,26 @@ class _GitBranchPickerState extends State<_GitBranchPicker> {
   }
 
   Future<void> _load() async {
-    final result = await _vm.git.branches(widget.root);
-    if (!mounted) return;
-    setState(() {
-      _loading = false;
+    try {
+      final result = await _vm.git
+          .branches(widget.root)
+          .timeout(const Duration(seconds: 15));
+      if (!mounted) return;
       switch (result) {
         case Success(:final value):
           _branches = value;
         case Failure(:final error):
           _error = error;
       }
-    });
+    } on Exception catch (error) {
+      if (!mounted) return;
+      _error = GitBranchError(
+        GitBranchErrorKind.listFailed,
+        detail: error.toString(),
+      );
+    } finally {
+      if (mounted) setState(() => _loading = false);
+    }
   }
 
   Future<void> _finish(Result<void, GitBranchError> result) async {

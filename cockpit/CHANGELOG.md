@@ -1,5 +1,10 @@
 # Changelog — Orkest Code
 
+## 0.1.4 (build 7) — 2026-10-26
+
+- The branch picker now shares the workspace's state correctly, so listing, switching, and creating branches work from the dialog.
+- Branch listing failures and requests that take longer than 15 seconds show an error instead of loading indefinitely.
+
 ## 0.1.3 (build 5) — 2026-10-25
 
 - Office room labels now follow the selected language, including changes while it is open.
