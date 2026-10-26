@@ -2,6 +2,8 @@ import 'dart:async';
 import 'dart:collection';
 import 'dart:convert';
 import 'office_social_state.dart';
+import 'office_room_effects.dart';
+import 'package:orkest_code/app/orkest/domain/services/git_terminal_event_detector.dart';
 
 import 'package:orkest_code/app/orkest/domain/contracts/terminal_gateway.dart';
 import 'package:orkest_code/app/orkest/domain/contracts/terminal_scrollback_store.dart';
@@ -516,6 +518,7 @@ class TerminalSession extends PaneItem {
   DateTime? _lastIdleAt;
   final Set<int> _observedOfficeActivityFingerprints = <int>{};
   final Queue<int> _observedOfficeActivityOrder = Queue<int>();
+  static const _gitEventDetector = GitTerminalEventDetector();
   DateTime? _lastOfficeActivityScanAt;
   DateTime? _pendingAgentPromptAt;
   bool _officeAgentActivityObserved = false;
@@ -754,6 +757,21 @@ class TerminalSession extends PaneItem {
     for (final raw in terminal.plainLines(limit: 80)) {
       final line = raw.trim();
       if (line.isEmpty) continue;
+
+      final gitEvent = _gitEventDetector.detect(line);
+      if (gitEvent != null) {
+        final gitFp = Object.hash('git', gitEvent.kind, gitEvent.summary, line);
+        if (_observedOfficeActivityFingerprints.add(gitFp)) {
+          _observedOfficeActivityOrder.addLast(gitFp);
+          if (_observedOfficeActivityOrder.length > 256) {
+            _observedOfficeActivityFingerprints.remove(
+              _observedOfficeActivityOrder.removeFirst(),
+            );
+          }
+          _handleObservedGitEvent(gitEvent);
+        }
+      }
+
       final observation = _mapOfficeActivityLine(line);
       if (observation == null) continue;
       _officeAgentActivityObserved = true;
@@ -771,6 +789,32 @@ class TerminalSession extends PaneItem {
       }
       applyOfficeActivity(kind: kind, phase: phase, summary: summary);
     }
+  }
+
+  void _handleObservedGitEvent(GitTerminalEvent event) {
+    final effects = OfficeRoomEffectsManager.instance;
+    switch (event.kind) {
+      case GitTerminalEventKind.prOpened:
+      case GitTerminalEventKind.prMerged:
+      case GitTerminalEventKind.release:
+        effects.triggerParty(projectId, event.banner, agentId: id);
+      case GitTerminalEventKind.ciFailed:
+        effects.triggerAlarm(projectId, event.banner, agentId: id);
+      case GitTerminalEventKind.ciPassed:
+        effects.resolveAlarm(
+          projectId,
+          celebrationText: event.banner,
+          agentId: id,
+        );
+      case GitTerminalEventKind.push:
+        break;
+    }
+
+    applyOfficeActivity(
+      kind: 'git',
+      phase: 'observed',
+      summary: event.summary,
+    );
   }
 
   /// Rechecks the rendered terminal screen while the Office is visible.

@@ -5,6 +5,7 @@ import 'package:orkest_code/app/orkest/domain/entities/project.dart';
 import 'package:orkest_code/app/orkest/ui/session/pane_item.dart';
 import 'package:orkest_code/app/orkest/ui/session/terminal_session.dart';
 import 'package:orkest_code/app/orkest/ui/session/office_social_state.dart';
+import 'package:orkest_code/app/orkest/ui/session/office_room_effects.dart';
 import 'package:orkest_code/app/core/ui/widgets/unzoomed_native_view.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/webview_chrome.dart';
 import 'package:orkest_code/app/core/domain/entities/harness.dart';
@@ -343,6 +344,8 @@ canvas{display:block;image-rendering:pixelated;outline:none}
               sessions.any((session) => session.projectId == project.id),
         )
         .toList(growable: false);
+    final effects = OfficeRoomEffectsManager.instance;
+    effects.prune(now);
     final rooms = [
       for (var slot = 0; slot < occupiedProjects.length; slot++)
         {
@@ -352,6 +355,8 @@ canvas{display:block;image-rendering:pixelated;outline:none}
           'slot': slot,
           'seed': _stableSeed(occupiedProjects[slot].id),
           'createdAt': occupiedProjects[slot].createdAt.millisecondsSinceEpoch,
+          if (effects.getEffect(occupiedProjects[slot].id, now) case final effect?)
+            'effect': effect.toMap(),
         },
     ];
     final accounts = [
@@ -1512,6 +1517,12 @@ Map<String, dynamic> _officeStatusActivity(
       'needs_input' => '✋',
       'done' => '✅',
       'error' => '⚠️',
+      'git' => switch (activitySummary.toLowerCase()) {
+        final s when s.contains('falhou') || s.contains('failed') => '🚨',
+        final s when s.contains('passou') || s.contains('passed') => '✅',
+        final s when s.contains('enviou') || s.contains('push') => '🚀',
+        _ => '🎉',
+      },
       _ => '⚙️',
     };
     final observedLabel = switch (activityKind) {
@@ -1552,6 +1563,11 @@ Map<String, dynamic> _officeStatusActivity(
       'icon': icon,
       'text': text.length > 72 ? '${text.substring(0, 71)}…' : text,
       'at': at,
+      if (activityKind == 'git') 'tool': 'GitHub',
+      if (activityKind == 'git' &&
+          (activitySummary.toLowerCase().contains('falhou') ||
+              activitySummary.toLowerCase().contains('failed')))
+        'error': true,
     };
   }
   final tool = toolName?.trim();
