@@ -3,7 +3,6 @@ import 'package:orkest_code/app/orkest/ui/session/pane_item.dart';
 import 'package:orkest_code/app/orkest/ui/session/terminal_session.dart';
 import 'package:orkest_code/app/core/domain/entities/sound_event.dart';
 import 'package:orkest_code/app/core/ui/window_activity_controller.dart';
-import 'package:orkest_code/app/core/utils/platform_kind.dart';
 import 'package:flutter/foundation.dart';
 
 /// Avisos de fim de turno: badge na aba, notificação do SO e chime, com as
@@ -52,7 +51,10 @@ class SessionNotificationsController extends ChangeNotifier {
   /// O bootstrap mantém este estado sincronizado com foco e minimização.
   /// Consultar o plugin nativo a cada fim de turno enfileirava uma chamada
   /// por terminal quando vários agentes terminavam juntos.
-  bool get _windowFocused => isMobilePlatform || _windowActivity.isActive;
+  // O lifecycle do app atualiza o controller também em iOS/Android. Não trate
+  // mobile como sempre ativo: com o app em segundo plano, o aviso precisa ir
+  // para a notificação nativa em vez de virar um chime inaudível.
+  bool get _windowFocused => _windowActivity.isActive;
 
   /// Badge (ponto na aba) → só se a sessão NÃO for a aba ativa.
   /// Notificação do SO → só se a janela não estiver focada.

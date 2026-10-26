@@ -24,6 +24,7 @@ class OrkestTopbar extends StatelessWidget {
     required this.treeVisible,
     required this.onToggleRail,
     required this.onToggleTree,
+    required this.officeAvailable,
     required this.officeView,
     required this.onToggleOffice,
     this.filesEnabled = true,
@@ -34,6 +35,7 @@ class OrkestTopbar extends StatelessWidget {
   final bool treeVisible;
   final VoidCallback onToggleRail;
   final VoidCallback onToggleTree;
+  final bool officeAvailable;
   final bool officeView;
   final VoidCallback onToggleOffice;
 
@@ -76,7 +78,7 @@ class OrkestTopbar extends StatelessWidget {
           style: context.typo.title.copyWith(fontSize: 14, color: colors.text),
         ),
         const Spacer(),
-        if (officeView && !Platform.isLinux) ...[
+        if (officeAvailable && officeView && !Platform.isLinux) ...[
           _IconBtn(
             icon: Icons.palette_outlined,
             tooltip: context.t.orkest.officeWorld.appearance,
@@ -84,15 +86,17 @@ class OrkestTopbar extends StatelessWidget {
           ),
           const SizedBox(width: 8),
         ],
-        _IconBtn(
-          icon: officeView ? Icons.terminal : Icons.groups_2_outlined,
-          tooltip: officeView
-              ? context.t.orkest.topbar.showTerminals
-              : context.t.orkest.topbar.showOffice,
-          active: officeView,
-          onTap: onToggleOffice,
-        ),
-        const SizedBox(width: 8),
+        if (officeAvailable) ...[
+          _IconBtn(
+            icon: officeView ? Icons.terminal : Icons.groups_2_outlined,
+            tooltip: officeView
+                ? context.t.orkest.topbar.showTerminals
+                : context.t.orkest.topbar.showOffice,
+            active: officeView,
+            onTap: onToggleOffice,
+          ),
+          const SizedBox(width: 8),
+        ],
         _IconBtn(
           icon: Icons.view_sidebar_outlined,
           tooltip: filesEnabled

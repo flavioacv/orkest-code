@@ -21,6 +21,8 @@ class LocalNotifier implements Notifier {
   static const String _windowsNotifierGuid =
       '88faed92-a013-44b2-a814-7dd1aebf7d59';
 
+  static const String _agentChannelId = 'agent_activity';
+
   final FlutterLocalNotificationsPlugin _plugin =
       FlutterLocalNotificationsPlugin();
   int _id = 0;
@@ -44,11 +46,13 @@ class LocalNotifier implements Notifier {
       defaultPresentBadge: true,
       defaultPresentSound: true,
     );
+    const android = AndroidInitializationSettings('@mipmap/ic_launcher');
     final settings = InitializationSettings(
       // Sem o bloco `iOS` o `initialize` lança "iOS settings must be set" —
       // era por isso que o init morria no mobile (e levava o chime junto).
       iOS: darwin,
       macOS: darwin,
+      android: android,
       linux: LinuxInitializationSettings(
         defaultActionName: t.orkest.notifications.open,
       ),
@@ -64,6 +68,18 @@ class LocalNotifier implements Notifier {
     // Android sem o bloco android:), não pode derrubar o chime já criado.
     try {
       await _plugin.initialize(settings: settings);
+      await _plugin
+          .resolvePlatformSpecificImplementation<
+            AndroidFlutterLocalNotificationsPlugin
+          >()
+          ?.createNotificationChannel(
+            AndroidNotificationChannel(
+              _agentChannelId,
+              t.orkest.notifications.agentNeedsAction,
+              description: t.orkest.notifications.agentNeedsAction,
+              importance: Importance.high,
+            ),
+          );
     } catch (_) {
       // notificação do SO indisponível; o chime segue funcionando.
     }
@@ -87,14 +103,21 @@ class LocalNotifier implements Notifier {
       id: _id++,
       title: title,
       body: subtitle,
-      notificationDetails: const NotificationDetails(
-        macOS: DarwinNotificationDetails(
+      notificationDetails: NotificationDetails(
+        macOS: const DarwinNotificationDetails(
           presentAlert: true,
           presentBadge: true,
           presentSound: true,
         ),
-        linux: LinuxNotificationDetails(),
-        windows: WindowsNotificationDetails(),
+        android: AndroidNotificationDetails(
+          _agentChannelId,
+          t.orkest.notifications.agentNeedsAction,
+          channelDescription: t.orkest.notifications.agentNeedsAction,
+          importance: Importance.high,
+          priority: Priority.high,
+        ),
+        linux: const LinuxNotificationDetails(),
+        windows: const WindowsNotificationDetails(),
       ),
     );
   }
