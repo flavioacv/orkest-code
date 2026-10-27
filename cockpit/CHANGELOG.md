@@ -1,5 +1,11 @@
 # Changelog — Orkest Code
 
+## 0.1.5 (build 9) — 2026-10-26
+
+- Office World: integração de efeitos e animações reativas para Git (chuva de confetes em PR aberto/mergeado e releases, alarme com giroflex e chão pulsante em falhas de CI, redenção "CI verde de novo!").
+- Detector agnóstico de eventos Git em sessões de terminal, compatível com qualquer harness (Antigravity, Claude Code, Codex, Cursor e shell puro).
+- Sincronização de feedback visual em ações manuais de Git (pull, push e sync).
+
 ## 0.1.4 (build 7) — 2026-10-26
 
 - The branch picker now shares the workspace's state correctly, so listing, switching, and creating branches work from the dialog.
