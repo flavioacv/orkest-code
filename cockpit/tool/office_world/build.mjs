@@ -22,4 +22,8 @@ const bubble = 'const age = now - ch.activityChangedAt;';
 if (!source.includes(bubble)) throw new Error('Review completion bubble compatibility before rebuilding');
 source = source.replace(bubble, `${bubble}\n      if (act.kind === "done" && age >= RECENT_MS) return null;`);
 await writeFile(new URL('../../assets/office_world/engine.js', import.meta.url), source);
+const nativeExport = new URL('../../build/office/export_native.mjs', import.meta.url);
+await build({ entryPoints: [fileURLToPath(new URL('./export_native.ts', import.meta.url))],
+  bundle: true, platform: 'node', format: 'esm', outfile: fileURLToPath(nativeExport) });
+await import(nativeExport.href + '?build=' + Date.now());
 console.log('Built Orkest Office with session-scoped social state and compatibility patches.');

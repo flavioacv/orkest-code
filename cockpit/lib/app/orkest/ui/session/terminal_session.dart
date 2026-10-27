@@ -3,6 +3,7 @@ import 'dart:collection';
 import 'dart:convert';
 import 'office_social_state.dart';
 import 'office_room_effects.dart';
+import 'office_harness_identity.dart';
 import 'package:orkest_code/app/orkest/domain/services/git_terminal_event_detector.dart';
 
 import 'package:orkest_code/app/orkest/domain/contracts/terminal_gateway.dart';
@@ -11,6 +12,7 @@ import 'package:orkest_code/app/orkest/domain/contracts/terminal_status_server.d
 import 'package:orkest_code/app/core/data/diagnostics/performance_diagnostics.dart';
 import 'package:orkest_code/app/core/domain/entities/harness.dart';
 import 'package:orkest_code/app/core/terminal/secret_redactor.dart';
+import 'package:orkest_code/app/core/terminal/pty_command_markers.dart';
 import 'package:orkest_code/app/orkest/domain/services/terminal_harness_monitor.dart';
 import 'package:orkest_code/app/core/domain/entities/terminal_profile.dart';
 import 'package:orkest_code/i18n/strings.g.dart';
@@ -164,6 +166,7 @@ class TerminalSession extends PaneItem {
           );
         }
         _kitty.feed(batch); // observa push/pop do kitty antes de renderizar.
+        _commandMarkers.feed(batch);
         terminal.write(batch);
         _observeTerminalActivity();
         _record(batch); // grava o scrollback pra replay no próximo boot.
@@ -186,13 +189,21 @@ class TerminalSession extends PaneItem {
         .where((s) => s.isNotEmpty)
         .listen(
           _coalescer.add,
-          onDone: () {
+          onDone: () async {
             final tail = _redactor.flush();
             if (tail.isNotEmpty) _coalescer.add(tail);
+            await _coalescer.drained;
             // Fim do stream = processo encerrado (o PTY local fecha a porta no
             // exit; o sidecar fecha no `PtyExitEvent`). No `dispose` fomos nós
             // que matamos — aí não é notícia pra ninguém.
-            if (!_disposed) onProcessExit?.call();
+            if (!_disposed) {
+              _processExited = true;
+              _officeCommands.clear();
+              _officeShell = null;
+              _setStatus(TerminalStatus.idle);
+              notifyListeners();
+              onProcessExit?.call();
+            }
           },
         );
     terminal.onOutput = (data) {
@@ -267,7 +278,67 @@ class TerminalSession extends PaneItem {
 
   Map<String, dynamic>? _officeShell;
   Map<String, dynamic>? _officeShellDone;
+  bool _processExited = false;
+  int _ptyCommandSerial = 0;
+  String? _ptyCommandId;
+  late final _commandMarkers = PtyCommandMarkers(
+    onStart: () {
+      if (_disposed || _processExited) return;
+      final previous = _ptyCommandId;
+      if (previous != null) _officeCommands.remove(previous);
+      final run = 'pty:${++_ptyCommandSerial}';
+      _ptyCommandId = run;
+      beginOfficeCommand(run, t.orkest.officeWorld.runningCommand);
+    },
+    onFinish: (code) {
+      final run = _ptyCommandId;
+      _ptyCommandId = null;
+      if (run == null) return;
+      finishOfficeCommand(
+        run,
+        code,
+        code == 0
+            ? t.orkest.officeWorld.toolCompleted
+            : t.orkest.officeWorld.activityError,
+      );
+      if (_officeCommands.isEmpty && _activeHarness == null) {
+        _setStatus(TerminalStatus.idle);
+      }
+    },
+  );
+  final Map<String, Map<String, dynamic>> _officeTasks = {};
+  int _officeTaskRevision = 0;
+  int get officeTaskRevision => _officeTaskRevision;
+  List<Map<String, dynamic>> get officeTasks => [
+    for (final task in _officeTasks.values)
+      Map<String, dynamic>.unmodifiable(task),
+  ];
+  DateTime? _officeStatusChangedAt;
+  String? _reportedOfficeHarness;
+  OfficeHarnessIdentity get officeHarness =>
+      OfficeHarnessIdentity.resolve(_activeHarness, _reportedOfficeHarness);
+  DateTime get officeStatusSince => _officeStatusChangedAt ?? createdAt;
+  String get officeVisualStatus {
+    if (status == TerminalStatus.waiting) return 'waiting';
+    final lastKind = _officeStatusHistory.lastOrNull?.activityKind;
+    final waitingForBackground =
+        officeShells.any((shell) => shell['background'] == true) &&
+        (status == TerminalStatus.idle ||
+            lastKind == 'wait' ||
+            lastKind == 'command');
+    if (waitingForBackground) return 'shell';
+    return status.name;
+  }
+
   final Map<String, Map<String, dynamic>> _officeCommands = {};
+  final _finishedOfficeActivities = <String>{};
+  void _rememberOfficeActivity(String id) {
+    _finishedOfficeActivities.add(id);
+    if (_finishedOfficeActivities.length > 128) {
+      _finishedOfficeActivities.remove(_finishedOfficeActivities.first);
+    }
+  }
+
   List<Map<String, dynamic>> get officeShells => [
     ?_officeShell,
     ..._officeCommands.values,
@@ -358,13 +429,14 @@ class TerminalSession extends PaneItem {
   /// recognizable activity row. Unknown harnesses can still enter through
   /// semantic PTY activity or structured Orkest activity events.
   bool get hasOfficeAgentPresence =>
-      _activeHarness != null ||
-      _officeAgentActivityObserved ||
-      _status != TerminalStatus.idle ||
-      _officeSubagents.isNotEmpty ||
-      _officeStatusHistory.any(
-        (event) => event.event != null || event.activityKind != null,
-      );
+      !_processExited &&
+      (_activeHarness != null ||
+          _officeAgentActivityObserved ||
+          _status != TerminalStatus.idle ||
+          _officeSubagents.isNotEmpty ||
+          _officeStatusHistory.any(
+            (event) => event.event != null || event.activityKind != null,
+          ));
 
   /// Most recent generic prompt/permission event, if this session is waiting.
   int get latestWaitingEventSequence {
@@ -589,6 +661,8 @@ class TerminalSession extends PaneItem {
     required String kind,
     required String phase,
     required String summary,
+    String? activityId,
+    String? harness,
   }) {
     final safeKind = kind.trim().toLowerCase();
     final safePhase = phase.trim().toLowerCase();
@@ -597,6 +671,125 @@ class TerminalSession extends PaneItem {
         .replaceAll(RegExp(r'\s+'), ' ')
         .trim();
     if (safeKind.isEmpty || safePhase.isEmpty || safeSummary.isEmpty) return;
+    if (_disposed) return;
+    if (harness != null &&
+        RegExp(r'^[A-Za-z0-9_.:/-]{1,80}$').hasMatch(harness)) {
+      _reportedOfficeHarness = harness;
+    }
+    if (activityId != null &&
+        !RegExp(r'^[A-Za-z0-9_.:/-]{1,160}$').hasMatch(activityId)) {
+      return;
+    }
+    if (const {
+      'task_pending',
+      'task_started',
+      'task_completed',
+      'task_removed',
+    }.contains(safeKind)) {
+      if (activityId == null || safePhase != 'completed') return;
+      if (safeKind == 'task_removed') {
+        _officeTasks.remove(activityId);
+      } else {
+        if (!_officeTasks.containsKey(activityId) &&
+            _officeTasks.length >= 64) {
+          final completed = _officeTasks.entries.where(
+            (entry) => entry.value['status'] == 'completed',
+          );
+          if (completed.isEmpty) return;
+          _officeTasks.remove(completed.first.key);
+        }
+        _officeTasks[activityId] = {
+          'id': activityId,
+          'title': safeSummary.substring(
+            0,
+            safeSummary.length > 160 ? 160 : safeSummary.length,
+          ),
+          'status': switch (safeKind) {
+            'task_started' => 'in_progress',
+            'task_completed' => 'completed',
+            _ => 'pending',
+          },
+        };
+      }
+      _officeAgentActivityObserved = true;
+      _officeTaskRevision++;
+      notifyListeners();
+      return;
+    }
+    // Correlation belongs to an execution, regardless of its producer or tool.
+    // Legacy callers without an ID retain the original single-command flow.
+    if (activityId != null && (safeKind == 'command' || safeKind == 'wait')) {
+      final runId = 'activity:$activityId';
+      if (_finishedOfficeActivities.contains(runId)) return;
+      if (safePhase == 'started') {
+        beginOfficeCommand(runId, safeSummary);
+        if (safeKind == 'wait') {
+          _officeCommands[runId]?['background'] = true;
+          notifyListeners();
+        }
+      } else if (safePhase == 'updated') {
+        final command = _officeCommands[runId];
+        if (command != null) {
+          command['label'] = safeSummary;
+          command['background'] = safeKind == 'wait';
+          notifyListeners();
+        }
+      } else if (const {
+        'completed',
+        'failed',
+        'interrupted',
+      }.contains(safePhase)) {
+        _rememberOfficeActivity(runId);
+        finishOfficeCommand(
+          runId,
+          safePhase == 'completed'
+              ? 0
+              : safePhase == 'interrupted'
+              ? 130
+              : 1,
+          safeSummary,
+        );
+      }
+      return;
+    }
+    final gitKind = switch (safeKind) {
+      'pr_opened' => GitTerminalEventKind.prOpened,
+      'pr_merged' => GitTerminalEventKind.prMerged,
+      'release' => GitTerminalEventKind.release,
+      'ci_failed' => GitTerminalEventKind.ciFailed,
+      'ci_passed' => GitTerminalEventKind.ciPassed,
+      'push' => GitTerminalEventKind.push,
+      _ => null,
+    };
+    if (gitKind != null) {
+      if (safePhase != 'completed') return;
+      if (activityId != null) {
+        final key = 'event:$safeKind:$activityId';
+        if (_finishedOfficeActivities.contains(key)) return;
+        _rememberOfficeActivity(key);
+      }
+      _handleObservedGitEvent(
+        GitTerminalEvent(
+          kind: gitKind,
+          summary: safeSummary.substring(
+            0,
+            safeSummary.length > 160 ? 160 : safeSummary.length,
+          ),
+          banner: safeSummary.substring(
+            0,
+            safeSummary.length > 30 ? 30 : safeSummary.length,
+          ),
+          icon: switch (gitKind) {
+            GitTerminalEventKind.ciFailed => '🚨',
+            GitTerminalEventKind.ciPassed => '✅',
+            GitTerminalEventKind.push => '🚀',
+            _ => '🎉',
+          },
+          isError: gitKind == GitTerminalEventKind.ciFailed,
+        ),
+      );
+      return;
+    }
     final terminalPhase = {
       'completed',
       'failed',
@@ -1012,7 +1205,10 @@ class TerminalSession extends PaneItem {
   }) {
     final changed = next != _status;
     if (!changed && event == null && !forceNotify) return;
-    if (changed) _status = next;
+    if (changed) {
+      _status = next;
+      _officeStatusChangedAt = DateTime.now();
+    }
     final lifecycleOnly = event == 'SessionStart' || event == 'SessionEnd';
     final safeToolName = toolName
         ?.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '')
@@ -1311,6 +1507,8 @@ class TerminalSession extends PaneItem {
     officeSocial.clear();
     onOfficeStateChanged = null;
     _officeCommands.clear();
+    _finishedOfficeActivities.clear();
+    _officeTasks.clear();
     _officeShell = null;
     _monitor?.unregisterSession(id);
     _notifyDebounce?.cancel();

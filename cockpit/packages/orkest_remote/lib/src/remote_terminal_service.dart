@@ -23,6 +23,10 @@ class RemoteTurnStatus {
     this.subagentType,
     this.subagentOutcome,
     this.subagentParentId,
+    this.activityKind,
+    this.activityPhase,
+    this.activitySummary,
+    this.activityId,
   });
 
   final String paneId;
@@ -36,6 +40,10 @@ class RemoteTurnStatus {
   final String? subagentType;
   final String? subagentOutcome;
   final String? subagentParentId;
+  final String? activityKind;
+  final String? activityPhase;
+  final String? activitySummary;
+  final String? activityId;
 }
 
 /// Um comando da CLI do host à espera de resposta deste cliente.
@@ -101,6 +109,10 @@ class RemoteTerminalService implements TerminalService {
           subagentType: m.subagentType,
           subagentOutcome: m.subagentOutcome,
           subagentParentId: m.subagentParentId,
+          activityKind: m.activityKind,
+          activityPhase: m.activityPhase,
+          activitySummary: m.activitySummary,
+          activityId: m.activityId,
         ),
       );
 

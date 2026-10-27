@@ -1081,6 +1081,10 @@ class TurnStatusReceiver {
         subagentType: json['subType'] as String?,
         subagentOutcome: json['subOutcome'] as String?,
         subagentParentId: json['subParent'] as String?,
+        activityKind: json['activityKind'] as String?,
+        activityPhase: json['activityPhase'] as String?,
+        activitySummary: json['activitySummary'] as String?,
+        activityId: json['activityId'] as String?,
       ),
     );
   }

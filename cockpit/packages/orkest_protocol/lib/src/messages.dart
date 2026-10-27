@@ -480,6 +480,10 @@ class TurnStatus extends RemoteMessage {
     this.subagentType,
     this.subagentOutcome,
     this.subagentParentId,
+    this.activityKind,
+    this.activityPhase,
+    this.activitySummary,
+    this.activityId,
   });
   static const kType = 'turn.status';
 
@@ -500,6 +504,10 @@ class TurnStatus extends RemoteMessage {
   final String? subagentType;
   final String? subagentOutcome;
   final String? subagentParentId;
+  final String? activityKind;
+  final String? activityPhase;
+  final String? activitySummary;
+  final String? activityId;
 
   factory TurnStatus.fromJson(Map<String, Object?> j) => TurnStatus(
     paneId: j['pane'] as String,
@@ -513,6 +521,10 @@ class TurnStatus extends RemoteMessage {
     subagentType: j['subType'] as String?,
     subagentOutcome: j['subOutcome'] as String?,
     subagentParentId: j['subParent'] as String?,
+    activityKind: j['activityKind'] as String?,
+    activityPhase: j['activityPhase'] as String?,
+    activitySummary: j['activitySummary'] as String?,
+    activityId: j['activityId'] as String?,
   );
 
   @override
@@ -531,6 +543,10 @@ class TurnStatus extends RemoteMessage {
     if (subagentType != null) 'subType': subagentType,
     if (subagentOutcome != null) 'subOutcome': subagentOutcome,
     if (subagentParentId != null) 'subParent': subagentParentId,
+    if (activityKind != null) 'activityKind': activityKind,
+    if (activityPhase != null) 'activityPhase': activityPhase,
+    if (activitySummary != null) 'activitySummary': activitySummary,
+    if (activityId != null) 'activityId': activityId,
   };
 }
 

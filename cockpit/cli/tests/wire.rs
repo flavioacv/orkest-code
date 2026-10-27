@@ -353,6 +353,90 @@ fn hook_reporta_status_pelo_mesmo_socket() {
 }
 
 #[test]
+fn activity_contract_needs_no_harness_and_preserves_execution_ids() {
+    for (kind, phase, id) in [
+        ("command", "started", ""),
+        ("command", "started", "run-1"),
+        ("wait", "updated", "run-1"),
+        ("command", "failed", "run-1"),
+        ("pr_opened", "completed", "pr-1"),
+        ("pr_merged", "completed", "merge-1"),
+        ("release", "completed", "release-1"),
+        ("ci_failed", "completed", "ci-1"),
+        ("ci_passed", "completed", "ci-2"),
+        ("push", "completed", "push-1"),
+        ("task_pending", "completed", "task-1"),
+        ("task_started", "completed", "task-1"),
+        ("task_completed", "completed", "task-1"),
+        ("task_removed", "completed", "task-1"),
+    ] {
+        let dir = unique_dir("office-activity");
+        std::fs::create_dir_all(&dir).unwrap();
+        let sock_path = dir.join("status.sock");
+        let listener = UnixListener::bind(&sock_path).unwrap();
+        let server = std::thread::spawn(move || {
+            let (stream, _) = listener.accept().unwrap();
+            let mut line = String::new();
+            BufReader::new(stream).read_line(&mut line).unwrap();
+            line
+        });
+        let mut command = Command::new(env!("CARGO_BIN_EXE_orkest"));
+        command.args(["activity", kind, "--phase", phase, "--summary", "Result"]);
+        if !id.is_empty() {
+            command.args(["--id", id]);
+        }
+        if kind.starts_with("task_") {
+            command.args(["--harness", "apple-fm"]);
+        }
+        let out = command.env("ORKEST_STATUS_SOCK", &sock_path)
+            .env("ORKEST_TAB_ID", "t7")
+            .env_remove("ORKEST_HARNESS")
+            .output()
+            .unwrap();
+        let req: Value = serde_json::from_str(&server.join().unwrap()).unwrap();
+        let _ = std::fs::remove_dir_all(&dir);
+        assert_eq!(out.status.code(), Some(0));
+        assert!(out.stdout.is_empty());
+        assert_eq!(req["paneId"], "t7");
+        assert_eq!(req["st"], "activity");
+        assert_eq!(req["activityKind"], kind);
+        assert_eq!(req["activityPhase"], phase);
+        if id.is_empty() {
+            assert!(req.get("activityId").is_none());
+        } else {
+            assert_eq!(req["activityId"], id);
+        }
+        assert_eq!(req["activitySummary"], "Result");
+        if kind.starts_with("task_") {
+            assert_eq!(req["hn"], "apple-fm");
+        } else {
+            assert!(req.get("hn").is_none());
+        }
+        assert!(req.get("tool").is_none());
+    }
+}
+
+#[test]
+fn activity_rejects_invalid_ids_and_unconfirmed_github_events() {
+    for args in [
+        vec!["activity", "command", "--id", "invalid id", "--summary", "Build"],
+        vec!["activity", "command", "--id", "", "--summary", "Build"],
+        vec!["activity", "pr_merged", "--phase", "failed", "--summary", "Merge"],
+        vec!["activity", "ci_failed", "--summary", "CI"],
+        vec!["activity", "task_started", "--phase", "completed", "--summary", "Task"],
+        vec!["activity", "task_completed", "--id", "task-1", "--summary", "Task"],
+        vec!["activity", "command", "--harness", "invalid harness", "--summary", "Build"],
+    ] {
+        let out = Command::new(env!("CARGO_BIN_EXE_orkest")).args(args).output().unwrap();
+        assert_eq!(out.status.code(), Some(2));
+    }
+    let out = Command::new(env!("CARGO_BIN_EXE_orkest"))
+        .args(["activity", "command", "--id", &"a".repeat(161), "--summary", "Build"])
+        .output().unwrap();
+    assert_eq!(out.status.code(), Some(2));
+}
+
+#[test]
 fn hook_fora_do_orkest_e_noop_silencioso() {
     let out = Command::new(env!("CARGO_BIN_EXE_orkest"))
         .arg("hook")

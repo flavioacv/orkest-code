@@ -16,7 +16,7 @@ export type AgentKind = 'main' | 'sub';
  * - codex: OpenAI Codex (CLI `codex` e o app desktop, que gravam no mesmo CODEX_HOME);
  * - antigravity: Google Antigravity (CLI `agy` e IDE/app, que gravam em ~/.gemini/antigravity-cli).
  */
-export type Provider = 'claude' | 'codex' | 'antigravity';
+export type Provider = 'claude' | 'codex' | 'antigravity' | (string & {});
 
 /**
  * Estado de alto nível de um agente — é o que dirige o comportamento do personagem.

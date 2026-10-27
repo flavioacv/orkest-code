@@ -6,6 +6,8 @@ import 'package:orkest_code/app/orkest/ui/session/terminal_session.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/habblaud_world_webview.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/office_world_flutter_view.dart';
 import 'package:flutter/widgets.dart';
+import 'package:flutter_modular/flutter_modular.dart';
+import 'package:orkest_code/app/core/ui/settings_controller.dart';
 
 export 'package:orkest_code/app/orkest/ui/widgets/office_world_flutter_view.dart'
     show OfficeWorldLabels;
@@ -37,6 +39,7 @@ class OfficeWorldView extends StatelessWidget {
         labels: labels,
         onOpenSession: onOpenSession,
         onRenameSession: onRenameSession,
+        settings: context.read<SettingsController>().settings,
       );
     }
     return HabblaudWorldWebView(

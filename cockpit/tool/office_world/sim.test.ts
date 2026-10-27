@@ -182,3 +182,59 @@ test('reliable shell waits activate all age stages and preserve human approval p
     assert.equal(sim.chars.get('orchestrator')!.mode, 'wait');
   }
 });
+
+test('unregistered harness metadata and task rewards survive snapshots', () => {
+  const input = snapshot();
+  input.accounts[0].provider = 'apple-fm';
+  input.agents[0].tasks = [{id:'review', title:'Review', status:'pending'}];
+  const sim = new OrkestSim(art, () => DEFAULT_WORLD_OPTIONS, null);
+  sim.applySnapshot(input, now);
+  assert.equal(sim.accounts.get('account')?.provider, 'apple-fm');
+  input.agents[0].tasks[0].status = 'completed';
+  sim.applySnapshot(input, now + 1);
+  assert.equal(sim.social.wallets.coins('orchestrator'), 110);
+  sim.applySnapshot(input, now + 2);
+  assert.equal(sim.social.wallets.coins('orchestrator'), 110);
+});
+
+test('confirmed shell outcomes trigger the correct effect once', () => {
+  for (const error of [false, true]) {
+    const input = snapshot();
+    const sim = new OrkestSim(art, () => DEFAULT_WORLD_OPTIONS, null);
+    sim.applySnapshot(input, now);
+    for (let i=1;i<=1200;i++) sim.update(1/60, now+i*1000/60);
+    input.agents[0] = {...input.agents[0], recent:[{id:'result', at:now+20001, error, text:'Result', icon:'', tool:'ShellDone', kind:error?'error':'done'}]};
+    sim.applySnapshot(input, now+20001);
+    assert.equal(sim.chars.get('orchestrator')!.icon, error?'storm':'star');
+    const count = sim.effects.filter(e => e.kind==='confetti').length;
+    assert.equal(count, error?0:1);
+    sim.applySnapshot(input, now+20002);
+    assert.equal(sim.effects.filter(e => e.kind==='confetti').length, count);
+  }
+});
+
+for (const kind of ['tv','videogame','arcade','pingpong','kitchen','talk','rps','mirror'] as const) {
+  test(`social ${kind} executes its script and yields to work`, () => {
+    const input = snapshot('idle');
+    input.agents[1].status = 'idle';
+    const sim = new OrkestSim(art, () => DEFAULT_WORLD_OPTIONS, null);
+    sim.applySnapshot(input, now);
+    assert.ok(sim.social.force(kind, now+1, ['orchestrator','developer']));
+    const poses = new Set<string>();
+    let ran = false;
+    for (let i=1;i<=4200;i++) {
+      sim.update(1/60, now+i*1000/60);
+      for(const ch of sim.chars.values()) poses.add(ch.pose);
+      ran ||= [...sim.social.gatherings].some(g => g.kind === kind && g.phase === 'run');
+    }
+    const expected = {tv:'sit',videogame:'game',arcade:'use',pingpong:'play',kitchen:'talk',talk:'talk',rps:'rps',mirror:'groom'}[kind];
+    assert.ok(ran, `${kind} never left the gathering phase`);
+    assert.ok(poses.has(expected), `${kind} did not execute ${expected}: ${[...poses]}`);
+    input.agents[0] = {...input.agents[0], status:'working'};
+    sim.applySnapshot(input, now+70001);
+    for (let i=1;i<=2400;i++) sim.update(1/60, now+70001+i*1000/60);
+    assert.equal(sim.chars.get('orchestrator')!.mode, 'work');
+    assert.equal(sim.chars.get('orchestrator')!.gathering, null);
+    assert.equal(sim.chars.get('orchestrator')!.atSpot, sim.chars.get('orchestrator')!.homeSpot);
+  });
+}
