@@ -17,6 +17,7 @@ class ClaudeStatusUpdate {
     this.activityKind,
     this.activityPhase,
     this.activitySummary,
+    this.activityId,
   });
 
   /// Id da aba (vem do env `ORKEST_PANE_ID` injetado na PTV — roteamento).
@@ -64,6 +65,7 @@ class ClaudeStatusUpdate {
   final String? activityKind;
   final String? activityPhase;
   final String? activitySummary;
+  final String? activityId;
 }
 
 /// Harness que roda numa aba de terminal. O Orkest precisa distinguir para

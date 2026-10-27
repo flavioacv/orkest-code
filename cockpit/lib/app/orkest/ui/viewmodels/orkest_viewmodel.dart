@@ -3004,6 +3004,10 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
         subagentType: s.subagentType,
         subagentOutcome: s.subagentOutcome,
         subagentParentId: s.subagentParentId,
+        activityKind: s.activityKind,
+        activityPhase: s.activityPhase,
+        activitySummary: s.activitySummary,
+        activityId: s.activityId,
       ),
     );
 
@@ -6141,6 +6145,8 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
         kind: u.activityKind!,
         phase: u.activityPhase!,
         summary: u.activitySummary!,
+        activityId: u.activityId,
+        harness: u.harness,
       );
     }
     if (u.event == 'SubagentStart' || u.event == 'SubagentStop') {

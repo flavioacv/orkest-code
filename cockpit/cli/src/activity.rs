@@ -8,14 +8,23 @@ use crate::util::{die, self_tab_id};
 const KINDS: &[&str] = &[
     "prompt", "thinking", "read", "search", "edit", "write", "command", "wait",
     "test", "web", "plan", "delegate", "needs_input", "respond", "done", "error", "other",
+    "pr_opened", "pr_merged", "release", "ci_failed", "ci_passed", "push",
+    "task_pending", "task_started", "task_completed", "task_removed",
 ];
 const PHASES: &[&str] = &["started", "updated", "completed", "failed", "interrupted"];
-const HELP: &str = "orkest activity <kind> --summary <text> [--phase <phase>] [--tab-id <id>]
+const HELP: &str = "orkest activity <kind> --summary <text> [--phase <phase>] [--id <execution-id>] [--harness <id>] [--tab-id <id>]
   Report a provider-neutral activity to the Office. No terminal output, prompt,
   or transcript is read or sent. Use needs_input only when user action is required.
   Kinds: prompt, thinking, read, search, edit, write, command, wait, test, web,
-         plan, delegate, needs_input, respond, done, error, other
-  Phases: started (default), updated, completed, failed, interrupted";
+         plan, delegate, needs_input, respond, done, error, other,
+         pr_opened, pr_merged, release, ci_failed, ci_passed, push,
+         task_pending, task_started, task_completed, task_removed
+  Phases: started (default), updated, completed, failed, interrupted
+  --id correlates parallel command/wait executions or deduplicates GitHub events.
+  --harness is optional descriptive metadata, including unregistered producers.
+  Reuse the same ID for all phases of an execution; use a new ID for a new run.
+  GitHub kinds require --phase completed and report a confirmed outcome only.
+  Task kinds require --id and --phase completed; --summary is the task title.";
 
 pub fn activity(args: &[String]) -> ! {
     if args.is_empty() || args[0] == "--help" || args[0] == "-h" {
@@ -29,22 +38,45 @@ pub fn activity(args: &[String]) -> ! {
     let mut summary = None;
     let mut phase = "started".to_string();
     let mut tab_id = None;
+    let mut activity_id = None;
+    let mut harness = None;
     let mut i = 1;
     while i < args.len() {
         let arg = args[i].as_str();
-        if !["--summary", "--phase", "--tab-id"].contains(&arg) || i + 1 >= args.len() {
+        if !["--summary", "--phase", "--tab-id", "--id", "--harness"].contains(&arg) || i + 1 >= args.len() {
             die(&format!("orkest activity: invalid or incomplete option \"{arg}\"\n{HELP}"), 2);
         }
         i += 1;
         match arg {
             "--summary" => summary = Some(args[i].clone()),
             "--phase" => phase = args[i].clone(),
+            "--id" => activity_id = Some(args[i].clone()),
+            "--harness" => harness = Some(args[i].clone()),
             _ => tab_id = Some(args[i].clone()),
         }
         i += 1;
     }
     if !PHASES.contains(&phase.as_str()) {
         die("orkest activity: invalid phase", 2);
+    }
+    if let Some(id) = &activity_id {
+        if id.is_empty() || id.len() > 160 ||
+            !id.bytes().all(|b| b.is_ascii_alphanumeric() || b"_.:/-".contains(&b)) {
+            die("orkest activity: --id must be 1-160 ASCII letters, digits or _ . : / -", 2);
+        }
+    }
+    if let Some(id) = &harness {
+        if id.is_empty() || id.len() > 80 || !id.bytes().all(|b| b.is_ascii_alphanumeric() || b"_.:/-".contains(&b)) {
+            die("orkest activity: invalid --harness identifier", 2);
+        }
+    }
+    if ["pr_opened", "pr_merged", "release", "ci_failed", "ci_passed", "push"].contains(&kind)
+        && phase != "completed" {
+        die("orkest activity: GitHub outcomes require --phase completed", 2);
+    }
+    if ["task_pending", "task_started", "task_completed", "task_removed"].contains(&kind)
+        && (activity_id.is_none() || phase != "completed") {
+        die("orkest activity: task updates require --id and --phase completed", 2);
     }
     let summary: String = summary
         .unwrap_or_default()
@@ -62,13 +94,19 @@ pub fn activity(args: &[String]) -> ! {
         .or_else(self_tab_id)
         .unwrap_or_else(|| die("orkest activity: no parent tab — run inside a Orkest terminal or pass --tab-id", 3));
     let status = if kind == "needs_input" { "waiting" } else { "activity" };
-    let payload = json!({
+    let mut payload = json!({
         "paneId": pane_id,
         "st": status,
         "activityKind": kind,
         "activityPhase": phase,
         "activitySummary": summary,
     });
+    if let Some(id) = activity_id {
+        payload["activityId"] = json!(id);
+    }
+    if let Some(id) = harness {
+        payload["hn"] = json!(id);
+    }
     if let Err(error) = transport::notify(payload) {
         die(&format!("orkest activity: {error}"), 3);
     }

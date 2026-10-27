@@ -4,6 +4,7 @@ import 'package:orkest_code/app/orkest/domain/contracts/terminal_gateway.dart';
 import 'package:orkest_code/app/core/utils/spawn_directory.dart';
 import 'package:orkest_code/app/core/domain/entities/terminal_profile.dart';
 import 'package:orkest_code/app/orkest/ui/session/terminal_session.dart';
+import 'package:orkest_code/app/orkest/ui/session/office_room_effects.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 /// [TerminalGateway] inerte — não sobe PTY nenhum; só satisfaz o construtor da
@@ -119,6 +120,195 @@ void main() {
     });
   });
   group('Office generic shell lifecycle', () {
+    test('parallel command lifecycle needs no harness identity', () async {
+      final s = _session();
+      void report(String id, String phase) => s.applyOfficeActivity(
+        kind: 'command',
+        phase: phase,
+        summary: 'Build',
+        activityId: id,
+      );
+      report('a', 'started');
+      report('b', 'started');
+      report('a', 'started');
+      expect(s.officeShells, hasLength(2));
+      expect(s.officeShells.first['label'], 'Build');
+      report('a', 'completed');
+      expect(s.officeShellDone?['error'], false);
+      expect(s.officeShells.single['id'], 'activity:b');
+      report('a', 'started');
+      expect(s.officeShells, hasLength(1));
+      report('b', 'failed');
+      expect(s.officeShellDone?['error'], true);
+      expect(s.officeShells, isEmpty);
+      report('late', 'completed');
+      report('late', 'started');
+      expect(s.officeShells, isEmpty);
+      await s.dispose();
+    });
+    test(
+      'correlated background work survives turn completion until its own outcome',
+      () async {
+        final s = _session();
+        s.applyOfficeActivity(
+          kind: 'command',
+          phase: 'started',
+          summary: 'Build',
+          activityId: 'a',
+        );
+        final started = s.officeShell!['startedAt'];
+        s.applyOfficeActivity(
+          kind: 'wait',
+          phase: 'updated',
+          summary: 'Waiting',
+          activityId: 'a',
+        );
+        expect(s.officeShell?['background'], true);
+        expect(s.officeShell?['startedAt'], started);
+        s.applyOfficeActivity(
+          kind: 'done',
+          phase: 'completed',
+          summary: 'Turn finished',
+        );
+        expect(s.officeShells, hasLength(1));
+        s.applyOfficeActivity(
+          kind: 'wait',
+          phase: 'interrupted',
+          summary: 'Interrupted',
+          activityId: 'a',
+        );
+        expect(s.officeShells, isEmpty);
+        expect(s.officeShellDone?['error'], true);
+        await s.dispose();
+      },
+    );
+    test(
+      'invalid IDs and observations do not manufacture command executions',
+      () async {
+        final s = _session();
+        s.applyOfficeActivity(
+          kind: 'command',
+          phase: 'started',
+          summary: 'Build',
+          activityId: 'invalid id',
+        );
+        s.applyOfficeActivity(
+          kind: 'command',
+          phase: 'observed',
+          summary: 'Build',
+          activityId: 'a',
+        );
+        s.applyOfficeActivity(
+          kind: 'command',
+          phase: 'updated',
+          summary: 'Build',
+          activityId: 'b',
+        );
+        expect(s.officeShells, isEmpty);
+        await s.dispose();
+      },
+    );
+    test(
+      'commands have independent IDs from telemetry and respect permission requests',
+      () async {
+        final s = _session();
+        s.beginOfficeCommand('a', 'Telemetry');
+        s.applyOfficeActivity(
+          kind: 'command',
+          phase: 'started',
+          summary: 'Build',
+          activityId: 'a',
+        );
+        s.applyOfficeActivity(
+          kind: 'needs_input',
+          phase: 'started',
+          summary: 'Approval',
+        );
+        s.applyOfficeActivity(
+          kind: 'command',
+          phase: 'failed',
+          summary: 'Failed',
+          activityId: 'a',
+        );
+        expect(s.officeShells.single['id'], 'a');
+        expect(s.status, TerminalStatus.waiting);
+        await s.dispose();
+      },
+    );
+    test(
+      'explicit GitHub events are generic, confirmed and deduplicated by ID',
+      () async {
+        final s = _session();
+        final effects = OfficeRoomEffectsManager.instance;
+        final now = DateTime.now().millisecondsSinceEpoch;
+        effects.prune(now + 1000000);
+        s.applyOfficeActivity(
+          kind: 'pr_opened',
+          phase: 'started',
+          summary: 'PR opened',
+          activityId: 'pr1',
+        );
+        expect(effects.getEffect('p1', now), isNull);
+        for (final kind in ['pr_opened', 'pr_merged', 'release']) {
+          s.applyOfficeActivity(
+            kind: kind,
+            phase: 'completed',
+            summary: kind,
+            activityId: kind,
+          );
+          final effect = effects.getEffect(
+            'p1',
+            DateTime.now().millisecondsSinceEpoch,
+          )!;
+          expect(effect.kind, OfficeRoomEffectKind.party);
+          expect(effect.text, kind);
+          s.applyOfficeActivity(
+            kind: kind,
+            phase: 'completed',
+            summary: 'duplicate',
+            activityId: kind,
+          );
+          expect(
+            effects.getEffect('p1', DateTime.now().millisecondsSinceEpoch),
+            same(effect),
+          );
+        }
+        s.applyOfficeActivity(
+          kind: 'ci_failed',
+          phase: 'completed',
+          summary: 'CI failed',
+        );
+        expect(
+          effects.getEffect('p1', DateTime.now().millisecondsSinceEpoch)?.kind,
+          OfficeRoomEffectKind.alarm,
+        );
+        s.applyOfficeActivity(
+          kind: 'ci_passed',
+          phase: 'completed',
+          summary: 'CI passed',
+        );
+        expect(
+          effects.getEffect('p1', DateTime.now().millisecondsSinceEpoch)?.kind,
+          OfficeRoomEffectKind.party,
+        );
+        effects.prune(now + 1000000);
+        s.applyOfficeActivity(
+          kind: 'push',
+          phase: 'completed',
+          summary: 'Pushed',
+        );
+        s.applyOfficeActivity(
+          kind: 'ci_passed',
+          phase: 'completed',
+          summary: 'CI passed',
+        );
+        expect(
+          effects.getEffect('p1', DateTime.now().millisecondsSinceEpoch),
+          isNull,
+        );
+        await s.dispose();
+      },
+    );
     test('structured commands track start and terminal outcomes', () async {
       final s = _session();
       s.applyOfficeActivity(

@@ -1,5 +1,15 @@
 # Changelog — Orkest Code
 
+## Unreleased
+
+- Office preserves the harness identified by the existing PTY monitor and accepts optional producer metadata without requiring a catalog entry.
+- Shell OSC 133/633 lifecycle markers and real task updates now feed Office execution reactions, wait stages and task boards.
+- Native Flutter Office includes social scripts, project effects, room transitions, delegation and animated scenery, using exported collision and furniture data; workspace count can exceed the baked layout cache.
+- Added the complete Office animation and trigger report in `docs/office-animations.md`.
+- Office command and wait activities accept an optional execution ID through `orkest activity --id`, supporting parallel runs, success, failure and interruption independently of the harness or tool name.
+- Any producer can report confirmed PR, merge, release, push and CI outcomes through the same activity contract; the Office does not interpret provider-specific hooks or MCP results.
+- Structured Office activities now survive remote and sidecar turn-status transport.
+
 ## 0.1.6 (build 10) — 2026-10-26
 
 - Office World no longer raises a CI alarm from old terminal scrollback or text that merely mentions a CI failure.

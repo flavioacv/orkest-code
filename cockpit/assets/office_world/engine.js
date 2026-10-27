@@ -24752,7 +24752,7 @@
       this.now = now;
       const first = !this.initialized;
       this.initialized = true;
-      this.accounts = new Map(snap.accounts.map((a) => [a.id, { short: a.short, color: a.color, name: a.name, ...a.provider === "codex" ? { provider: a.provider } : {} }]));
+      this.accounts = new Map(snap.accounts.map((a) => [a.id, { short: a.short, color: a.color, name: a.name, ...a.provider ? { provider: a.provider } : {} }]));
       let layoutDirty = false;
       const listed = /* @__PURE__ */ new Set();
       for (const r of [...snap.rooms].sort((a, b) => a.slot - b.slot)) {

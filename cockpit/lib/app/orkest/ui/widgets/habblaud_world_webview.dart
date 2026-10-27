@@ -8,7 +8,7 @@ import 'package:orkest_code/app/orkest/ui/session/office_social_state.dart';
 import 'package:orkest_code/app/orkest/ui/session/office_room_effects.dart';
 import 'package:orkest_code/app/core/ui/widgets/unzoomed_native_view.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/webview_chrome.dart';
-import 'package:orkest_code/app/core/domain/entities/harness.dart';
+import 'package:orkest_code/app/orkest/ui/session/office_harness_identity.dart';
 import 'package:orkest_code/app/core/ui/settings_controller.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/office_agent_profile_dialog.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/office_agent_names.dart';
@@ -122,6 +122,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
         .toList(growable: false);
     final identities = _resolveAgentIdentities(sessions, officeSettings);
     final accountCounts = <String, int>{};
+    final accountIdentities = <String, OfficeHarnessIdentity>{};
     final agents = <Map<String, dynamic>>[];
     final usedOfficeNames = <String>{
       for (final identity in identities.values) identity.name.toLowerCase(),
@@ -136,15 +137,17 @@ canvas{display:block;image-rendering:pixelated;outline:none}
                 candidate.officeIdentity == session.officeParentIdentity,
           )
           .firstOrNull;
-      final harness = session.activeHarness;
       final identity = identities[session.id]!;
-      final provider = _providerFor(harness);
+      final identityHarness = session.officeHarness;
+      final provider = identityHarness.id;
       final accountId = 'orkest-$provider';
+      accountIdentities[accountId] = identityHarness;
       accountCounts.update(accountId, (count) => count + 1, ifAbsent: () => 1);
       final previousStatus = _lastStatuses[session.id];
       if (previousStatus != session.status) {
         _lastStatuses[session.id] = session.status;
-        _statusSince[session.id] = now;
+        _statusSince[session.id] =
+            session.officeStatusSince.millisecondsSinceEpoch;
       }
       final seed = _stableSeed('${session.projectId}:${session.id}');
       final recent = [
@@ -212,19 +215,20 @@ canvas{display:block;image-rendering:pixelated;outline:none}
         'socialIdentity': session.officeIdentity,
         if (session.officeSocial.data != null)
           'socialState': session.officeSocial.data,
-        if (provider != 'claude') 'provider': provider,
+        'provider': provider,
         'roomId': session.projectId,
         'name': identity.name,
         'look': identity.look,
-        'role': 'Orkest agent',
+        'role': identityHarness.label,
+        'harness': {
+          'id': identityHarness.id,
+          'label': identityHarness.label,
+          'source': identityHarness.source,
+        },
         'title': session.title,
         'sessionId': session.id,
         'account': accountId,
-        'status':
-            session.status != TerminalStatus.waiting &&
-                session.officeShells.any((shell) => shell['background'] == true)
-            ? 'shell'
-            : _statusFor(session.status),
+        'status': session.officeVisualStatus,
         if (session.officeShells.isNotEmpty) 'shells': session.officeShells,
         if (session.status == TerminalStatus.waiting)
           'waitingFor':
@@ -236,7 +240,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
               ? [latestActivity]
               : recent.skip(recent.length > 30 ? recent.length - 30 : 0),
         ],
-        'tasks': const <dynamic>[],
+        'tasks': session.officeTasks,
         'startedAt': session.createdAt.millisecondsSinceEpoch,
         'lastEventAt': now,
         'statusSince': _statusSince[session.id] ?? now,
@@ -277,7 +281,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
         agents.add({
           'id': childId,
           'kind': 'sub',
-          if (provider != 'claude') 'provider': provider,
+          'provider': provider,
           'parentId': nestedParentId ?? session.id,
           'roomId': session.projectId,
           'name': identity.name,
@@ -355,7 +359,8 @@ canvas{display:block;image-rendering:pixelated;outline:none}
           'slot': slot,
           'seed': _stableSeed(occupiedProjects[slot].id),
           'createdAt': occupiedProjects[slot].createdAt.millisecondsSinceEpoch,
-          if (effects.getEffect(occupiedProjects[slot].id, now) case final effect?)
+          if (effects.getEffect(occupiedProjects[slot].id, now)
+              case final effect?)
             'effect': effect.toMap(),
         },
     ];
@@ -363,11 +368,10 @@ canvas{display:block;image-rendering:pixelated;outline:none}
       for (final entry in accountCounts.entries)
         {
           'id': entry.key,
-          if (entry.key != 'orkest-claude')
-            'provider': entry.key.substring('orkest-'.length),
-          'short': _providerShort(entry.key),
-          'name': 'Orkest ${_providerShort(entry.key)}',
-          'color': _providerColor(entry.key),
+          'provider': accountIdentities[entry.key]!.id,
+          'short': accountIdentities[entry.key]!.short,
+          'name': accountIdentities[entry.key]!.label,
+          'color': '#596273',
           'configDir': '~/.orkest',
           'sessions': entry.value,
           'usageStatus': 'disabled',
@@ -465,9 +469,11 @@ canvas{display:block;image-rendering:pixelated;outline:none}
         session.officeParentIdentity,
         session.officeShells,
         session.officeShellDone,
+        session.officeTasks,
         session.projectId,
         session.displayTitle,
         session.activeHarness?.name,
+        session.officeHarness.id,
         session.status.name,
         session.officeStatusHistory.length,
         if (session.officeStatusHistory.isNotEmpty)
@@ -1037,7 +1043,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
       TerminalStatus.waiting => '✋',
       TerminalStatus.idle => '🚶',
     };
-    final harness = session.activeHarness?.name ?? 'Orkest';
+    final harness = session.officeHarness.label;
     final title = session.title.trim();
     final description = title.isEmpty || title == 'New terminal'
         ? harness
@@ -1459,12 +1465,6 @@ canvas{display:block;image-rendering:pixelated;outline:none}
   );
 }
 
-String _statusFor(TerminalStatus status) => switch (status) {
-  TerminalStatus.working => 'working',
-  TerminalStatus.waiting => 'waiting',
-  TerminalStatus.idle => 'idle',
-};
-
 String get _officeLocale => switch (LocaleSettings.currentLocale) {
   AppLocale.en => 'en',
   AppLocale.es => 'es',
@@ -1617,29 +1617,6 @@ Map<String, dynamic> _officeStatusActivity(
     'at': at,
   };
 }
-
-String _providerFor(HarnessKind? harness) => switch (harness) {
-  null => 'orkest',
-  HarnessKind.codex => 'codex',
-  HarnessKind.antigravity => 'antigravity',
-  HarnessKind.claudeCode ||
-  HarnessKind.cursor ||
-  HarnessKind.gitHubCopilot ||
-  HarnessKind.openCode ||
-  HarnessKind.pi => 'claude',
-};
-
-String _providerShort(String accountId) => switch (accountId) {
-  'orkest-codex' => 'CD',
-  'orkest-antigravity' => 'AG',
-  _ => 'CO',
-};
-
-String _providerColor(String accountId) => switch (accountId) {
-  'orkest-codex' => '#6977e8',
-  'orkest-antigravity' => '#43a77a',
-  _ => '#596273',
-};
 
 int _stableSeed(String value) => value.codeUnits.fold<int>(
   0x345678,

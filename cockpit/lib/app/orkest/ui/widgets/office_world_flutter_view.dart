@@ -9,6 +9,14 @@ import 'package:orkest_code/app/orkest/ui/session/terminal_session.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/office_agent_profile_dialog.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
+import 'package:orkest_code/app/core/domain/entities/app_settings.dart';
+import 'package:orkest_code/app/orkest/ui/session/office_animation_rules.dart';
+import 'package:orkest_code/app/orkest/ui/session/office_room_effects.dart';
+import 'package:orkest_code/app/orkest/ui/session/office_social_state.dart';
+
+part 'office_native_simulation.dart';
+part 'office_native_effects.dart';
+part 'office_native_layout.dart';
 
 /// Displays the Habblaud office layout with Orkest workspaces and sessions.
 class OfficeWorldFlutterView extends StatefulWidget {
@@ -19,6 +27,8 @@ class OfficeWorldFlutterView extends StatefulWidget {
     required this.labels,
     required this.onOpenSession,
     required this.onRenameSession,
+    this.settings = const AppSettings(),
+    this.nowMilliseconds,
   });
 
   final List<Project> projects;
@@ -26,6 +36,8 @@ class OfficeWorldFlutterView extends StatefulWidget {
   final OfficeWorldLabels labels;
   final ValueChanged<TerminalSession> onOpenSession;
   final void Function(TerminalSession session, String name) onRenameSession;
+  final AppSettings settings;
+  final int Function()? nowMilliseconds;
 
   @override
   State<OfficeWorldFlutterView> createState() => _OfficeWorldViewState();
@@ -56,6 +68,11 @@ class _OfficeFrameClock extends ChangeNotifier {
 }
 
 class _OfficeWorldViewState extends State<OfficeWorldFlutterView> {
+  int get _now =>
+      widget.nowMilliseconds?.call() ?? DateTime.now().millisecondsSinceEpoch;
+  final _gatherings = <_NativeGathering>[];
+  final _roomTransitions = <String, _NativeRoomTransition>{};
+  bool _initialScene = true;
   // The pixel scene does not need a 60 Hz full-scene repaint. Thirty frames
   // per second keeps movement fluid while leaving more time for terminal UI.
   late final Timer _clock = Timer.periodic(
@@ -66,10 +83,21 @@ class _OfficeWorldViewState extends State<OfficeWorldFlutterView> {
   late final Future<List<Map<String, dynamic>>> _manifestFuture =
       _loadManifest();
   late final Future<_CharacterAtlas> _charactersFuture = _loadCharacters();
+  late final Future<Map<String, dynamic>> _nativeSceneFuture = rootBundle
+      .loadString('assets/office_world/native-scene.json')
+      .then((text) => (jsonDecode(text) as Map).cast<String, dynamic>());
   final Map<int, Future<_WorldMap>> _mapFutures = {};
   final Map<int, _WorldMap> _loadedMaps = {};
   final Map<String, _OfficeAgent> _agents = {};
   final List<ui.Image> _images = [];
+  void _retainImage(ui.Image image) {
+    if (mounted) {
+      _images.add(image);
+    } else {
+      image.dispose();
+    }
+  }
+
   int _lastTickMs = DateTime.now().millisecondsSinceEpoch;
   _WorldMap? _currentMap;
   List<Project> _baseProjects = const [];
@@ -112,8 +140,13 @@ class _OfficeWorldViewState extends State<OfficeWorldFlutterView> {
     );
     final image = (await codec.getNextFrame()).image;
     codec.dispose();
-    _images.add(image);
-    final map = _WorldMap.fromJson(entry, image);
+    _retainImage(image);
+    final native = await _nativeSceneFuture;
+    final details = (native['scenes'] as Map)['${entry['count']}'] as Map;
+    final map = _WorldMap.fromJson(
+      _nativeLayout(entry, details, requestedCount),
+      image,
+    );
     _loadedMaps[requestedCount] = map;
     return map;
   }
@@ -138,7 +171,7 @@ class _OfficeWorldViewState extends State<OfficeWorldFlutterView> {
     );
     final image = (await codec.getNextFrame()).image;
     codec.dispose();
-    _images.add(image);
+    _retainImage(image);
     final iconBytes = await rootBundle.load('assets/habblaud_art/icons.png');
     final iconCodec = await ui.instantiateImageCodec(
       iconBytes.buffer.asUint8List(
@@ -148,7 +181,7 @@ class _OfficeWorldViewState extends State<OfficeWorldFlutterView> {
     );
     final iconsImage = (await iconCodec.getNextFrame()).image;
     iconCodec.dispose();
-    _images.add(iconsImage);
+    _retainImage(iconsImage);
     final carsMetadataBytes = await rootBundle.load(
       'assets/habblaud_art/cars.json',
     );
@@ -162,6 +195,19 @@ class _OfficeWorldViewState extends State<OfficeWorldFlutterView> {
               ),
             )
             as Map<String, dynamic>;
+    final nativeMeta = await _nativeSceneFuture;
+    final nativeBytes = await rootBundle.load(
+      'assets/office_world/native-furniture.png',
+    );
+    final nativeCodec = await ui.instantiateImageCodec(
+      nativeBytes.buffer.asUint8List(
+        nativeBytes.offsetInBytes,
+        nativeBytes.lengthInBytes,
+      ),
+    );
+    final nativeImage = (await nativeCodec.getNextFrame()).image;
+    nativeCodec.dispose();
+    _retainImage(nativeImage);
     final carsBytes = await rootBundle.load('assets/habblaud_art/cars.png');
     final carsCodec = await ui.instantiateImageCodec(
       carsBytes.buffer.asUint8List(
@@ -171,13 +217,15 @@ class _OfficeWorldViewState extends State<OfficeWorldFlutterView> {
     );
     final carsImage = (await carsCodec.getNextFrame()).image;
     carsCodec.dispose();
-    _images.add(carsImage);
+    _retainImage(carsImage);
     return _CharacterAtlas.fromJson(
       metadata,
       image,
       iconsImage,
       carsMetadata,
       carsImage,
+      nativeMeta,
+      nativeImage,
     );
   }
 
@@ -186,6 +234,12 @@ class _OfficeWorldViewState extends State<OfficeWorldFlutterView> {
     for (final actor in _agents.values.where((actor) => actor.leaving)) {
       if (result.any((project) => project.id == actor.project.id)) continue;
       result.insert(actor.slot.clamp(0, result.length), actor.project);
+    }
+    for (final room in _roomTransitions.values) {
+      if (result.any((p) => p.id == room.project.id)) continue;
+      if (room.leftAt == null || _now - room.leftAt! < 4300) {
+        result.insert(room.slot.clamp(0, result.length), room.project);
+      }
     }
     return result;
   }
@@ -196,83 +250,197 @@ class _OfficeWorldViewState extends State<OfficeWorldFlutterView> {
     _WorldMap map, {
     bool notify = true,
   }) {
-    final now = DateTime.now().millisecondsSinceEpoch;
-    final projectSlots = <String, int>{
-      for (var i = 0; i < projects.length; i++) projects[i].id: i,
-    };
-    final sessionsById = {for (final session in sessions) session.id: session};
-    final activeIds = <String>{};
-    final usedDesks = <String, int>{};
-    for (final actor in _agents.values) {
-      if (actor.leaving) continue;
-      usedDesks[actor.projectId] = (usedDesks[actor.projectId] ?? 0) + 1;
+    final now = _now;
+    final slots = {for (var i = 0; i < projects.length; i++) projects[i].id: i};
+    final sources = <String, (TerminalSession, OfficeSubagent?, String?)>{};
+    for (final session in sessions) {
+      if (!session.hasOfficeAgentPresence) continue;
+      final parent = sessions
+          .where(
+            (candidate) =>
+                candidate.officeIdentity == session.officeParentIdentity,
+          )
+          .firstOrNull;
+      sources[session.id] = (session, null, parent?.id);
+      final children = session.officeSubagents;
+      for (final child in children) {
+        final id = '${session.id}:sub:${child.id}';
+        final nested = children.any((c) => c.id == child.parentSubagentId);
+        sources[id] = (
+          session,
+          child,
+          nested ? '${session.id}:sub:${child.parentSubagentId!}' : session.id,
+        );
+      }
     }
-
+    for (var slot = 0; slot < projects.length; slot++) {
+      final p = projects[slot];
+      _roomTransitions.putIfAbsent(
+        p.id,
+        () =>
+            _NativeRoomTransition(slot, _initialScene ? now - 2600 : now, p)
+              ..lightAt = _initialScene ? now - 600 : null,
+      );
+    }
     var changed = false;
     for (final actor in _agents.values.toList()) {
       if (actor.leaving) continue;
-      final session = sessionsById[actor.id];
-      final slot = projectSlots[actor.projectId];
-      if (session == null || slot == null) {
-        actor.beginLeaving(map, now);
-        changed = true;
-        continue;
-      }
-      actor.project = projects[slot];
-      actor.slot = slot;
-      actor.session = session;
-      if (!session.hasOfficeAgentPresence) {
+      final source = sources[actor.id], slot = slots[actor.projectId];
+      if (source == null || slot == null) {
         actor.missingAt ??= now;
         if (now - actor.missingAt! >= _OfficeAgent.missingGraceMs) {
+          actor._lastToLeave = !_agents.values.any(
+            (a) =>
+                a != actor &&
+                a.projectId == actor.projectId &&
+                !a.leaving &&
+                !a.gone,
+          );
           actor.beginLeaving(map, now);
           changed = true;
         }
         continue;
       }
-      activeIds.add(session.id);
       actor.missingAt = null;
-      if (actor.status != session.status) {
-        actor.changeStatus(session.status, now);
+      actor.session = source.$1;
+      actor.child = source.$2;
+      actor.parentId = source.$3;
+      if (actor.slot != slot) {
+        final old = actor.slot;
+        actor.position += Offset(
+          ((slot ~/ 2) - (old ~/ 2)) * 256.0,
+          ((slot % 2) - (old % 2)) * 272.0,
+        );
+        actor.slot = slot;
+        actor._spot(map);
+      }
+      actor.project = projects[slot];
+      actor.roomLight = _roomTransitions[actor.projectId];
+      final child = source.$2;
+      actor.changeStatus(
+        child == null
+            ? source.$1.status
+            : child.finishedAt == null
+            ? TerminalStatus.working
+            : TerminalStatus.idle,
+        now,
+      );
+      if (child?.finishedAt != null && !actor.delivered && !actor.delivering) {
+        if (child!.outcome == null || child.outcome == 'success') {
+          _deliverNative(actor, map, now);
+        } else {
+          actor.beginLeaving(map, now);
+        }
+      } else if (child == null && actor.parentId != null) {
+        final last = actor.session.officeStatusHistory.lastOrNull;
+        if (last?.activityKind == 'done' &&
+            last!.sequence != actor._lastDeliverySequence &&
+            !actor.entering) {
+          actor._lastDeliverySequence = last.sequence;
+          actor.delivered = false;
+          _deliverNative(actor, map, now);
+        }
       }
     }
-
-    for (final session in sessions) {
-      if (!session.hasOfficeAgentPresence || activeIds.contains(session.id)) {
-        continue;
-      }
-      final slot = projectSlots[session.projectId];
+    final used = <String, Set<int>>{};
+    for (final actor in _agents.values.where((a) => !a.leaving)) {
+      (used[actor.projectId] ??= <int>{}).add(actor.deskIndex);
+    }
+    for (final entry in sources.entries) {
+      if (_agents.containsKey(entry.key)) continue;
+      final source = entry.value, slot = slots[source.$1.projectId];
       if (slot == null || slot >= map.workSpots.length) continue;
-      final project = projects[slot];
-      final deskIndex = usedDesks[project.id] ?? 0;
-      final spots = map.workSpots[slot];
-      if (spots.isEmpty) continue;
-      final spotIndex = deskIndex % spots.length;
+      var desk = 0;
+      while (used[source.$1.projectId]?.contains(desk) ?? false) {
+        desk++;
+      }
+      (used[source.$1.projectId] ??= <int>{}).add(desk);
       final actor = _OfficeAgent(
-        session: session,
-        project: project,
+        session: source.$1,
+        project: projects[slot],
         slot: slot,
-        deskIndex: spotIndex,
-        status: session.status,
+        deskIndex: desk,
+        status: source.$2 == null ? source.$1.status : TerminalStatus.working,
         createdAt: now,
-      )..arrive(map);
-      _agents[session.id] = actor;
-      usedDesks[project.id] = deskIndex + 1;
-      activeIds.add(session.id);
+        agentId: entry.key,
+        child: source.$2,
+        parentId: source.$3,
+      )..roomLight = _roomTransitions[source.$1.projectId];
+      actor.arrive(map);
+      _agents[entry.key] = actor;
       changed = true;
+    }
+    _initialScene = false;
+    for (final entry in _roomTransitions.entries.toList()) {
+      final listed =
+          widget.projects.any((p) => p.id == entry.key) &&
+          sources.values.any((v) => v.$1.projectId == entry.key);
+      final occupants = _agents.values.any(
+        (a) => a.projectId == entry.key && !a.gone,
+      );
+      if (listed) {
+        entry.value.leftAt = null;
+      } else if (!occupants) {
+        entry.value.leftAt ??= now;
+        entry.value.darkAt ??= now;
+        entry.value.lightAt = null;
+      }
+      if (entry.value.leftAt != null && now - entry.value.leftAt! > 4300) {
+        _roomTransitions.remove(entry.key);
+        changed = true;
+      }
     }
     if (changed && notify && mounted) setState(() {});
   }
 
+  void _deliverNative(_OfficeAgent actor, _WorldMap map, int now) {
+    final parent = _agents[actor.parentId];
+    if (actor.entering) return;
+    if (parent == null || parent.leaving) {
+      if (actor.child != null) actor.beginLeaving(map, now);
+      return;
+    }
+    actor.gathering?.remove(actor);
+    actor.outing = null;
+    actor.outingState = 0;
+    actor.delivering = true;
+    actor._deliveryAt = 0;
+    actor.held = 'papers';
+    final target = parent.position + const Offset(16, 0);
+    actor._setRoute(_OfficeAgent._path(map, actor.position, target));
+    parent.icon = 'check';
+    parent.iconUntil = now + 2800;
+  }
+
+  List<Map<String, dynamic>> get debugActors => [
+    for (final actor in _agents.values)
+      {
+        'id': actor.id,
+        'pose': actor.pose,
+        'held': actor.held,
+        'mode': actor.mode,
+        'icon': actor.icon,
+        'group': actor.gathering?.kind,
+        'shellStage': actor.shellStage?.name,
+        'leaving': actor.leaving,
+        'gone': actor.gone,
+        'x': actor.position.dx,
+        'y': actor.position.dy,
+      },
+  ];
+  void debugTick() => _onClock();
+
   void _onClock() {
-    final now = DateTime.now().millisecondsSinceEpoch;
+    final now = _now;
     final dt = ((now - _lastTickMs) / 1000).clamp(0.0, 0.1);
     _lastTickMs = now;
     final map = _currentMap;
     if (map != null) {
       _syncAgents(_projectsForScene(_baseProjects), _currentSessions, map);
       for (final actor in _agents.values) {
-        actor.advance(dt, now, map);
+        actor.advance(dt, now, map, widget.settings);
       }
+      _advanceGatherings(now, map);
       final departed = _agents.values
           .where((actor) => actor.gone)
           .map((actor) => actor.id)
@@ -299,8 +467,16 @@ class _OfficeWorldViewState extends State<OfficeWorldFlutterView> {
 
   @override
   Widget build(BuildContext context) {
-    _baseProjects = widget.projects.where((p) => !p.isSystemTerminal).toList();
     _currentSessions = widget.sessions.whereType<TerminalSession>().toList();
+    _baseProjects = widget.projects
+        .where(
+          (p) =>
+              !p.isSystemTerminal &&
+              _currentSessions.any(
+                (s) => s.projectId == p.id && s.hasOfficeAgentPresence,
+              ),
+        )
+        .toList();
     final currentMap = _currentMap;
     if (currentMap != null) {
       _syncAgents(
@@ -322,6 +498,12 @@ class _OfficeWorldViewState extends State<OfficeWorldFlutterView> {
           return _AssetLoadError(error: mapSnapshot.error.toString());
         }
         if (!mapSnapshot.hasData) return const SizedBox.expand();
+        if (_currentMap != null && !identical(_currentMap, mapSnapshot.data)) {
+          for (final group in _gatherings) {
+            group.finish(_now);
+          }
+          _gatherings.clear();
+        }
         _currentMap = mapSnapshot.data!;
         _syncAgents(
           _projectsForScene(_baseProjects),
@@ -353,6 +535,10 @@ class _OfficeWorldViewState extends State<OfficeWorldFlutterView> {
                         agents: _agents.values.toList(growable: false),
                         labels: widget.labels,
                         clock: _frameClock,
+                        gatherings: _gatherings,
+                        transitions: _roomTransitions,
+                        settings: widget.settings,
+                        now: () => _now,
                       );
                 return ColoredBox(
                   color: const Color(0xff70a85f),
@@ -384,6 +570,18 @@ class _OfficeWorldViewState extends State<OfficeWorldFlutterView> {
                                   context,
                                   session: selectedSession,
                                   project: project,
+                                  loadSocial: () async {
+                                    final actor = _agents[selectedSession.id];
+                                    return actor == null
+                                        ? null
+                                        : OfficeAgentSocial.fromJson({
+                                            ...actor.wallet,
+                                            'doing':
+                                                actor.gathering?.kind ??
+                                                actor.outing ??
+                                                actor.mode,
+                                          });
+                                  },
                                   onOpenTerminal: () =>
                                       widget.onOpenSession(selectedSession),
                                   onRename: (name) => widget.onRenameSession(
@@ -450,7 +648,7 @@ class _AssetLoadError extends StatelessWidget {
 }
 
 class _WorldMap {
-  const _WorldMap({
+  _WorldMap({
     required this.image,
     required this.width,
     required this.height,
@@ -460,6 +658,7 @@ class _WorldMap {
     required this.doors,
     required this.core,
     required this.carLanes,
+    required this.native,
   });
 
   factory _WorldMap.fromJson(Map<String, dynamic> json, ui.Image image) {
@@ -491,6 +690,7 @@ class _WorldMap {
           .cast<Map<String, dynamic>>()
           .map(rect)
           .toList(),
+      native: (json['native'] as Map).cast<String, dynamic>(),
       carLanes: (json['carLanes'] as List<dynamic>)
           .cast<Map<String, dynamic>>()
           .toList(),
@@ -506,6 +706,9 @@ class _WorldMap {
   final List<Map<String, dynamic>> doors;
   final List<Map<String, double>> core;
   final List<Map<String, dynamic>> carLanes;
+  final Map<String, dynamic> native;
+  final Map<String, String> reservations = {};
+  final Map<String, int> elevatorNext = {};
 }
 
 class _Sprite {
@@ -524,6 +727,8 @@ class _CharacterAtlas {
     required this.icons,
     required this.animations,
     required this.cars,
+    required this.furnitureImage,
+    required this.furniture,
   });
   factory _CharacterAtlas.fromJson(
     Map<String, dynamic> json,
@@ -531,6 +736,8 @@ class _CharacterAtlas {
     ui.Image iconsImage,
     Map<String, dynamic> carsJson,
     ui.Image carsImage,
+    Map<String, dynamic> nativeMeta,
+    ui.Image nativeImage,
   ) {
     final entries = json['sprites'] as Map<String, dynamic>;
     final iconEntries =
@@ -542,6 +749,8 @@ class _CharacterAtlas {
       image: image,
       iconsImage: iconsImage,
       carsImage: carsImage,
+      furnitureImage: nativeImage,
+      furniture: (nativeMeta['sprites'] as Map).cast<String, dynamic>(),
       sprites: {
         for (final entry in entries.entries)
           entry.key: _Sprite(
@@ -594,6 +803,8 @@ class _CharacterAtlas {
   final ui.Image image;
   final ui.Image iconsImage;
   final ui.Image carsImage;
+  final ui.Image furnitureImage;
+  final Map<String, dynamic> furniture;
   final Map<String, _Sprite> sprites;
   final Map<String, _Sprite> icons;
   final Map<String, _AnimationSpec> animations;
@@ -604,415 +815,6 @@ class _AnimationSpec {
   const _AnimationSpec(this.frames, this.durationMs);
   final int frames;
   final int durationMs;
-}
-
-/// Runtime state for one active Orkest harness. The static map comes from
-/// Habblaud's renderer; this state follows the real terminal session lifecycle.
-class _OfficeAgent {
-  _OfficeAgent({
-    required this.session,
-    required this.project,
-    required this.slot,
-    required this.deskIndex,
-    required this.status,
-    required int createdAt,
-  }) : id = session.id,
-       projectId = session.projectId,
-       statusSince = createdAt,
-       poseSince = createdAt,
-       nextOutingAt = createdAt + 6000 + (_hash(session.id) % 9000),
-       look = _hash(session.id) % 16;
-
-  static const missingGraceMs = 3000;
-  static const _walkSpeed = 51.2; // Habblaud's 3.2 tiles/s at 16 px/tile.
-
-  final String id;
-  final String projectId;
-  final int look;
-  TerminalSession session;
-  Project project;
-  int slot;
-  int deskIndex;
-  TerminalStatus status;
-  int statusSince;
-  int poseSince;
-  int? missingAt;
-  int? celebrationUntil;
-  int nextOutingAt;
-  int? actionUntil;
-  int outingState = 0;
-  int outingCount = 0;
-  Map<String, dynamic>? outing;
-  bool entering = false;
-  bool leaving = false;
-  bool gone = false;
-  double alpha = 1;
-  Offset position = Offset.zero;
-  String pose = 'stand';
-  String held = 'none';
-  String dir = 'down';
-  bool seated = false;
-  String? icon;
-  int iconUntil = 0;
-  int _routeIndex = 0;
-  List<Offset> _route = const [];
-  int _leaveStartedAt = 0;
-  int _leaveDurationMs = 0;
-  Map<String, dynamic>? _workSpot;
-
-  void arrive(_WorldMap map) {
-    final spot = _spot(map);
-    if (spot == null) {
-      position = Offset.zero;
-      return;
-    }
-    entering = true;
-    dir = (spot['dir'] as String?) ?? 'down';
-    seated = spot['seated'] == true;
-    final toDesk = _deskPoint(spot);
-    final route = _pointList(spot['pathToDoor']);
-    if (route.isEmpty) {
-      position = toDesk;
-      entering = false;
-      _setRestPose(DateTime.now().millisecondsSinceEpoch);
-      return;
-    }
-    position = route.last;
-    _setRoute([...route.reversed, toDesk]);
-  }
-
-  void beginLeaving(_WorldMap map, int now) {
-    if (leaving || gone) return;
-    leaving = true;
-    entering = false;
-    icon = null;
-    final spot = _spot(map);
-    if (spot == null) {
-      _leaveStartedAt = now;
-      _leaveDurationMs = 700;
-      return;
-    }
-    final routeToDoor = _pointList(spot['pathToDoor']);
-    final desk = _deskPoint(spot);
-    final path = <Offset>[];
-    if ((position - desk).distance > 2) path.add(desk);
-    path.addAll(routeToDoor);
-    if (path.isEmpty) path.add(desk);
-    final length = _pathLength([position, ...path]);
-    _leaveStartedAt = now;
-    _leaveDurationMs = (length / _walkSpeed * 1000 + 250)
-        .clamp(700, 12000)
-        .toInt();
-    _setRoute(path);
-    if (_route.isEmpty) gone = true;
-  }
-
-  void changeStatus(TerminalStatus next, int now) {
-    final previous = status;
-    if (previous == next) return;
-    status = next;
-    statusSince = now;
-    icon = null;
-    iconUntil = 0;
-    if (previous == TerminalStatus.working && next == TerminalStatus.idle) {
-      celebrationUntil = now + 1500;
-      icon = 'star';
-      iconUntil = now + 2400;
-    } else if (next == TerminalStatus.waiting) {
-      icon = 'question';
-      iconUntil = now + 3200;
-    }
-    if (next != TerminalStatus.idle && outing != null) {
-      _returnFromOuting();
-    }
-  }
-
-  void advance(double dt, int now, _WorldMap map) {
-    if (gone) return;
-    if (leaving) {
-      _advanceRoute(dt, now, walk: true);
-      final progress = (now - _leaveStartedAt) / _leaveDurationMs;
-      alpha = progress > 0.72 ? (1 - progress) / 0.28 : 1;
-      alpha = alpha.clamp(0, 1);
-      if (_routeIndex >= _route.length || progress >= 1) gone = true;
-      return;
-    }
-    if (entering) {
-      _advanceRoute(dt, now, walk: true);
-      if (_routeIndex >= _route.length) {
-        entering = false;
-        alpha = 1;
-        _setRestPose(now);
-      }
-      return;
-    }
-    if (_routeIndex < _route.length) {
-      _advanceRoute(dt, now, walk: true);
-      if (_routeIndex >= _route.length) {
-        if (outingState == 1) {
-          _beginOutingAction(now);
-        } else if (outingState == 3) {
-          outing = null;
-          outingState = 0;
-          actionUntil = null;
-          nextOutingAt = now + 7000 + (_hash('$id:$outingCount') % 13000);
-        }
-      }
-      return;
-    }
-    if (outingState == 2 && actionUntil != null && now >= actionUntil!) {
-      _returnFromOuting();
-    }
-    if (status == TerminalStatus.idle &&
-        outing == null &&
-        now >= nextOutingAt) {
-      _startOuting(map, now);
-      if (_routeIndex < _route.length) {
-        _advanceRoute(dt, now, walk: true);
-        return;
-      }
-    }
-    if (iconUntil > 0 && now >= iconUntil) {
-      icon = null;
-      iconUntil = 0;
-    }
-    _setRestPose(now);
-  }
-
-  void _setRestPose(int now) {
-    if (status == TerminalStatus.working) {
-      _setPose('type', now, held: 'none', seated: true);
-      _setDeskDir();
-      return;
-    }
-    if (status == TerminalStatus.waiting) {
-      _setPose('wait', now, held: 'none', seated: true);
-      _setDeskDir();
-      if (icon == null && now - statusSince < 3200) {
-        icon = 'question';
-        iconUntil = statusSince + 3200;
-      }
-      return;
-    }
-    final cheerUntil = celebrationUntil;
-    if (cheerUntil != null && now < cheerUntil) {
-      final elapsed = now - (cheerUntil - 1500);
-      _setPose(elapsed < 650 ? 'stretch' : 'cheer', now, seated: true);
-      icon ??= 'star';
-      if (iconUntil < cheerUntil) iconUntil = cheerUntil;
-      return;
-    }
-    if (now - statusSince >= const Duration(minutes: 10).inMilliseconds) {
-      _setPose('sleep', now, seated: true);
-      icon ??= 'zzz';
-    } else {
-      _setPose('sit', now, seated: true);
-    }
-    _setDeskDir();
-  }
-
-  void _setDeskDir() {
-    final spot = _workSpot;
-    if (spot != null) dir = (spot['dir'] as String?) ?? dir;
-  }
-
-  void _setPose(
-    String next,
-    int now, {
-    String held = 'none',
-    bool seated = false,
-  }) {
-    if (pose != next) {
-      pose = next;
-      poseSince = now;
-    }
-    this.held = held;
-    this.seated = seated;
-  }
-
-  void _advanceRoute(double dt, int now, {required bool walk}) {
-    if (_routeIndex >= _route.length) return;
-    var budget = _walkSpeed * dt;
-    while (budget > 0 && _routeIndex < _route.length) {
-      final target = _route[_routeIndex];
-      final delta = target - position;
-      final distance = delta.distance;
-      if (distance < 0.01) {
-        position = target;
-        _routeIndex++;
-        continue;
-      }
-      dir = _direction(delta, dir);
-      _setPose(walk ? 'walk' : 'run', now);
-      if (distance <= budget) {
-        position = target;
-        budget -= distance;
-        _routeIndex++;
-      } else {
-        position += delta / distance * budget;
-        budget = 0;
-      }
-    }
-  }
-
-  void _setRoute(List<Offset> points) {
-    _route = points.where((point) => (point - position).distance > 1).toList();
-    _routeIndex = 0;
-  }
-
-  void _startOuting(_WorldMap map, int now) {
-    final home = _spot(map);
-    final options =
-        (home?['outingSpots'] as List<dynamic>?)
-            ?.cast<Map<String, dynamic>>() ??
-        const <Map<String, dynamic>>[];
-    if (options.isEmpty) {
-      nextOutingAt = now + 8000;
-      return;
-    }
-    final available = options
-        .where((spot) => (spot['path'] as List?)?.isNotEmpty ?? false)
-        .toList();
-    if (available.isEmpty) {
-      nextOutingAt = now + 8000;
-      return;
-    }
-    final optionIndex = _hash('$id:$outingCount') % available.length;
-    final target = available[optionIndex];
-    outing = target;
-    outingCount++;
-    outingState = 1;
-    final path = _pointList(target['path']);
-    final destination = Offset(
-      (target['x'] as num).toDouble(),
-      (target['y'] as num).toDouble(),
-    );
-    _setRoute([...path, destination]);
-    if (_route.isEmpty) _beginOutingAction(now);
-  }
-
-  void _beginOutingAction(int now) {
-    final target = outing;
-    if (target == null) return;
-    outingState = 2;
-    final kind = target['kind'] as String? ?? '';
-    dir = target['dir'] as String? ?? dir;
-    seated = target['seated'] == true;
-    held = 'none';
-    switch (kind) {
-      case 'coffee':
-      case 'cafe_seat':
-        held = 'coffee';
-        _setPose(
-          kind == 'coffee' ? 'drink' : 'sit',
-          now,
-          held: held,
-          seated: seated,
-        );
-        actionUntil = now + 4500;
-        break;
-      case 'pingpong':
-        _setPose('play', now, held: 'paddle');
-        actionUntil = now + 7000;
-        break;
-      case 'talk':
-        _setPose('talk', now);
-        actionUntil = now + 5000;
-        break;
-      case 'water':
-        held = 'water';
-        _setPose('drink', now, held: held, seated: seated);
-        actionUntil = now + 3500;
-        break;
-      case 'sofa':
-      case 'armchair':
-      case 'beanbag':
-        _setPose('sit', now, seated: true);
-        actionUntil = now + 5500;
-        break;
-      case 'shelf':
-      case 'window':
-        held = kind == 'shelf' ? 'book' : 'papers';
-        _setPose('read', now, held: held, seated: seated);
-        actionUntil = now + 5000;
-        break;
-      case 'arcade':
-      case 'snack':
-      case 'fridge':
-      case 'sink':
-        _setPose('use', now, seated: seated);
-        actionUntil = now + 3000;
-        break;
-      default:
-        _setPose('stand', now);
-        actionUntil = now + 2500;
-        break;
-    }
-  }
-
-  void _returnFromOuting() {
-    final target = outing;
-    final home = _workSpot;
-    if (target == null || home == null) {
-      outing = null;
-      outingState = 0;
-      return;
-    }
-    final path = _pointList(target['path']);
-    final targetPoint = Offset(
-      (target['x'] as num).toDouble(),
-      (target['y'] as num).toDouble(),
-    );
-    final desk = _deskPoint(home);
-    _setRoute([targetPoint, ...path.reversed, desk]);
-    outingState = 3;
-    actionUntil = null;
-    held = 'none';
-  }
-
-  Map<String, dynamic>? _spot(_WorldMap map) {
-    if (slot < 0 || slot >= map.workSpots.length) return null;
-    final spots = map.workSpots[slot];
-    if (spots.isEmpty) return null;
-    _workSpot = spots[deskIndex % spots.length];
-    return _workSpot;
-  }
-
-  Offset _deskPoint(Map<String, dynamic> spot) =>
-      Offset((spot['x'] as num).toDouble(), (spot['y'] as num).toDouble());
-
-  static List<Offset> _pointList(Object? raw) => raw is List
-      ? raw
-            .whereType<Map>()
-            .map(
-              (point) => Offset(
-                (point['x'] as num).toDouble(),
-                (point['y'] as num).toDouble(),
-              ),
-            )
-            .toList()
-      : const [];
-
-  static double _pathLength(List<Offset> points) {
-    var length = 0.0;
-    for (var i = 1; i < points.length; i++) {
-      length += (points[i] - points[i - 1]).distance;
-    }
-    return length;
-  }
-
-  static int _hash(String value) => value.codeUnits.fold<int>(
-    0,
-    (hash, unit) => (hash * 31 + unit) & 0x7fffffff,
-  );
-
-  static String _direction(Offset delta, String fallback) {
-    if (delta.distance < 0.01) return fallback;
-    if (delta.dx.abs() >= delta.dy.abs()) {
-      return delta.dx > 0 ? 'right' : 'left';
-    }
-    return delta.dy > 0 ? 'down' : 'up';
-  }
 }
 
 class _AgentHit {
@@ -1037,10 +839,19 @@ class _WorldBackgroundPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final scale = size.height / map.height;
+    canvas.drawRect(
+      Offset.zero & size,
+      Paint()..color = const Color(0xff78a65f),
+    );
     canvas.drawImageRect(
       map.image,
-      Rect.fromLTWH(0, 0, map.width, map.height),
-      Rect.fromLTWH(0, 0, map.width * scale, size.height),
+      Rect.fromLTWH(
+        0,
+        0,
+        map.image.width.toDouble(),
+        map.image.height.toDouble(),
+      ),
+      Rect.fromLTWH(0, 0, map.image.width * scale, size.height),
       Paint()..filterQuality = FilterQuality.none,
     );
     canvas.save();
@@ -1065,21 +876,6 @@ class _WorldBackgroundPainter extends CustomPainter {
         anchor.dy,
         coreLabels[index],
         const Color(0xff262d37),
-      );
-    }
-    for (
-      var index = 0;
-      index < projects.length && index < map.rooms.length;
-      index++
-    ) {
-      final rect = map.rooms[index];
-      final anchor = point(rect['x']! + rect['w']! / 2, rect['y']! - 5);
-      _badge(
-        canvas,
-        anchor.dx,
-        anchor.dy,
-        projects[index].name,
-        const Color(0xff303744),
       );
     }
     canvas.restore();
@@ -1134,6 +930,10 @@ class _WorldPainter extends CustomPainter {
     required this.agents,
     required this.labels,
     required this.clock,
+    required this.gatherings,
+    required this.transitions,
+    required this.settings,
+    required this.now,
   }) : super(repaint: clock);
 
   final _WorldMap map;
@@ -1141,6 +941,10 @@ class _WorldPainter extends CustomPainter {
   final List<_OfficeAgent> agents;
   final OfficeWorldLabels labels;
   final Listenable clock;
+  final List<_NativeGathering> gatherings;
+  final Map<String, _NativeRoomTransition> transitions;
+  final AppSettings settings;
+  final int Function() now;
   final List<_AgentHit> _hits = [];
   final Map<String, TextPainter> _badgePainters = {};
   double _scale = 1;
@@ -1170,13 +974,16 @@ class _WorldPainter extends CustomPainter {
     _hits.clear();
     canvas.save();
     canvas.scale(_scale);
+    _paintRoomTransitions(canvas);
+    _paintDynamicFurniture(canvas);
     _paintCars(canvas);
     _paintAgents(canvas);
+    _paintOfficeEffects(canvas);
     canvas.restore();
   }
 
   void _paintCars(Canvas canvas) {
-    final now = DateTime.now().millisecondsSinceEpoch;
+    final now = this.now();
     final scale = map.transform['scale']!;
     for (var laneIndex = 0; laneIndex < map.carLanes.length; laneIndex++) {
       final lane = map.carLanes[laneIndex];
@@ -1214,9 +1021,11 @@ class _WorldPainter extends CustomPainter {
   }
 
   void _paintAgents(Canvas canvas) {
-    final now = DateTime.now().millisecondsSinceEpoch;
+    final now = this.now();
     final spriteScale = map.transform['scale']!;
-    for (final actor in agents) {
+    final ordered = agents.toList()
+      ..sort((a, b) => a.position.dy.compareTo(b.position.dy));
+    for (final actor in ordered) {
       if (actor.gone || actor.alpha <= 0.02) continue;
       final foot = _sourcePoint(actor.position.dx, actor.position.dy);
       final animation = atlas.animations[actor.pose];
@@ -1227,11 +1036,16 @@ class _WorldPainter extends CustomPainter {
       final seated = actor.seated ? 1 : 0;
       final key =
           '${actor.look}:${actor.dir}:${actor.pose}:${actor.held}:$seated:$frame';
-      final sprite = atlas.sprites[key];
+      final sprite =
+          atlas.sprites[key] ??
+          atlas
+              .sprites['${actor.look}:${actor.dir}:${actor.pose}:none:$seated:$frame'];
       if (sprite == null) continue;
       final dest = Rect.fromLTWH(
         foot.dx - sprite.ax * spriteScale,
-        foot.dy - sprite.ay * spriteScale,
+        foot.dy -
+            sprite.ay * spriteScale +
+            (actor.seated ? -1 : 1) * (1 - actor.seatBlend) * 3 * spriteScale,
         sprite.rect.width * spriteScale,
         sprite.rect.height * spriteScale,
       );
@@ -1240,12 +1054,48 @@ class _WorldPainter extends CustomPainter {
         ..filterQuality = FilterQuality.none
         ..color = Color.fromARGB((opacity * 255).round(), 255, 255, 255);
       canvas.drawImageRect(atlas.image, sprite.rect, dest, spritePaint);
+      if (actor.pose == 'read' && actor.held == 'laptop') {
+        final laptop = Rect.fromLTWH(
+          foot.dx - 5 * spriteScale,
+          foot.dy - 12 * spriteScale,
+          9 * spriteScale,
+          6 * spriteScale,
+        );
+        canvas.drawRect(laptop, Paint()..color = const Color(0xff394f64));
+        canvas.drawRect(
+          laptop.deflate(spriteScale),
+          Paint()..color = const Color(0xff81afbd),
+        );
+        canvas.drawRect(
+          Rect.fromLTWH(
+            laptop.left - spriteScale,
+            laptop.bottom,
+            11 * spriteScale,
+            spriteScale,
+          ),
+          Paint()..color = const Color(0xff778b96),
+        );
+      }
       if (!actor.leaving && opacity > 0.4) {
         _hits.add(_AgentHit(dest.inflate(5), actor.session));
       }
-      final icon = actor.icon == null ? null : atlas.icons[actor.icon];
+      final iconName =
+          actor.icon ??
+          (actor.mode == 'waiting'
+              ? 'alert'
+              : actor.mode == 'shell'
+              ? (now ~/ 1200 % 2 == 0 ? 'hourglass' : 'hourglass_flip')
+              : null);
+      final icon = iconName == null ? null : atlas.icons[iconName];
       if (icon != null && !actor.leaving) {
-        final iconPoint = Offset(foot.dx, dest.top - 4);
+        final iconPoint = Offset(
+          foot.dx,
+          dest.top -
+              4 +
+              (actor.mode == 'waiting'
+                  ? math.sin(now / 180).abs() * 4
+                  : math.sin(now / 500) * 1.5),
+        );
         final iconRect = Rect.fromLTWH(
           iconPoint.dx - icon.ax * spriteScale,
           iconPoint.dy - icon.ay * spriteScale,
@@ -1265,15 +1115,18 @@ class _WorldPainter extends CustomPainter {
         TerminalStatus.idle => labels.idle,
       };
       final sessionTitle = actor.session.displayTitle.trim();
-      final title = sessionTitle.isEmpty ? status : '$sessionTitle · $status';
-      _badge(
-        canvas,
-        foot.dx,
-        dest.top - 4,
-        title,
-        const Color(0xe9222933),
-        maxWidth: 180,
-      );
+      final title =
+          '${sessionTitle.isEmpty ? actor.title : sessionTitle} · ${actor.session.officeHarness.label} · $status';
+      if (settings.officeShowNames) {
+        _badge(
+          canvas,
+          foot.dx,
+          dest.top - 4,
+          title,
+          const Color(0xe9222933),
+          maxWidth: 180,
+        );
+      }
     }
   }
 

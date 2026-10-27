@@ -217,6 +217,7 @@ class TerminalStatusServerImpl implements TerminalStatusServer {
           activityKind: activityKind.isEmpty ? null : activityKind,
           activityPhase: activityPhase.isEmpty ? null : activityPhase,
           activitySummary: activitySummary.isEmpty ? null : activitySummary,
+          activityId: decoded['activityId'] as String?,
         ),
       );
       return (null, null);

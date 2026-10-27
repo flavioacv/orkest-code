@@ -114,6 +114,36 @@ void main() {
     expect(received.status, 'working');
     await socket.close();
   });
+  test('structured Office activities reach the remote client intact', () async {
+    final server = _server();
+    await server.bind(path);
+    addTearDown(server.close);
+    final client = await _connectClient(path);
+    final status = client.messages.firstWhere((m) => m is TurnStatus);
+    final socket = await _connectStatus(server);
+    addTearDown(socket.destroy);
+    socket.writeln(
+      jsonEncode({
+        'paneId': 't1',
+        'st': 'activity',
+        'tok': _token(server),
+        'activityKind': 'command',
+        'activityPhase': 'failed',
+        'activitySummary': 'Build failed',
+        'activityId': 'run1',
+        'hn': 'apple-fm',
+      }),
+    );
+    await socket.flush();
+    final received =
+        await status.timeout(const Duration(seconds: 5)) as TurnStatus;
+    expect(received.status, 'activity');
+    expect(received.activityKind, 'command');
+    expect(received.activityPhase, 'failed');
+    expect(received.activitySummary, 'Build failed');
+    expect(received.activityId, 'run1');
+    expect(received.harness, 'apple-fm');
+  });
   test('com dois clientes, o comando vai para o DONO da aba', () async {
     // Desktop e iPad ligados ao mesmo host: responder pelo último que conectou
     // devolvia as abas do dispositivo errado.
