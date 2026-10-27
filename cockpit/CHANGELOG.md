@@ -1,6 +1,6 @@
 # Changelog — Orkest Code
 
-## Unreleased
+## 0.1.7 (build 11) — 2026-10-27
 
 - Office preserves the harness identified by the existing PTY monitor and accepts optional producer metadata without requiring a catalog entry.
 - Shell OSC 133/633 lifecycle markers and real task updates now feed Office execution reactions, wait stages and task boards.
