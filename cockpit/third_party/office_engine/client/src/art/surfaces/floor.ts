@@ -60,7 +60,7 @@ export function floorChunk(kind: FloorKind, cx: number, cy: number, o: FloorOpts
       paintMarble(b, x0, y0, o.seed);
       break;
     case 'sidewalk':
-      paintSidewalk(b, x0, y0, o.seed);
+      paintSidewalk(b, x0, y0, o.seed, o.tint);
       break;
     default:
       for (let ty = 0; ty < CHUNK_TILES; ty++) {
@@ -131,16 +131,120 @@ function paintTile(b: PixelBuf, kind: FloorKind, tx: number, ty: number, o: Floo
       break;
     }
     case 'grass': {
-      const g = ramp('#6cab57', 0.045);
+      const season = o.tint;
+      if (season === 'winter') {
+        const g = ramp('#dde8f3', 0.04);
+        const n = noise(tx * TILE, ty * TILE, 48, o.seed + 5);
+        const base = mix(g.dk, g.lt, n);
+        b.rect(0, 0, TILE, TILE, base);
+        for (let i = 0; i < 10; i++) {
+          const x = Math.floor(r(i) * TILE);
+          const y = Math.floor(r(i + 20) * TILE);
+          const c = r(i + 40) < 0.55 ? '#f5f9fe' : '#c4d5e8';
+          b.set(x, y, c);
+          if (r(i + 60) < 0.4) b.set(x + 1, y, '#eef5fc');
+        }
+        for (let i = 0; i < 2; i++) {
+          const x = 2 + Math.floor(r(i + 80) * 12);
+          const y = 3 + Math.floor(r(i + 90) * 11);
+          if (r(i + 95) < 0.45) {
+            // Tufo congelado discreto saindo da neve
+            b.set(x, y, '#8aa3b8');
+            b.set(x - 1, y - 1, '#a3bacf');
+            b.set(x + 1, y - 1, '#ffffff');
+          } else {
+            b.set(x, y, '#c2d3e6');
+            b.set(x + 1, y, '#eef6ff');
+            b.set(x, y - 1, '#ffffff');
+          }
+        }
+        if (r(99) < 0.14) {
+          const fx = 3 + Math.floor(r(100) * 10);
+          const fy = 3 + Math.floor(r(101) * 10);
+          b.set(fx, fy, '#ffffff');
+          b.set(fx + 1, fy, '#b8d8f8');
+        }
+        break;
+      }
+      if (season === 'autumn') {
+        const g = ramp('#8d9c52', 0.05);
+        const n = noise(tx * TILE, ty * TILE, 44, o.seed + 5);
+        const n2 = noise(tx * TILE, ty * TILE, 28, o.seed + 19);
+        const warmBase = mix(g.dk, g.lt, n);
+        const base = mix(warmBase, '#b08c46', n2 * 0.45);
+        b.rect(0, 0, TILE, TILE, base);
+        for (let i = 0; i < 12; i++) {
+          const x = Math.floor(r(i) * TILE);
+          const y = Math.floor(r(i + 20) * TILE);
+          const c = r(i + 40) < 0.5 ? shade(base, 0.055) : shade(base, -0.055);
+          b.set(x, y, c);
+          if (r(i + 60) < 0.5) b.set(x, y - 1, shade(c, 0.03));
+        }
+        for (let i = 0; i < 2; i++) {
+          const x = 2 + Math.floor(r(i + 80) * 12);
+          const y = 3 + Math.floor(r(i + 90) * 11);
+          b.set(x, y, '#6b753a');
+          b.set(x - 1, y - 1, '#7f8c46');
+          b.set(x + 1, y - 1, '#9ea352');
+          b.set(x, y - 2, '#bda252');
+        }
+        // Folhas secas caídas no gramado
+        const leafCount = r(99) < 0.48 ? 2 : r(99) < 0.8 ? 1 : 0;
+        const leafCols = ['#d96b27', '#c84b28', '#e69d35', '#9e5424', '#e07a2e'];
+        for (let l = 0; l < leafCount; l++) {
+          const lx = 2 + Math.floor(r(100 + l * 5) * 11);
+          const ly = 2 + Math.floor(r(101 + l * 5) * 11);
+          const lc = leafCols[Math.floor(r(102 + l * 5) * leafCols.length)];
+          b.set(lx, ly, lc);
+          if (r(103 + l * 5) < 0.65) b.set(lx + 1, ly, shade(lc, -0.08));
+        }
+        break;
+      }
+      if (season === 'spring') {
+        const g = ramp('#68ba54', 0.048);
+        const n = noise(tx * TILE, ty * TILE, 48, o.seed + 5);
+        const base = mix(g.dk, g.lt, n);
+        b.rect(0, 0, TILE, TILE, base);
+        for (let i = 0; i < 13; i++) {
+          const x = Math.floor(r(i) * TILE);
+          const y = Math.floor(r(i + 20) * TILE);
+          const c = r(i + 40) < 0.55 ? shade(base, 0.055) : shade(base, -0.045);
+          b.set(x, y, c);
+          if (r(i + 60) < 0.55) b.set(x, y - 1, shade(c, 0.035));
+        }
+        for (let i = 0; i < 2; i++) {
+          const x = 2 + Math.floor(r(i + 80) * 12);
+          const y = 3 + Math.floor(r(i + 90) * 11);
+          b.set(x, y, g.dd);
+          b.set(x - 1, y - 1, g.dk);
+          b.set(x + 1, y - 1, g.dk);
+          b.set(x, y - 2, g.lt);
+        }
+        // Primavera mais florida: maior densidade e variedade de flores silvestres
+        const blooms = r(99) < 0.34 ? (r(98) < 0.35 ? 2 : 1) : 0;
+        const springPalette = ['#ff8eb8', '#ffd84d', '#ffffff', '#c59bf7', '#ff6996', '#7fe3ff'];
+        for (let k = 0; k < blooms; k++) {
+          const fx = 2 + Math.floor(r(100 + k * 7) * 11);
+          const fy = 2 + Math.floor(r(101 + k * 7) * 11);
+          const fc = springPalette[Math.floor(r(102 + k * 7) * springPalette.length)];
+          b.set(fx, fy, fc);
+          b.set(fx + 1, fy, fc);
+          b.set(fx, fy - 1, fc);
+          b.set(fx + 1, fy + 1, '#f7c948');
+        }
+        break;
+      }
+      // Verão (ou padrão): verde vibrante e ensolarado
+      const g = ramp(season === 'summer' ? '#62ad4e' : '#6cab57', 0.048);
       const n = noise(tx * TILE, ty * TILE, 48, o.seed + 5);
       const base = mix(g.dk, g.lt, n);
       b.rect(0, 0, TILE, TILE, base);
-      for (let i = 0; i < 12; i++) {
+      for (let i = 0; i < 14; i++) {
         const x = Math.floor(r(i) * TILE);
         const y = Math.floor(r(i + 20) * TILE);
-        const c = r(i + 40) < 0.5 ? shade(base, 0.05) : shade(base, -0.05);
+        const c = r(i + 40) < 0.55 ? shade(base, 0.055) : shade(base, -0.05);
         b.set(x, y, c);
-        if (r(i + 60) < 0.5) b.set(x, y - 1, shade(c, 0.03));
+        if (r(i + 60) < 0.55) b.set(x, y - 1, shade(c, 0.035));
       }
       for (let i = 0; i < 2; i++) {
         const x = 2 + Math.floor(r(i + 80) * 12);
@@ -150,10 +254,10 @@ function paintTile(b: PixelBuf, kind: FloorKind, tx: number, ty: number, o: Floo
         b.set(x + 1, y - 1, g.dk);
         b.set(x, y - 2, g.lt);
       }
-      if (r(99) < 0.12) {
+      if (r(99) < (season === 'summer' ? 0.16 : 0.12)) {
         const fx = 3 + Math.floor(r(100) * 10);
         const fy = 3 + Math.floor(r(101) * 10);
-        const fc = ['#ffffff', '#f7d154', '#f28fb0', '#b9a2f0'][Math.floor(r(102) * 4)];
+        const fc = ['#ffffff', '#f7d154', '#f28fb0', '#b9a2f0', '#ff785a'][Math.floor(r(102) * 5)];
         b.set(fx, fy, fc);
         b.set(fx + 1, fy, fc);
         b.set(fx, fy - 1, fc);
@@ -271,8 +375,13 @@ const WALK_TONES = ['#d3cdc2', '#cfc8bc', '#d8d2c8'] as const;
 /** [tom][0 normal, 1 junta, 2 borda clara, 3 mancha]. */
 const WALK: readonly (readonly RGBA[])[] = WALK_TONES.map((t) => [t, '#b8b1a5', shade(t, 0.03), shade(t, -0.05)].map(rgba));
 
+const WALK_WINTER_TONES = ['#d5dee8', '#cfd9e4', '#dde5ef'] as const;
+const WALK_WINTER: readonly (readonly RGBA[])[] = WALK_WINTER_TONES.map((t) => [t, '#b4c2d1', '#eef4fa', shade(t, -0.04)].map(rgba));
+const SNOW_EDGE = rgba('#f0f6fc');
+
 /** Calçada de placas 16x8 em fileiras desencontradas. */
-function paintSidewalk(b: PixelBuf, x0: number, y0: number, seed: number): void {
+function paintSidewalk(b: PixelBuf, x0: number, y0: number, seed: number, season?: string): void {
+  const palette = season === 'winter' ? WALK_WINTER : WALK;
   for (let py = 0; py < CHUNK_PX; py++) {
     for (let px = 0; px < CHUNK_PX; px++) {
       const wx = x0 + px;
@@ -281,12 +390,16 @@ function paintSidewalk(b: PixelBuf, x0: number, y0: number, seed: number): void 
       const off = row & 1 ? 8 : 0;
       const ix = (wx + off) & 15;
       const iy = wy & 7;
-      const t = WALK[h3((wx + off) >> 4, row, 5, seed) % WALK.length];
+      const t = palette[h3((wx + off) >> 4, row, 5, seed) % palette.length];
       let k = 0;
       if (iy === 7 || ix === 15) k = 1;
       else if (iy === 0 || ix === 0) k = 2;
       else if (h3(wx, wy, 6, seed) % 41 === 0) k = 3;
-      b.put(px, py, t[k]);
+      if (season === 'winter' && (iy === 0 || iy === 1) && noise(wx, wy, 18, seed + 33) > 0.62) {
+        b.put(px, py, SNOW_EDGE);
+      } else {
+        b.put(px, py, t[k]);
+      }
     }
   }
 }

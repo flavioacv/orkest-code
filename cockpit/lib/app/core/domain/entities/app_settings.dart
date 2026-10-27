@@ -68,6 +68,7 @@ class AppSettings {
     this.updateCheckFrequency = UpdateCheckFrequency.daily,
     this.lastUpdateCheckTime,
     this.officeTheme = 'auto',
+    this.officeSeason = 'auto_south',
     this.officeShowNames = true,
     this.officeBubbles = 'important',
     this.officeLiveliness = 'normal',
@@ -261,6 +262,7 @@ class AppSettings {
 
   /// Preferências locais do mundo Habblaud, independentes do tema do Orkest.
   final String officeTheme;
+  final String officeSeason;
   final bool officeShowNames;
   final String officeBubbles;
   final String officeLiveliness;
@@ -360,6 +362,7 @@ class AppSettings {
     UpdateCheckFrequency? updateCheckFrequency,
     DateTime? lastUpdateCheckTime,
     String? officeTheme,
+    String? officeSeason,
     bool? officeShowNames,
     String? officeBubbles,
     String? officeLiveliness,
@@ -427,6 +430,7 @@ class AppSettings {
       updateCheckFrequency: updateCheckFrequency ?? this.updateCheckFrequency,
       lastUpdateCheckTime: lastUpdateCheckTime ?? this.lastUpdateCheckTime,
       officeTheme: officeTheme ?? this.officeTheme,
+      officeSeason: officeSeason ?? this.officeSeason,
       officeShowNames: officeShowNames ?? this.officeShowNames,
       officeBubbles: officeBubbles ?? this.officeBubbles,
       officeLiveliness: officeLiveliness ?? this.officeLiveliness,
@@ -501,6 +505,7 @@ class AppSettings {
     if (lastUpdateCheckTime != null)
       'lastUpdateCheckTime': lastUpdateCheckTime!.toIso8601String(),
     'office.theme': officeTheme,
+    'office.season': officeSeason,
     'office.showNames': officeShowNames,
     'office.bubbles': officeBubbles,
     'office.liveliness': officeLiveliness,
@@ -607,6 +612,15 @@ class AppSettings {
         'christmas',
         'halloween',
       }, 'auto'),
+      officeSeason: _officeChoice(json['office.season'], const {
+        'auto',
+        'auto_south',
+        'auto_north',
+        'spring',
+        'summer',
+        'autumn',
+        'winter',
+      }, 'auto_south'),
       officeShowNames: json['office.showNames'] as bool? ?? true,
       officeBubbles: _officeChoice(json['office.bubbles'], const {
         'all',

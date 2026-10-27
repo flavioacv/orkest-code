@@ -65,4 +65,19 @@ void main() {
     expect(appearance(reset, 'julia'), isEmpty);
     expect(appearance(reset, 'carlos'), {'top': '#abcdef'});
   });
+
+  test(
+    'round-trips officeSeason and falls back to auto_south on invalid value',
+    () {
+      const defaults = AppSettings();
+      expect(defaults.officeSeason, 'auto_south');
+
+      final updated = defaults.copyWith(officeSeason: 'winter');
+      final reloaded = AppSettings.fromJson(updated.toJson());
+      expect(reloaded.officeSeason, 'winter');
+
+      final invalid = AppSettings.fromJson({'office.season': 'invalid_season'});
+      expect(invalid.officeSeason, 'auto_south');
+    },
+  );
 }

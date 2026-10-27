@@ -2,7 +2,7 @@
 // ordenadas por profundidade -> luz/escuridão -> ícones. A passada em espaço de tela (texto
 // nítido) fica em overlay.ts.
 import { TILE, type ArtModule, type CharacterFrameRequest, type IconName, type ScreenMode, type Sprite } from '../../art/api';
-import type { SeasonalTheme, WorldOptions } from '../api';
+import type { ExteriorSeason, SeasonalTheme, WorldOptions } from '../api';
 import type { WorldAssets } from '../assets';
 import type { Camera } from '../camera';
 import { BUILDING_H, COL_W, CORE_COLS, CORRIDOR_Y } from '../constants';
@@ -116,6 +116,7 @@ export class Renderer {
   private clearColor = '#7fae62';
   private grass: CanvasPattern | null = null;
   private theme: SeasonalTheme = 'none';
+  private season: ExteriorSeason = 'summer';
 
   constructor(
     readonly canvas: HTMLCanvasElement,
@@ -124,7 +125,7 @@ export class Renderer {
     private readonly camera: Camera,
   ) {
     this.ctx = canvas.getContext('2d', { alpha: false })!;
-    this.exterior = layoutExterior(sim.building.cols);
+    this.exterior = layoutExterior(sim.building.cols, this.season);
     this.lighting = new Lighting(art, sim);
   }
 
@@ -136,12 +137,15 @@ export class Renderer {
   // =================================================================== sincronização com a simulação
 
   /** Mantém caches e visuais coerentes com o prédio atual. */
-  sync(theme: SeasonalTheme = 'none'): void {
+  sync(theme: SeasonalTheme = 'none', season: ExteriorSeason = 'summer'): void {
     const sim = this.sim;
     const themeChanged = theme !== this.theme;
+    const seasonChanged = season !== this.season;
     this.theme = theme;
+    this.season = season;
+    if (seasonChanged) this.pavings.clear();
     const assetsChanged = this.builtAssetsVersion !== this.assetsVersion || themeChanged;
-    if (this.baseCols !== sim.building.cols || assetsChanged) this.buildBase();
+    if (this.baseCols !== sim.building.cols || assetsChanged || seasonChanged) this.buildBase();
     if (this.layoutVersion !== sim.layoutVersion || assetsChanged) {
       this.layoutVersion = sim.layoutVersion;
       const want = new Set<string>();
@@ -171,11 +175,17 @@ export class Renderer {
     this.builtAssetsVersion = this.assetsVersion;
   }
 
+  private vignetteRgb(): [number, number, number] {
+    if (this.season === 'winter') return [28, 42, 62];
+    if (this.season === 'autumn') return [42, 30, 18];
+    return [18, 40, 26];
+  }
+
   /** Camada base: área externa, pátios dos slots e fechamentos do corredor. */
   private buildBase(): void {
     const cols = this.sim.building.cols;
     this.baseCols = cols;
-    this.exterior = layoutExterior(cols);
+    this.exterior = layoutExterior(cols, this.season);
     const b = this.exterior.bounds;
     this.baseX = b.x * TILE;
     this.baseY = b.y * TILE;
@@ -194,7 +204,7 @@ export class Renderer {
     this.shellWindows = [];
     for (let col = CORE_COLS; col < cols; col++) {
       for (const side of ['north', 'south'] as const) {
-        const sh = slotShell(slotAt(col, side), col === cols - 1);
+        const sh = slotShell(slotAt(col, side), col === cols - 1, this.season);
         this.shells.push(sh);
         paintShell(this.art, ctx, sh.floors, sh.walls);
         for (const w of sh.windows) this.shellWindows.push(toWallVis(w, `shell:${sh.slot}`));
@@ -204,6 +214,7 @@ export class Renderer {
     // fundo além da área desenhada: a própria grama (amostra espelhada 2x2, sem emendas), já no
     // tom da borda da vinheta
     const s = 4 * TILE;
+    const [vr, vg, vb] = this.vignetteRgb();
     try {
       const tile = document.createElement('canvas');
       tile.width = 2 * s;
@@ -236,15 +247,15 @@ export class Renderer {
       tctx.fillStyle = avg;
       tctx.fillRect(0, 0, 2 * s, 2 * s);
       tctx.globalAlpha = 1;
-      tctx.fillStyle = VIGNETTE_EDGE;
+      tctx.fillStyle = `rgba(${vr},${vg},${vb},${VIGNETTE_ALPHA})`;
       tctx.fillRect(0, 0, 2 * s, 2 * s);
       this.grass = this.ctx.createPattern(tile, 'repeat');
       // cor de fundo (antes do padrão carregar): a média já com o tom da vinheta
       const k = VIGNETTE_ALPHA;
-      this.clearColor = `rgb(${Math.round((r / n) * (1 - k) + 18 * k)},${Math.round((g / n) * (1 - k) + 40 * k)},${Math.round((bl / n) * (1 - k) + 26 * k)})`;
+      this.clearColor = `rgb(${Math.round((r / n) * (1 - k) + vr * k)},${Math.round((g / n) * (1 - k) + vg * k)},${Math.round((bl / n) * (1 - k) + vb * k)})`;
     } catch {
       this.grass = null;
-      this.clearColor = '#6f9a5a';
+      this.clearColor = this.season === 'winter' ? '#c8d6e6' : this.season === 'autumn' ? '#8c8a52' : '#6f9a5a';
     }
     this.finishBase(ctx, cols);
     this.base = c;
@@ -275,6 +286,7 @@ export class Renderer {
     // vinheta: escurece com a distância ao prédio e chega ao tom da grama "de fora" exatamente na
     // borda da área desenhada (máscara de 1 px por tile, ampliada com suavização)
     const bwT = cols * COL_W;
+    const [vr, vg, vb] = this.vignetteRgb();
     const smooth = (a: number, z: number, v: number) => {
       const t = Math.max(0, Math.min(1, (v - a) / Math.max(1e-6, z - a)));
       return t * t * (3 - 2 * t);
@@ -292,9 +304,9 @@ export class Renderer {
           const fx = wx < 0 ? smooth(6, -b.x, -wx) : wx > bwT ? smooth(6, b.x + b.w - bwT, wx - bwT) : 0;
           const fy = wy < 0 ? smooth(5, -b.y, -wy) : wy > BUILDING_H ? smooth(12, b.y + b.h - BUILDING_H, wy - BUILDING_H) : 0;
           const i = (ty * b.w + tx) * 4;
-          img.data[i] = 18;
-          img.data[i + 1] = 40;
-          img.data[i + 2] = 26;
+          img.data[i] = vr;
+          img.data[i + 1] = vg;
+          img.data[i + 2] = vb;
           img.data[i + 3] = Math.round(Math.max(fx, fy) * VIGNETTE_ALPHA * 255);
         }
       }
@@ -491,6 +503,7 @@ export class Renderer {
     this.drawCobwebs(now);
     this.drainEffects(now);
     this.roomFx.emit(this.particles, this.sim, now, dt, view);
+    this.particles.emitWeather(this.season, dt, view, (wx, wy) => this.isIndoor(wx, wy));
     this.particles.update(dt);
     this.particles.draw(ctx, vx0, vy0, vx1, vy1, now);
 
@@ -1102,6 +1115,15 @@ export class Renderer {
     ctx.restore();
   }
 
+  private isIndoor(wx: number, wy: number): boolean {
+    for (const vis of this.areas.values()) {
+      if (vis.room && !vis.room.present) continue;
+      const p = vis.px;
+      if (wx >= p.x - 4 && wx <= p.x + p.w + 4 && wy >= p.y - WALL_MARGIN && wy <= p.y + p.h + 4) return true;
+    }
+    return false;
+  }
+
   private drawProp(prop: ExteriorProp, alpha: number): void {
     if (prop.kind === 'paving') {
       const c = this.pavingCanvas(prop);
@@ -1110,7 +1132,7 @@ export class Renderer {
       this.ctx.globalAlpha = 1;
       return;
     }
-    const s = propSprite(prop);
+    const s = propSprite(prop, this.season);
     if (alpha < 1) this.ctx.globalAlpha = alpha;
     this.ctx.drawImage(s.canvas, Math.round(prop.x - s.ax), Math.round(prop.y - s.ay));
     this.ctx.globalAlpha = 1;
@@ -1120,7 +1142,7 @@ export class Renderer {
 
   /** Trecho de calçada (2x2 tiles) com o mesmo desenho da calçada vizinha (coordenadas de mundo). */
   private pavingCanvas(prop: ExteriorProp): HTMLCanvasElement {
-    const key = `${prop.x},${prop.y}`;
+    const key = `${this.season}:${prop.x},${prop.y}`;
     let c = this.pavings.get(key);
     if (c) return c;
     c = document.createElement('canvas');
@@ -1129,7 +1151,7 @@ export class Renderer {
     const ctx = c.getContext('2d')!;
     ctx.imageSmoothingEnabled = false;
     ctx.translate(-prop.x, -prop.y);
-    this.safe(() => this.art.drawFloor(ctx, 'sidewalk', prop.x, prop.y, 2 * TILE, 2 * TILE, { seed: prop.seed }));
+    this.safe(() => this.art.drawFloor(ctx, 'sidewalk', prop.x, prop.y, 2 * TILE, 2 * TILE, { seed: prop.seed, tint: this.season }));
     this.pavings.set(key, c);
     return c;
   }

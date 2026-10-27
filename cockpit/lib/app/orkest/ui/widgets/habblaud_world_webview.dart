@@ -392,6 +392,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
         'daylight': officeSettings.officeDaylight,
         'dayNight': officeSettings.officeDaylight != 'day',
         'theme': officeSettings.officeTheme,
+        'season': officeSettings.officeSeason,
         'sound': officeSettings.officeSounds,
         'sounds': {
           'volume': officeSettings.officeSoundVolume / 100,
@@ -442,6 +443,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
 
   String _snapshotSignature() => jsonEncode([
     context.read<SettingsController>().settings.officeTheme,
+    context.read<SettingsController>().settings.officeSeason,
     _officeLocale,
     context.read<SettingsController>().settings.officeShowNames,
     context.read<SettingsController>().settings.officeBubbles,

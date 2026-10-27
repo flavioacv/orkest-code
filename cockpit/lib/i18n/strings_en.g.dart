@@ -697,6 +697,27 @@ class Translations$orkest$officeWorld$en {
 	/// en: 'Halloween'
 	String get themeHalloween => 'Halloween';
 
+	/// en: 'Exterior season'
+	String get officeSeason => 'Exterior season';
+
+	/// en: 'Auto (South)'
+	String get seasonAutoSouth => 'Auto (South)';
+
+	/// en: 'Auto (North)'
+	String get seasonAutoNorth => 'Auto (North)';
+
+	/// en: 'Spring'
+	String get seasonSpring => 'Spring';
+
+	/// en: 'Summer'
+	String get seasonSummer => 'Summer';
+
+	/// en: 'Autumn'
+	String get seasonAutumn => 'Autumn';
+
+	/// en: 'Winter'
+	String get seasonWinter => 'Winter';
+
 	/// en: 'Show agent names'
 	String get showNames => 'Show agent names';
 
@@ -4588,6 +4609,13 @@ extension on Translations {
 			'orkest.officeWorld.themeNone' => 'Original',
 			'orkest.officeWorld.themeChristmas' => 'Christmas',
 			'orkest.officeWorld.themeHalloween' => 'Halloween',
+			'orkest.officeWorld.officeSeason' => 'Exterior season',
+			'orkest.officeWorld.seasonAutoSouth' => 'Auto (South)',
+			'orkest.officeWorld.seasonAutoNorth' => 'Auto (North)',
+			'orkest.officeWorld.seasonSpring' => 'Spring',
+			'orkest.officeWorld.seasonSummer' => 'Summer',
+			'orkest.officeWorld.seasonAutumn' => 'Autumn',
+			'orkest.officeWorld.seasonWinter' => 'Winter',
 			'orkest.officeWorld.showNames' => 'Show agent names',
 			'orkest.officeWorld.bubbles' => 'Activity bubbles',
 			'orkest.officeWorld.bubblesAll' => 'All',
@@ -4939,6 +4967,8 @@ extension on Translations {
 			'orkest.dbRedisTable.loadMore' => 'Load more',
 			'orkest.dbRedisTable.loadingFullValue' => 'Loading full value…',
 			'orkest.dbRedisTable.ttlMustBeNumber' => 'TTL must be a number of seconds.',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.dbRedisTable.addKey' => 'Add key',
 			'orkest.dbRedisTable.keyFieldHint' => 'key',
 			'orkest.dbRedisTable.ttlFieldHint' => 'ttl (s, optional)',
@@ -4946,8 +4976,6 @@ extension on Translations {
 			'orkest.dbRedisTable.searchHint' => 'Search — pattern, e.g. user:*',
 			'orkest.dbQueryView.saveQueryAs' => 'Save query as',
 			'orkest.dbQueryView.couldNotSave' => 'Could not save',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.dbQueryView.selectDatabase' => 'Select database',
 			'orkest.dbQueryView.noSqlConnections' => 'No SQL connections',
 			'orkest.dbQueryView.running' => 'Running…',
@@ -5453,6 +5481,8 @@ extension on Translations {
 			'settings.page.appearance.interfaceFontTitle' => 'Interface font',
 			'settings.page.appearance.interfaceFontDesc' => 'Used across the whole app. Empty = system default.',
 			'settings.page.appearance.interfaceSizeTitle' => 'Interface size',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.appearance.codeFontTitle' => 'Code font',
 			'settings.page.appearance.codeFontDesc' => 'Code and diffs. Empty = system default.',
 			'settings.page.appearance.codeSizeTitle' => 'Code size',
@@ -5460,8 +5490,6 @@ extension on Translations {
 			'settings.page.appearance.terminalFontDesc' => 'Terminal only. Empty = system default.',
 			'settings.page.appearance.terminalSizeTitle' => 'Terminal size',
 			'settings.page.appearance.terminalSizeDesc' => 'Off = follows the code size.',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.appearance.terminalSizeInherit' => 'Follow code size',
 			'settings.page.appearance.terminalWeightTitle' => 'Terminal weight',
 			'settings.page.appearance.terminalWeightDesc' => 'Low-density screens render strokes heavier. Auto lightens them there and leaves Retina untouched.',

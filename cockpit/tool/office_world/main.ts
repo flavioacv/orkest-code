@@ -2,7 +2,7 @@ import * as art from '../../third_party/office_engine/client/src/art/index.ts';
 import { PART_KEYS, type AppearanceParts, type PartKey } from '../../third_party/office_engine/shared/appearance.ts';
 import { SoundBoard } from '../../third_party/office_engine/client/src/audio/board.ts';
 import { DEFAULT_SOUND_SETTINGS, type SoundSettings } from '../../third_party/office_engine/client/src/audio/scheduler.ts';
-import { DEFAULT_WORLD_OPTIONS, seasonalThemeFor } from '../../third_party/office_engine/client/src/world/api.ts';
+import { DEFAULT_WORLD_OPTIONS, exteriorSeasonFor, seasonalThemeFor } from '../../third_party/office_engine/client/src/world/api.ts';
 import type { WorldOptions } from '../../third_party/office_engine/client/src/world/api.ts';
 import { Camera, overviewFrame } from '../../third_party/office_engine/client/src/world/camera.ts';
 import { BUILDING_H, COL_W, TILE } from '../../third_party/office_engine/client/src/world/constants.ts';
@@ -174,7 +174,8 @@ function loop(ts: number) {
   const dt = lastTs ? Math.min(0.1, Math.max(0, (ts - lastTs) / 1000)) : 1 / 60;
   lastTs = ts;
   sim.update(dt, now);
-  renderer.sync(seasonalThemeFor(options.theme, new Date()));
+  const nowDate = new Date();
+  renderer.sync(seasonalThemeFor(options.theme, nowDate), exteriorSeasonFor(options.season, nowDate));
   if (sim.building.cols !== lastCols) {
     lastCols = sim.building.cols;
     updateBounds();
@@ -238,6 +239,7 @@ window.orkestOfficeWorld = {
         ...(next.liveliness === 'calm' || next.liveliness === 'normal' || next.liveliness === 'lively' ? { liveliness: next.liveliness } : {}),
         ...(next.daylight === 'auto' || next.daylight === 'day' || next.daylight === 'night' ? { daylight: next.daylight, dayNight: next.daylight !== 'day' } : {}),
         ...(next.theme === 'auto' || next.theme === 'none' || next.theme === 'christmas' || next.theme === 'halloween' ? { theme: next.theme } : {}),
+        ...(next.season === 'auto' || next.season === 'auto_south' || next.season === 'auto_north' || next.season === 'spring' || next.season === 'summer' || next.season === 'autumn' || next.season === 'winter' ? { season: next.season } : {}),
       };
       soundEnabled = next.sound === true;
       const rawSounds = next.sounds && typeof next.sounds === 'object' ? next.sounds : {};
@@ -275,7 +277,8 @@ window.orkestOfficeWorld = {
       }
     }
     sim.applySnapshot(snapshot, now);
-    renderer.sync(seasonalThemeFor(options.theme, new Date()));
+    const nowDate = new Date();
+    renderer.sync(seasonalThemeFor(options.theme, nowDate), exteriorSeasonFor(options.season, nowDate));
     if (sim.building.cols !== lastCols) {
       lastCols = sim.building.cols;
       updateBounds();

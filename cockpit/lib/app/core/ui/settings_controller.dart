@@ -78,6 +78,7 @@ class SettingsController extends ChangeNotifier {
 
   void setOfficeWorldOptions({
     String? theme,
+    String? season,
     bool? showNames,
     String? bubbles,
     String? liveliness,
@@ -91,6 +92,7 @@ class SettingsController extends ChangeNotifier {
   }) => _apply(
     _settings.copyWith(
       officeTheme: theme,
+      officeSeason: season,
       officeShowNames: showNames,
       officeBubbles: bubbles,
       officeLiveliness: liveliness,

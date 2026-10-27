@@ -1,7 +1,8 @@
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as art from '../../third_party/office_engine/client/src/art/index.ts';
-import { DEFAULT_WORLD_OPTIONS } from '../../third_party/office_engine/client/src/world/api.ts';
+import { DEFAULT_WORLD_OPTIONS, exteriorSeasonFor } from '../../third_party/office_engine/client/src/world/api.ts';
+import { layoutExterior, slotShell } from '../../third_party/office_engine/client/src/world/layout/exterior.ts';
 import { Sim } from '../../third_party/office_engine/client/src/world/sim/sim.ts';
 import { OrkestSim, repairCharacterVisibility } from './sim.ts';
 import { coreAreaName } from '../../third_party/office_engine/client/src/world/render/overlay.ts';
@@ -238,3 +239,33 @@ for (const kind of ['tv','videogame','arcade','pingpong','kitchen','talk','rps',
     assert.equal(sim.chars.get('orchestrator')!.atSpot, sim.chars.get('orchestrator')!.homeSpot);
   });
 }
+
+test('exteriorSeasonFor resolves southern and northern hemisphere calendars and fixed seasons', () => {
+  assert.equal(exteriorSeasonFor('auto_south', new Date(2026, 0, 15)), 'summer');
+  assert.equal(exteriorSeasonFor('auto_south', new Date(2026, 3, 15)), 'autumn');
+  assert.equal(exteriorSeasonFor('auto_south', new Date(2026, 6, 15)), 'winter');
+  assert.equal(exteriorSeasonFor('auto_south', new Date(2026, 9, 15)), 'spring');
+
+  assert.equal(exteriorSeasonFor('auto_north', new Date(2026, 0, 15)), 'winter');
+  assert.equal(exteriorSeasonFor('auto_north', new Date(2026, 3, 15)), 'spring');
+  assert.equal(exteriorSeasonFor('auto_north', new Date(2026, 6, 15)), 'summer');
+  assert.equal(exteriorSeasonFor('auto_north', new Date(2026, 9, 15)), 'autumn');
+
+  assert.equal(exteriorSeasonFor('spring', new Date(2026, 6, 15)), 'spring');
+  assert.equal(exteriorSeasonFor('winter', new Date(2026, 0, 15)), 'winter');
+});
+
+test('layoutExterior and slotShell apply seasonal floor tints and seasonal props', () => {
+  const autumn = layoutExterior(3, 'autumn');
+  assert.equal(autumn.floors[0].tint, 'autumn');
+  assert.ok(autumn.props.some((p) => (p.kind as string) === 'leaf_pile'));
+
+  const winter = layoutExterior(3, 'winter');
+  assert.equal(winter.floors[0].tint, 'winter');
+  assert.ok(winter.props.some((p) => (p.kind as string) === 'snowman'));
+  assert.ok(winter.props.some((p) => (p.kind as string) === 'snowdrift'));
+
+  const shellWinter = slotShell(0, true, 'winter');
+  assert.equal(shellWinter.floors[0].tint, 'winter');
+  assert.ok(shellWinter.props.some((p) => (p.kind as string) === 'snowman' || (p.kind as string) === 'snowdrift'));
+});

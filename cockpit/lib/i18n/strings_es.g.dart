@@ -386,6 +386,13 @@ class _Translations$orkest$officeWorld$es extends Translations$orkest$officeWorl
 	@override String get themeNone => 'Original';
 	@override String get themeChristmas => 'Navidad';
 	@override String get themeHalloween => 'Halloween';
+	@override String get officeSeason => 'Estación exterior';
+	@override String get seasonAutoSouth => 'Automático (Sur)';
+	@override String get seasonAutoNorth => 'Automático (Norte)';
+	@override String get seasonSpring => 'Primavera';
+	@override String get seasonSummer => 'Verano';
+	@override String get seasonAutumn => 'Otoño';
+	@override String get seasonWinter => 'Invierno';
 	@override String get showNames => 'Mostrar nombres de agentes';
 	@override String get bubbles => 'Globos de actividad';
 	@override String get bubblesAll => 'Todos';
@@ -2227,6 +2234,13 @@ extension on TranslationsEs {
 			'orkest.officeWorld.themeNone' => 'Original',
 			'orkest.officeWorld.themeChristmas' => 'Navidad',
 			'orkest.officeWorld.themeHalloween' => 'Halloween',
+			'orkest.officeWorld.officeSeason' => 'Estación exterior',
+			'orkest.officeWorld.seasonAutoSouth' => 'Automático (Sur)',
+			'orkest.officeWorld.seasonAutoNorth' => 'Automático (Norte)',
+			'orkest.officeWorld.seasonSpring' => 'Primavera',
+			'orkest.officeWorld.seasonSummer' => 'Verano',
+			'orkest.officeWorld.seasonAutumn' => 'Otoño',
+			'orkest.officeWorld.seasonWinter' => 'Invierno',
 			'orkest.officeWorld.showNames' => 'Mostrar nombres de agentes',
 			'orkest.officeWorld.bubbles' => 'Globos de actividad',
 			'orkest.officeWorld.bubblesAll' => 'Todos',
@@ -2578,6 +2592,8 @@ extension on TranslationsEs {
 			'orkest.dbRedisTable.loadMore' => 'Cargar más',
 			'orkest.dbRedisTable.loadingFullValue' => 'Cargando valor completo…',
 			'orkest.dbRedisTable.ttlMustBeNumber' => 'El TTL debe ser un número de segundos.',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.dbRedisTable.addKey' => 'Añadir clave',
 			'orkest.dbRedisTable.keyFieldHint' => 'clave',
 			'orkest.dbRedisTable.ttlFieldHint' => 'ttl (s, opcional)',
@@ -2585,8 +2601,6 @@ extension on TranslationsEs {
 			'orkest.dbRedisTable.searchHint' => 'Buscar — patrón, ej.: user:*',
 			'orkest.dbQueryView.saveQueryAs' => 'Guardar query como',
 			'orkest.dbQueryView.couldNotSave' => 'No se pudo guardar',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.dbQueryView.selectDatabase' => 'Seleccionar base de datos',
 			'orkest.dbQueryView.noSqlConnections' => 'Sin conexiones SQL',
 			'orkest.dbQueryView.running' => 'Ejecutando…',
@@ -3092,6 +3106,8 @@ extension on TranslationsEs {
 			'settings.page.appearance.interfaceFontTitle' => 'Fuente de la interfaz',
 			'settings.page.appearance.interfaceFontDesc' => 'Se usa en toda la aplicación. Vacío = predeterminado del sistema.',
 			'settings.page.appearance.interfaceSizeTitle' => 'Tamaño de la interfaz',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.appearance.codeFontTitle' => 'Fuente del código',
 			'settings.page.appearance.codeFontDesc' => 'Código y diffs. Vacío = predeterminado del sistema.',
 			'settings.page.appearance.codeSizeTitle' => 'Tamaño del código',
@@ -3099,8 +3115,6 @@ extension on TranslationsEs {
 			'settings.page.appearance.terminalFontDesc' => 'Solo la terminal. Vacío = predeterminado del sistema.',
 			'settings.page.appearance.terminalSizeTitle' => 'Tamaño de la terminal',
 			'settings.page.appearance.terminalSizeDesc' => 'Apagado = sigue el tamaño del código.',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.appearance.terminalSizeInherit' => 'Seguir el código',
 			'settings.page.appearance.terminalWeightTitle' => 'Grosor de la terminal',
 			'settings.page.appearance.terminalWeightDesc' => 'Las pantallas de baja densidad engrosan los trazos. El automático los afina solo ahí y no toca la Retina.',

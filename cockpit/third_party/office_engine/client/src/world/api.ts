@@ -19,11 +19,37 @@ export interface WorldOptions {
   daylight?: DaylightMode;
   /** Tema visual: automático (segue o calendário; ver seasonalThemeFor), nenhum, Natal ou Halloween. */
   theme?: OfficeTheme;
+  /** Estação do mapa externo: automático (hemisfério sul/norte) ou estação fixa. */
+  season?: OfficeSeason;
 }
 
 /** Tema que o renderer desenha: o escritório original ('none') ou um dos sazonais. */
 export type SeasonalTheme = 'none' | 'christmas' | 'halloween';
 export type OfficeTheme = 'auto' | SeasonalTheme;
+
+/** Estação da área externa (gramado, árvores, arbustos, canteiros e clima externo). */
+export type ExteriorSeason = 'spring' | 'summer' | 'autumn' | 'winter';
+export type OfficeSeason = 'auto' | 'auto_south' | 'auto_north' | ExteriorSeason;
+
+/**
+ * Estação externa desenhada numa data (hora local).
+ * - Hemisfério Sul (`auto` / `auto_south`): Verão (Dez–Fev), Outono (Mar–Mai), Inverno (Jun–Ago), Primavera (Set–Nov).
+ * - Hemisfério Norte (`auto_north`): Inverno (Dez–Fev), Primavera (Mar–Mai), Verão (Jun–Ago), Outono (Set–Nov).
+ */
+export function exteriorSeasonFor(season: OfficeSeason | undefined, date: Date): ExteriorSeason {
+  if (season === 'spring' || season === 'summer' || season === 'autumn' || season === 'winter') return season;
+  const month = date.getMonth();
+  if (season === 'auto_north') {
+    if (month === 11 || month <= 1) return 'winter';
+    if (month <= 4) return 'spring';
+    if (month <= 7) return 'summer';
+    return 'autumn';
+  }
+  if (month === 11 || month <= 1) return 'summer';
+  if (month <= 4) return 'autumn';
+  if (month <= 7) return 'winter';
+  return 'spring';
+}
 
 /**
  * Tema desenhado numa data (hora local). No automático: Halloween de 1º a 31 de outubro, Natal de 1º de novembro a
@@ -155,4 +181,5 @@ export const DEFAULT_WORLD_OPTIONS: WorldOptions = {
   followSelected: false,
   dayNight: true,
   theme: 'auto',
+  season: 'auto_south',
 };

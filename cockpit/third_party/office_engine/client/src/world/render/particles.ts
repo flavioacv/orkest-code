@@ -1,6 +1,8 @@
 // Partículas em pixel art (px de mundo): pipoca pulando do balde, confete da comemoração, chuva
-// da nuvenzinha de quando um shell falha, moedinhas voando (aposta paga) e brilhos (espelho).
+// da nuvenzinha de quando um shell falha, moedinhas voando (aposta paga), brilhos (espelho) e
+// clima sazonal externo (folhas de outono, flocos de neve, pétalas de primavera e pólen de verão).
 // Pool fixo em arrays tipados: nada é alocado por frame.
+import type { ExteriorSeason } from '../api';
 
 /** Tipos de partícula. */
 const enum PK {
@@ -9,6 +11,10 @@ const enum PK {
   Rain,
   Coin,
   Sparkle,
+  Leaf,
+  Snow,
+  Petal,
+  SunMote,
 }
 
 /** Cores do confete (saturadas, legíveis sobre o piso claro e o carpete). */
@@ -20,11 +26,35 @@ const COIN_BODY = '#ffcf3a';
 const COIN_EDGE = '#c98a12';
 const COIN_SHINE = '#fff6c2';
 const SPARKLE_COLORS: readonly string[] = ['#ffffff', '#fff3a6', '#ffd1f0', '#bfe9ff'];
+const LEAF_COLORS: readonly string[] = ['#d4652f', '#e89d38', '#b83f2b', '#8c5228', '#f2b84b'];
+const SNOW_COLORS: readonly string[] = ['#ffffff', '#eef5fc', '#d4e5f7'];
+const PETAL_COLORS: readonly string[] = ['#ff94be', '#ffdbf0', '#ffffff', '#ffe97d', '#d4a6ff'];
+const MOTE_COLORS: readonly string[] = ['#fff7bd', '#ffe680', '#ffffff'];
 
 /** Gravidade por tipo (px/s²). */
-const GRAVITY: Readonly<Record<PK, number>> = { [PK.Popcorn]: 260, [PK.Confetti]: 150, [PK.Rain]: 0, [PK.Coin]: 240, [PK.Sparkle]: -14 };
+const GRAVITY: Readonly<Record<PK, number>> = {
+  [PK.Popcorn]: 260,
+  [PK.Confetti]: 150,
+  [PK.Rain]: 0,
+  [PK.Coin]: 240,
+  [PK.Sparkle]: -14,
+  [PK.Leaf]: 8,
+  [PK.Snow]: 4,
+  [PK.Petal]: 5,
+  [PK.SunMote]: -2,
+};
 /** Arrasto horizontal por tipo (fração perdida por segundo): confete plana, pipoca não. */
-const DRAG: Readonly<Record<PK, number>> = { [PK.Popcorn]: 0, [PK.Confetti]: 2.2, [PK.Rain]: 0, [PK.Coin]: 0, [PK.Sparkle]: 3 };
+const DRAG: Readonly<Record<PK, number>> = {
+  [PK.Popcorn]: 0,
+  [PK.Confetti]: 2.2,
+  [PK.Rain]: 0,
+  [PK.Coin]: 0,
+  [PK.Sparkle]: 3,
+  [PK.Leaf]: 0.4,
+  [PK.Snow]: 0.3,
+  [PK.Petal]: 0.5,
+  [PK.SunMote]: 0.8,
+};
 
 export class Particles {
   readonly cap: number;
@@ -122,6 +152,68 @@ export class Particles {
     }
   }
 
+  /** Emite partículas climáticas sazonais na área externa visível. */
+  emitWeather(
+    season: ExteriorSeason,
+    dt: number,
+    view: { x0: number; y0: number; x1: number; y1: number },
+    isIndoor: (x: number, y: number) => boolean,
+  ): void {
+    if (this.n > this.cap - 80) return;
+    const rate = season === 'winter' ? 22 : season === 'autumn' ? 14 : season === 'spring' ? 11 : 6;
+    const expected = rate * Math.min(0.1, Math.max(0, dt));
+    let count = Math.floor(expected);
+    if (Math.random() < expected - count) count++;
+    const vw = Math.max(64, view.x1 - view.x0);
+    const vh = Math.max(64, view.y1 - view.y0);
+    for (let i = 0; i < count; i++) {
+      const x = view.x0 + Math.random() * vw;
+      const y = view.y0 + Math.random() * vh;
+      if (isIndoor(x, y)) continue;
+      if (season === 'autumn') {
+        this.spawn(
+          PK.Leaf,
+          x,
+          y,
+          10 + Math.random() * 14,
+          12 + Math.random() * 10,
+          2.2 + Math.random() * 1.6,
+          Math.floor(Math.random() * LEAF_COLORS.length),
+        );
+      } else if (season === 'winter') {
+        this.spawn(
+          PK.Snow,
+          x,
+          y,
+          -4 + Math.random() * 10,
+          14 + Math.random() * 12,
+          2.4 + Math.random() * 1.8,
+          Math.floor(Math.random() * SNOW_COLORS.length),
+        );
+      } else if (season === 'spring') {
+        this.spawn(
+          PK.Petal,
+          x,
+          y,
+          8 + Math.random() * 12,
+          8 + Math.random() * 8,
+          2.4 + Math.random() * 1.5,
+          Math.floor(Math.random() * PETAL_COLORS.length),
+        );
+      } else {
+        this.spawn(
+          PK.SunMote,
+          x,
+          y,
+          -3 + Math.random() * 6,
+          -4 + Math.random() * 4,
+          1.8 + Math.random() * 1.4,
+          Math.floor(Math.random() * MOTE_COLORS.length),
+        );
+      }
+    }
+  }
+
   update(dt: number): void {
     const d = Math.min(0.1, Math.max(0, dt));
     let i = 0;
@@ -134,8 +226,14 @@ export class Particles {
       const k = this.kind[i] as PK;
       this.vy[i] += GRAVITY[k] * d;
       if (DRAG[k]) this.vx[i] *= Math.max(0, 1 - DRAG[k] * d);
-      // confete: queda limitada (plana balançando)
       if (k === PK.Confetti && this.vy[i] > 38) this.vy[i] = 38;
+      if (k === PK.Leaf || k === PK.Petal) {
+        this.vx[i] += Math.sin(this.age[i] * 3.5 + this.ph[i]) * 18 * d;
+        if (this.vy[i] > 24) this.vy[i] = 24;
+      } else if (k === PK.Snow) {
+        this.vx[i] += Math.sin(this.age[i] * 2.4 + this.ph[i]) * 10 * d;
+        if (this.vy[i] > 22) this.vy[i] = 22;
+      }
       this.x[i] += this.vx[i] * d;
       this.y[i] += this.vy[i] * d;
       i++;
@@ -186,6 +284,30 @@ export class Particles {
           ctx.fillRect(x - 1, y, 3, 1);
           ctx.fillRect(x, y - 1, 1, 3);
         } else ctx.fillRect(x, y, 1, 1);
+      } else if (k === PK.Leaf) {
+        const fadeIn = Math.min(1, this.age[i] * 3);
+        ctx.globalAlpha = Math.min(fadeIn, left * 2.5) * 0.92;
+        ctx.fillStyle = LEAF_COLORS[this.color[i] % LEAF_COLORS.length];
+        const flip = Math.sin(now / 140 + this.ph[i]) > 0;
+        ctx.fillRect(x, y, flip ? 2 : 1, flip ? 1 : 2);
+        ctx.fillRect(x + 1, y + 1, 1, 1);
+      } else if (k === PK.Snow) {
+        const fadeIn = Math.min(1, this.age[i] * 3);
+        ctx.globalAlpha = Math.min(fadeIn, left * 2.5) * 0.9;
+        ctx.fillStyle = SNOW_COLORS[this.color[i] % SNOW_COLORS.length];
+        const big = (this.color[i] & 1) === 0;
+        ctx.fillRect(x, y, big ? 2 : 1, big ? 2 : 1);
+      } else if (k === PK.Petal) {
+        const fadeIn = Math.min(1, this.age[i] * 3);
+        ctx.globalAlpha = Math.min(fadeIn, left * 2.5) * 0.9;
+        ctx.fillStyle = PETAL_COLORS[this.color[i] % PETAL_COLORS.length];
+        const flip = Math.sin(now / 120 + this.ph[i]) > 0;
+        ctx.fillRect(x, y, flip ? 2 : 1, flip ? 1 : 2);
+      } else if (k === PK.SunMote) {
+        const pulse = 0.5 + 0.5 * Math.sin(now / 180 + this.ph[i]);
+        ctx.globalAlpha = Math.min(1, left * 2.5) * pulse * 0.75;
+        ctx.fillStyle = MOTE_COLORS[this.color[i] % MOTE_COLORS.length];
+        ctx.fillRect(x, y, 1, 1);
       } else {
         ctx.globalAlpha = 0.9;
         ctx.fillStyle = RAIN_COLOR;

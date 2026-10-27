@@ -15930,7 +15930,7 @@
         paintMarble(b, x0, y0, o.seed);
         break;
       case "sidewalk":
-        paintSidewalk(b, x0, y0, o.seed);
+        paintSidewalk(b, x0, y0, o.seed, o.tint);
         break;
       default:
         for (let ty = 0; ty < CHUNK_TILES; ty++) {
@@ -15997,16 +15997,116 @@
         break;
       }
       case "grass": {
-        const g = ramp("#6cab57", 0.045);
+        const season = o.tint;
+        if (season === "winter") {
+          const g2 = ramp("#dde8f3", 0.04);
+          const n2 = noise(tx * TILE, ty * TILE, 48, o.seed + 5);
+          const base2 = mix(g2.dk, g2.lt, n2);
+          b.rect(0, 0, TILE, TILE, base2);
+          for (let i = 0; i < 10; i++) {
+            const x = Math.floor(r(i) * TILE);
+            const y = Math.floor(r(i + 20) * TILE);
+            const c = r(i + 40) < 0.55 ? "#f5f9fe" : "#c4d5e8";
+            b.set(x, y, c);
+            if (r(i + 60) < 0.4) b.set(x + 1, y, "#eef5fc");
+          }
+          for (let i = 0; i < 2; i++) {
+            const x = 2 + Math.floor(r(i + 80) * 12);
+            const y = 3 + Math.floor(r(i + 90) * 11);
+            if (r(i + 95) < 0.45) {
+              b.set(x, y, "#8aa3b8");
+              b.set(x - 1, y - 1, "#a3bacf");
+              b.set(x + 1, y - 1, "#ffffff");
+            } else {
+              b.set(x, y, "#c2d3e6");
+              b.set(x + 1, y, "#eef6ff");
+              b.set(x, y - 1, "#ffffff");
+            }
+          }
+          if (r(99) < 0.14) {
+            const fx = 3 + Math.floor(r(100) * 10);
+            const fy = 3 + Math.floor(r(101) * 10);
+            b.set(fx, fy, "#ffffff");
+            b.set(fx + 1, fy, "#b8d8f8");
+          }
+          break;
+        }
+        if (season === "autumn") {
+          const g2 = ramp("#8d9c52", 0.05);
+          const n2 = noise(tx * TILE, ty * TILE, 44, o.seed + 5);
+          const n22 = noise(tx * TILE, ty * TILE, 28, o.seed + 19);
+          const warmBase = mix(g2.dk, g2.lt, n2);
+          const base2 = mix(warmBase, "#b08c46", n22 * 0.45);
+          b.rect(0, 0, TILE, TILE, base2);
+          for (let i = 0; i < 12; i++) {
+            const x = Math.floor(r(i) * TILE);
+            const y = Math.floor(r(i + 20) * TILE);
+            const c = r(i + 40) < 0.5 ? shade(base2, 0.055) : shade(base2, -0.055);
+            b.set(x, y, c);
+            if (r(i + 60) < 0.5) b.set(x, y - 1, shade(c, 0.03));
+          }
+          for (let i = 0; i < 2; i++) {
+            const x = 2 + Math.floor(r(i + 80) * 12);
+            const y = 3 + Math.floor(r(i + 90) * 11);
+            b.set(x, y, "#6b753a");
+            b.set(x - 1, y - 1, "#7f8c46");
+            b.set(x + 1, y - 1, "#9ea352");
+            b.set(x, y - 2, "#bda252");
+          }
+          const leafCount = r(99) < 0.48 ? 2 : r(99) < 0.8 ? 1 : 0;
+          const leafCols = ["#d96b27", "#c84b28", "#e69d35", "#9e5424", "#e07a2e"];
+          for (let l = 0; l < leafCount; l++) {
+            const lx = 2 + Math.floor(r(100 + l * 5) * 11);
+            const ly = 2 + Math.floor(r(101 + l * 5) * 11);
+            const lc = leafCols[Math.floor(r(102 + l * 5) * leafCols.length)];
+            b.set(lx, ly, lc);
+            if (r(103 + l * 5) < 0.65) b.set(lx + 1, ly, shade(lc, -0.08));
+          }
+          break;
+        }
+        if (season === "spring") {
+          const g2 = ramp("#68ba54", 0.048);
+          const n2 = noise(tx * TILE, ty * TILE, 48, o.seed + 5);
+          const base2 = mix(g2.dk, g2.lt, n2);
+          b.rect(0, 0, TILE, TILE, base2);
+          for (let i = 0; i < 13; i++) {
+            const x = Math.floor(r(i) * TILE);
+            const y = Math.floor(r(i + 20) * TILE);
+            const c = r(i + 40) < 0.55 ? shade(base2, 0.055) : shade(base2, -0.045);
+            b.set(x, y, c);
+            if (r(i + 60) < 0.55) b.set(x, y - 1, shade(c, 0.035));
+          }
+          for (let i = 0; i < 2; i++) {
+            const x = 2 + Math.floor(r(i + 80) * 12);
+            const y = 3 + Math.floor(r(i + 90) * 11);
+            b.set(x, y, g2.dd);
+            b.set(x - 1, y - 1, g2.dk);
+            b.set(x + 1, y - 1, g2.dk);
+            b.set(x, y - 2, g2.lt);
+          }
+          const blooms = r(99) < 0.34 ? r(98) < 0.35 ? 2 : 1 : 0;
+          const springPalette = ["#ff8eb8", "#ffd84d", "#ffffff", "#c59bf7", "#ff6996", "#7fe3ff"];
+          for (let k = 0; k < blooms; k++) {
+            const fx = 2 + Math.floor(r(100 + k * 7) * 11);
+            const fy = 2 + Math.floor(r(101 + k * 7) * 11);
+            const fc = springPalette[Math.floor(r(102 + k * 7) * springPalette.length)];
+            b.set(fx, fy, fc);
+            b.set(fx + 1, fy, fc);
+            b.set(fx, fy - 1, fc);
+            b.set(fx + 1, fy + 1, "#f7c948");
+          }
+          break;
+        }
+        const g = ramp(season === "summer" ? "#62ad4e" : "#6cab57", 0.048);
         const n = noise(tx * TILE, ty * TILE, 48, o.seed + 5);
         const base = mix(g.dk, g.lt, n);
         b.rect(0, 0, TILE, TILE, base);
-        for (let i = 0; i < 12; i++) {
+        for (let i = 0; i < 14; i++) {
           const x = Math.floor(r(i) * TILE);
           const y = Math.floor(r(i + 20) * TILE);
-          const c = r(i + 40) < 0.5 ? shade(base, 0.05) : shade(base, -0.05);
+          const c = r(i + 40) < 0.55 ? shade(base, 0.055) : shade(base, -0.05);
           b.set(x, y, c);
-          if (r(i + 60) < 0.5) b.set(x, y - 1, shade(c, 0.03));
+          if (r(i + 60) < 0.55) b.set(x, y - 1, shade(c, 0.035));
         }
         for (let i = 0; i < 2; i++) {
           const x = 2 + Math.floor(r(i + 80) * 12);
@@ -16016,10 +16116,10 @@
           b.set(x + 1, y - 1, g.dk);
           b.set(x, y - 2, g.lt);
         }
-        if (r(99) < 0.12) {
+        if (r(99) < (season === "summer" ? 0.16 : 0.12)) {
           const fx = 3 + Math.floor(r(100) * 10);
           const fy = 3 + Math.floor(r(101) * 10);
-          const fc = ["#ffffff", "#f7d154", "#f28fb0", "#b9a2f0"][Math.floor(r(102) * 4)];
+          const fc = ["#ffffff", "#f7d154", "#f28fb0", "#b9a2f0", "#ff785a"][Math.floor(r(102) * 5)];
           b.set(fx, fy, fc);
           b.set(fx + 1, fy, fc);
           b.set(fx, fy - 1, fc);
@@ -16119,7 +16219,11 @@
   }
   var WALK_TONES = ["#d3cdc2", "#cfc8bc", "#d8d2c8"];
   var WALK = WALK_TONES.map((t2) => [t2, "#b8b1a5", shade(t2, 0.03), shade(t2, -0.05)].map(rgba));
-  function paintSidewalk(b, x0, y0, seed) {
+  var WALK_WINTER_TONES = ["#d5dee8", "#cfd9e4", "#dde5ef"];
+  var WALK_WINTER = WALK_WINTER_TONES.map((t2) => [t2, "#b4c2d1", "#eef4fa", shade(t2, -0.04)].map(rgba));
+  var SNOW_EDGE = rgba("#f0f6fc");
+  function paintSidewalk(b, x0, y0, seed, season) {
+    const palette = season === "winter" ? WALK_WINTER : WALK;
     for (let py = 0; py < CHUNK_PX; py++) {
       for (let px = 0; px < CHUNK_PX; px++) {
         const wx = x0 + px;
@@ -16128,12 +16232,16 @@
         const off = row & 1 ? 8 : 0;
         const ix = wx + off & 15;
         const iy = wy & 7;
-        const t2 = WALK[h3(wx + off >> 4, row, 5, seed) % WALK.length];
+        const t2 = palette[h3(wx + off >> 4, row, 5, seed) % palette.length];
         let k = 0;
         if (iy === 7 || ix === 15) k = 1;
         else if (iy === 0 || ix === 0) k = 2;
         else if (h3(wx, wy, 6, seed) % 41 === 0) k = 3;
-        b.put(px, py, t2[k]);
+        if (season === "winter" && (iy === 0 || iy === 1) && noise(wx, wy, 18, seed + 33) > 0.62) {
+          b.put(px, py, SNOW_EDGE);
+        } else {
+          b.put(px, py, t2[k]);
+        }
       }
     }
   }
@@ -16767,6 +16875,20 @@
   };
 
   // third_party/office_engine/client/src/world/api.ts
+  function exteriorSeasonFor(season, date) {
+    if (season === "spring" || season === "summer" || season === "autumn" || season === "winter") return season;
+    const month = date.getMonth();
+    if (season === "auto_north") {
+      if (month === 11 || month <= 1) return "winter";
+      if (month <= 4) return "spring";
+      if (month <= 7) return "summer";
+      return "autumn";
+    }
+    if (month === 11 || month <= 1) return "summer";
+    if (month <= 4) return "autumn";
+    if (month <= 7) return "winter";
+    return "spring";
+  }
   function seasonalThemeFor(theme, date) {
     if (theme && theme !== "auto") return theme;
     const month = date.getMonth();
@@ -16780,7 +16902,8 @@
     liveliness: "normal",
     followSelected: false,
     dayNight: true,
-    theme: "auto"
+    theme: "auto",
+    season: "auto_south"
   };
 
   // third_party/office_engine/client/src/world/constants.ts
@@ -18494,22 +18617,24 @@
 
   // third_party/office_engine/client/src/world/layout/exterior.ts
   var EXTERIOR_WALL = { base: "#cfc8bd", trim: "#8a8174", pattern: "brick", exterior: true };
-  function layoutExterior(cols) {
+  function layoutExterior(cols, season = "summer") {
     const w = cols * COL_W;
     const bounds = { x: -EXT_WEST, y: -EXT_NORTH, w: w + EXT_WEST + EXT_EAST, h: BUILDING_H + EXT_NORTH + EXT_SOUTH };
     const px = (t2) => t2 * TILE;
     const floors = [];
     const props = [];
     const rng = mulberry32(49374 + cols);
-    floors.push({ kind: "grass", x: px(bounds.x), y: px(bounds.y), w: px(bounds.w), h: px(bounds.h), seed: 11 });
+    floors.push({ kind: "grass", x: px(bounds.x), y: px(bounds.y), w: px(bounds.w), h: px(bounds.h), seed: 11, tint: season });
     const south = BUILDING_H;
-    floors.push({ kind: "sidewalk", x: px(bounds.x), y: px(south + 2), w: px(bounds.w), h: px(2), seed: 12 });
+    floors.push({ kind: "sidewalk", x: px(bounds.x), y: px(south + 2), w: px(bounds.w), h: px(2), seed: 12, tint: season });
     floors.push({ kind: "street", x: px(bounds.x), y: px(south + 4), w: px(bounds.w), h: px(5), seed: 13 });
-    floors.push({ kind: "sidewalk", x: px(bounds.x), y: px(south + 9), w: px(bounds.w), h: px(2), seed: 14 });
-    floors.push({ kind: "sidewalk", x: px(-3), y: px(CORRIDOR_Y), w: px(3), h: px(5), seed: 15 });
-    floors.push({ kind: "sidewalk", x: px(-3), y: px(CORRIDOR_Y + 5), w: px(2), h: px(south + 2 - CORRIDOR_Y - 5), seed: 16 });
+    floors.push({ kind: "sidewalk", x: px(bounds.x), y: px(south + 9), w: px(bounds.w), h: px(2), seed: 14, tint: season });
+    floors.push({ kind: "sidewalk", x: px(-3), y: px(CORRIDOR_Y), w: px(3), h: px(5), seed: 15, tint: season });
+    floors.push({ kind: "sidewalk", x: px(-3), y: px(CORRIDOR_Y + 5), w: px(2), h: px(south + 2 - CORRIDOR_Y - 5), seed: 16, tint: season });
     for (let x = bounds.x + 1; x < bounds.x + bounds.w - 1; x += 4 + Math.floor(rng() * 3)) {
-      props.push({ kind: rng() < 0.25 ? "pine" : "tree", x: px(x) + Math.floor(rng() * 8), y: px(-3) - Math.floor(rng() * 20), seed: Math.floor(rng() * 1e9) });
+      const tx = px(x) + Math.floor(rng() * 8);
+      const ty = px(-3) - Math.floor(rng() * 20);
+      props.push({ kind: rng() < 0.25 ? "pine" : "tree", x: tx, y: ty, seed: Math.floor(rng() * 1e9) });
       if (rng() < 0.6) props.push({ kind: "bush", x: px(x + 2), y: px(-1) - 2, seed: Math.floor(rng() * 1e9) });
     }
     for (const [row, gap] of [
@@ -18548,6 +18673,34 @@
     }
     props.push({ kind: "bench", x: px(-4), y: px(CORRIDOR_Y + 3) + 6, seed: 1 });
     props.push({ kind: "totem", x: px(-3) + 6, y: px(CORRIDOR_Y + 1), seed: 2 });
+    const srng = mulberry32(24229 + cols * 17);
+    if (season === "autumn") {
+      for (let x = bounds.x + 3; x < bounds.x + bounds.w - 3; x += 7 + Math.floor(srng() * 5)) {
+        props.push({ kind: "leaf_pile", x: px(x) + Math.floor(srng() * 10), y: px(-2) - Math.floor(srng() * 8), seed: Math.floor(srng() * 1e9) });
+        if (srng() < 0.7) {
+          props.push({ kind: "leaf_pile", x: px(x) + Math.floor(srng() * 8), y: px(south + 12) + Math.floor(srng() * 16), seed: Math.floor(srng() * 1e9) });
+        }
+      }
+      props.push({ kind: "leaf_pile", x: px(-5), y: px(CORRIDOR_Y + 5), seed: 101 });
+      props.push({ kind: "leaf_pile", x: px(w + 2), y: px(CORRIDOR_Y + 2), seed: 102 });
+    } else if (season === "winter") {
+      props.push({ kind: "snowman", x: px(-5), y: px(CORRIDOR_Y + 2), seed: 201 });
+      props.push({ kind: "snowman", x: px(Math.max(4, Math.floor(w * 0.35))), y: px(-2) - 4, seed: 202 });
+      props.push({ kind: "snowman", x: px(Math.max(10, Math.floor(w * 0.72))), y: px(south + 12) + 6, seed: 203 });
+      for (let x = bounds.x + 4; x < bounds.x + bounds.w - 4; x += 9 + Math.floor(srng() * 5)) {
+        props.push({ kind: "snowdrift", x: px(x), y: px(-2) - Math.floor(srng() * 10), seed: Math.floor(srng() * 1e9) });
+        if (srng() < 0.65) {
+          props.push({ kind: "snowdrift", x: px(x + 2), y: px(south + 12) + Math.floor(srng() * 12), seed: Math.floor(srng() * 1e9) });
+        }
+      }
+    } else if (season === "spring") {
+      for (let x = bounds.x + 4; x < bounds.x + bounds.w - 4; x += 8 + Math.floor(srng() * 5)) {
+        props.push({ kind: "flowers", x: px(x), y: px(-2) + 4, seed: Math.floor(srng() * 1e9) });
+        if (srng() < 0.65) {
+          props.push({ kind: "flowers", x: px(x + 2), y: px(south + 12) + 2, seed: Math.floor(srng() * 1e9) });
+        }
+      }
+    }
     const streetY = px(south + 4);
     const streetH = px(5);
     return {
@@ -18562,7 +18715,7 @@
       streetH
     };
   }
-  function slotShell(slot, lastColumn) {
+  function slotShell(slot, lastColumn, season = "summer") {
     const col = slotColumn(slot);
     const side = slotSide(slot);
     const rect = cellRect(col, side);
@@ -18576,7 +18729,7 @@
     const T = (n) => n * TILE;
     const seed = () => Math.floor(rng() * 1e9);
     const deck = (lx, ly, w, h) => {
-      floors.push({ kind: "sidewalk", x: x0 + T(lx), y: T(rect.y + ly), w: T(w), h: T(h), seed: slot + 7 });
+      floors.push({ kind: "sidewalk", x: x0 + T(lx), y: T(rect.y + ly), w: T(w), h: T(h), seed: slot + 7, tint: season });
       floors.push({ kind: "wood", x: x0 + T(lx) + 4, y: T(rect.y + ly) + 4, w: T(w) - 8, h: T(h) - 8, seed: slot + 8 });
     };
     if (side === "north") {
@@ -18586,7 +18739,7 @@
         (cx, i) => windows.push({ id: `shell:${slot}:janela${i}`, kind: "window", cx: x0 + cx * TILE, baseY: CORRIDOR_Y * TILE, on: "face", order: 0 })
       );
       if (lastColumn) walls.push({ kind: "cap", x: x0 + W - TILE / 2, y: fy, w: TILE / 2, h: 2 * TILE, style: EXTERIOR_WALL });
-      floors.push({ kind: "sidewalk", x: x0 + T(7), y: T(rect.y), w: T(2), h: T(3), seed: slot });
+      floors.push({ kind: "sidewalk", x: x0 + T(7), y: T(rect.y), w: T(2), h: T(3), seed: slot, tint: season });
       deck(3, 3, 10, 5);
       props.push({ kind: "parasol", x: x0 + T(5.5), y: T(rect.y + 6) + 4, seed: seed(), slot });
       props.push({ kind: "parasol", x: x0 + T(10.5), y: T(rect.y + 6) + 4, seed: seed(), slot });
@@ -18597,10 +18750,15 @@
       props.push({ kind: rng() < 0.5 ? "pine" : "tree", x: x0 + T(15) - 4, y: T(rect.y + 3) + 6, seed: seed(), slot });
       props.push({ kind: "bush", x: x0 + T(1) + 8, y: T(rect.y + 8), seed: seed(), slot });
       props.push({ kind: "bush", x: x0 + T(15) - 8, y: T(rect.y + 8), seed: seed(), slot });
+      if (season === "autumn") {
+        props.push({ kind: "leaf_pile", x: x0 + T(2.2), y: T(rect.y + 5.5), seed: slot + 41, slot });
+      } else if (season === "winter") {
+        props.push({ kind: slot % 2 === 0 ? "snowman" : "snowdrift", x: x0 + T(2.2), y: T(rect.y + 5.5), seed: slot + 51, slot });
+      }
     } else {
       walls.push({ kind: "south", x: x0, y: SOUTH_Y * TILE, w: W, style: EXTERIOR_WALL });
       if (lastColumn) walls.push({ kind: "cap", x: x0 + W - TILE / 2, y: SOUTH_Y * TILE, w: TILE / 2, h: TILE, style: EXTERIOR_WALL });
-      floors.push({ kind: "sidewalk", x: x0 + T(7), y: T(rect.y + 1), w: T(2), h: T(rect.h - 1), seed: slot });
+      floors.push({ kind: "sidewalk", x: x0 + T(7), y: T(rect.y + 1), w: T(2), h: T(rect.h - 1), seed: slot, tint: season });
       props.push({ kind: "paving", x: x0 + T(7), y: T(BUILDING_H), seed: slot, slot });
       deck(3, 3.5, 10, 5);
       props.push({ kind: "parasol", x: x0 + T(5.5), y: T(rect.y + 6.5) + 4, seed: seed(), slot });
@@ -18613,6 +18771,11 @@
       props.push({ kind: "tree", x: x0 + T(1) + 6, y: T(rect.y + 11), seed: seed(), slot });
       props.push({ kind: rng() < 0.5 ? "pine" : "tree", x: x0 + T(15) - 6, y: T(rect.y + 11) + 4, seed: seed(), slot });
       props.push({ kind: "rock", x: x0 + T(14), y: T(rect.y + 2) + 4, seed: slot + 3, slot });
+      if (season === "autumn") {
+        props.push({ kind: "leaf_pile", x: x0 + T(2.2), y: T(rect.y + 9.2), seed: slot + 61, slot });
+      } else if (season === "winter") {
+        props.push({ kind: slot % 2 === 1 ? "snowman" : "snowdrift", x: x0 + T(2.2), y: T(rect.y + 9.2), seed: slot + 71, slot });
+      }
     }
     return { slot, rect, walls, windows, floors, props };
   }
@@ -18935,7 +19098,7 @@
       }
     }
   }
-  function treeSprite(seed) {
+  function treeSprite(seed, season) {
     const rng = mulberry32(seed);
     const [c, ctx] = makeCanvas(36, 48);
     shadowEllipse(ctx, 18, 45, 12, 3, 0.25);
@@ -18948,22 +19111,66 @@
     }
     p.set(15, 45, "#4a3222");
     p.set(21, 45, "#4a3222");
-    const variants = [
-      ["#2f6a43", "#3f8550", "#5aa45d", "#86c873"],
-      ["#356b3c", "#4b8a45", "#6aa956", "#9fcf74"],
-      ["#2c6250", "#3a7e5f", "#53a071", "#82c489"]
-    ];
-    canopy(p, rng, 18, 18, 11 + Math.floor(rng() * 3), variants[Math.floor(rng() * variants.length)], "#25463a");
+    if (season === "spring") {
+      const springVariants = [
+        // Ipê-rosa / cerejeira
+        { tones: ["#a34870", "#cc6290", "#eb8ab5", "#ffdbf0"], outline: "#612842", blossoms: ["#ffffff", "#ffeaf7"] },
+        // Ipê-amarelo
+        { tones: ["#9e741e", "#c99826", "#ecc23e", "#fff08a"], outline: "#5c4212", blossoms: ["#fff9c4", "#ffffff"] },
+        // Copa verde fresca florida
+        { tones: ["#2f6e41", "#429152", "#63b864", "#94de80"], outline: "#244732", blossoms: ["#f794be", "#ffe96b", "#ffffff", "#c896ff"] }
+      ];
+      const v = springVariants[seed % springVariants.length];
+      canopy(p, rng, 18, 18, 11 + Math.floor(rng() * 3), v.tones, v.outline);
+      if (v.blossoms) {
+        for (let i = 0; i < 20; i++) {
+          const bx = 9 + Math.floor(rng() * 18);
+          const by = 8 + Math.floor(rng() * 18);
+          if (p.alpha(bx, by) > 0) p.set(bx, by, v.blossoms[Math.floor(rng() * v.blossoms.length)]);
+        }
+      }
+    } else if (season === "autumn") {
+      const autumnVariants = [
+        { tones: ["#7a2e22", "#a84228", "#d4652f", "#f29b4b"], outline: "#4a1b14" },
+        { tones: ["#7d521e", "#a87324", "#d69c32", "#f7cb5c"], outline: "#4d3112" },
+        { tones: ["#633924", "#87502f", "#b06f3c", "#d99952"], outline: "#3d2215" }
+      ];
+      const v = autumnVariants[seed % autumnVariants.length];
+      canopy(p, rng, 18, 18, 11 + Math.floor(rng() * 3), v.tones, v.outline);
+      const leafCols = ["#d4652f", "#e89d38", "#b83f2b"];
+      for (let i = 0; i < 5; i++) {
+        p.set(12 + Math.floor(rng() * 12), 44 + Math.floor(rng() * 2), leafCols[i % leafCols.length]);
+      }
+    } else if (season === "winter") {
+      const winterVariants = [
+        { tones: ["#4c5c6e", "#6f8399", "#b8cadb", "#eef5fc"], outline: "#2f3d4c" },
+        { tones: ["#3d5466", "#5c758a", "#9eb5c9", "#eaf2fa"], outline: "#283845" }
+      ];
+      const v = winterVariants[seed % winterVariants.length];
+      canopy(p, rng, 18, 18, 11 + Math.floor(rng() * 3), v.tones, v.outline);
+      for (let x = 14; x <= 22; x++) {
+        p.set(x, 45, "#eef5fc");
+        if (x >= 15 && x <= 21) p.set(x, 44, "#cfe0f0");
+      }
+    } else {
+      const variants = [
+        ["#28663b", "#38854b", "#56ad5b", "#8ce076"],
+        ["#306b37", "#468c40", "#66b352", "#a0db72"],
+        ["#26614d", "#36805e", "#50a672", "#82cf8a"]
+      ];
+      canopy(p, rng, 18, 18, 11 + Math.floor(rng() * 3), variants[Math.floor(rng() * variants.length)], "#214536");
+    }
     p.flush();
     return { canvas: c, ax: 18, ay: 45 };
   }
-  function pineSprite(seed) {
+  function pineSprite(seed, season) {
     const rng = mulberry32(seed);
     const [c, ctx] = makeCanvas(28, 48);
     shadowEllipse(ctx, 14, 45, 9, 3, 0.25);
     const p = new Painter(ctx, 28, 48);
     for (let y = 38; y < 46; y++) for (let x = 12; x < 16; x++) p.set(x, y, x === 12 ? "#8a6243" : x === 15 ? "#4a3222" : "#6b4a32");
-    const tones = ["#24533f", "#2f6b4f", "#3f8a5f", "#62ab79"];
+    const tones = season === "autumn" ? ["#264736", "#355e44", "#4d7a53", "#739e68"] : season === "winter" ? ["#22453a", "#2e594b", "#437563", "#689c88"] : ["#24533f", "#2f6b4f", "#3f8a5f", "#62ab79"];
+    const outline = season === "winter" ? "#1b362e" : "#1d3f33";
     const layers = 4;
     for (let l = 0; l < layers; l++) {
       const top = 4 + l * 8;
@@ -18972,48 +19179,91 @@
         const half = Math.round((y - top) / (bottom - top) * (5 + l * 2.2));
         for (let x = 14 - half; x <= 14 + half; x++) {
           const edge = x === 14 - half || x === 14 + half || y === bottom - 1;
-          const light = (14 - x) / (half + 1) - (y - top) / (bottom - top) + (rng() - 0.5) * 0.5;
-          p.set(x, y, edge ? "#1d3f33" : tones[light > 0.5 ? 3 : light > -0.1 ? 2 : light > -0.6 ? 1 : 0]);
+          const relY = (y - top) / (bottom - top);
+          if (season === "winter" && !edge && (relY < 0.34 || relY < 0.52 && rng() < 0.55)) {
+            p.set(x, y, x <= 14 ? "#f2f7fd" : "#cfe0f0");
+            continue;
+          }
+          const light = (14 - x) / (half + 1) - relY + (rng() - 0.5) * 0.5;
+          p.set(x, y, edge ? outline : tones[light > 0.5 ? 3 : light > -0.1 ? 2 : light > -0.6 ? 1 : 0]);
         }
       }
+    }
+    if (season === "winter") {
+      for (let x = 11; x <= 16; x++) p.set(x, 45, "#eef5fc");
     }
     p.flush();
     return { canvas: c, ax: 14, ay: 45 };
   }
-  function bushSprite(seed) {
+  function bushSprite(seed, season) {
     const rng = mulberry32(seed);
     const [c, ctx] = makeCanvas(22, 16);
     shadowEllipse(ctx, 11, 14, 9, 2, 0.22);
     const p = new Painter(ctx, 22, 16);
-    canopy(p, rng, 11, 9, 6, ["#34663f", "#47864c", "#62a45a", "#8cc66f"], "#264a36");
-    if (rng() < 0.6) {
-      const col = ["#f2d14b", "#f28aa5", "#ffffff"][Math.floor(rng() * 3)];
-      for (let i = 0; i < 4; i++) p.set(6 + Math.floor(rng() * 10), 5 + Math.floor(rng() * 6), col);
+    if (season === "autumn") {
+      canopy(p, rng, 11, 9, 6, ["#6e3b24", "#8f4f2b", "#b86b35", "#de954b"], "#452415");
+      if (rng() < 0.7) {
+        for (let i = 0; i < 4; i++) p.set(6 + Math.floor(rng() * 10), 5 + Math.floor(rng() * 6), "#f2b84b");
+      }
+    } else if (season === "winter") {
+      canopy(p, rng, 11, 9, 6, ["#465b6e", "#657c91", "#b4c7d9", "#eef5fc"], "#2d3c4a");
+    } else if (season === "spring") {
+      canopy(p, rng, 11, 9, 6, ["#326b3d", "#468f4d", "#64b35f", "#92d676"], "#244a32");
+      const cols = ["#ff85b3", "#ffe047", "#ffffff", "#c78dff"];
+      for (let i = 0; i < 7; i++) {
+        p.set(5 + Math.floor(rng() * 12), 4 + Math.floor(rng() * 7), cols[Math.floor(rng() * cols.length)]);
+      }
+    } else {
+      canopy(p, rng, 11, 9, 6, ["#34663f", "#47864c", "#62a45a", "#8cc66f"], "#264a36");
+      if (rng() < 0.65) {
+        const col = ["#f2d14b", "#f28aa5", "#ffffff"][Math.floor(rng() * 3)];
+        for (let i = 0; i < 4; i++) p.set(6 + Math.floor(rng() * 10), 5 + Math.floor(rng() * 6), col);
+      }
     }
     p.flush();
     return { canvas: c, ax: 11, ay: 14 };
   }
-  function flowersSprite(seed) {
+  function flowersSprite(seed, season) {
     const rng = mulberry32(seed);
     const [c, ctx] = makeCanvas(30, 14);
     const p = new Painter(ctx, 30, 14);
     for (let y = 4; y < 13; y++) {
       for (let x = 1; x < 29; x++) {
         const border = y === 4 || y === 12 || x === 1 || x === 28;
-        p.set(x, y, border ? y === 12 ? "#8d8a82" : "#b9b5aa" : "#6a4b35");
+        const soil = season === "winter" ? "#c8d8e8" : season === "autumn" ? "#5e4330" : "#6a4b35";
+        const rim = season === "winter" ? y === 12 ? "#8b9cad" : "#dce7f2" : y === 12 ? "#8d8a82" : "#b9b5aa";
+        p.set(x, y, border ? rim : soil);
       }
     }
-    const cols = ["#e8574a", "#f2c94c", "#f08bb0", "#ffffff", "#9b7be0"];
-    for (let i = 0; i < 26; i++) {
-      const x = 3 + Math.floor(rng() * 24);
-      const y = 2 + Math.floor(rng() * 9);
-      p.set(x, y + 1, "#3f8550");
-      p.set(x, y, rng() < 0.75 ? cols[Math.floor(rng() * cols.length)] : "#5aa45d");
+    if (season === "winter") {
+      for (let i = 0; i < 18; i++) {
+        const x = 3 + Math.floor(rng() * 24);
+        const y = 3 + Math.floor(rng() * 8);
+        p.set(x, y, rng() < 0.7 ? "#eef5fc" : "#3d6b58");
+        if (rng() < 0.25) p.set(x, y - 1, "#d94848");
+      }
+    } else if (season === "autumn") {
+      const cols = ["#e06a2b", "#f2a238", "#c9432b", "#d9b44a"];
+      for (let i = 0; i < 22; i++) {
+        const x = 3 + Math.floor(rng() * 24);
+        const y = 2 + Math.floor(rng() * 9);
+        p.set(x, y + 1, "#6e522b");
+        p.set(x, y, cols[Math.floor(rng() * cols.length)]);
+      }
+    } else {
+      const cols = season === "spring" ? ["#ff6b9d", "#ffde4d", "#ffffff", "#b37feb", "#ff8552", "#6bd4ff"] : ["#e8574a", "#f2c94c", "#f08bb0", "#ffffff", "#9b7be0"];
+      const count = season === "spring" ? 38 : 26;
+      for (let i = 0; i < count; i++) {
+        const x = 3 + Math.floor(rng() * 24);
+        const y = 2 + Math.floor(rng() * 9);
+        p.set(x, y + 1, "#3f8550");
+        p.set(x, y, rng() < 0.82 ? cols[Math.floor(rng() * cols.length)] : "#5aa45d");
+      }
     }
     p.flush();
     return { canvas: c, ax: 15, ay: 13 };
   }
-  function hedgeSprite(seed) {
+  function hedgeSprite(seed, season) {
     const rng = mulberry32(seed);
     const [c, ctx] = makeCanvas(34, 16);
     shadowEllipse(ctx, 17, 14, 15, 2, 0.2);
@@ -19024,13 +19274,29 @@
         if (x < 1 + r || x > 32 - r) continue;
         const edge = y === 3 || y === 13 || x === 1 + r || x === 32 - r;
         const light = -(y - 3) / 10 + (rng() - 0.5) * 0.6;
-        p.set(x, y, edge ? "#264a36" : light > 0 ? "#6aa956" : light > -0.4 ? "#4b8a45" : "#356b3c");
+        if (season === "winter") {
+          if (!edge && y <= 6 && (y <= 4 || rng() < 0.65)) {
+            p.set(x, y, y === 4 ? "#f2f7fd" : "#d2e2f0");
+          } else {
+            p.set(x, y, edge ? "#223b32" : light > 0 ? "#557d6a" : light > -0.4 ? "#3f6353" : "#2e4d3f");
+          }
+        } else if (season === "autumn") {
+          p.set(x, y, edge ? "#452817" : light > 0 ? "#ba7838" : light > -0.4 ? "#945b27" : "#6e411b");
+        } else {
+          p.set(x, y, edge ? "#264a36" : light > 0 ? "#6aa956" : light > -0.4 ? "#4b8a45" : "#356b3c");
+        }
+      }
+    }
+    if (season === "spring") {
+      const blossoms = ["#ff8ab8", "#ffe359", "#ffffff"];
+      for (let i = 0; i < 9; i++) {
+        p.set(4 + Math.floor(rng() * 26), 4 + Math.floor(rng() * 7), blossoms[Math.floor(rng() * blossoms.length)]);
       }
     }
     p.flush();
     return { canvas: c, ax: 17, ay: 14 };
   }
-  function lampSprite() {
+  function lampSprite(season) {
     const [c, ctx] = makeCanvas(10, 36);
     shadowEllipse(ctx, 5, 34, 4, 1, 0.25);
     ctx.fillStyle = "#2e3648";
@@ -19045,9 +19311,13 @@
     ctx.fillRect(3, 4, 2, 1);
     ctx.fillStyle = "#3a4152";
     ctx.fillRect(3, 32, 4, 2);
+    if (season === "winter") {
+      ctx.fillStyle = "#eef5fc";
+      ctx.fillRect(2, 1, 6, 1);
+    }
     return { canvas: c, ax: 5, ay: 34 };
   }
-  function benchSprite() {
+  function benchSprite(season) {
     const [c, ctx] = makeCanvas(26, 14);
     shadowEllipse(ctx, 13, 12, 11, 2, 0.22);
     ctx.fillStyle = "#2e3648";
@@ -19062,19 +19332,33 @@
     ctx.fillStyle = "#5b3c25";
     ctx.fillRect(1, 8, 24, 1);
     ctx.fillRect(1, 3, 24, 1);
+    if (season === "winter") {
+      ctx.fillStyle = "#eef5fc";
+      ctx.fillRect(2, 1, 9, 1);
+      ctx.fillRect(15, 1, 8, 1);
+      ctx.fillRect(3, 6, 7, 1);
+    }
     return { canvas: c, ax: 13, ay: 12 };
   }
-  function rockSprite(seed) {
+  function rockSprite(seed, season) {
     const rng = mulberry32(seed);
     const [c, ctx] = makeCanvas(16, 12);
     const p = new Painter(ctx, 16, 12);
-    canopy(p, rng, 8, 7, 4, ["#7d8590", "#959da8", "#b3bac4", "#d3d8de"], "#4d5562");
+    const tones = season === "winter" ? ["#7d8896", "#9ba8b8", "#c8d6e6", "#eef5fc"] : ["#7d8590", "#959da8", "#b3bac4", "#d3d8de"];
+    canopy(p, rng, 8, 7, 4, tones, "#4d5562");
     p.flush();
     return { canvas: c, ax: 8, ay: 11 };
   }
-  function parasolSprite(seed) {
+  function parasolSprite(seed, season) {
     const [c, ctx] = makeCanvas(32, 34);
-    const palettes = [
+    const palettes = season === "autumn" ? [
+      ["#c9592c", "#f5ebd6", "#8a3918"],
+      ["#d99326", "#f5ebd6", "#966112"],
+      ["#8c422b", "#f2e6cf", "#5e2918"]
+    ] : season === "winter" ? [
+      ["#5c7fa6", "#eef5fc", "#3c5673"],
+      ["#738fa8", "#f2f7fd", "#4b6278"]
+    ] : [
       ["#e8574a", "#f6efe2", "#a83a33"],
       ["#2fb3a3", "#f6efe2", "#1f8579"],
       ["#f2b33d", "#fbf4e4", "#c88a1f"]
@@ -19116,6 +19400,68 @@
     p.flush();
     return { canvas: c, ax: 16, ay: 29 };
   }
+  function leafPileSprite(seed) {
+    const rng = mulberry32(seed);
+    const [c, ctx] = makeCanvas(22, 12);
+    shadowEllipse(ctx, 11, 9, 9, 2, 0.16);
+    const p = new Painter(ctx, 22, 12);
+    const cols = ["#8c3b20", "#b85228", "#d9762e", "#eba83b", "#6e351c"];
+    for (let i = 0; i < 42; i++) {
+      const a = rng() * Math.PI * 2;
+      const r = rng() * 7.5;
+      const x = Math.round(11 + Math.cos(a) * r);
+      const y = Math.round(7 + Math.sin(a) * r * 0.45);
+      const col = cols[Math.floor(rng() * cols.length)];
+      p.set(x, y, col);
+      if (rng() < 0.55) p.set(x + 1, y, col);
+    }
+    p.flush();
+    return { canvas: c, ax: 11, ay: 10 };
+  }
+  function snowmanSprite(seed) {
+    const [c, ctx] = makeCanvas(20, 26);
+    shadowEllipse(ctx, 10, 23, 7, 2, 0.22);
+    const p = new Painter(ctx, 20, 26);
+    const ball = (cx, cy, r) => {
+      for (let y = cy - r - 1; y <= cy + r + 1; y++) {
+        for (let x = cx - r - 1; x <= cx + r + 1; x++) {
+          const d2 = (x - cx) ** 2 + (y - cy) ** 2;
+          if (d2 > r * r) continue;
+          const edge = d2 >= (r - 0.9) ** 2;
+          const lit = x - cx + (y - cy) < -1;
+          p.set(x, y, edge ? "#4a5c70" : lit ? "#ffffff" : "#d5e3f0");
+        }
+      }
+    };
+    ball(10, 18, 5);
+    ball(10, 10, 3.6);
+    for (let i = 1; i <= 3; i++) {
+      p.set(5 - i, 15 - (i >> 1), "#5b3c25");
+      p.set(15 + i, 15 - (i >> 1), "#5b3c25");
+    }
+    p.set(9, 9, "#222a38");
+    p.set(11, 9, "#222a38");
+    p.set(10, 10, "#f07829");
+    p.set(11, 10, "#f07829");
+    p.set(10, 16, "#222a38");
+    p.set(10, 19, "#222a38");
+    const scarf = seed % 2 === 0 ? "#d94848" : "#2f82b8";
+    for (let x = 7; x <= 13; x++) p.set(x, 13, scarf);
+    p.set(12, 14, scarf);
+    p.set(12, 15, scarf);
+    for (let x = 7; x <= 13; x++) p.set(x, 6, "#2b3242");
+    for (let y = 3; y <= 5; y++) for (let x = 8; x <= 12; x++) p.set(x, y, "#394257");
+    p.flush();
+    return { canvas: c, ax: 10, ay: 23 };
+  }
+  function snowdriftSprite(seed) {
+    const rng = mulberry32(seed);
+    const [c, ctx] = makeCanvas(24, 12);
+    const p = new Painter(ctx, 24, 12);
+    canopy(p, rng, 12, 8, 5, ["#b5c8db", "#cfe0f0", "#e6f0fa", "#ffffff"], "#6d8299");
+    p.flush();
+    return { canvas: c, ax: 12, ay: 10 };
+  }
   function totemSprite() {
     const [c, ctx] = makeCanvas(14, 34);
     shadowEllipse(ctx, 7, 32, 6, 1.5, 0.25);
@@ -19140,37 +19486,47 @@
     ctx.fillRect(1, 31, 12, 2);
     return { canvas: c, ax: 7, ay: 32 };
   }
-  function propSprite(prop2) {
-    const key = prop2.kind === "lamp" || prop2.kind === "bench" || prop2.kind === "totem" ? prop2.kind : `${prop2.kind}:${prop2.seed % 7}`;
+  function propSprite(prop2, season = "summer") {
+    const kind = prop2.kind;
+    const key = kind === "totem" ? kind : `${season}:${kind}:${prop2.seed % 7}`;
     let s = cache.get(key);
     if (s) return s;
-    switch (prop2.kind) {
+    switch (kind) {
       case "tree":
-        s = treeSprite(prop2.seed % 7);
+        s = treeSprite(prop2.seed % 7, season);
         break;
       case "pine":
-        s = pineSprite(prop2.seed % 7);
+        s = pineSprite(prop2.seed % 7, season);
         break;
       case "bush":
-        s = bushSprite(prop2.seed % 7);
+        s = bushSprite(prop2.seed % 7, season);
         break;
       case "flowers":
-        s = flowersSprite(prop2.seed % 7);
+        s = flowersSprite(prop2.seed % 7, season);
         break;
       case "hedge":
-        s = hedgeSprite(prop2.seed % 7);
+        s = hedgeSprite(prop2.seed % 7, season);
         break;
       case "lamp":
-        s = lampSprite();
+        s = lampSprite(season);
         break;
       case "bench":
-        s = benchSprite();
+        s = benchSprite(season);
         break;
       case "rock":
-        s = rockSprite(prop2.seed % 7);
+        s = rockSprite(prop2.seed % 7, season);
         break;
       case "parasol":
-        s = parasolSprite(prop2.seed % 7);
+        s = parasolSprite(prop2.seed % 7, season);
+        break;
+      case "leaf_pile":
+        s = leafPileSprite(prop2.seed % 7);
+        break;
+      case "snowman":
+        s = snowmanSprite(prop2.seed % 7);
+        break;
+      case "snowdrift":
+        s = snowdriftSprite(prop2.seed % 7);
         break;
       case "totem":
         s = totemSprite();
@@ -20237,8 +20593,32 @@
   var COIN_EDGE = "#c98a12";
   var COIN_SHINE = "#fff6c2";
   var SPARKLE_COLORS = ["#ffffff", "#fff3a6", "#ffd1f0", "#bfe9ff"];
-  var GRAVITY = { [0 /* Popcorn */]: 260, [1 /* Confetti */]: 150, [2 /* Rain */]: 0, [3 /* Coin */]: 240, [4 /* Sparkle */]: -14 };
-  var DRAG = { [0 /* Popcorn */]: 0, [1 /* Confetti */]: 2.2, [2 /* Rain */]: 0, [3 /* Coin */]: 0, [4 /* Sparkle */]: 3 };
+  var LEAF_COLORS = ["#d4652f", "#e89d38", "#b83f2b", "#8c5228", "#f2b84b"];
+  var SNOW_COLORS = ["#ffffff", "#eef5fc", "#d4e5f7"];
+  var PETAL_COLORS = ["#ff94be", "#ffdbf0", "#ffffff", "#ffe97d", "#d4a6ff"];
+  var MOTE_COLORS = ["#fff7bd", "#ffe680", "#ffffff"];
+  var GRAVITY = {
+    [0 /* Popcorn */]: 260,
+    [1 /* Confetti */]: 150,
+    [2 /* Rain */]: 0,
+    [3 /* Coin */]: 240,
+    [4 /* Sparkle */]: -14,
+    [5 /* Leaf */]: 8,
+    [6 /* Snow */]: 4,
+    [7 /* Petal */]: 5,
+    [8 /* SunMote */]: -2
+  };
+  var DRAG = {
+    [0 /* Popcorn */]: 0,
+    [1 /* Confetti */]: 2.2,
+    [2 /* Rain */]: 0,
+    [3 /* Coin */]: 0,
+    [4 /* Sparkle */]: 3,
+    [5 /* Leaf */]: 0.4,
+    [6 /* Snow */]: 0.3,
+    [7 /* Petal */]: 0.5,
+    [8 /* SunMote */]: 0.8
+  };
   var Particles = class {
     cap;
     n = 0;
@@ -20325,6 +20705,62 @@
         this.spawn(4 /* Sparkle */, x + Math.cos(a) * r, y + Math.sin(a) * r * 0.8 - 6, Math.cos(a) * 6, -10 - Math.random() * 8, 0.8 + Math.random() * 0.6, Math.floor(Math.random() * SPARKLE_COLORS.length));
       }
     }
+    /** Emite partículas climáticas sazonais na área externa visível. */
+    emitWeather(season, dt, view, isIndoor) {
+      if (this.n > this.cap - 80) return;
+      const rate = season === "winter" ? 22 : season === "autumn" ? 14 : season === "spring" ? 11 : 6;
+      const expected = rate * Math.min(0.1, Math.max(0, dt));
+      let count = Math.floor(expected);
+      if (Math.random() < expected - count) count++;
+      const vw = Math.max(64, view.x1 - view.x0);
+      const vh = Math.max(64, view.y1 - view.y0);
+      for (let i = 0; i < count; i++) {
+        const x = view.x0 + Math.random() * vw;
+        const y = view.y0 + Math.random() * vh;
+        if (isIndoor(x, y)) continue;
+        if (season === "autumn") {
+          this.spawn(
+            5 /* Leaf */,
+            x,
+            y,
+            10 + Math.random() * 14,
+            12 + Math.random() * 10,
+            2.2 + Math.random() * 1.6,
+            Math.floor(Math.random() * LEAF_COLORS.length)
+          );
+        } else if (season === "winter") {
+          this.spawn(
+            6 /* Snow */,
+            x,
+            y,
+            -4 + Math.random() * 10,
+            14 + Math.random() * 12,
+            2.4 + Math.random() * 1.8,
+            Math.floor(Math.random() * SNOW_COLORS.length)
+          );
+        } else if (season === "spring") {
+          this.spawn(
+            7 /* Petal */,
+            x,
+            y,
+            8 + Math.random() * 12,
+            8 + Math.random() * 8,
+            2.4 + Math.random() * 1.5,
+            Math.floor(Math.random() * PETAL_COLORS.length)
+          );
+        } else {
+          this.spawn(
+            8 /* SunMote */,
+            x,
+            y,
+            -3 + Math.random() * 6,
+            -4 + Math.random() * 4,
+            1.8 + Math.random() * 1.4,
+            Math.floor(Math.random() * MOTE_COLORS.length)
+          );
+        }
+      }
+    }
     update(dt) {
       const d = Math.min(0.1, Math.max(0, dt));
       let i = 0;
@@ -20338,6 +20774,13 @@
         this.vy[i] += GRAVITY[k] * d;
         if (DRAG[k]) this.vx[i] *= Math.max(0, 1 - DRAG[k] * d);
         if (k === 1 /* Confetti */ && this.vy[i] > 38) this.vy[i] = 38;
+        if (k === 5 /* Leaf */ || k === 7 /* Petal */) {
+          this.vx[i] += Math.sin(this.age[i] * 3.5 + this.ph[i]) * 18 * d;
+          if (this.vy[i] > 24) this.vy[i] = 24;
+        } else if (k === 6 /* Snow */) {
+          this.vx[i] += Math.sin(this.age[i] * 2.4 + this.ph[i]) * 10 * d;
+          if (this.vy[i] > 22) this.vy[i] = 22;
+        }
         this.x[i] += this.vx[i] * d;
         this.y[i] += this.vy[i] * d;
         i++;
@@ -20384,6 +20827,30 @@
             ctx.fillRect(x - 1, y, 3, 1);
             ctx.fillRect(x, y - 1, 1, 3);
           } else ctx.fillRect(x, y, 1, 1);
+        } else if (k === 5 /* Leaf */) {
+          const fadeIn = Math.min(1, this.age[i] * 3);
+          ctx.globalAlpha = Math.min(fadeIn, left * 2.5) * 0.92;
+          ctx.fillStyle = LEAF_COLORS[this.color[i] % LEAF_COLORS.length];
+          const flip = Math.sin(now / 140 + this.ph[i]) > 0;
+          ctx.fillRect(x, y, flip ? 2 : 1, flip ? 1 : 2);
+          ctx.fillRect(x + 1, y + 1, 1, 1);
+        } else if (k === 6 /* Snow */) {
+          const fadeIn = Math.min(1, this.age[i] * 3);
+          ctx.globalAlpha = Math.min(fadeIn, left * 2.5) * 0.9;
+          ctx.fillStyle = SNOW_COLORS[this.color[i] % SNOW_COLORS.length];
+          const big = (this.color[i] & 1) === 0;
+          ctx.fillRect(x, y, big ? 2 : 1, big ? 2 : 1);
+        } else if (k === 7 /* Petal */) {
+          const fadeIn = Math.min(1, this.age[i] * 3);
+          ctx.globalAlpha = Math.min(fadeIn, left * 2.5) * 0.9;
+          ctx.fillStyle = PETAL_COLORS[this.color[i] % PETAL_COLORS.length];
+          const flip = Math.sin(now / 120 + this.ph[i]) > 0;
+          ctx.fillRect(x, y, flip ? 2 : 1, flip ? 1 : 2);
+        } else if (k === 8 /* SunMote */) {
+          const pulse = 0.5 + 0.5 * Math.sin(now / 180 + this.ph[i]);
+          ctx.globalAlpha = Math.min(1, left * 2.5) * pulse * 0.75;
+          ctx.fillStyle = MOTE_COLORS[this.color[i] % MOTE_COLORS.length];
+          ctx.fillRect(x, y, 1, 1);
         } else {
           ctx.globalAlpha = 0.9;
           ctx.fillStyle = RAIN_COLOR;
@@ -20572,7 +21039,7 @@
       this.sim = sim2;
       this.camera = camera2;
       this.ctx = canvas3.getContext("2d", { alpha: false });
-      this.exterior = layoutExterior(sim2.building.cols);
+      this.exterior = layoutExterior(sim2.building.cols, this.season);
       this.lighting = new Lighting(art, sim2);
     }
     canvas;
@@ -20619,18 +21086,22 @@
     clearColor = "#7fae62";
     grass = null;
     theme = "none";
+    season = "summer";
     setAssets(a) {
       this.assets = a;
       this.assetsVersion++;
     }
     // =================================================================== sincronização com a simulação
     /** Mantém caches e visuais coerentes com o prédio atual. */
-    sync(theme = "none") {
+    sync(theme = "none", season = "summer") {
       const sim2 = this.sim;
       const themeChanged = theme !== this.theme;
+      const seasonChanged = season !== this.season;
       this.theme = theme;
+      this.season = season;
+      if (seasonChanged) this.pavings.clear();
       const assetsChanged = this.builtAssetsVersion !== this.assetsVersion || themeChanged;
-      if (this.baseCols !== sim2.building.cols || assetsChanged) this.buildBase();
+      if (this.baseCols !== sim2.building.cols || assetsChanged || seasonChanged) this.buildBase();
       if (this.layoutVersion !== sim2.layoutVersion || assetsChanged) {
         this.layoutVersion = sim2.layoutVersion;
         const want = /* @__PURE__ */ new Set();
@@ -20658,11 +21129,16 @@
       for (const [id, vis] of this.areas) if (vis.room && !vis.room.present) this.areas.delete(id);
       this.builtAssetsVersion = this.assetsVersion;
     }
+    vignetteRgb() {
+      if (this.season === "winter") return [28, 42, 62];
+      if (this.season === "autumn") return [42, 30, 18];
+      return [18, 40, 26];
+    }
     /** Camada base: área externa, pátios dos slots e fechamentos do corredor. */
     buildBase() {
       const cols = this.sim.building.cols;
       this.baseCols = cols;
-      this.exterior = layoutExterior(cols);
+      this.exterior = layoutExterior(cols, this.season);
       const b = this.exterior.bounds;
       this.baseX = b.x * TILE;
       this.baseY = b.y * TILE;
@@ -20680,7 +21156,7 @@
       this.shellWindows = [];
       for (let col = CORE_COLS; col < cols; col++) {
         for (const side of ["north", "south"]) {
-          const sh = slotShell(slotAt(col, side), col === cols - 1);
+          const sh = slotShell(slotAt(col, side), col === cols - 1, this.season);
           this.shells.push(sh);
           paintShell(this.art, ctx, sh.floors, sh.walls);
           for (const w of sh.windows) this.shellWindows.push(toWallVis(w, `shell:${sh.slot}`));
@@ -20688,6 +21164,7 @@
       }
       this.desaturate(ctx);
       const s = 4 * TILE;
+      const [vr, vg, vb] = this.vignetteRgb();
       try {
         const tile = document.createElement("canvas");
         tile.width = 2 * s;
@@ -20719,14 +21196,14 @@
         tctx.fillStyle = avg;
         tctx.fillRect(0, 0, 2 * s, 2 * s);
         tctx.globalAlpha = 1;
-        tctx.fillStyle = VIGNETTE_EDGE;
+        tctx.fillStyle = `rgba(${vr},${vg},${vb},${VIGNETTE_ALPHA})`;
         tctx.fillRect(0, 0, 2 * s, 2 * s);
         this.grass = this.ctx.createPattern(tile, "repeat");
         const k = VIGNETTE_ALPHA;
-        this.clearColor = `rgb(${Math.round(r / n * (1 - k) + 18 * k)},${Math.round(g / n * (1 - k) + 40 * k)},${Math.round(bl / n * (1 - k) + 26 * k)})`;
+        this.clearColor = `rgb(${Math.round(r / n * (1 - k) + vr * k)},${Math.round(g / n * (1 - k) + vg * k)},${Math.round(bl / n * (1 - k) + vb * k)})`;
       } catch {
         this.grass = null;
-        this.clearColor = "#6f9a5a";
+        this.clearColor = this.season === "winter" ? "#c8d6e6" : this.season === "autumn" ? "#8c8a52" : "#6f9a5a";
       }
       this.finishBase(ctx, cols);
       this.base = c;
@@ -20752,6 +21229,7 @@
       const h = b.h * TILE;
       ctx.save();
       const bwT = cols * COL_W;
+      const [vr, vg, vb] = this.vignetteRgb();
       const smooth = (a, z, v) => {
         const t2 = Math.max(0, Math.min(1, (v - a) / Math.max(1e-6, z - a)));
         return t2 * t2 * (3 - 2 * t2);
@@ -20769,9 +21247,9 @@
             const fx = wx < 0 ? smooth(6, -b.x, -wx) : wx > bwT ? smooth(6, b.x + b.w - bwT, wx - bwT) : 0;
             const fy = wy < 0 ? smooth(5, -b.y, -wy) : wy > BUILDING_H ? smooth(12, b.y + b.h - BUILDING_H, wy - BUILDING_H) : 0;
             const i = (ty * b.w + tx) * 4;
-            img.data[i] = 18;
-            img.data[i + 1] = 40;
-            img.data[i + 2] = 26;
+            img.data[i] = vr;
+            img.data[i + 1] = vg;
+            img.data[i + 2] = vb;
             img.data[i + 3] = Math.round(Math.max(fx, fy) * VIGNETTE_ALPHA * 255);
           }
         }
@@ -20949,6 +21427,7 @@
       this.drawCobwebs(now);
       this.drainEffects(now);
       this.roomFx.emit(this.particles, this.sim, now, dt, view);
+      this.particles.emitWeather(this.season, dt, view, (wx, wy) => this.isIndoor(wx, wy));
       this.particles.update(dt);
       this.particles.draw(ctx, vx0, vy0, vx1, vy1, now);
       this.night = this.lighting.night;
@@ -21502,6 +21981,14 @@
       ctx.stroke();
       ctx.restore();
     }
+    isIndoor(wx, wy) {
+      for (const vis of this.areas.values()) {
+        if (vis.room && !vis.room.present) continue;
+        const p = vis.px;
+        if (wx >= p.x - 4 && wx <= p.x + p.w + 4 && wy >= p.y - WALL_MARGIN && wy <= p.y + p.h + 4) return true;
+      }
+      return false;
+    }
     drawProp(prop2, alpha) {
       if (prop2.kind === "paving") {
         const c = this.pavingCanvas(prop2);
@@ -21510,7 +21997,7 @@
         this.ctx.globalAlpha = 1;
         return;
       }
-      const s = propSprite(prop2);
+      const s = propSprite(prop2, this.season);
       if (alpha < 1) this.ctx.globalAlpha = alpha;
       this.ctx.drawImage(s.canvas, Math.round(prop2.x - s.ax), Math.round(prop2.y - s.ay));
       this.ctx.globalAlpha = 1;
@@ -21518,7 +22005,7 @@
     pavings = /* @__PURE__ */ new Map();
     /** Trecho de calçada (2x2 tiles) com o mesmo desenho da calçada vizinha (coordenadas de mundo). */
     pavingCanvas(prop2) {
-      const key = `${prop2.x},${prop2.y}`;
+      const key = `${this.season}:${prop2.x},${prop2.y}`;
       let c = this.pavings.get(key);
       if (c) return c;
       c = document.createElement("canvas");
@@ -21527,7 +22014,7 @@
       const ctx = c.getContext("2d");
       ctx.imageSmoothingEnabled = false;
       ctx.translate(-prop2.x, -prop2.y);
-      this.safe(() => this.art.drawFloor(ctx, "sidewalk", prop2.x, prop2.y, 2 * TILE, 2 * TILE, { seed: prop2.seed }));
+      this.safe(() => this.art.drawFloor(ctx, "sidewalk", prop2.x, prop2.y, 2 * TILE, 2 * TILE, { seed: prop2.seed, tint: this.season }));
       this.pavings.set(key, c);
       return c;
     }
@@ -26825,7 +27312,8 @@
     const dt = lastTs ? Math.min(0.1, Math.max(0, (ts - lastTs) / 1e3)) : 1 / 60;
     lastTs = ts;
     sim.update(dt, now);
-    renderer.sync(seasonalThemeFor(options.theme, /* @__PURE__ */ new Date()));
+    const nowDate = /* @__PURE__ */ new Date();
+    renderer.sync(seasonalThemeFor(options.theme, nowDate), exteriorSeasonFor(options.season, nowDate));
     if (sim.building.cols !== lastCols) {
       lastCols = sim.building.cols;
       updateBounds();
@@ -26890,7 +27378,8 @@
           ...next.bubbles === "all" || next.bubbles === "important" || next.bubbles === "none" ? { bubbles: next.bubbles } : {},
           ...next.liveliness === "calm" || next.liveliness === "normal" || next.liveliness === "lively" ? { liveliness: next.liveliness } : {},
           ...next.daylight === "auto" || next.daylight === "day" || next.daylight === "night" ? { daylight: next.daylight, dayNight: next.daylight !== "day" } : {},
-          ...next.theme === "auto" || next.theme === "none" || next.theme === "christmas" || next.theme === "halloween" ? { theme: next.theme } : {}
+          ...next.theme === "auto" || next.theme === "none" || next.theme === "christmas" || next.theme === "halloween" ? { theme: next.theme } : {},
+          ...next.season === "auto" || next.season === "auto_south" || next.season === "auto_north" || next.season === "spring" || next.season === "summer" || next.season === "autumn" || next.season === "winter" ? { season: next.season } : {}
         };
         soundEnabled = next.sound === true;
         const rawSounds = next.sounds && typeof next.sounds === "object" ? next.sounds : {};
@@ -26923,7 +27412,8 @@
         }
       }
       sim.applySnapshot(snapshot, now);
-      renderer.sync(seasonalThemeFor(options.theme, /* @__PURE__ */ new Date()));
+      const nowDate = /* @__PURE__ */ new Date();
+      renderer.sync(seasonalThemeFor(options.theme, nowDate), exteriorSeasonFor(options.season, nowDate));
       if (sim.building.cols !== lastCols) {
         lastCols = sim.building.cols;
         updateBounds();

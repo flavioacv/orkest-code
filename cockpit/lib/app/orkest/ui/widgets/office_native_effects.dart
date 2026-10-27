@@ -613,6 +613,59 @@ extension _NativeOfficeEffects on _WorldPainter {
         : 'none';
   }
 
+  String _season(int time) {
+    final s = settings.officeSeason;
+    if (s == 'spring' || s == 'summer' || s == 'autumn' || s == 'winter') {
+      return s;
+    }
+    final month = DateTime.fromMillisecondsSinceEpoch(time).month;
+    if (s == 'auto_north') {
+      if (month == 12 || month <= 2) return 'winter';
+      if (month <= 5) return 'spring';
+      if (month <= 8) return 'summer';
+      return 'autumn';
+    }
+    if (month == 12 || month <= 2) return 'summer';
+    if (month <= 5) return 'autumn';
+    if (month <= 8) return 'winter';
+    return 'spring';
+  }
+
+  void _paintExteriorSeason(Canvas canvas, int time) {
+    final season = _season(time);
+    for (var i = 0; i < 28; i++) {
+      final cycle = (time / 1000 + i * 0.41) % 3.2;
+      final px =
+          ((i * 73) % 100) / 100 * map.width +
+          math.sin(time / 420 + i) * 6 * _unit;
+      final py = (cycle / 3.2) * map.height;
+      final inBuilding =
+          map.core.any(
+            (r) => _rect(r['x']!, r['y']!, r['w']!, r['h']!).contains(
+              Offset(px, py),
+            ),
+          ) ||
+          map.rooms.any(
+            (r) => _rect(r['x']!, r['y']!, r['w']!, r['h']!).contains(
+              Offset(px, py),
+            ),
+          );
+      if (inBuilding) continue;
+      final color = switch (season) {
+        'winter' => const Color(0xddeef5fc),
+        'autumn' =>
+          i % 2 == 0 ? const Color(0xddd4652f) : const Color(0xdde89d38),
+        'spring' =>
+          i % 2 == 0 ? const Color(0xddff94be) : const Color(0xddffe97d),
+        _ => const Color(0xaaffe680),
+      };
+      canvas.drawRect(
+        Rect.fromLTWH(px, py, (i % 2 + 1) * _unit, _unit),
+        Paint()..color = color,
+      );
+    }
+  }
+
   void _window(Canvas canvas, Rect r, int time, int seed) {
     final hour = DateTime.fromMillisecondsSinceEpoch(time).hour;
     final night =
@@ -667,6 +720,7 @@ extension _NativeOfficeEffects on _WorldPainter {
 
   void _paintOfficeEffects(Canvas canvas) {
     final time = now();
+    _paintExteriorSeason(canvas, time);
     for (final room in transitions.values) {
       if (room.slot >= map.rooms.length) continue;
       final source = map.rooms[room.slot];

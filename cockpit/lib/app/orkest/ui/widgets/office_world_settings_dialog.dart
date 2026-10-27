@@ -16,6 +16,7 @@ Future<void> showOfficeWorldSettings(BuildContext context) {
         final prefs = settings.settings;
         void update({
           String? theme,
+          String? season,
           bool? showNames,
           String? bubbles,
           String? liveliness,
@@ -29,6 +30,7 @@ Future<void> showOfficeWorldSettings(BuildContext context) {
         }) {
           settings.setOfficeWorldOptions(
             theme: theme,
+            season: season,
             showNames: showNames,
             bubbles: bubbles,
             liveliness: liveliness,
@@ -68,6 +70,22 @@ Future<void> showOfficeWorldSettings(BuildContext context) {
                       ('halloween', tr.themeHalloween),
                     ],
                     onSelected: (value) => update(theme: value),
+                  ),
+                  const SizedBox(height: 12),
+                  _OfficeChoiceRow(
+                    label: tr.officeSeason,
+                    selected: prefs.officeSeason == 'auto'
+                        ? 'auto_south'
+                        : prefs.officeSeason,
+                    options: [
+                      ('auto_south', tr.seasonAutoSouth),
+                      ('auto_north', tr.seasonAutoNorth),
+                      ('spring', tr.seasonSpring),
+                      ('summer', tr.seasonSummer),
+                      ('autumn', tr.seasonAutumn),
+                      ('winter', tr.seasonWinter),
+                    ],
+                    onSelected: (value) => update(season: value),
                   ),
                   const SizedBox(height: 12),
                   Row(
