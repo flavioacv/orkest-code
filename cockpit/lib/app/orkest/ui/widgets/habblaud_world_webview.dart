@@ -57,13 +57,11 @@ class _HabblaudWorldWebViewState extends State<HabblaudWorldWebView> {
   String? _lastOpenedAgent;
   int _lastOpenedAt = 0;
   bool _sidebarVisible = true;
-  bool _activityVisible = true;
   String _agentQuery = '';
   final TextEditingController _agentSearch = TextEditingController();
   final Map<String, Future<_OfficePortrait?>> _portraitCache = {};
   final Map<String, String> _portraitSignatures = {};
   final Map<String, OfficeAgentSocial> _socialBySession = {};
-  List<OfficeSocialEvent> _socialEvents = [];
   bool _readingSocial = false;
   bool _socialReadFailed = false;
   String? _socialSignature;
@@ -738,30 +736,15 @@ canvas{display:block;image-rendering:pixelated;outline:none}
               ),
             ),
             if (_sidebarVisible) _buildAgentSidebar(context),
-            if (_activityVisible) _buildActivityFeed(context),
-            if (!_sidebarVisible || !_activityVisible)
+            if (!_sidebarVisible)
               Positioned(
-                left: _sidebarVisible ? 12 : 16,
-                bottom: _activityVisible ? 12 : 16,
-                child: Row(
-                  children: [
-                    if (!_sidebarVisible)
-                      _panelToggle(
-                        context,
-                        '☷',
-                        labels.reopenRoster,
-                        () => setState(() => _sidebarVisible = true),
-                      ),
-                    if (!_activityVisible && !_sidebarVisible)
-                      const SizedBox(width: 8),
-                    if (!_activityVisible)
-                      _panelToggle(
-                        context,
-                        '☰',
-                        labels.reopenFeed,
-                        () => setState(() => _activityVisible = true),
-                      ),
-                  ],
+                left: 16,
+                bottom: 16,
+                child: _panelToggle(
+                  context,
+                  '☷',
+                  labels.reopenRoster,
+                  () => setState(() => _sidebarVisible = true),
                 ),
               ),
           ],
@@ -819,13 +802,6 @@ canvas{display:block;image-rendering:pixelated;outline:none}
           );
         }
       }
-      _socialEvents =
-          (data['events'] is List ? data['events'] as List : const [])
-              .map(OfficeSocialEvent.fromJson)
-              .whereType<OfficeSocialEvent>()
-              .where((event) => ids.contains(event.agentId))
-              .take(40)
-              .toList();
       if (mounted) setState(() {});
     } catch (error, stack) {
       // A WebView may disappear while this asynchronous read is in flight.
@@ -942,7 +918,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
     return Positioned(
       left: 14,
       top: 14,
-      bottom: _activityVisible ? 188 : 14,
+      bottom: 14,
       width: 292,
       child: _officePanel(
         colors,
@@ -1116,254 +1092,6 @@ canvas{display:block;image-rendering:pixelated;outline:none}
       ),
     );
   }
-
-  Widget _buildActivityFeed(BuildContext context) {
-    final colors = context.colors;
-    final labels = context.t.orkest.officeWorld;
-    final rows =
-        <
-          ({
-            TerminalSession session,
-            Project project,
-            TerminalStatusEvent event,
-            String? socialIcon,
-          })
-        >[];
-    for (final session in _officeSessions) {
-      final project = widget.projects
-          .where((item) => item.id == session.projectId)
-          .firstOrNull;
-      if (project == null) continue;
-      for (final event in session.officeStatusHistory) {
-        rows.add((
-          session: session,
-          project: project,
-          event: event,
-          socialIcon: null,
-        ));
-      }
-    }
-    for (final event in _socialEvents) {
-      final session = _officeSessions
-          .where((session) => session.id == event.agentId)
-          .firstOrNull;
-      if (session == null) continue;
-      final project = widget.projects
-          .where((p) => p.id == session.projectId)
-          .firstOrNull;
-      if (project == null) continue;
-      rows.add((
-        session: session,
-        project: project,
-        event: TerminalStatusEvent(
-          session.status,
-          event.at,
-          activityKind: 'social',
-          activitySummary: event.text,
-        ),
-        socialIcon: event.icon,
-      ));
-    }
-    rows.sort((a, b) => b.event.at.compareTo(a.event.at));
-    final recent = rows.take(50).toList(growable: false);
-    return Positioned(
-      left: _sidebarVisible ? 322 : 16,
-      right: 16,
-      bottom: 14,
-      height: 174,
-      child: _officePanel(
-        colors,
-        child: Column(
-          children: [
-            _panelHeader(
-              context,
-              labels.activityFeed,
-              labels.collapseFeed,
-              () => setState(() => _activityVisible = false),
-            ),
-            Expanded(
-              child: recent.isEmpty
-                  ? Center(
-                      child: Text(
-                        labels.activityEmpty,
-                        style: TextStyle(color: colors.text2, fontSize: 12),
-                      ),
-                    )
-                  : ListView.builder(
-                      reverse: false,
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 3,
-                      ),
-                      itemCount: recent.length,
-                      itemBuilder: (context, index) {
-                        final row = recent[recent.length - 1 - index];
-                        final time = row.event.at;
-                        final clock =
-                            '${time.hour.toString().padLeft(2, '0')}:${time.minute.toString().padLeft(2, '0')}';
-                        final summary = row.socialIcon == null
-                            ? _activityLabel(context, row.event)
-                            : '${labels.socialActivity}: ${row.event.activitySummary}';
-                        return InkWell(
-                          onTap: () => unawaited(
-                            _showAgentProfile(
-                              context,
-                              session: row.session,
-                              project: row.project,
-                            ),
-                          ),
-                          child: Padding(
-                            padding: const EdgeInsets.symmetric(vertical: 5),
-                            child: Row(
-                              children: [
-                                SizedBox(
-                                  width: 42,
-                                  child: Text(
-                                    clock,
-                                    style: TextStyle(
-                                      color: colors.text3,
-                                      fontSize: 10,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 5),
-                                SizedBox(
-                                  width: 19,
-                                  child: Text(
-                                    row.socialIcon ?? _activityIcon(row.event),
-                                    style: const TextStyle(fontSize: 13),
-                                  ),
-                                ),
-                                SizedBox(
-                                  width: 23,
-                                  height: 23,
-                                  child: FutureBuilder<_OfficePortrait?>(
-                                    future: _portraitFor(
-                                      row.session,
-                                      row.project,
-                                    ),
-                                    builder: (context, snapshot) =>
-                                        _agentPortrait(
-                                          snapshot.data?.face,
-                                          colors,
-                                          size: 23,
-                                          fallback: '👤',
-                                          fit: BoxFit.cover,
-                                        ),
-                                  ),
-                                ),
-                                const SizedBox(width: 5),
-                                SizedBox(
-                                  width: 100,
-                                  child: Column(
-                                    crossAxisAlignment:
-                                        CrossAxisAlignment.start,
-                                    children: [
-                                      Text(
-                                        _agentName(row.session),
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          color: colors.text,
-                                          fontSize: 11,
-                                          fontWeight: FontWeight.w600,
-                                        ),
-                                      ),
-                                      Text(
-                                        row.session.activeHarness?.name ??
-                                            'Orkest',
-                                        maxLines: 1,
-                                        overflow: TextOverflow.ellipsis,
-                                        style: TextStyle(
-                                          color: colors.text3,
-                                          fontSize: 9,
-                                        ),
-                                      ),
-                                    ],
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                Expanded(
-                                  child: Text(
-                                    summary,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: colors.text2,
-                                      fontSize: 11,
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 8),
-                                SizedBox(
-                                  width: 110,
-                                  child: Text(
-                                    row.project.name,
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    textAlign: TextAlign.right,
-                                    style: TextStyle(
-                                      color: colors.text3,
-                                      fontSize: 10,
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        );
-                      },
-                    ),
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
-  String _activityLabel(BuildContext context, TerminalStatusEvent event) {
-    final labels = context.t.orkest.officeWorld;
-    return switch (event.activityKind) {
-      'prompt' => labels.promptReceived,
-      'respond' => labels.agentResponded,
-      'thinking' => labels.agentThinking,
-      'read' => labels.readingFile,
-      'search' => labels.searchingCode,
-      'edit' => labels.editingFile,
-      'write' => labels.writingFile,
-      'command' => labels.runningCommand,
-      'wait' => labels.shellWaiting,
-      'needs_input' => labels.waitingInTerminal,
-      'test' => labels.runningTests,
-      'web' => labels.browsingWeb,
-      'plan' => labels.organizingTasks,
-      'delegate' => labels.callingSubagents,
-      'done' => labels.turnCompleted,
-      'error' => labels.activityError,
-      _ => labels.usingTool,
-    };
-  }
-
-  String _activityIcon(TerminalStatusEvent event) =>
-      switch (event.activityKind) {
-        'prompt' => '📨',
-        'respond' => '💬',
-        'thinking' => '💭',
-        'read' => '📖',
-        'search' => '🔎',
-        'edit' => '✏️',
-        'write' => '📝',
-        'command' => '💻',
-        'wait' => '⏳',
-        'needs_input' => '✋',
-        'test' => '🧪',
-        'web' => '🌐',
-        'plan' => '🗒️',
-        'delegate' => '👥',
-        'done' => '✅',
-        'error' => '⚠️',
-        _ => '⚙️',
-      };
 
   Widget _officePanel(AppColors colors, {required Widget child}) => Container(
     clipBehavior: Clip.antiAlias,
