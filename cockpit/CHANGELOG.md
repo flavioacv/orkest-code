@@ -1,5 +1,13 @@
 # Changelog — Orkest Code
 
+## 0.1.9 (build 13) — 2026-10-27
+
+- Files and diffs open the Office workspace window directly, without requiring an agent terminal to be open; its header follows the active tab and project.
+- The Office workspace window supports dragging, resizing from edges and corners, and maximizing/restoring by button or double-clicking the title bar, while retaining existing tabs and terminal sessions.
+- Responding to Office notifications opens the real agent terminal with its full controls.
+- Removed the bottom Office activity panel; agents remain accessible from the left sidebar.
+- Git operations resolve the repository root when a workspace is opened from a subfolder, preventing duplicated paths and restore failures.
+
 ## 0.1.8 (build 12) — 2026-10-27
 
 - Office World exterior map now supports a 4-season system (`spring`, `summer`, `autumn`, `winter`) with automatic Southern/Northern hemisphere calendars or manual season selection, seasonal grass and sidewalk palettes, flowering/autumn/snow-covered trees, pines, bushes, hedges, flower beds, seasonal props (leaf piles, snowmen, snowdrifts) and ambient outdoor weather particles (falling leaves, snowflakes, floating petals and sun motes).
