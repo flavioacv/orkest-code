@@ -34,6 +34,55 @@ void main() {
     expect(GitController.deriveRoots(root), [root]);
   });
 
+  test('subpasta usa a raiz real para listar e restaurar arquivos', () async {
+    final root = ws('nested');
+    final mobile = '$root/mobile';
+    Directory('$mobile/ios').createSync(recursive: true);
+    final file = File('$mobile/ios/Podfile.lock');
+    file.writeAsStringSync('original\n');
+    Future<ProcessResult> git(List<String> args, String cwd) =>
+        Process.run('git', args, workingDirectory: cwd);
+    expect((await git(['init'], root)).exitCode, 0);
+    expect((await git(['add', '.'], root)).exitCode, 0);
+    expect(
+      (await git([
+        '-c',
+        'user.name=Test',
+        '-c',
+        'user.email=test@example.com',
+        '-c',
+        'commit.gpgsign=false',
+        'commit',
+        '-m',
+        'initial',
+      ], root)).exitCode,
+      0,
+    );
+    file.writeAsStringSync('modified\n');
+
+    final roots = GitController.deriveRoots(mobile);
+    expect(roots, [root]);
+    final status = await git(['status', '--porcelain=v1', '-z'], roots.single);
+    expect(status.stdout, ' M mobile/ios/Podfile.lock\u0000');
+    final restored = await git([
+      'restore',
+      '--source=HEAD',
+      '--staged',
+      '--worktree',
+      '--',
+      'mobile/ios/Podfile.lock',
+    ], roots.single);
+    expect(restored.exitCode, 0, reason: '${restored.stderr}');
+    expect(file.readAsStringSync(), 'original\n');
+  });
+
+  test('subpasta de worktree usa o ancestral com .git arquivo', () {
+    final root = ws('linked');
+    makeLinkedWorktree(root, ws('outside/.git/worktrees/linked'));
+    Directory('$root/mobile/ios').createSync(recursive: true);
+    expect(GitController.deriveRoots('$root/mobile/ios'), [root]);
+  });
+
   test('raiz sem git e sem filhas-repo → pasta comum', () {
     final root = ws('plain');
     Directory('$root/docs').createSync(recursive: true);

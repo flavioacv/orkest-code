@@ -19,6 +19,7 @@ import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:orkest_code/app/core/ui/window_activity_controller.dart';
 import 'package:orkest_code/app/core/data/diagnostics/performance_diagnostics.dart';
 import 'package:flutter/foundation.dart';
+import 'package:path/path.dart' as p;
 
 typedef DirectoryWatch = Stream<FileSystemEvent> Function(String path);
 
@@ -612,6 +613,18 @@ class GitController extends ChangeNotifier {
     if (FileSystemEntity.typeSync('$path/.git') !=
         FileSystemEntityType.notFound) {
       return [path];
+    }
+    // O porcelain retorna paths relativos ao repositório, mesmo com -C numa
+    // subpasta. Usar essa subpasta como root duplicaria o prefixo no restore.
+    var ancestor = p.dirname(p.normalize(p.absolute(path)));
+    while (true) {
+      if (FileSystemEntity.typeSync(p.join(ancestor, '.git')) !=
+          FileSystemEntityType.notFound) {
+        return [p.posix.joinAll(p.split(ancestor))];
+      }
+      final parent = p.dirname(ancestor);
+      if (parent == ancestor) break;
+      ancestor = parent;
     }
     final roots = <String>[];
     try {
