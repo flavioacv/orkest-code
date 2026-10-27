@@ -1,5 +1,9 @@
 # Changelog — Orkest Code
 
+## 0.1.8 (build 12) — 2026-10-27
+
+- Office World exterior map now supports a 4-season system (`spring`, `summer`, `autumn`, `winter`) with automatic Southern/Northern hemisphere calendars or manual season selection, seasonal grass and sidewalk palettes, flowering/autumn/snow-covered trees, pines, bushes, hedges, flower beds, seasonal props (leaf piles, snowmen, snowdrifts) and ambient outdoor weather particles (falling leaves, snowflakes, floating petals and sun motes).
+
 ## 0.1.7 (build 11) — 2026-10-27
 
 - Office preserves the harness identified by the existing PTY monitor and accepts optional producer metadata without requiring a catalog entry.
