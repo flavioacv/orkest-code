@@ -1,5 +1,11 @@
 # Changelog — Orkest Code
 
+## 0.1.6 (build 10) — 2026-10-26
+
+- Office World no longer raises a CI alarm from old terminal scrollback or text that merely mentions a CI failure.
+- Git animations now require more specific PR, release, CI and push output; rejected pushes and fetch output no longer appear as successful pushes.
+- Manual Git sync, pull, push and fetch actions no longer trigger room celebrations or alarms solely from their exit code.
+
 ## 0.1.5 (build 9) — 2026-10-26
 
 - Office World: integração de efeitos e animações reativas para Git (chuva de confetes em PR aberto/mergeado e releases, alarme com giroflex e chão pulsante em falhas de CI, redenção "CI verde de novo!").
