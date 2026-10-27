@@ -39,7 +39,6 @@ import 'package:orkest_code/app/orkest/ui/widgets/remote_disconnected_banner.dar
 import 'package:orkest_code/app/orkest/ui/widgets/terminal_key_bar.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/widgets.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/office_world_view.dart';
-import 'package:orkest_code/app/orkest/ui/widgets/office_terminal_interaction_dialog.dart';
 import 'package:orkest_code/app/core/data/diagnostics/performance_diagnostics.dart';
 import 'package:orkest_code/app/core/ui/automation_controller.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
@@ -1065,6 +1064,16 @@ class _CenterPanelState extends State<_CenterPanel> {
     }
   }
 
+  Future<void> _openOfficeTerminal(TerminalSession session) async {
+    final vm = context.read<OrkestViewModel>();
+    await vm.selectProjectAndWait(session.projectId);
+    if (!mounted) return;
+    final pane = vm.leafOfTab(session.projectId, session.id);
+    if (pane == null) return;
+    vm.selectTab(pane, session.id);
+    setState(() => _officeTerminalSessionId = session.id);
+  }
+
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<OrkestViewModel>();
@@ -1123,13 +1132,7 @@ class _CenterPanelState extends State<_CenterPanel> {
               idle: context.t.orkest.officeWorld.idle,
             ),
             onOpenSession: (session) {
-              unawaited(() async {
-                await vm.selectProjectAndWait(session.projectId);
-                if (!mounted) return;
-                final pane = vm.leafOfTab(session.projectId, session.id);
-                if (pane != null) vm.selectTab(pane, session.id);
-                setState(() => _officeTerminalSessionId = session.id);
-              }());
+              unawaited(_openOfficeTerminal(session));
             },
             onRenameSession: (session, name) =>
                 vm.setPaneLabel(session.id, name),
@@ -1236,9 +1239,11 @@ class _CenterPanelState extends State<_CenterPanel> {
                       ?.name ??
                   session.projectId,
               onRespond: (session) {
-                _dismissedOfficeWaiting[session.id] =
-                    session.latestWaitingEventSequence;
-                unawaited(showOfficeTerminalInteraction(context, session));
+                setState(() {
+                  _dismissedOfficeWaiting[session.id] =
+                      session.latestWaitingEventSequence;
+                });
+                unawaited(_openOfficeTerminal(session));
               },
               onDismiss: (session) => setState(() {
                 _dismissedOfficeWaiting[session.id] =
