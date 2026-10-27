@@ -1259,6 +1259,9 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
     }
   }
 
+  int _workspaceRevealRevision = 0;
+  int get workspaceRevealRevision => _workspaceRevealRevision;
+
   Future<void> openFile(
     String path, {
     String? inPane,
@@ -1271,6 +1274,8 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
       isPreview: isPreview,
       revealLine: revealLine,
     );
+    _workspaceRevealRevision++;
+    notifyListeners();
   }
 
   Future<FileOpenResult?> _dispatchFileOpen(
@@ -2255,6 +2260,24 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
   /// Abre o **diff** de um arquivo contra o HEAD numa aba de viewer (split, só
   /// leitura). Espelha [openFile]: reutiliza a aba de preview quando possível.
   Future<void> openDiff(
+    String path, {
+    bool isPreview = true,
+    String? commitHash,
+    String? repoRoot,
+    String? previousRelativePath,
+  }) async {
+    await _openDiff(
+      path,
+      isPreview: isPreview,
+      commitHash: commitHash,
+      repoRoot: repoRoot,
+      previousRelativePath: previousRelativePath,
+    );
+    _workspaceRevealRevision++;
+    notifyListeners();
+  }
+
+  Future<void> _openDiff(
     String path, {
     bool isPreview = true,
     String? commitHash,
@@ -4081,7 +4104,11 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
           GitHistoryError(GitHistoryErrorKind.commandFailed),
         );
       }
-      return await _runHistoryGitAction(root, const ['reset', '--mixed', 'HEAD^']);
+      return await _runHistoryGitAction(root, const [
+        'reset',
+        '--mixed',
+        'HEAD^',
+      ]);
     } catch (error) {
       return Failure(
         GitHistoryError(GitHistoryErrorKind.commandFailed, detail: '$error'),

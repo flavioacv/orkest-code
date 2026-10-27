@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/orkest/ui/widgets/office_workspace_window.dart';
 import 'package:orkest_core/orkest_core.dart';
 
 import 'dart:async' show StreamSubscription, Timer, unawaited;
@@ -1015,7 +1016,8 @@ class _CenterPanelState extends State<_CenterPanel> {
   // only its own pane state, so a terminal update does not rebuild every
   // workspace's pane tree.
   final Map<String, Widget> _workspaceWidgets = {};
-  String? _officeTerminalSessionId;
+  bool _officeWorkspaceVisible = false;
+  int? _lastWorkspaceRevealRevision;
   final Map<String, int> _dismissedOfficeWaiting = <String, int>{};
   final Set<TerminalSession> _observedTerminalSessions = <TerminalSession>{};
   bool _officeInitialized = false;
@@ -1060,7 +1062,7 @@ class _CenterPanelState extends State<_CenterPanel> {
     super.didUpdateWidget(oldWidget);
     if (widget.officeView) _officeInitialized = true;
     if (oldWidget.officeView && !widget.officeView) {
-      _officeTerminalSessionId = null;
+      _officeWorkspaceVisible = false;
     }
   }
 
@@ -1071,7 +1073,7 @@ class _CenterPanelState extends State<_CenterPanel> {
     final pane = vm.leafOfTab(session.projectId, session.id);
     if (pane == null) return;
     vm.selectTab(pane, session.id);
-    setState(() => _officeTerminalSessionId = session.id);
+    setState(() => _officeWorkspaceVisible = true);
   }
 
   @override
@@ -1082,12 +1084,21 @@ class _CenterPanelState extends State<_CenterPanel> {
     final projectIds = vm.projects.map((project) => project.id).toList();
     final liveIds = projectIds.toSet();
     _workspaceWidgets.removeWhere((id, _) => !liveIds.contains(id));
-    final selectedOfficeItem = _officeTerminalSessionId == null
+    final revision = vm.workspaceRevealRevision;
+    if (_lastWorkspaceRevealRevision != null &&
+        revision != _lastWorkspaceRevealRevision &&
+        widget.officeView) {
+      _officeWorkspaceVisible = true;
+    }
+    _lastWorkspaceRevealRevision = revision;
+    final projectId = vm.selectedProjectId;
+    final tree = projectId == null ? null : vm.tree(projectId);
+    final focusedId = projectId == null ? null : vm.focusedPaneId(projectId);
+    final activeLeaf = tree == null
         ? null
-        : vm.session(_officeTerminalSessionId!);
-    final officeSession = selectedOfficeItem is TerminalSession
-        ? selectedOfficeItem
-        : null;
+        : findLeaf(tree, focusedId ?? '') ?? leaves(tree).firstOrNull;
+    final activeId = activeLeaf?.active;
+    final activeItem = activeId == null ? null : vm.session(activeId);
     final waitingSessions = vm.allSessions
         .whereType<TerminalSession>()
         .where(
@@ -1102,12 +1113,8 @@ class _CenterPanelState extends State<_CenterPanel> {
         (session) => session.id == id,
       ),
     );
-    final officeProject = officeSession == null
-        ? null
-        : vm.projects
-              .where((project) => project.id == officeSession.projectId)
-              .firstOrNull;
-    final showTerminalWorkspace = !widget.officeView || officeSession != null;
+    final officeProject = vm.selectedProject;
+    final showTerminalWorkspace = !widget.officeView || _officeWorkspaceVisible;
 
     // Build the WebView on first entry, then keep its canvas mounted while the
     // user switches back to the terminal. Habblaud's simulation is stateful;
@@ -1188,10 +1195,11 @@ class _CenterPanelState extends State<_CenterPanel> {
           ),
         if (terminalWorkspace != null)
           if (widget.officeView)
-            _OfficeTerminalWindow(
-              title: officeSession?.displayTitle ?? 'Terminal',
+            OfficeWorkspaceWindow(
+              title:
+                  activeItem?.displayTitle ?? officeProject?.name ?? 'Orkest',
               projectName: officeProject?.name ?? '',
-              onClose: () => setState(() => _officeTerminalSessionId = null),
+              onClose: () => setState(() => _officeWorkspaceVisible = false),
               child: terminalWorkspace,
             )
           else
@@ -1589,84 +1597,6 @@ class _OfficeCompletionNotificationsState
 /// Floating frame over the Office map. Its child is the existing workspace
 /// multiplexer, so the terminal remains the same PTY and controller used by
 /// the regular Orkest view.
-class _OfficeTerminalWindow extends StatelessWidget {
-  const _OfficeTerminalWindow({
-    required this.title,
-    required this.projectName,
-    required this.onClose,
-    required this.child,
-  });
-
-  final String title;
-  final String projectName;
-  final VoidCallback onClose;
-  final Widget child;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return Positioned.fill(
-      child: ColoredBox(
-        color: const Color(0x66000000),
-        child: Center(
-          child: FractionallySizedBox(
-            widthFactor: 0.78,
-            heightFactor: 0.78,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                color: colors.bg,
-                border: Border.all(color: colors.border),
-                borderRadius: BorderRadius.circular(10),
-                boxShadow: const [
-                  BoxShadow(color: Color(0x66000000), blurRadius: 28),
-                ],
-              ),
-              child: ClipRRect(
-                borderRadius: BorderRadius.circular(10),
-                child: Column(
-                  children: [
-                    SizedBox(
-                      height: 38,
-                      child: Row(
-                        children: [
-                          const SizedBox(width: 14),
-                          Icon(Icons.terminal, size: 16, color: colors.text3),
-                          const SizedBox(width: 8),
-                          Expanded(
-                            child: Text(
-                              projectName.isEmpty
-                                  ? title
-                                  : '$projectName · $title',
-                              maxLines: 1,
-                              overflow: TextOverflow.ellipsis,
-                              style: TextStyle(
-                                color: colors.text,
-                                fontSize: 12,
-                                fontWeight: FontWeight.w600,
-                              ),
-                            ),
-                          ),
-                          IconButton.ghost(
-                            icon: const Icon(Icons.close, size: 16),
-                            onPressed: onClose,
-                          ),
-                          const SizedBox(width: 6),
-                        ],
-                      ),
-                    ),
-                    Divider(height: 1, color: colors.border),
-                    Expanded(child: child),
-                  ],
-                ),
-              ),
-            ),
-          ),
-        ),
-      ),
-    );
-  }
-}
-
 typedef _ProjectPaneState = ({
   PaneNode? tree,
   String? focusedPaneId,
