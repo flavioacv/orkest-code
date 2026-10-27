@@ -54,7 +54,9 @@ void main() {
     const detector = GitTerminalEventDetector();
 
     test('detects PR open from GitHub URL', () {
-      final event = detector.detect('https://github.com/my-org/my-repo/pull/42');
+      final event = detector.detect(
+        'https://github.com/my-org/my-repo/pull/42',
+      );
       expect(event, isNotNull);
       expect(event!.kind, GitTerminalEventKind.prOpened);
       expect(event.number, 42);
@@ -79,7 +81,7 @@ void main() {
     });
 
     test('detects CI failure and success', () {
-      final fail = detector.detect('✗ main CI · 123 failed');
+      final fail = detector.detect('✗ main CI · 123');
       expect(fail, isNotNull);
       expect(fail!.kind, GitTerminalEventKind.ciFailed);
       expect(fail.isError, isTrue);
@@ -91,11 +93,51 @@ void main() {
       expect(pass.icon, '✅');
     });
 
+    test('ignores prose and source text mentioning CI failures', () {
+      expect(
+        detector.detect('CI failed before the agent ran anything'),
+        isNull,
+      );
+      expect(detector.detect('expect(text, "CI failed")'), isNull);
+      expect(
+        detector.detect('CI falhou (com alarme, como no Habblaud)'),
+        isNull,
+      );
+      expect(detector.detect('X main CI failed'), isNull);
+    });
+
     test('detects git push', () {
-      final push = detector.detect('abc1234..def5678  main -> main');
+      final push = detector.detect(
+        'abc1234..def5678  main -> main',
+        isPushOutput: true,
+      );
       expect(push, isNotNull);
       expect(push!.kind, GitTerminalEventKind.push);
       expect(push.icon, '🚀');
+    });
+
+    test('does not celebrate URLs, rejected pushes or unrelated output', () {
+      expect(
+        detector.detect('Veja https://github.com/acme/repo/pull/42'),
+        isNull,
+      );
+      expect(
+        detector.detect('https://github.com/acme/repo/pull/42 já existe'),
+        isNull,
+      );
+      expect(
+        detector.detect(
+          'Release: https://github.com/acme/repo/releases/tag/v1',
+        ),
+        isNull,
+      );
+      expect(detector.detect('✓ Merged'), isNull);
+      expect(detector.detect('main -> origin/main'), isNull);
+      expect(detector.detect('abc1234..def5678  main -> origin/main'), isNull);
+      expect(
+        detector.detect('! [rejected] main -> main', isPushOutput: true),
+        isNull,
+      );
     });
   });
 }

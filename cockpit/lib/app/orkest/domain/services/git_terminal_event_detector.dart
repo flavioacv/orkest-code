@@ -39,50 +39,50 @@ class GitTerminalEventDetector {
   const GitTerminalEventDetector();
 
   static final RegExp _prUrlPattern = RegExp(
-    r'https?://github\.com/([\w.-]+/[\w.-]+)/pull/(\d+)',
+    r'^https?://github\.com/([\w.-]+/[\w.-]+)/pull/(\d+)$',
     caseSensitive: false,
   );
 
   static final RegExp _releaseUrlPattern = RegExp(
-    r'https?://github\.com/([\w.-]+/[\w.-]+)/releases/tag/([^\s]+)',
+    r'^https?://github\.com/([\w.-]+/[\w.-]+)/releases/tag/([^\s]+)$',
     caseSensitive: false,
   );
 
   static final RegExp _prCreatedPattern = RegExp(
-    r'(?:created|opened)\s+pull\s+request\s+#?(\d+)',
+    r'^(?:created|opened)\s+pull\s+request\s+#(\d+)$',
     caseSensitive: false,
   );
 
   static final RegExp _prMergedPattern = RegExp(
-    r'(?:✓\s*merged\s+pull\s+request\s+#?(\d+)|merged\s+pull\s+request\s+#?(\d+)|\bpull\s+request\s+#?(\d+)\s+merged\b|✓\s*merged\b)',
+    r'^(?:✓\s*merged\s+pull\s+request\s+#(\d+)(?:\s+into\s+\S+)?|✓\s*(?:squashed and |rebase and )?merged pull request [\w.-]+/[\w.-]+#(\d+)(?:\s+\(.+\))?)$',
     caseSensitive: false,
   );
 
   static final RegExp _ciFailPattern = RegExp(
-    r'(?:some\s+checks\s+were\s+not\s+successful|\b\d+\s+failing\b|checks?\s+failed|check\s+suite\s+failed|workflow\s+run\s+failed|[✗X]\s+([^\n\r]+?)\s+CI|\bCI\s+failed\b)',
+    r'^(?:Some checks were not successful|[1-9]\d* failing(?:\b.*)?|[✗X]\s+([^\s]+)\s+(.+?)\s+·\s+\d+|[✗X]\s+Run\s+.+?\s+\(\d+\)\s+completed with .failure.)$',
     caseSensitive: false,
   );
 
   static final RegExp _ciPassPattern = RegExp(
-    r'(?:all\s+checks\s+(?:were\s+)?successful|[✓✔]\s+([^\n\r]+?)\s+CI|\bworkflow\s+run\s+(?:completed\s+with\s+)?success|\bCI\s+passed\b)',
+    r'^(?:All checks were successful|[✓✔]\s+[^\s]+\s+.+?\s+·\s+\d+|[✓✔]\s+Run\s+.+?\s+\(\d+\)\s+completed with .success.)$',
     caseSensitive: false,
   );
 
   static final RegExp _pushPattern = RegExp(
-    r'(?:->\s*([a-zA-Z0-9_\-\.\/]+)\s*\(forced\s+update\)|->\s*([a-zA-Z0-9_\-\.\/]+)|\*\s*\[new\s+branch\]\s+([a-zA-Z0-9_\-\.\/]+)\s*->|\bTo\s+(?:https?://|git@)github\.com)',
+    r'^(?:[+*]?\s*(?:[0-9a-f]{4,40}\.\.{1,2}[0-9a-f]{4,40}|\[new branch\])\s+\S+\s+->\s+([a-zA-Z0-9_./-]+)(?:\s+\(forced update\))?)$',
     caseSensitive: false,
   );
 
   /// Tenta identificar um evento Git na linha especificada.
   /// Retorna `null` se a linha não contiver um evento reconhecido.
-  GitTerminalEvent? detect(String line) {
+  GitTerminalEvent? detect(String line, {bool isPushOutput = false}) {
     final trimmed = line.trim();
     if (trimmed.isEmpty) return null;
 
     // 1. Detecção de PR Mergeado
     final mergeMatch = _prMergedPattern.firstMatch(trimmed);
     if (mergeMatch != null) {
-      final prNumberStr = mergeMatch.group(1) ?? mergeMatch.group(2) ?? mergeMatch.group(3);
+      final prNumberStr = mergeMatch.group(1) ?? mergeMatch.group(2);
       final prNum = prNumberStr != null ? int.tryParse(prNumberStr) : null;
       final prLabel = prNum != null ? 'PR #$prNum' : 'PR';
       return GitTerminalEvent(
@@ -163,9 +163,9 @@ class GitTerminalEventDetector {
     }
 
     // 6. Detecção de Push
-    final pushMatch = _pushPattern.firstMatch(trimmed);
+    final pushMatch = isPushOutput ? _pushPattern.firstMatch(trimmed) : null;
     if (pushMatch != null) {
-      final branch = pushMatch.group(1) ?? pushMatch.group(2) ?? pushMatch.group(3);
+      final branch = pushMatch.group(1);
       return GitTerminalEvent(
         kind: GitTerminalEventKind.push,
         summary: branch != null && branch.isNotEmpty

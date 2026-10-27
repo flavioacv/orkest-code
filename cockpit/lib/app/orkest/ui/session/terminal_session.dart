@@ -520,6 +520,8 @@ class TerminalSession extends PaneItem {
   final Queue<int> _observedOfficeActivityOrder = Queue<int>();
   static const _gitEventDetector = GitTerminalEventDetector();
   DateTime? _lastOfficeActivityScanAt;
+  List<String>? _previousGitScreenLines;
+  bool _awaitingGitPushResult = false;
   DateTime? _pendingAgentPromptAt;
   bool _officeAgentActivityObserved = false;
   bool _officePermissionPromptVisible = false;
@@ -754,11 +756,29 @@ class TerminalSession extends PaneItem {
       }
     }
 
-    for (final raw in terminal.plainLines(limit: 80)) {
+    final screenLines = terminal.plainLines(limit: 80).toList(growable: false);
+    final previousGitLines = _previousGitScreenLines;
+    _previousGitScreenLines = screenLines;
+    for (final raw in screenLines) {
       final line = raw.trim();
       if (line.isEmpty) continue;
 
-      final gitEvent = _gitEventDetector.detect(line);
+      // The first scan contains scrollback from before this observer started.
+      // A Git result must appear on a later screen, not merely be present in
+      // old output or documentation when a harness is opened.
+      final isNewGitLine =
+          previousGitLines != null && !previousGitLines.contains(raw);
+      if (isNewGitLine && line.startsWith('To ')) {
+        _awaitingGitPushResult = true;
+      } else if (isNewGitLine && line.startsWith('From ')) {
+        _awaitingGitPushResult = false;
+      }
+      final gitEvent = isNewGitLine
+          ? _gitEventDetector.detect(line, isPushOutput: _awaitingGitPushResult)
+          : null;
+      if (gitEvent?.kind == GitTerminalEventKind.push) {
+        _awaitingGitPushResult = false;
+      }
       if (gitEvent != null) {
         final gitFp = Object.hash('git', gitEvent.kind, gitEvent.summary, line);
         if (_observedOfficeActivityFingerprints.add(gitFp)) {
@@ -810,11 +830,7 @@ class TerminalSession extends PaneItem {
         break;
     }
 
-    applyOfficeActivity(
-      kind: 'git',
-      phase: 'observed',
-      summary: event.summary,
-    );
+    applyOfficeActivity(kind: 'git', phase: 'observed', summary: event.summary);
   }
 
   /// Rechecks the rendered terminal screen while the Office is visible.

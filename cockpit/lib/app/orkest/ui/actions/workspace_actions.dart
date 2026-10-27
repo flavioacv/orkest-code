@@ -1,6 +1,5 @@
 import 'package:orkest_code/app/orkest/domain/contracts/git_command_runner.dart';
 import 'package:orkest_code/app/orkest/domain/entities/project.dart';
-import 'package:orkest_code/app/orkest/ui/session/office_room_effects.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/git_process_dialog.dart';
 import 'package:orkest_code/app/orkest/ui/viewmodels/orkest_viewmodel.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/widgets.dart';
@@ -197,18 +196,7 @@ Future<void> _gitOpDialog(
     output: process.output,
     success: exitCodeFuture.then((c) => c == 0),
   );
-  final exitCode = await exitCodeFuture;
-  if (exitCode == 0) {
-    OfficeRoomEffectsManager.instance.triggerParty(
-      project.id,
-      'Git sincronizado!',
-    );
-  } else {
-    OfficeRoomEffectsManager.instance.triggerAlarm(
-      project.id,
-      'Falha no comando Git',
-    );
-  }
+  await exitCodeFuture;
   await vm.refreshGitProject(project.id);
 }
 
