@@ -1,5 +1,13 @@
 # Changelog — Orkest Code
 
+## 0.1.11 (build 15) — 2026-10-28
+
+- Office agents remain present and resume idle social activities after a turn finishes, leaving only when their harness session ends; launching a harness no longer starts work without an instruction.
+- Approval requests stay associated with their originating session, without replaying old prompts or repeatedly notifying about the same pending request.
+- Git, GitHub CLI and Azure command results observed through Orkest execution routes share normalized repository events with API and MCP adapters, preserving existing PR, release and CI effects.
+- Repository events remain independent of agent activity and approval status, including after a turn finishes; isolated PR or release URLs no longer imply a creation event.
+- The Office map expands its terrain to fill wide and vertical viewports, while the initial camera focuses on the offices; night lighting and map boundaries are improved.
+
 ## 0.1.10 (build 14) — 2026-10-27
 
 - Office includes a shared coworking lounge, accessible seats and individual workstations while preserving dynamic project rooms and existing furniture.
