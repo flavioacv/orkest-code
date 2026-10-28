@@ -21,7 +21,9 @@ function prop(kind: SeasonalProp): Sprite {
 
 export function seasonalCostume(theme: SeasonalTheme, seed: number): CharacterFrameRequest['costume'] {
   if (theme === 'christmas') return 'santa';
-  if (theme === 'halloween') return (['witch', 'pumpkin', 'vampire'] as const)[(seed >>> 0) % 3];
+  // Keep the third variant in its original clothes: the vampire cape obscures
+  // the silhouette and does not follow the character's facing direction.
+  if (theme === 'halloween') return (['witch', 'pumpkin', undefined] as const)[(seed >>> 0) % 3];
   return undefined;
 }
 

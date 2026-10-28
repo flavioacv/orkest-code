@@ -1122,12 +1122,14 @@ class _CenterPanelState extends State<_CenterPanel> {
     final office = _officeInitialized
         ? OfficeWorldView(
             projects: <String, Project>{
+              for (final workspace in [vm.orkestWorkspace].nonNulls)
+                workspace.id: workspace,
               for (final root in vm.rootProjects) root.id: root,
               for (final root in vm.rootProjects)
                 for (final worktree in vm.worktreesOf(root.id))
                   worktree.id: worktree,
               for (final remote in vm.remoteWorkspaces) remote.id: remote,
-            }.values.where((project) => !project.isSystemTerminal).toList(),
+            }.values.toList(),
             sessions: vm.allSessions.toList(),
             labels: OfficeWorldLabels(
               reception: context.t.orkest.officeWorld.reception,

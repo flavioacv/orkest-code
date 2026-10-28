@@ -602,6 +602,9 @@ class TerminalSession extends PaneItem {
   bool _agentSessionEnded = false;
   bool _officeTurnCompleted = false;
   DateTime? _lastIdleAt;
+  // Completion text is scoped to the current turn, not deduplicated forever.
+  // Only rows already present when work starts are stale until they disappear.
+  final Set<int> _officeCompletionBaseline = <int>{};
   final Set<int> _observedOfficeActivityFingerprints = <int>{};
   final Queue<int> _observedOfficeActivityOrder = Queue<int>();
   static const _gitEventDetector = GitTerminalEventDetector();
@@ -1004,6 +1007,11 @@ class TerminalSession extends PaneItem {
     final visibleLines = terminal.plainLines(limit: _viewportRows ?? 25);
     // Codex retains previous turns above its ready prompt. Those rows belong
     // to this PTY, but no longer describe a pending interaction.
+    // The input prompt and previous completion rows can remain painted while
+    // Codex runs tools. Its current interruptible status takes precedence.
+    final hasActiveWork = visibleLines.any(
+      (line) => line.toLowerCase().contains('esc to interrupt'),
+    );
     final readyIndex = visibleLines.lastIndexWhere(
       (line) => RegExp(
         r'^[›❯>]\s*Ask Codex to do anything\s*$',
@@ -1012,7 +1020,28 @@ class TerminalSession extends PaneItem {
     final permissionIndex = visibleLines.lastIndexWhere(
       (line) => _mapOfficeActivityLine(line.trim())?.$1 == 'needs_input',
     );
-    if (readyIndex >= 0 && readyIndex > permissionIndex) {
+    final activityLines = terminal.plainLines(limit: 80);
+    final completionFingerprints = <int>{
+      for (final line in activityLines)
+        if (_mapOfficeActivityLine(line.trim()) case (
+          'done',
+          _,
+          _,
+          final fingerprint,
+        ))
+          fingerprint,
+    };
+    _officeCompletionBaseline.retainAll(completionFingerprints);
+    final hasNewCompletion = visibleLines.any((line) {
+      final observation = _mapOfficeActivityLine(line.trim());
+      return observation != null &&
+          observation.$1 == 'done' &&
+          !_officeCompletionBaseline.contains(observation.$4);
+    });
+    if (!hasActiveWork &&
+        (!_turnActive || hasNewCompletion) &&
+        readyIndex >= 0 &&
+        readyIndex > permissionIndex) {
       _officePermissionPromptVisible = false;
       _suppressVisiblePermissionPrompt = false;
       _turnActive = false;
@@ -1046,7 +1075,7 @@ class TerminalSession extends PaneItem {
       }
     }
 
-    for (final raw in terminal.plainLines(limit: 80)) {
+    for (final raw in activityLines) {
       final line = raw.trim();
       if (line.isEmpty) continue;
 
@@ -1056,16 +1085,22 @@ class TerminalSession extends PaneItem {
       // The visible-screen transition above emits permission requests. Do not
       // replay matching prompts from scrollback or deduplicate them forever.
       if (kind == 'needs_input') continue;
+      if (kind == 'done' &&
+          (hasActiveWork || _officeCompletionBaseline.contains(fingerprint))) {
+        continue;
+      }
       // Startup banners and restored output are not proof of a new turn.
       if (!_turnActive && _status == TerminalStatus.idle) continue;
       _officeAgentActivityObserved = true;
       if (_status == TerminalStatus.waiting && kind != 'needs_input') continue;
-      if (!_observedOfficeActivityFingerprints.add(fingerprint)) continue;
-      _observedOfficeActivityOrder.addLast(fingerprint);
-      if (_observedOfficeActivityOrder.length > 256) {
-        _observedOfficeActivityFingerprints.remove(
-          _observedOfficeActivityOrder.removeFirst(),
-        );
+      if (kind != 'done') {
+        if (!_observedOfficeActivityFingerprints.add(fingerprint)) continue;
+        _observedOfficeActivityOrder.addLast(fingerprint);
+        if (_observedOfficeActivityOrder.length > 256) {
+          _observedOfficeActivityFingerprints.remove(
+            _observedOfficeActivityOrder.removeFirst(),
+          );
+        }
       }
       applyOfficeActivity(kind: kind, phase: phase, summary: summary);
     }
@@ -1328,6 +1363,15 @@ class TerminalSession extends PaneItem {
     final changed = next != _status;
     if (!changed && event == null && !forceNotify) return;
     if (changed) {
+      if (next == TerminalStatus.working && _status == TerminalStatus.idle) {
+        _officeCompletionBaseline.clear();
+        for (final line in terminal.plainLines(limit: 80)) {
+          final observation = _mapOfficeActivityLine(line.trim());
+          if (observation != null && observation.$1 == 'done') {
+            _officeCompletionBaseline.add(observation.$4);
+          }
+        }
+      }
       _status = next;
       _officeStatusChangedAt = DateTime.now();
     }

@@ -103,9 +103,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
   Map<String, dynamic> _snapshot() {
     final now = DateTime.now().millisecondsSinceEpoch;
     final officeSettings = context.read<SettingsController>().settings;
-    final projects = widget.projects
-        .where((project) => !project.isSystemTerminal)
-        .toList(growable: false);
+    final projects = widget.projects;
     final projectIds = projects.map((project) => project.id).toSet();
     final sessions = widget.sessions
         .whereType<TerminalSession>()
@@ -754,10 +752,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
   }
 
   List<TerminalSession> get _officeSessions {
-    final projectIds = widget.projects
-        .where((project) => !project.isSystemTerminal)
-        .map((project) => project.id)
-        .toSet();
+    final projectIds = widget.projects.map((project) => project.id).toSet();
     return widget.sessions
         .whereType<TerminalSession>()
         .where(

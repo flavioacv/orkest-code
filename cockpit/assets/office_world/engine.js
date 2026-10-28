@@ -20015,7 +20015,7 @@
   }
   function seasonalCostume(theme, seed) {
     if (theme === "christmas") return "santa";
-    if (theme === "halloween") return ["witch", "pumpkin", "vampire"][(seed >>> 0) % 3];
+    if (theme === "halloween") return ["witch", "pumpkin", void 0][(seed >>> 0) % 3];
     return void 0;
   }
   function seasonalFurniture(theme, kind, area, seed) {
