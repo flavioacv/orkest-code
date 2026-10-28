@@ -2,6 +2,7 @@
 
 ## 0.1.12 (build 16) — 2026-10-28
 
+- Removed the automatic Halloween vampire cape, preserving original character silhouettes in every direction.
 - Harnesses launched in the global Orkest terminal now appear in their Office room, consistently with their notifications.
 - Old completion rows and ready prompts no longer make an agent idle while its current turn is still running tools.
 - Completion detection is scoped to each turn, allowing successive tasks with identical completion text to finish correctly.
