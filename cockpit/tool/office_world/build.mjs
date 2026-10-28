@@ -1,9 +1,21 @@
-import { build } from 'esbuild';
+import { createRequire } from 'node:module';
+import { execFileSync } from 'node:child_process';
+import { dirname, resolve } from 'node:path';
 import { writeFile } from 'node:fs/promises';
 import { fileURLToPath } from 'node:url';
 
+const require = createRequire(new URL('../../package.json', import.meta.url));
+let build;
+try { ({ build } = require('esbuild')); }
+catch {
+  const common = execFileSync('git', ['rev-parse', '--path-format=absolute', '--git-common-dir'], {
+    cwd: fileURLToPath(new URL('../../', import.meta.url)), encoding: 'utf8',
+  }).trim();
+  ({ build } = createRequire(resolve(dirname(common), 'cockpit/package.json'))('esbuild'));
+}
+
 const result = await build({ entryPoints: [fileURLToPath(new URL('./main.ts', import.meta.url))],
-  bundle: true, format: 'iife', target: 'es2022', write: false });
+  bundle: true, format: 'iife', target: 'es2022', write: false, loader: { '.png': 'dataurl' } });
 let source = result.outputFiles[0].text;
 const locale = /function setLocale\((\w+)\) \{\s*current = \1;\s*\}/;
 if (!locale.test(source)) throw new Error('Review Habblaud locale compatibility before rebuilding');

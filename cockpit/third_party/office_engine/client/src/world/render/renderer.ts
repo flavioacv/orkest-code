@@ -1,7 +1,7 @@
 // Desenho do mundo por frame: camada externa -> pisos -> paredes/itens de parede -> entidades
 // ordenadas por profundidade -> luz/escuridão -> ícones. A passada em espaço de tela (texto
 // nítido) fica em overlay.ts.
-import { TILE, type ArtModule, type CharacterFrameRequest, type IconName, type ScreenMode, type Sprite } from '../../art/api';
+import { TILE, type ArtModule, type CharacterFrameRequest, type FurnitureSprites, type IconName, type ScreenMode, type Sprite } from '../../art/api';
 import type { ExteriorSeason, SeasonalTheme, WorldOptions } from '../api';
 import type { WorldAssets } from '../assets';
 import type { Camera } from '../camera';
@@ -19,7 +19,7 @@ import { daylightModeOf, parseHourParam } from './daylight';
 import { RoomFxRenderer } from './github-fx';
 import { Lighting } from './lighting';
 import { Particles } from './particles';
-import { carSprite, propSprite, shadowSprite } from './props';
+import { carSprite, propSprite, shadowSprite, type PropSprite } from './props';
 import { countBadge, fallbackIcon } from './shell-sprites';
 import { decorateElevator, drawSeasonalLights, drawSeasonalWindow, seasonalCostume, seasonalFurniture } from './seasonal';
 import { buildAreaVis, furnitureSprites, opaqueBounds, paintShell, toWallVis, WALL_MARGIN, wallItemOrigin, wallSprites, type AreaVis, type FurnVis, type WallVis } from './scene';
@@ -30,12 +30,16 @@ const enum K {
   Char,
   Prop,
   Car,
+  Outdoor,
+  PropFront,
 }
+
+export interface OutdoorActor { id: string; x: number; y: number; sprite: Sprite; }
 
 interface Ent {
   k: K;
   y: number;
-  ref: FurnVis | Character | ExteriorProp | Car | null;
+  ref: FurnVis | Character | ExteriorProp | Car | OutdoorActor | null;
   area: AreaVis | null;
   scale: number;
 }
@@ -76,6 +80,14 @@ const VIGNETTE_ALPHA = 0.2;
 const VIGNETTE_EDGE = `rgba(18,40,26,${VIGNETTE_ALPHA})`;
 
 export class Renderer {
+  outdoorActors: ((dt: number) => readonly OutdoorActor[]) | null = null;
+  furnitureOverride: ((furniture: FurnVis, state: number) => FurnitureSprites | null) | null = null;
+  /** Optional raster art for the exterior; movement and placement stay in the simulation. */
+  exteriorSprites: {
+    prop(prop: ExteriorProp, season: ExteriorSeason): PropSprite | null;
+    car(variant: number, flip: boolean): PropSprite;
+    position?(prop: ExteriorProp, now: number): ExteriorProp;
+  } | null = null;
   readonly ctx: CanvasRenderingContext2D;
   readonly areas = new Map<string, AreaVis>();
   readonly heads = new Map<string, HeadInfo>();
@@ -91,6 +103,7 @@ export class Renderer {
   private builtAssetsVersion = 0;
   cars: Car[] = [];
   private nextCarAt = 0;
+  private carSequence = 0;
   private ents: Ent[] = [];
   private pool: Ent[] = [];
   private date = new Date();
@@ -428,8 +441,9 @@ export class Renderer {
         const s = anim.mode === 'none' ? 1 : furnitureScale(anim, f.order);
         if (s <= 0.01) continue;
         if (!visible(f.ax - 3 * TILE, f.ay - 4 * TILE, 6 * TILE, 4 * TILE + 4)) continue;
-        push(K.FurnBase, f.ay, f, vis, s);
-        const fs = furnitureSprites(this.art, f, this.furnState(f, now));
+        const composite = f.kind === 'focus_pod' || f.kind === 'coworking_set' || f.kind === 'meeting_pair' || f.kind === 'meeting_set';
+        const fs = this.furnitureOverride?.(f, this.furnState(f, now)) ?? furnitureSprites(this.art, f, this.furnState(f, now));
+        push(K.FurnBase, composite && fs ? f.ay - fs.base.ay : f.ay, f, vis, s);
         if (fs?.front) push(K.FurnFront, f.ay + 0.5, f, vis, s);
       }
     }
@@ -446,8 +460,10 @@ export class Renderer {
       }
       push(K.Char, ch.depth(), ch, null, 1);
     }
-    for (const prop of this.exterior.props) {
-      if (!visible(prop.x - 24, prop.y - 56, 48, 60)) continue;
+    for (const original of this.exterior.props) {
+      const prop = this.exteriorSprites?.position?.(original, now) ?? original;
+      const art = this.exteriorSprites?.prop(prop, this.season);
+      if (!visible(prop.x - (art?.ax ?? 24), prop.y - (art?.ay ?? 56), art?.canvas.width ?? 48, art?.canvas.height ?? 60)) continue;
       let alpha = 1;
       if (prop.whenRoom !== undefined) {
         // ex.: cerca viva diante do caminho do jardim — surge junto com a sala
@@ -459,7 +475,11 @@ export class Renderer {
           if (alpha <= 0.02) continue;
         }
       }
-      push(K.Prop, prop.y, prop, null, alpha);
+      const garden = (prop.kind as string) === 'garden_set';
+      const floorProp = garden || (prop.kind as string) === 'stream_lake' || (prop.kind as string) === 'pond' || (prop.kind as string) === 'station_track';
+      const raster = floorProp ? art : null;
+      push(K.Prop, floorProp && raster ? prop.y - raster.ay : prop.y, prop, null, alpha);
+      if (garden) push(K.PropFront, prop.y + .5, prop, null, alpha);
     }
     for (const sh of this.shells) {
       const room = this.roomInSlot(sh.slot);
@@ -475,7 +495,13 @@ export class Renderer {
         push(K.Prop, prop.y, prop, null, alpha);
       }
     }
-    for (const car of this.cars) if (visible(car.x - 24, car.y - 24, 48, 28)) push(K.Car, car.y, car, null, 1);
+    for (const car of this.cars) {
+      const s = this.exteriorSprites?.car(car.variant, car.dir < 0) ?? carSprite(car.variant, car.dir < 0);
+      if (visible(car.x - s.ax, car.y - s.ay, s.canvas.width, s.canvas.height)) push(K.Car, car.y, car, null, 1);
+    }
+    for (const actor of this.outdoorActors?.(dt) ?? []) {
+      if (visible(actor.x - 24, actor.y - 40, 48, 48)) push(K.Outdoor, actor.y, actor, null, 1);
+    }
     ents.sort((a, b) => a.y - b.y || a.k - b.k);
 
     this.iconCount = 0;
@@ -493,9 +519,17 @@ export class Renderer {
         case K.Prop:
           this.drawProp(e.ref as ExteriorProp, e.scale);
           break;
+        case K.PropFront:
+          this.drawProp(e.ref as ExteriorProp, e.scale, true);
+          break;
         case K.Car:
           this.drawCar(e.ref as Car);
           break;
+        case K.Outdoor: {
+          const actor = e.ref as OutdoorActor;
+          this.ctx.drawImage(actor.sprite.canvas, Math.round(actor.x - actor.sprite.ax), Math.round(actor.y - actor.sprite.ay));
+          break;
+        }
       }
     }
     this.drawPingPong(now);
@@ -774,7 +808,7 @@ export class Renderer {
   private drawFurniture(f: FurnVis, area: AreaVis, scale: number, front: boolean, now: number): void {
     const { ctx } = this;
     const state = this.furnState(f, now);
-    const fs = furnitureSprites(this.art, f, state);
+    const fs = this.furnitureOverride?.(f, state) ?? furnitureSprites(this.art, f, state);
     if (!fs) return;
     const s = front ? fs.front : seasonalFurniture(this.theme, f.kind, area.layout, f.seed) ?? fs.base;
     if (!s) return;
@@ -1124,7 +1158,7 @@ export class Renderer {
     return false;
   }
 
-  private drawProp(prop: ExteriorProp, alpha: number): void {
+  private drawProp(prop: ExteriorProp, alpha: number, front = false): void {
     if (prop.kind === 'paving') {
       const c = this.pavingCanvas(prop);
       if (alpha < 1) this.ctx.globalAlpha = alpha;
@@ -1132,10 +1166,16 @@ export class Renderer {
       this.ctx.globalAlpha = 1;
       return;
     }
-    const s = propSprite(prop, this.season);
+    const s = this.exteriorSprites?.prop(prop, this.season) ?? propSprite(prop, this.season);
+    if (front) {
+      this.ctx.save(); this.ctx.beginPath();
+      this.ctx.rect(prop.x - s.ax, prop.y - s.canvas.height * .12, s.canvas.width, s.canvas.height * .12);
+      this.ctx.clip();
+    }
     if (alpha < 1) this.ctx.globalAlpha = alpha;
     this.ctx.drawImage(s.canvas, Math.round(prop.x - s.ax), Math.round(prop.y - s.ay));
     this.ctx.globalAlpha = 1;
+    if (front) this.ctx.restore();
   }
 
   private pavings = new Map<string, HTMLCanvasElement>();
@@ -1157,7 +1197,7 @@ export class Renderer {
   }
 
   private drawCar(car: Car): void {
-    const s = carSprite(car.variant, car.dir < 0);
+    const s = this.exteriorSprites?.car(car.variant, car.dir < 0) ?? carSprite(car.variant, car.dir < 0);
     this.ctx.drawImage(s.canvas, Math.round(car.x - s.ax), Math.round(car.y - s.ay));
   }
 
@@ -1168,7 +1208,7 @@ export class Renderer {
     if (now >= this.nextCarAt) {
       this.nextCarAt = now + 4000 + Math.random() * 9000;
       const lane = this.exterior.lanes[Math.floor(Math.random() * this.exterior.lanes.length)];
-      if (lane) this.cars.push({ x: lane.dir > 0 ? x0 : x1, y: lane.y, dir: lane.dir, speed: 38 + Math.random() * 30, variant: Math.floor(Math.random() * 6) });
+      if (lane) this.cars.push({ x: lane.dir > 0 ? x0 : x1, y: lane.y, dir: lane.dir, speed: 38 + Math.random() * 30, variant: this.exteriorSprites ? (5 + this.carSequence++) % 6 : Math.floor(Math.random() * 6) });
     }
     for (const c of this.cars) c.x += c.dir * c.speed * Math.min(dt, 0.1);
     if (this.cars.length) this.cars = this.cars.filter((c) => c.x >= x0 - 10 && c.x <= x1 + 10);

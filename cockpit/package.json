@@ -4,7 +4,7 @@
   "version": "0.1.0",
   "scripts": {
     "office:build": "node tool/office_world/build.mjs",
-    "office:test": "esbuild tool/office_world/sim.test.ts --bundle --platform=node --format=cjs --outfile=build/office/sim.test.cjs && node --test build/office/sim.test.cjs"
+    "office:test": "esbuild tool/office_world/sim.test.ts tool/office_world/layout.test.ts --bundle --platform=node --format=cjs --outdir=build/office/tests --out-extension:.js=.cjs && node --test build/office/tests/*.cjs"
   },
   "devDependencies": { "esbuild": "0.28.2" }
 }

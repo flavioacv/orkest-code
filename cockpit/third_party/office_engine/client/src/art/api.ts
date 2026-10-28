@@ -138,6 +138,10 @@ export interface CharacterFrameRequest {
 }
 
 export type FurnitureKind =
+  | 'focus_pod'
+  | 'coworking_set'
+  | 'meeting_pair'
+  | 'meeting_set'
   // --- escritório (salas de projeto)
   | 'desk' // 2x1. Mesa com monitor virado para o SUL (tela visível para a câmera), teclado e caneca. rects.screen = área da tela.
   | 'desk_back' // 2x1. Mesa vista pelo outro lado: vemos a TRASEIRA do monitor; a pessoa senta ao NORTE dela, virada para baixo (rosto visível). Para ilhas de mesas face a face. Mesmas variants de desk.
@@ -217,6 +221,10 @@ export interface FurnitureDef {
  * Ordenação de profundidade: por y da âncora no mundo (maior y = desenhado depois).
  */
 export const FURNITURE: Readonly<Record<FurnitureKind, FurnitureDef>> = {
+  focus_pod: { mount: 'floor', footprint: { w: 2, h: 2 }, blocks: false },
+  coworking_set: { mount: 'floor', footprint: { w: 6, h: 4 }, blocks: false },
+  meeting_pair: { mount: 'floor', footprint: { w: 3, h: 2 }, blocks: false },
+  meeting_set: { mount: 'floor', footprint: { w: 4, h: 3 }, blocks: false },
   desk: { mount: 'floor', footprint: { w: 2, h: 1 }, blocks: true, variants: ['wood', 'white', 'dark'] },
   desk_back: { mount: 'floor', footprint: { w: 2, h: 1 }, blocks: true, variants: ['wood', 'white', 'dark'] },
   office_chair_front: { mount: 'floor', footprint: { w: 1, h: 1 }, blocks: false, seat: true, variants: ['black', 'blue', 'red', 'green', 'gray'] },

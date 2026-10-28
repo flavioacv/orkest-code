@@ -4,18 +4,27 @@ import { TILE } from '../art/api';
 export { TILE };
 
 /** Largura de uma coluna do prédio (uma sala ao norte + uma ao sul). */
-export const COL_W = 16;
+export let COL_W = 16;
 /** Altura de uma sala: 2 linhas de face da parede norte + 9 de piso + 1 de parede sul. */
 export const ROOM_H = 12;
 /** Altura do corredor que corta o prédio de leste a oeste. */
-export const CORRIDOR_H = 5;
+export let CORRIDOR_H = 5;
 /** Colunas do núcleo (recepção/banheiros e copa/lounge). */
-export const CORE_COLS = 2;
+export let CORE_COLS = 2;
 
 export const NORTH_Y = 0;
 export const CORRIDOR_Y = ROOM_H;
-export const SOUTH_Y = ROOM_H + CORRIDOR_H;
-export const BUILDING_H = ROOM_H * 2 + CORRIDOR_H;
+export let SOUTH_Y = ROOM_H + CORRIDOR_H;
+export let BUILDING_H = ROOM_H * 2 + CORRIDOR_H;
+
+/** Select before creating a simulation. The legacy profile remains available to raster exports. */
+export function configureOfficeLayout(spacious: boolean): void {
+  COL_W = spacious ? 20 : 16;
+  CORRIDOR_H = spacious ? 9 : 5;
+  CORE_COLS = spacious ? 3 : 2;
+  SOUTH_Y = ROOM_H + CORRIDOR_H;
+  BUILDING_H = ROOM_H * 2 + CORRIDOR_H;
+}
 
 /** Primeira coluna (local) da porta de 2 tiles das salas. */
 export const DOOR_X = 7;

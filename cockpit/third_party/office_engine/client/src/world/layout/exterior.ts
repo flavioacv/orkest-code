@@ -5,6 +5,7 @@ import type { ExteriorSeason } from '../api';
 import { BUILDING_H, COL_W, CORE_COLS, CORRIDOR_Y, EXT_EAST, EXT_NORTH, EXT_SOUTH, EXT_WEST, SOUTH_Y, TILE } from '../constants';
 import { cellRect, slotAt, slotColumn, slotSide } from './geometry';
 import type { ExteriorProp, FloorPatch, TileRect, WallItemPlacement, WallSegment } from './types';
+import { outdoorLifeLayout, outdoorReserved } from './outdoor-life';
 
 export const EXTERIOR_WALL: WallStyle = { base: '#cfc8bd', trim: '#8a8174', pattern: 'brick', exterior: true };
 
@@ -32,7 +33,8 @@ export interface SlotShell {
 
 export function layoutExterior(cols: number, season: ExteriorSeason = 'summer'): ExteriorLayout {
   const w = cols * COL_W;
-  const bounds: TileRect = { x: -EXT_WEST, y: -EXT_NORTH, w: w + EXT_WEST + EXT_EAST, h: BUILDING_H + EXT_NORTH + EXT_SOUTH };
+  const north = CORE_COLS > 2 ? 30 : EXT_NORTH;
+  const bounds: TileRect = { x: -EXT_WEST, y: -north, w: w + EXT_WEST + EXT_EAST, h: BUILDING_H + north + (CORE_COLS > 2 ? 64 : EXT_SOUTH) };
   const px = (t: number) => t * TILE;
   const floors: FloorPatch[] = [];
   const props: ExteriorProp[] = [];
@@ -86,7 +88,7 @@ export function layoutExterior(cols: number, season: ExteriorSeason = 'summer'):
   for (let x = bounds.x + 4; x < bounds.x + bounds.w; x += 10) {
     props.push({ kind: 'lamp', x: px(x), y: px(south + 3) + 6, seed: x });
   }
-  for (const row of [13, 17, 21]) {
+  for (const row of (CORE_COLS > 2 ? [13, 17, 21, 47, 53, 59] : [13, 17, 21])) {
     for (let x = bounds.x + 3; x < bounds.x + bounds.w - 2; x += 6 + Math.floor(rng() * 5)) {
       props.push({ kind: rng() < 0.2 ? 'pine' : 'tree', x: px(x) + Math.floor(rng() * 10), y: px(south + row) + Math.floor(rng() * 10), seed: Math.floor(rng() * 1e9) });
       if (rng() < 0.3) props.push({ kind: 'bush', x: px(x + 3), y: px(south + row + 1), seed: Math.floor(rng() * 1e9) });
@@ -126,6 +128,22 @@ export function layoutExterior(cols: number, season: ExteriorSeason = 'summer'):
     }
   }
 
+  if (CORE_COLS > 2) {
+    const life = outdoorLifeLayout(cols);
+    // Clear walking paths and points of interest before adding the curated objects.
+    for (let i = props.length - 1; i >= 0; i--) {
+      if (outdoorReserved(props[i].x, props[i].y, life, 64)) props.splice(i, 1);
+    }
+    props.push(...life.props);
+    // A shared promenade links the market, fountain plaza and a centered station approach.
+    floors.push({ kind: 'sidewalk', x: life.garden.x - 230, y: life.garden.y + 62, w: life.fountain.x - life.garden.x + 475, h: 48, seed: 904, tint: season });
+    floors.push({ kind: 'sidewalk', x: life.fountain.x - 216, y: life.fountain.y - 216, w: 432, h: 280, seed: 905, tint: season });
+    floors.push({ kind: 'sidewalk', x: life.station.x - 360, y: life.station.y - 128, w: 720, h: 96, seed: 906, tint: season });
+    floors.push({ kind: 'sidewalk', x: life.station.x - 32, y: life.garden.y + 110, w: 64, h: life.station.y - 238 - life.garden.y, seed: 907, tint: season });
+    props.push({ kind: 'duck' as ExteriorProp['kind'], x: px(2 * COL_W + 18), y: px(7), seed: 903 });
+    floors.push({ kind: 'sidewalk', x: life.fountain.x - 24, y: px(south + 11), w: 48, h: life.fountain.y - 216 - px(south + 11), seed: 908, tint: season });
+
+  }
   const streetY = px(south + 4);
   const streetH = px(5);
   return {
