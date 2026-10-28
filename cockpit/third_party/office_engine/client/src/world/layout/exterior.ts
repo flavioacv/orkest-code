@@ -132,9 +132,21 @@ export function layoutExterior(cols: number, season: ExteriorSeason = 'summer'):
     const life = outdoorLifeLayout(cols);
     // Clear walking paths and points of interest before adding the curated objects.
     for (let i = props.length - 1; i >= 0; i--) {
-      if (outdoorReserved(props[i].x, props[i].y, life, 64)) props.splice(i, 1);
+      if (props[i].kind !== 'lamp' && outdoorReserved(props[i].x, props[i].y, life, 64)) props.splice(i, 1);
     }
     props.push(...life.props);
+    // Keep the walking routes readable at night without flooding the surrounding woods.
+    const lamp = (x: number, y: number) => props.push({ kind: 'lamp', x, y, seed: Math.round(x * 7 + y) });
+    for (let x = bounds.x + 4; x < bounds.x + bounds.w - 2; x += 10) lamp(px(x), px(south + 10.5));
+    for (let x = life.garden.x - 200; x <= life.fountain.x + 200; x += 128) lamp(x, life.garden.y + 102);
+    for (let x = life.station.x - 320; x <= life.station.x + 320; x += 128) lamp(x, life.station.y - 40);
+    for (let y = px(south + 14); y < life.fountain.y - 180; y += 96) lamp(life.fountain.x + 36, y);
+    for (let y = life.garden.y + 160; y < life.station.y - 128; y += 112) lamp(life.station.x + 48, y);
+    lamp(life.fountain.x - 190, life.fountain.y - 160);
+    lamp(life.fountain.x + 190, life.fountain.y - 160);
+    lamp(life.camp.x - 120, life.camp.y + 44);
+    lamp(life.pond.x + 64, life.pond.y + 44);
+    lamp(px(-2), px(CORRIDOR_Y + 5));
     // A shared promenade links the market, fountain plaza and a centered station approach.
     floors.push({ kind: 'sidewalk', x: life.garden.x - 230, y: life.garden.y + 62, w: life.fountain.x - life.garden.x + 475, h: 48, seed: 904, tint: season });
     floors.push({ kind: 'sidewalk', x: life.fountain.x - 216, y: life.fountain.y - 216, w: 432, h: 280, seed: 905, tint: season });

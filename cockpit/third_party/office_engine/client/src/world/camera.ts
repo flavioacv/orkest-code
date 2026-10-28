@@ -62,7 +62,7 @@ export class Camera {
 
   /** Níveis de zoom nítidos: zoom × dpr inteiro (e meio-inteiro acima de 2× no dpr 1). */
   levels(): number[] {
-    const min = Math.min(this.minZoom, ZOOM_MIN);
+    const min = this.minZoom;
     const set = new Set<number>();
     // inteiros em pixels de dispositivo (nitidez perfeita)
     for (let k = 1; k <= ZOOM_MAX * this.dpr; k++) set.add(Math.round((k / this.dpr) * 1000) / 1000);
@@ -99,7 +99,7 @@ export class Camera {
   }
 
   animateTo(x: number, y: number, zoom: number, now: number, dur = 400): void {
-    const tz = Math.max(Math.min(this.minZoom, ZOOM_MIN), Math.min(ZOOM_MAX, zoom));
+    const tz = Math.max(this.minZoom, Math.min(ZOOM_MAX, zoom));
     this.anim = { fx: this.x, fy: this.y, fz: this.zoom, tx: x, ty: y, tz, t0: now, dur };
   }
 
@@ -117,7 +117,7 @@ export class Camera {
 
   /** Zoom ancorado num ponto da tela (CSS px). */
   zoomAt(newZoom: number, sx: number, sy: number, now: number, animate = true): void {
-    const z = Math.max(Math.min(this.minZoom, ZOOM_MIN), Math.min(ZOOM_MAX, newZoom));
+    const z = Math.max(this.minZoom, Math.min(ZOOM_MAX, newZoom));
     const wx = this.x + (sx - this.viewW / 2) / this.zoom;
     const wy = this.y + (sy - this.viewH / 2) / this.zoom;
     const nx = wx - (sx - this.viewW / 2) / z;
@@ -160,6 +160,7 @@ export class Camera {
   /** Mantém a área livre (fora dos painéis da UI) dentro dos limites; se couber inteira, centraliza. */
   clamp(): void {
     const b = this.bounds;
+    this.zoom = Math.max(this.minZoom, Math.min(ZOOM_MAX, this.zoom));
     const z = this.zoom;
     const ins = this.insets;
     const l = (-this.viewW / 2 + ins.left) / z;
