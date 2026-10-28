@@ -161,11 +161,9 @@ void main() {
         (i) => _session(_Gateway(), id: 'idle-$i'),
       );
       for (final session in sessions) {
-        session.applyOfficeActivity(
-          kind: 'task_pending',
-          phase: 'completed',
-          summary: 'Available',
-          activityId: 'task',
+        session.applyClaudeStatus(
+          status: TerminalStatus.idle,
+          event: 'SessionStart',
         );
       }
       await tester.pumpWidget(
@@ -264,6 +262,50 @@ void main() {
         expect(actor['group'], isNull);
         expect(actor['pose'], 'type');
       }
+      sessions.first.applyOfficeActivity(
+        kind: 'done',
+        phase: 'completed',
+        summary: 'Finished',
+      );
+      sessions[1].applyOfficeActivity(
+        kind: 'needs_input',
+        phase: 'started',
+        summary: 'Approval',
+      );
+      for (var i = 0; i < 2500; i++) {
+        now += 33;
+        state.debugTick();
+      }
+      await tester.pump();
+      expect(state.debugActors, hasLength(6));
+      expect(
+        (state.debugActors as List).where((actor) => actor['mode'] == 'idle'),
+        hasLength(1),
+      );
+      expect(
+        (state.debugActors as List).where(
+          (actor) => actor['mode'] == 'waiting',
+        ),
+        hasLength(1),
+      );
+      expect(
+        (state.debugActors as List).where(
+          (actor) => actor['mode'] == 'working',
+        ),
+        hasLength(4),
+      );
+      sessions.first.applyClaudeStatus(
+        status: TerminalStatus.idle,
+        event: 'SessionEnd',
+      );
+      for (var i = 0; i < 2500; i++) {
+        now += 33;
+        state.debugTick();
+      }
+      await tester.pump();
+      expect(state.debugActors, hasLength(5));
+      expect(sessions.first.hasOfficeAgentPresence, false);
+      expect(sessions[1].status, TerminalStatus.waiting);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());
       await tester.runAsync(() async {

@@ -1,5 +1,10 @@
 import 'dart:async';
+import 'dart:convert';
 
+import 'package:orkest_code/app/core/domain/entities/harness.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/process_tree_provider.dart';
+import 'package:orkest_code/app/orkest/domain/entities/process_snapshot.dart';
+import 'package:orkest_code/app/orkest/domain/services/terminal_harness_monitor.dart';
 import 'package:orkest_code/app/orkest/domain/contracts/terminal_gateway.dart';
 import 'package:orkest_code/app/core/utils/spawn_directory.dart';
 import 'package:orkest_code/app/core/domain/entities/terminal_profile.dart';
@@ -15,7 +20,7 @@ class _NoopGateway implements TerminalGateway {
   SpawnDirectory? get spawnDirectory => null;
 
   @override
-  int? get rootProcessId => null;
+  int? get rootProcessId => 100;
 
   final _out = StreamController<List<int>>();
 
@@ -41,11 +46,29 @@ class _NoopGateway implements TerminalGateway {
   }
 }
 
-TerminalSession _session() => TerminalSession(
-  id: 't1',
-  projectId: 'p1',
+class _ProcessTree implements ProcessTreeProvider {
+  List<ProcessSnapshot> snapshots = const [
+    ProcessSnapshot(pid: 100, ppid: 1, executable: 'sh', argv: ['sh']),
+    ProcessSnapshot(pid: 101, ppid: 100, executable: 'codex', argv: ['codex']),
+  ];
+
+  @override
+  Future<List<ProcessSnapshot>> getProcessSnapshots({
+    required List<int> rootPids,
+  }) async => snapshots;
+}
+
+TerminalSession _session({
+  TerminalHarnessMonitor? monitor,
+  String id = 't1',
+  String projectId = 'p1',
+  _NoopGateway? gateway,
+}) => TerminalSession(
+  id: id,
+  projectId: projectId,
   workingDirectory: '/tmp',
-  gateway: _NoopGateway(),
+  gateway: gateway ?? _NoopGateway(),
+  monitor: monitor,
   profile: const TerminalProfile(
     id: 'login-shell',
     label: 'sh (login)',
@@ -55,6 +78,392 @@ TerminalSession _session() => TerminalSession(
 );
 
 void main() {
+  group('Office presence follows the open harness session', () {
+    for (final (executable, kind) in [
+      ('codex', HarnessKind.codex),
+      ('antigravity', HarnessKind.antigravity),
+    ]) {
+      for (final emitMarkers in [false, true]) {
+        test(
+          '$executable starts idle after launch Enter (shell markers: $emitMarkers)',
+          () async {
+            final provider = _ProcessTree();
+            final shell = provider.snapshots.first;
+            final harness = ProcessSnapshot(
+              pid: 101,
+              ppid: 100,
+              executable: executable,
+              argv: [executable],
+            );
+            provider.snapshots = [shell];
+            final gateway = _NoopGateway();
+            final monitor = TerminalHarnessMonitor(provider: provider);
+            final s = _session(monitor: monitor, gateway: gateway);
+            s.setVisible(true);
+            await Future<void>.delayed(Duration.zero);
+            s.sendKeys(utf8.encode('$executable\r'));
+            if (emitMarkers) gateway._out.add(utf8.encode('\x1b]133;C\x07'));
+            await Future<void>.delayed(const Duration(milliseconds: 300));
+            provider.snapshots = [shell, harness];
+            await monitor.poll();
+            expect(s.activeHarness, kind);
+            expect(s.hasOfficeAgentPresence, true);
+            expect(s.status, TerminalStatus.idle);
+            expect(s.officeShells, isEmpty);
+            if (!emitMarkers) {
+              // The launch marker can also arrive after process detection.
+              gateway._out.add(utf8.encode('\x1b]133;C\x07'));
+              await Future<void>.delayed(const Duration(milliseconds: 300));
+              expect(s.status, TerminalStatus.idle);
+              expect(s.officeShells, isEmpty);
+            }
+            expect(
+              s.officeStatusHistory.where(
+                (event) => event.activityKind == 'prompt',
+              ),
+              isEmpty,
+            );
+            s.terminal.write('• Reading startup instructions\r\n');
+            s.refreshOfficeActivityFromScreen();
+            expect(s.status, TerminalStatus.idle);
+            s.sendKeys(utf8.encode('Do the task\r'));
+            expect(s.status, TerminalStatus.working);
+            await Future<void>.delayed(Duration.zero);
+            s.applyClaudeStatus(status: TerminalStatus.idle, event: 'Stop');
+            expect(s.hasOfficeAgentPresence, true);
+            provider.snapshots = [shell];
+            await monitor.poll();
+            expect(s.hasOfficeAgentPresence, false);
+            s.sendKeys(utf8.encode('$executable\r'));
+            await Future<void>.delayed(Duration.zero);
+            provider.snapshots = [shell, harness];
+            await monitor.poll();
+            expect(s.hasOfficeAgentPresence, true);
+            expect(s.status, TerminalStatus.idle);
+            await s.dispose();
+            monitor.dispose();
+          },
+        );
+      }
+    }
+    test('SessionStart alone enters idle and SessionEnd removes it', () async {
+      final s = _session();
+      s.applyClaudeStatus(
+        status: TerminalStatus.idle,
+        event: 'SessionStart',
+        sessionId: 'session',
+      );
+      expect(s.hasOfficeAgentPresence, true);
+      expect(s.status, TerminalStatus.idle);
+      s.terminal.write('• Reading startup instructions\r\n');
+      s.refreshOfficeActivityFromScreen();
+      expect(s.status, TerminalStatus.idle);
+      s.applyClaudeStatus(
+        status: TerminalStatus.idle,
+        event: 'SessionEnd',
+        sessionId: 'session',
+      );
+      expect(s.hasOfficeAgentPresence, false);
+      await s.dispose();
+    });
+    test(
+      'SessionEnd removes the character even with unfinished activity records',
+      () async {
+        final s = _session();
+        s.beginOfficeCommand('build', 'Build');
+        expect(s.hasOfficeAgentPresence, true);
+        s.applyClaudeStatus(status: TerminalStatus.idle, event: 'SessionEnd');
+        expect(s.officeShells, isNotEmpty);
+        expect(s.hasOfficeAgentPresence, false);
+        await s.dispose();
+      },
+    );
+    for (final harness in ['codex', 'claude', 'pi', 'gemini', 'kimi']) {
+      test(
+        '$harness remains idle after completion until the session ends',
+        () async {
+          final done = _session(id: 'done');
+          final pending = _session(id: 'pending');
+          expect(done.hasOfficeAgentPresence, false);
+          done.applyOfficeActivity(
+            kind: 'prompt',
+            phase: 'started',
+            summary: 'Work',
+            harness: harness,
+          );
+          pending.applyOfficeActivity(
+            kind: 'needs_input',
+            phase: 'started',
+            summary: 'Approval',
+            harness: harness,
+          );
+          expect(done.hasOfficeAgentPresence, true);
+          expect(pending.hasOfficeAgentPresence, true);
+          done.applyOfficeActivity(
+            kind: 'done',
+            phase: 'completed',
+            summary: 'Finished',
+          );
+          expect(done.hasOfficeAgentPresence, true);
+          expect(done.status, TerminalStatus.idle);
+          expect(done.officeStatusHistory, isNotEmpty);
+          expect(pending.hasOfficeAgentPresence, true);
+          expect(pending.status, TerminalStatus.waiting);
+          done.applyOfficeActivity(
+            kind: 'prompt',
+            phase: 'started',
+            summary: 'Next turn',
+          );
+          expect(done.hasOfficeAgentPresence, true);
+          done.applyClaudeStatus(
+            status: TerminalStatus.idle,
+            event: 'SessionEnd',
+          );
+          expect(done.hasOfficeAgentPresence, false);
+          await done.dispose();
+          await pending.dispose();
+        },
+      );
+    }
+
+    test(
+      'idle harness stays present and stale output cannot start work',
+      () async {
+        final provider = _ProcessTree();
+        final monitor = TerminalHarnessMonitor(provider: provider);
+        final s = _session(monitor: monitor);
+        await Future<void>.delayed(Duration.zero);
+        expect(s.activeHarness, HarnessKind.codex);
+        expect(s.hasOfficeAgentPresence, true);
+        expect(s.status, TerminalStatus.idle);
+        s.applyClaudeStatus(status: TerminalStatus.working, isTurnStart: true);
+        expect(s.hasOfficeAgentPresence, true);
+        s.applyClaudeStatus(status: TerminalStatus.idle, event: 'Stop');
+        expect(s.activeHarness, HarnessKind.codex);
+        expect(s.hasOfficeAgentPresence, true);
+        s.terminal.write(
+          '• Reading a file\r\nWould you like to run the following command?\r\n',
+        );
+        s.refreshOfficeActivityFromScreen();
+        expect(s.hasOfficeAgentPresence, true);
+        expect(s.status, TerminalStatus.idle);
+        await s.dispose();
+        monitor.dispose();
+      },
+    );
+
+    test('background completion leaves the harness idle and present', () async {
+      final s = _session();
+      s.applyOfficeActivity(
+        kind: 'command',
+        phase: 'started',
+        summary: 'Build',
+        activityId: 'build',
+      );
+      s.applyOfficeActivity(
+        kind: 'done',
+        phase: 'completed',
+        summary: 'Turn finished',
+      );
+      expect(s.hasOfficeAgentPresence, true);
+      s.applyOfficeActivity(
+        kind: 'command',
+        phase: 'completed',
+        summary: 'Built',
+        activityId: 'build',
+      );
+      expect(s.hasOfficeAgentPresence, true);
+      expect(s.status, TerminalStatus.idle);
+      s.applySubagentEvent(id: 'child', type: 'worker', started: true);
+      expect(s.hasOfficeAgentPresence, true);
+      s.applySubagentEvent(id: 'child', type: 'worker', started: false);
+      expect(s.hasOfficeAgentPresence, true);
+      s.applyClaudeStatus(status: TerminalStatus.idle, event: 'SessionEnd');
+      expect(s.hasOfficeAgentPresence, false);
+      await s.dispose();
+    });
+  });
+  group('Office approval screen isolation', () {
+    test(
+      'only the requesting PTY waits when two agents share a project',
+      () async {
+        final done = _session(id: 'done');
+        final pending = _session(id: 'pending');
+        done.terminal.write(
+          'Would you like to run the following command?\r\n'
+          '1. Yes, proceed\r\n'
+          'Worked for 14m 17s\r\n'
+          '› Ask Codex to do anything\r\n',
+        );
+        pending.terminal.write(
+          'Would you like to run the following command?\r\n'
+          '1. Yes, proceed\r\n',
+        );
+        var requests = 0;
+        pending.onTurnFinished = () => requests++;
+        for (var i = 0; i < 3; i++) {
+          done.refreshOfficeActivityFromScreen();
+          pending.refreshOfficeActivityFromScreen();
+          await Future<void>.delayed(const Duration(milliseconds: 1100));
+        }
+        expect(done.projectId, pending.projectId);
+        expect(done.status, TerminalStatus.idle);
+        expect(done.latestWaitingEventSequence, -1);
+        expect(pending.status, TerminalStatus.waiting);
+        expect(requests, 1);
+        await done.dispose();
+        await pending.dispose();
+      },
+    );
+
+    test(
+      'Stop settles a still visible approval without replaying it',
+      () async {
+        final s = _session();
+        s.terminal.write('Would you like to run the following command?\r\n');
+        s.refreshOfficeActivityFromScreen();
+        expect(s.status, TerminalStatus.waiting);
+        s.applyClaudeStatus(status: TerminalStatus.idle, event: 'Stop');
+        await Future<void>.delayed(const Duration(milliseconds: 1100));
+        s.refreshOfficeActivityFromScreen();
+        expect(s.status, TerminalStatus.idle);
+        s.terminal.write('\x1b[2J\x1b[H');
+        s.applyClaudeStatus(status: TerminalStatus.working, isTurnStart: true);
+        await Future<void>.delayed(const Duration(milliseconds: 1100));
+        s.refreshOfficeActivityFromScreen();
+        s.terminal.write('Would you like to run the following command?\r\n');
+        await Future<void>.delayed(const Duration(milliseconds: 1100));
+        s.refreshOfficeActivityFromScreen();
+        expect(s.status, TerminalStatus.waiting);
+        await s.dispose();
+      },
+    );
+
+    test('repeated pending hooks and activities notify once', () async {
+      final s = _session();
+      var requests = 0;
+      s.onTurnFinished = () => requests++;
+      for (var i = 0; i < 3; i++) {
+        s.applyClaudeStatus(
+          status: TerminalStatus.waiting,
+          event: 'PermissionRequest',
+          sessionId: 'session',
+        );
+        s.applyOfficeActivity(
+          kind: 'needs_input',
+          phase: 'observed',
+          summary: 'Approval',
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 100));
+      }
+      expect(requests, 1);
+      expect(s.latestWaitingEventSequence, 0);
+      s.applyClaudeStatus(status: TerminalStatus.working, isTurnStart: true);
+      s.applyClaudeStatus(
+        status: TerminalStatus.waiting,
+        event: 'PermissionRequest',
+        sessionId: 'session',
+      );
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(requests, 2);
+      await s.dispose();
+    });
+  });
+  group('Office agent session isolation', () {
+    test(
+      'process exit clears permission and rejects late hooks with the PTY open',
+      () async {
+        final provider = _ProcessTree();
+        final monitor = TerminalHarnessMonitor(provider: provider);
+        final s = _session(monitor: monitor);
+        await Future<void>.delayed(Duration.zero);
+        expect(s.activeHarness, HarnessKind.codex);
+        s.applyClaudeStatus(
+          status: TerminalStatus.waiting,
+          event: 'PermissionRequest',
+          sessionId: 'remote',
+        );
+        provider.snapshots = [provider.snapshots.first];
+        await monitor.poll();
+        expect(s.activeHarness, isNull);
+        expect(s.status, TerminalStatus.idle);
+        s.applyClaudeStatus(
+          status: TerminalStatus.waiting,
+          event: 'PermissionRequest',
+          sessionId: 'remote',
+        );
+        expect(s.status, TerminalStatus.idle);
+        await s.dispose();
+        monitor.dispose();
+      },
+    );
+    test(
+      'foreign hooks cannot replace the bound session or request approval',
+      () async {
+        final s = _session();
+        s.applyClaudeStatus(
+          status: TerminalStatus.idle,
+          event: 'SessionStart',
+          sessionId: 'remote',
+        );
+        s.applyClaudeStatus(
+          status: TerminalStatus.waiting,
+          event: 'PermissionRequest',
+          sessionId: 'detran',
+          transcriptPath: '/foreign.jsonl',
+        );
+        expect(s.status, TerminalStatus.idle);
+        expect(s.claudeSessionId, 'remote');
+        expect(s.transcriptPath, isNull);
+        await s.dispose();
+      },
+    );
+
+    test('ended agent ignores late hooks until a new session starts', () async {
+      final s = _session();
+      s.applyClaudeStatus(
+        status: TerminalStatus.idle,
+        event: 'SessionStart',
+        sessionId: 'remote',
+      );
+      s.applyClaudeStatus(
+        status: TerminalStatus.waiting,
+        event: 'PermissionRequest',
+        sessionId: 'remote',
+      );
+      expect(s.status, TerminalStatus.waiting);
+      s.applyClaudeStatus(
+        status: TerminalStatus.idle,
+        event: 'SessionEnd',
+        sessionId: 'remote',
+      );
+      s.applyClaudeStatus(
+        status: TerminalStatus.waiting,
+        event: 'PermissionRequest',
+        sessionId: 'remote',
+      );
+      s.applyClaudeStatus(
+        status: TerminalStatus.working,
+        isTurnStart: true,
+        event: 'UserPromptSubmit',
+        sessionId: 'remote',
+      );
+      expect(s.status, TerminalStatus.idle);
+      s.applyClaudeStatus(
+        status: TerminalStatus.idle,
+        event: 'SessionStart',
+        sessionId: 'new',
+      );
+      s.applyClaudeStatus(
+        status: TerminalStatus.waiting,
+        event: 'PermissionRequest',
+        sessionId: 'new',
+      );
+      expect(s.status, TerminalStatus.waiting);
+      expect(s.claudeSessionId, 'new');
+      await s.dispose();
+    });
+  });
   group('TerminalSession — status de turno (spinner)', () {
     test('working → idle: spinner liga e desliga', () async {
       final s = _session();

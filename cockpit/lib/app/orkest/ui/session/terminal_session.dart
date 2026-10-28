@@ -241,19 +241,27 @@ class TerminalSession extends PaneItem {
       onHarnessChanged: (newHarness) {
         if (_activeHarness != newHarness) {
           _activeHarness = newHarness;
-          notifyListeners();
-          final submittedAt = _pendingAgentPromptAt;
-          if (newHarness != null &&
-              submittedAt != null &&
-              DateTime.now().difference(submittedAt) <=
-                  const Duration(seconds: 30)) {
-            _pendingAgentPromptAt = null;
-            applyOfficeActivity(
-              kind: 'prompt',
-              phase: 'started',
-              summary: 'Pedido enviado pelo terminal',
-            );
+          if (newHarness == null) {
+            _agentSessionEnded = true;
+            _turnActive = false;
+            _officePermissionPromptVisible = false;
+            _setStatus(TerminalStatus.idle, event: 'SessionEnd');
+          } else {
+            _agentSessionEnded = false;
+            // OSC 133 tracks the shell command that launched this harness.
+            // Its lifetime is not a work request inside the interactive app.
+            final launchCommand = _ptyCommandId;
+            if (launchCommand != null) {
+              _officeCommands.remove(launchCommand);
+              _ptyCommandId = null;
+              if (!_turnActive && _status != TerminalStatus.waiting) {
+                _setStatus(TerminalStatus.idle, event: 'SessionStart');
+                _notifyDebounce?.cancel();
+              }
+            }
+            _officeTurnCompleted = _status == TerminalStatus.idle;
           }
+          notifyListeners();
         }
       },
     );
@@ -283,7 +291,9 @@ class TerminalSession extends PaneItem {
   String? _ptyCommandId;
   late final _commandMarkers = PtyCommandMarkers(
     onStart: () {
-      if (_disposed || _processExited) return;
+      // A delayed shell marker may arrive after the interactive app was
+      // detected. Its launch is not work performed by that app.
+      if (_disposed || _processExited || _activeHarness != null) return;
       final previous = _ptyCommandId;
       if (previous != null) _officeCommands.remove(previous);
       final run = 'pty:${++_ptyCommandSerial}';
@@ -424,19 +434,17 @@ class TerminalSession extends PaneItem {
   List<TerminalStatusEvent> get officeStatusHistory =>
       List.unmodifiable(_officeStatusHistory);
 
-  /// Whether this PTY has evidence of an agent for the Office map.
-  /// A detected agent process is sufficient evidence even before it emits a
-  /// recognizable activity row. Unknown harnesses can still enter through
-  /// semantic PTY activity or structured Orkest activity events.
+  /// A live harness stays in Office between turns. The terminal alone does
+  /// not keep its character after the harness session ends.
   bool get hasOfficeAgentPresence =>
       !_processExited &&
+      !_agentSessionEnded &&
       (_activeHarness != null ||
           _officeAgentActivityObserved ||
           _status != TerminalStatus.idle ||
-          _officeSubagents.isNotEmpty ||
-          _officeStatusHistory.any(
-            (event) => event.event != null || event.activityKind != null,
-          ));
+          _officeCommands.isNotEmpty ||
+          _officeShell?['background'] == true ||
+          _officeSubagents.values.any((agent) => agent.finishedAt == null));
 
   /// Most recent generic prompt/permission event, if this session is waiting.
   int get latestWaitingEventSequence {
@@ -587,6 +595,8 @@ class TerminalSession extends PaneItem {
   /// tardio/reordenado do turno que já acabou e é descartado (senão o spinner
   /// fica girando pra sempre).
   bool _turnActive = false;
+  bool _agentSessionEnded = false;
+  bool _officeTurnCompleted = false;
   DateTime? _lastIdleAt;
   final Set<int> _observedOfficeActivityFingerprints = <int>{};
   final Queue<int> _observedOfficeActivityOrder = Queue<int>();
@@ -594,9 +604,9 @@ class TerminalSession extends PaneItem {
   DateTime? _lastOfficeActivityScanAt;
   List<String>? _previousGitScreenLines;
   bool _awaitingGitPushResult = false;
-  DateTime? _pendingAgentPromptAt;
   bool _officeAgentActivityObserved = false;
   bool _officePermissionPromptVisible = false;
+  bool _suppressVisiblePermissionPrompt = false;
 
   /// Janela em que um `working` mid-turn órfão (sem turno ativo) pós-`idle` é
   /// tratado como reordenação. Generosa (a real reordenação chega em ms); turnos
@@ -617,6 +627,36 @@ class TerminalSession extends PaneItem {
     String? transcriptPath,
     AgentHarness? harness,
   }) {
+    if (_disposed) return;
+    final startsSession = event == 'SessionStart';
+    // A terminal can outlive its agent. Late hooks must neither revive an
+    // ended session nor replace its resume identity with another agent's ID.
+    if (!startsSession &&
+        (_agentSessionEnded ||
+            (sessionId != null &&
+                sessionId.isNotEmpty &&
+                claudeSessionId != null &&
+                claudeSessionId != sessionId))) {
+      return;
+    }
+    if (startsSession) {
+      _agentSessionEnded = false;
+      _officeAgentActivityObserved = true;
+    }
+    if (status != TerminalStatus.waiting) {
+      // An authoritative hook settles any approval still painted in the TUI.
+      // Do not reinterpret that same screen as a new request on the next tick.
+      _suppressVisiblePermissionPrompt = _visiblePermissionPrompt();
+      _officePermissionPromptVisible = false;
+    } else {
+      _officePermissionPromptVisible = _visiblePermissionPrompt();
+      _suppressVisiblePermissionPrompt = false;
+    }
+    if (event == 'SessionEnd') {
+      _agentSessionEnded = true;
+      _turnActive = false;
+      _officePermissionPromptVisible = false;
+    }
     // O harness anda junto do id: trocar um sem o outro montaria um comando de
     // resume com o id do harness errado.
     if (sessionId != null && sessionId.isNotEmpty && harness != null) {
@@ -647,12 +687,10 @@ class TerminalSession extends PaneItem {
       return;
     }
 
-    _setStatus(
-      status,
-      event: event,
-      toolName: toolName,
-      forceTurnFinished: status == TerminalStatus.waiting && event != null,
-    );
+    if (status == TerminalStatus.waiting && _status == TerminalStatus.waiting) {
+      return;
+    }
+    _setStatus(status, event: event, toolName: toolName);
   }
 
   /// Adds a provider-neutral activity event without inspecting PTY output.
@@ -666,6 +704,9 @@ class TerminalSession extends PaneItem {
   }) {
     final safeKind = kind.trim().toLowerCase();
     final safePhase = phase.trim().toLowerCase();
+    // A terminal has one current approval surface. Repeated reports of the
+    // pending request must not create fresh notification sequences.
+    if (safeKind == 'needs_input' && _status == TerminalStatus.waiting) return;
     final safeSummary = summary
         .replaceAll(RegExp(r'[\x00-\x1F\x7F]'), ' ')
         .replaceAll(RegExp(r'\s+'), ' ')
@@ -826,7 +867,6 @@ class TerminalSession extends PaneItem {
         (safePhase != 'observed' || safeKind == 'needs_input')) {
       _officeShell = null;
     }
-    _pendingAgentPromptAt = null;
     if (safeKind == 'prompt' || safeKind == 'respond') {
       _turnActive = true;
     } else if (safeKind == 'done' || safeKind == 'error') {
@@ -865,6 +905,16 @@ class TerminalSession extends PaneItem {
           forceNotify: true,
         );
       default:
+        if (terminalPhase &&
+            (safeKind == 'command' || safeKind == 'wait') &&
+            _officeTurnCompleted) {
+          _setStatus(
+            TerminalStatus.idle,
+            recordHistory: false,
+            forceNotify: true,
+          );
+          return;
+        }
         if (_status == TerminalStatus.waiting &&
             safeKind != 'prompt' &&
             safeKind != 'respond') {
@@ -882,16 +932,12 @@ class TerminalSession extends PaneItem {
   /// A submitted line is a harness-neutral signal that work was requested. The
   /// input itself is never inspected or retained.
   void _observeGenericPromptSubmission({required bool responding}) {
-    // A terminal already identified as an agent is enough evidence for its
-    // first prompt. Previously that prompt was discarded until later output
-    // happened to match one of the activity patterns.
-    if (!responding &&
-        !_officeAgentActivityObserved &&
-        _activeHarness == null) {
-      // The monitor may identify a newly started harness just after Enter.
-      // Keep only the submission time, never the prompt contents, so this
-      // startup race does not hide the initial Office transition.
-      _pendingAgentPromptAt = DateTime.now();
+    // Enter in the shell may launch the harness; it is not a prompt submitted
+    // inside it. Only attribute input to a session already known to be open.
+    if (_agentSessionEnded ||
+        (!responding &&
+            !_officeAgentActivityObserved &&
+            _activeHarness == null)) {
       return;
     }
     if (responding) _officePermissionPromptVisible = false;
@@ -909,6 +955,7 @@ class TerminalSession extends PaneItem {
   /// chunks and full line contents are neither persisted nor forwarded. The
   /// recognizer intentionally returns fixed labels, never a command or path.
   void _observeTerminalActivity() {
+    if (_agentSessionEnded || _officeTurnCompleted) return;
     final now = DateTime.now();
     final lastScan = _lastOfficeActivityScanAt;
     if (lastScan != null &&
@@ -920,12 +967,28 @@ class TerminalSession extends PaneItem {
     // Permission prompts are a current screen state, not transcript events.
     // Limit detection to the visible terminal rows so an old approval in the
     // scrollback cannot resurrect a notification after it was answered.
-    final visibleRows = _viewportRows ?? 25;
-    final visibleLines = terminal.plainLines(limit: visibleRows);
-    final hasVisiblePermissionPrompt = visibleLines.any((raw) {
-      final observation = _mapOfficeActivityLine(raw.trim());
-      return observation != null && observation.$1 == 'needs_input';
-    });
+    final visibleLines = terminal.plainLines(limit: _viewportRows ?? 25);
+    // Codex retains previous turns above its ready prompt. Those rows belong
+    // to this PTY, but no longer describe a pending interaction.
+    final readyIndex = visibleLines.lastIndexWhere(
+      (line) => RegExp(
+        r'^[›❯>]\s*Ask Codex to do anything\s*$',
+      ).hasMatch(line.trim()),
+    );
+    final permissionIndex = visibleLines.lastIndexWhere(
+      (line) => _mapOfficeActivityLine(line.trim())?.$1 == 'needs_input',
+    );
+    if (readyIndex >= 0 && readyIndex > permissionIndex) {
+      _officePermissionPromptVisible = false;
+      _suppressVisiblePermissionPrompt = false;
+      _turnActive = false;
+      _setStatus(TerminalStatus.idle);
+      return;
+    }
+    final rawPermissionPrompt = permissionIndex >= 0;
+    if (!rawPermissionPrompt) _suppressVisiblePermissionPrompt = false;
+    final hasVisiblePermissionPrompt =
+        rawPermissionPrompt && !_suppressVisiblePermissionPrompt;
     if (hasVisiblePermissionPrompt && !_officePermissionPromptVisible) {
       _officePermissionPromptVisible = true;
       _officeAgentActivityObserved = true;
@@ -987,11 +1050,13 @@ class TerminalSession extends PaneItem {
 
       final observation = _mapOfficeActivityLine(line);
       if (observation == null) continue;
-      _officeAgentActivityObserved = true;
       final (kind, summary, phase, fingerprint) = observation;
       // The visible-screen transition above emits permission requests. Do not
       // replay matching prompts from scrollback or deduplicate them forever.
       if (kind == 'needs_input') continue;
+      // Startup banners and restored output are not proof of a new turn.
+      if (!_turnActive && _status == TerminalStatus.idle) continue;
+      _officeAgentActivityObserved = true;
       if (_status == TerminalStatus.waiting && kind != 'needs_input') continue;
       if (!_observedOfficeActivityFingerprints.add(fingerprint)) continue;
       _observedOfficeActivityOrder.addLast(fingerprint);
@@ -1032,6 +1097,10 @@ class TerminalSession extends PaneItem {
   /// and restored scrollback that was rendered before the PTY output listener
   /// was attached. The scan is throttled and only emits fixed activity labels.
   void refreshOfficeActivityFromScreen() => _observeTerminalActivity();
+
+  bool _visiblePermissionPrompt() => terminal
+      .plainLines(limit: _viewportRows ?? 25)
+      .any((line) => _mapOfficeActivityLine(line.trim())?.$1 == 'needs_input');
 
   (String, String, String, int)? _mapOfficeActivityLine(String line) {
     // Common agent TUIs show this while a turn is active. It is an observed
@@ -1203,6 +1272,8 @@ class TerminalSession extends PaneItem {
     bool forceNotify = false,
     bool forceTurnFinished = false,
   }) {
+    _officeTurnCompleted =
+        next == TerminalStatus.idle && event != 'SessionStart';
     final changed = next != _status;
     if (!changed && event == null && !forceNotify) return;
     if (changed) {
