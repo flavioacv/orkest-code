@@ -354,24 +354,21 @@ export class Renderer {
     ctx.imageSmoothingEnabled = false;
     ctx.fillStyle = this.clearColor;
     ctx.fillRect(0, 0, W, H);
+    // The centered margins remain a quiet backdrop, including during the night cycle.
+    ctx.fillStyle = `rgba(12,18,30,${this.lighting.night * 0.75})`;
+    ctx.fillRect(0, 0, W, H);
     const { scale, ox, oy } = camera.transform();
     ctx.setTransform(scale, 0, 0, scale, ox, oy);
     const vx0 = -ox / scale;
     const vy0 = -oy / scale;
     const vx1 = vx0 + W / scale;
     const vy1 = vy0 + H / scale;
-    if (this.grass && this.base) {
-      const bx1 = this.baseX + this.base.width;
-      const by1 = this.baseY + this.base.height;
-      if (vx0 < this.baseX || vy0 < this.baseY || vx1 > bx1 || vy1 > by1) {
-        // padrão ancorado na origem do mundo (múltiplo do tile), alinhado à camada base
-        ctx.fillStyle = this.grass;
-        ctx.save();
-        ctx.translate(this.baseX, this.baseY);
-        ctx.fillRect(vx0 - this.baseX - 1, vy0 - this.baseY - 1, vx1 - vx0 + 2, vy1 - vy0 + 2);
-        ctx.restore();
-      }
-    }
+    // Off-map journeys stay alive in the simulation, but never draw outside the terrain.
+    const bounds = this.exterior.bounds;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(bounds.x * TILE, bounds.y * TILE, bounds.w * TILE, bounds.h * TILE);
+    ctx.clip();
     const visible = (x: number, y: number, w: number, h: number) => x < vx1 && x + w > vx0 && y < vy1 && y + h > vy0;
 
     // ---- camada base (só a parte visível)
@@ -570,6 +567,7 @@ export class Renderer {
       }
     }
     ctx.globalAlpha = 1;
+    ctx.restore();
   }
 
   private headOf(ch: Character): HeadInfo {

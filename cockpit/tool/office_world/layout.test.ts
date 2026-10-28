@@ -14,6 +14,60 @@ import { sampleTrainJourney } from '../../third_party/office_engine/client/src/w
 import { outdoorAppearance } from './outdoor_people.ts';
 import { layoutExterior } from '../../third_party/office_engine/client/src/world/layout/exterior.ts';
 import { BUILDING_H, TILE } from '../../third_party/office_engine/client/src/world/constants.ts';
+import { Camera } from '../../third_party/office_engine/client/src/world/camera.ts';
+
+test('camera fits and centers the full terrain without allowing a farther zoom out', () => {
+  for (const [width, height] of [[1600, 900], [700, 1300], [900, 900]]) {
+    const camera = new Camera();
+    camera.setView(width, height, 2);
+    camera.bounds = { x: -320, y: -480, w: 1920, h: 2080 };
+    camera.minZoom = camera.fitZoom(camera.bounds, 24);
+    camera.zoomAt(0.01, 0, 0, 0, false);
+    assert.equal(camera.zoom, camera.minZoom);
+    camera.panBy(-100000, 100000);
+    const middle = camera.worldToScreen(640, 560);
+    assert.ok(Math.abs(middle.x - width / 2) <= 1);
+    assert.ok(Math.abs(middle.y - height / 2) <= 1);
+    const topLeft = camera.worldToScreen(-320, -480);
+    const bottomRight = camera.worldToScreen(1600, 1600);
+    assert.ok(topLeft.x >= 23 && topLeft.y >= 23);
+    assert.ok(bottomRight.x <= width - 23 && bottomRight.y <= height - 23);
+    camera.zoomAt(2, width / 2, height / 2, 0, false);
+    camera.panBy(100000, 100000);
+    assert.ok(camera.screenToWorld(0, 0).x >= camera.bounds.x - 1);
+    assert.ok(camera.screenToWorld(0, 0).y >= camera.bounds.y - 1);
+  }
+});
+
+test('camera respects a dynamic minimum above the default at every zoom entry point', () => {
+  const camera = new Camera();
+  camera.minZoom = 1.4;
+  assert.equal(camera.levels()[0], 1.4);
+  camera.animateTo(0, 0, 0.2, 0, 10);
+  camera.update(10, null, 0.01);
+  assert.equal(camera.zoom, 1.4);
+  camera.zoom = 0.2;
+  camera.clamp();
+  assert.equal(camera.zoom, 1.4);
+});
+
+test('night lighting covers both sidewalks, the promenade and the station in every season', () => {
+  configureOfficeLayout(true);
+  try {
+    for (const season of ['spring', 'summer', 'autumn', 'winter'] as const) {
+      const exterior = layoutExterior(5, season);
+      const life = outdoorLifeLayout(5);
+      const lamps = exterior.props.filter(prop => prop.kind === 'lamp');
+      assert.ok(lamps.length >= 30);
+      for (const point of [
+        { x: 0, y: (BUILDING_H + 3) * TILE },
+        { x: 0, y: (BUILDING_H + 10.5) * TILE },
+        { x: life.garden.x, y: life.garden.y + 102 },
+        { x: life.station.x, y: life.station.y - 40 },
+      ]) assert.ok(lamps.some(lamp => Math.hypot(lamp.x - point.x, lamp.y - point.y) < 100));
+    }
+  } finally { configureOfficeLayout(false); }
+});
 
 test('spacious Office separates rooms and connects every coworking seat to the corridor', () => {
   configureOfficeLayout(true);

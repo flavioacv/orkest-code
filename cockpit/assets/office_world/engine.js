@@ -16988,7 +16988,7 @@
     }
     /** Níveis de zoom nítidos: zoom × dpr inteiro (e meio-inteiro acima de 2× no dpr 1). */
     levels() {
-      const min = Math.min(this.minZoom, ZOOM_MIN);
+      const min = this.minZoom;
       const set = /* @__PURE__ */ new Set();
       for (let k = 1; k <= ZOOM_MAX * this.dpr; k++) set.add(Math.round(k / this.dpr * 1e3) / 1e3);
       for (let h = 4; h <= ZOOM_MAX * 2; h++) set.add(h / 2);
@@ -17020,7 +17020,7 @@
       return lv[Math.max(0, Math.min(lv.length - 1, i + steps))];
     }
     animateTo(x, y, zoom, now, dur = 400) {
-      const tz = Math.max(Math.min(this.minZoom, ZOOM_MIN), Math.min(ZOOM_MAX, zoom));
+      const tz = Math.max(this.minZoom, Math.min(ZOOM_MAX, zoom));
       this.anim = { fx: this.x, fy: this.y, fz: this.zoom, tx: x, ty: y, tz, t0: now, dur };
     }
     stop() {
@@ -17035,7 +17035,7 @@
     }
     /** Zoom ancorado num ponto da tela (CSS px). */
     zoomAt(newZoom, sx, sy, now, animate = true) {
-      const z = Math.max(Math.min(this.minZoom, ZOOM_MIN), Math.min(ZOOM_MAX, newZoom));
+      const z = Math.max(this.minZoom, Math.min(ZOOM_MAX, newZoom));
       const wx = this.x + (sx - this.viewW / 2) / this.zoom;
       const wy = this.y + (sy - this.viewH / 2) / this.zoom;
       const nx = wx - (sx - this.viewW / 2) / z;
@@ -17075,6 +17075,7 @@
     /** Mantém a área livre (fora dos painéis da UI) dentro dos limites; se couber inteira, centraliza. */
     clamp() {
       const b = this.bounds;
+      this.zoom = Math.max(this.minZoom, Math.min(ZOOM_MAX, this.zoom));
       const z = this.zoom;
       const ins = this.insets;
       const l = (-this.viewW / 2 + ins.left) / z;
@@ -18959,9 +18960,20 @@
     if (CORE_COLS > 2) {
       const life = outdoorLifeLayout(cols);
       for (let i = props.length - 1; i >= 0; i--) {
-        if (outdoorReserved(props[i].x, props[i].y, life, 64)) props.splice(i, 1);
+        if (props[i].kind !== "lamp" && outdoorReserved(props[i].x, props[i].y, life, 64)) props.splice(i, 1);
       }
       props.push(...life.props);
+      const lamp = (x, y) => props.push({ kind: "lamp", x, y, seed: Math.round(x * 7 + y) });
+      for (let x = bounds.x + 4; x < bounds.x + bounds.w - 2; x += 10) lamp(px(x), px(south + 10.5));
+      for (let x = life.garden.x - 200; x <= life.fountain.x + 200; x += 128) lamp(x, life.garden.y + 102);
+      for (let x = life.station.x - 320; x <= life.station.x + 320; x += 128) lamp(x, life.station.y - 40);
+      for (let y = px(south + 14); y < life.fountain.y - 180; y += 96) lamp(life.fountain.x + 36, y);
+      for (let y = life.garden.y + 160; y < life.station.y - 128; y += 112) lamp(life.station.x + 48, y);
+      lamp(life.fountain.x - 190, life.fountain.y - 160);
+      lamp(life.fountain.x + 190, life.fountain.y - 160);
+      lamp(life.camp.x - 120, life.camp.y + 44);
+      lamp(life.pond.x + 64, life.pond.y + 44);
+      lamp(px(-2), px(CORRIDOR_Y + 5));
       floors.push({ kind: "sidewalk", x: life.garden.x - 230, y: life.garden.y + 62, w: life.fountain.x - life.garden.x + 475, h: 48, seed: 904, tint: season });
       floors.push({ kind: "sidewalk", x: life.fountain.x - 216, y: life.fountain.y - 216, w: 432, h: 280, seed: 905, tint: season });
       floors.push({ kind: "sidewalk", x: life.station.x - 360, y: life.station.y - 128, w: 720, h: 96, seed: 906, tint: season });
@@ -21553,23 +21565,19 @@
       ctx.imageSmoothingEnabled = false;
       ctx.fillStyle = this.clearColor;
       ctx.fillRect(0, 0, W, H);
+      ctx.fillStyle = `rgba(12,18,30,${this.lighting.night * 0.75})`;
+      ctx.fillRect(0, 0, W, H);
       const { scale, ox, oy } = camera2.transform();
       ctx.setTransform(scale, 0, 0, scale, ox, oy);
       const vx0 = -ox / scale;
       const vy0 = -oy / scale;
       const vx1 = vx0 + W / scale;
       const vy1 = vy0 + H / scale;
-      if (this.grass && this.base) {
-        const bx1 = this.baseX + this.base.width;
-        const by1 = this.baseY + this.base.height;
-        if (vx0 < this.baseX || vy0 < this.baseY || vx1 > bx1 || vy1 > by1) {
-          ctx.fillStyle = this.grass;
-          ctx.save();
-          ctx.translate(this.baseX, this.baseY);
-          ctx.fillRect(vx0 - this.baseX - 1, vy0 - this.baseY - 1, vx1 - vx0 + 2, vy1 - vy0 + 2);
-          ctx.restore();
-        }
-      }
+      const bounds = this.exterior.bounds;
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(bounds.x * TILE, bounds.y * TILE, bounds.w * TILE, bounds.h * TILE);
+      ctx.clip();
       const visible = (x, y, w, h) => x < vx1 && x + w > vx0 && y < vy1 && y + h > vy0;
       if (this.base) {
         const sx = Math.max(0, Math.floor(vx0 - this.baseX) - 1);
@@ -21748,6 +21756,7 @@
         }
       }
       ctx.globalAlpha = 1;
+      ctx.restore();
     }
     headOf(ch) {
       let h = this.heads.get(ch.id);
@@ -28408,27 +28417,13 @@
   }
 
   // tool/office_world/sprite_mix.ts
-  var storageKey = "orkest.office.sprite-scales.v1";
   var defaults = { vegetation: 70, vehicles: 50, furniture: 70 };
-  function readScales() {
-    const scales = { ...defaults };
-    try {
-      const saved = JSON.parse(localStorage.getItem(storageKey) ?? "null");
-      if (saved && typeof saved === "object") for (const key of Object.keys(defaults)) {
-        const value = saved[key];
-        if (typeof value === "number" && Number.isFinite(value)) scales[key] = Math.max(0, Math.min(100, Math.round(value)));
-      }
-    } catch (error) {
-      console.warn("N\xE3o foi poss\xEDvel recuperar as escalas do Office.", error);
-    }
-    return scales;
-  }
   async function installSpriteMix(renderer2, sim2, onFurnitureScale) {
     const [exterior, rasters] = await Promise.all([
       loadExterior(),
       Promise.all(catalog.map((entry) => loadRaster(entry)))
     ]);
-    const scales = readScales();
+    const scales = { ...defaults };
     const previousExterior = renderer2.exteriorSprites;
     const previousFurniture = renderer2.furnitureOverride;
     renderer2.exteriorSprites = exterior;
@@ -28481,162 +28476,7 @@
       return result;
     }
     renderer2.furnitureOverride = (f) => f.kind === "coworking_set" ? furniture(27) : null;
-    const controls = document.createElement("details");
-    controls.id = "office-sprite-controls";
-    controls.open = true;
-    controls.style.cssText = "position:fixed;right:14px;top:14px;z-index:20;width:278px;max-width:calc(100vw - 28px);padding:10px 12px;border:1px solid var(--ckp-border,GrayText);border-radius:8px;background:var(--ckp-bg-raised,Canvas);color:var(--ckp-text,CanvasText);font:12px system-ui";
-    const summary = document.createElement("summary");
-    summary.textContent = "Escala dos sprites";
-    summary.style.cursor = "pointer";
-    controls.append(summary);
-    const description = document.createElement("p");
-    description.textContent = "100% = tamanho do PNG. 0% oculta a categoria nova.";
-    description.style.cssText = "margin:8px 0;color:var(--ckp-text-secondary,GrayText)";
-    controls.append(description);
-    const outputs = /* @__PURE__ */ new Map();
-    function apply() {
-      cache4.clear();
-      onFurnitureScale?.(scales.furniture);
-      if (scales.furniture === 0) sim2.stopCoworkingTest();
-      alignSeats();
-      exterior.setScales(scales.vegetation, scales.vehicles, scales.furniture);
-      try {
-        localStorage.setItem(storageKey, JSON.stringify(scales));
-      } catch (error) {
-        console.warn("N\xE3o foi poss\xEDvel salvar as escalas do Office.", error);
-      }
-      for (const [key, { input, output }] of outputs) {
-        input.value = String(scales[key]);
-        output.value = `${scales[key]}%`;
-      }
-    }
-    for (const [key, label] of [
-      ["vegetation", "\xC1rvores e arbustos"],
-      ["vehicles", "Ve\xEDculos"],
-      ["furniture", "M\xF3veis novos"]
-    ]) {
-      const row = document.createElement("label");
-      row.style.cssText = "display:grid;grid-template-columns:1fr 42px;gap:6px;margin:10px 0";
-      const text = document.createElement("span");
-      text.textContent = label;
-      const output = document.createElement("output");
-      output.value = `${scales[key]}%`;
-      output.style.textAlign = "right";
-      const input = document.createElement("input");
-      input.id = `scale-${key}`;
-      input.type = "range";
-      input.min = "0";
-      input.max = "100";
-      input.step = "1";
-      input.value = String(scales[key]);
-      input.style.cssText = "grid-column:1 / -1;width:100%;margin:0";
-      input.oninput = () => {
-        scales[key] = Number(input.value);
-        apply();
-      };
-      outputs.set(key, { input, output });
-      row.append(text, output, input);
-      controls.append(row);
-    }
-    const reset = document.createElement("button");
-    reset.textContent = "Restaurar padr\xE3o";
-    reset.type = "button";
-    reset.onclick = () => {
-      Object.assign(scales, defaults);
-      apply();
-    };
-    controls.append(reset);
-    const coworking = document.createElement("button");
-    coworking.type = "button";
-    coworking.textContent = "Ir ao coworking";
-    coworking.style.marginLeft = "8px";
-    coworking.onclick = () => window.orkestOfficeWorld.focusArea("core:lounge");
-    controls.append(coworking);
-    const interaction = document.createElement("fieldset");
-    interaction.style.cssText = "margin:12px 0 0;padding:8px;border:1px solid var(--ckp-border,GrayText)";
-    const legend = document.createElement("legend");
-    legend.textContent = "Testar personagem";
-    interaction.append(legend);
-    const feedback = document.createElement("p");
-    feedback.style.cssText = "margin:8px 0 0";
-    feedback.setAttribute("aria-live", "polite");
-    let lastMessage = "Escolha uma \xE1rea. O personagem usa o assento por 30 segundos.";
-    let wasTesting = false;
-    for (const [zone, name] of [["focus", "Mesa individual"], ["meeting", "Poltrona"], ["lounge", "Coworking"]]) {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.id = `test-${zone}`;
-      button.textContent = name;
-      button.style.margin = "0 4px 4px 0";
-      button.onclick = () => {
-        if (scales.furniture === 0 && zone === "lounge") {
-          lastMessage = "Aumente a escala dos m\xF3veis para visualizar o teste.";
-          return;
-        }
-        const result = window.orkestOfficeWorld.testCoworking(zone);
-        lastMessage = result.message;
-      };
-      interaction.append(button);
-    }
-    const group = document.createElement("button");
-    group.type = "button";
-    group.id = "test-group";
-    group.textContent = "Ocupar assentos";
-    group.onclick = () => {
-      if (!scales.furniture) {
-        lastMessage = "Aumente a escala dos m\xF3veis para visualizar os assentos do coworking.";
-        return;
-      }
-      lastMessage = window.orkestOfficeWorld.testCoworkingGroup().message;
-    };
-    interaction.append(group);
-    const stop2 = document.createElement("button");
-    stop2.type = "button";
-    stop2.id = "test-stop";
-    stop2.textContent = "Encerrar teste";
-    stop2.onclick = () => {
-      window.orkestOfficeWorld.stopCoworkingTest();
-      lastMessage = "Teste encerrado. O personagem retoma sua atividade.";
-    };
-    interaction.append(stop2, feedback);
-    controls.append(interaction);
-    const timer = setInterval(() => {
-      const state = window.orkestOfficeWorld.getCoworkingTest();
-      if (state) wasTesting = true;
-      else if (wasTesting) {
-        lastMessage = "Teste encerrado. O personagem retoma sua atividade.";
-        wasTesting = false;
-      }
-      const place = state?.zone === "focus" ? "mesa individual" : state?.zone === "meeting" ? "poltrona" : "sof\xE1 coletivo";
-      const visits = window.orkestOfficeWorld.getCoworkingTests();
-      feedback.textContent = visits.length > 1 ? `${visits.filter((visit) => visit.phase === "using").length}/${visits.length} personagens sentados no lounge e coworking.` : state ? `${state.name}: ${state.phase === "using" ? "usando" : "caminhando at\xE9"} ${place}.` : lastMessage;
-    }, 250);
-    feedback.textContent = lastMessage;
-    const exteriorButton = document.createElement("button");
-    exteriorButton.type = "button";
-    exteriorButton.id = "view-exterior";
-    exteriorButton.textContent = "Ver exterior";
-    exteriorButton.style.marginTop = "8px";
-    exteriorButton.onclick = () => window.orkestOfficeWorld.overview();
-    controls.append(exteriorButton);
-    const outdoorSelect = document.createElement("select");
-    outdoorSelect.id = "outdoor-place";
-    outdoorSelect.setAttribute("aria-label", "Visitar \xE1rea externa");
-    outdoorSelect.style.cssText = "margin:8px 0 0 8px;max-width:145px";
-    for (const [value, label] of [["", "Visitar exterior\u2026"], ["garden", "Jardim externo"], ["camp", "Acampamento"], ["pond", "Rio e ponte"], ["fountain", "Pra\xE7a da fonte"], ["station", "Esta\xE7\xE3o de trem"], ["market", "Vendedores"], ["woodland", "Bosque e lenhador"]]) {
-      const option = document.createElement("option");
-      option.value = value;
-      option.textContent = label;
-      outdoorSelect.append(option);
-    }
-    outdoorSelect.onchange = () => {
-      if (outdoorSelect.value) window.orkestOfficeWorld.focusOutdoor(outdoorSelect.value);
-    };
-    controls.append(outdoorSelect);
-    document.body.append(controls);
     return () => {
-      clearInterval(timer);
-      controls.remove();
       cache4.clear();
       renderer2.exteriorSprites = previousExterior;
       renderer2.furnitureOverride = previousFurniture;
@@ -28731,7 +28571,7 @@
     const e = renderer.exterior.bounds;
     const bounds = { x: e.x * TILE, y: e.y * TILE, w: e.w * TILE, h: e.h * TILE };
     camera.bounds = bounds;
-    camera.minZoom = Math.min(0.5, Math.max(0.15, camera.fitZoom(bounds, 16) * 0.75));
+    camera.minZoom = Math.min(6, camera.fitZoom(bounds, 24));
     camera.clamp();
   }
   function overview(animate, exterior = false) {

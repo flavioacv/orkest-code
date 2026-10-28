@@ -111,7 +111,7 @@ function updateBounds() {
   const e = renderer.exterior.bounds;
   const bounds = { x: e.x * TILE, y: e.y * TILE, w: e.w * TILE, h: e.h * TILE };
   camera.bounds = bounds;
-  camera.minZoom = Math.min(0.5, Math.max(0.15, camera.fitZoom(bounds, 16) * .75));
+  camera.minZoom = Math.min(6, camera.fitZoom(bounds, 24));
   camera.clamp();
 }
 
