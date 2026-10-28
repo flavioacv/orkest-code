@@ -95,6 +95,7 @@ export class Renderer {
   shells: SlotShell[] = [];
   shellWindows: WallVis[] = [];
   private base: HTMLCanvasElement | null = null;
+  private baseAspect = 0;
   private baseX = 0;
   private baseY = 0;
   private baseCols = -1;
@@ -158,7 +159,7 @@ export class Renderer {
     this.season = season;
     if (seasonChanged) this.pavings.clear();
     const assetsChanged = this.builtAssetsVersion !== this.assetsVersion || themeChanged;
-    if (this.baseCols !== sim.building.cols || assetsChanged || seasonChanged) this.buildBase();
+    if (this.baseCols !== sim.building.cols || assetsChanged || seasonChanged || this.baseAspect !== this.viewportAspect()) this.buildBase();
     if (this.layoutVersion !== sim.layoutVersion || assetsChanged) {
       this.layoutVersion = sim.layoutVersion;
       const want = new Set<string>();
@@ -194,11 +195,17 @@ export class Renderer {
     return [18, 40, 26];
   }
 
+  private viewportAspect(): number {
+    const { viewW, viewH, insets } = this.camera;
+    return Math.round(Math.max(1, viewW - insets.left - insets.right) / Math.max(1, viewH - insets.top - insets.bottom) * 100) / 100;
+  }
+
   /** Camada base: área externa, pátios dos slots e fechamentos do corredor. */
   private buildBase(): void {
     const cols = this.sim.building.cols;
     this.baseCols = cols;
-    this.exterior = layoutExterior(cols, this.season);
+    this.baseAspect = this.viewportAspect();
+    this.exterior = layoutExterior(cols, this.season, this.baseAspect);
     const b = this.exterior.bounds;
     this.baseX = b.x * TILE;
     this.baseY = b.y * TILE;

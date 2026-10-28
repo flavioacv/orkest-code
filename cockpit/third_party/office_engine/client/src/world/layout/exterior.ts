@@ -31,10 +31,16 @@ export interface SlotShell {
   props: ExteriorProp[];
 }
 
-export function layoutExterior(cols: number, season: ExteriorSeason = 'summer'): ExteriorLayout {
+export function layoutExterior(cols: number, season: ExteriorSeason = 'summer', viewportAspect = 0): ExteriorLayout {
   const w = cols * COL_W;
   const north = CORE_COLS > 2 ? 30 : EXT_NORTH;
   const bounds: TileRect = { x: -EXT_WEST, y: -north, w: w + EXT_WEST + EXT_EAST, h: BUILDING_H + north + (CORE_COLS > 2 ? 64 : EXT_SOUTH) };
+  const original = { ...bounds };
+  if (CORE_COLS > 2 && Number.isFinite(viewportAspect) && viewportAspect > 0) {
+    const width = Math.max(bounds.w, Math.ceil(bounds.h * Math.max(16 / 9, viewportAspect)));
+    bounds.x -= (width - bounds.w) / 2;
+    bounds.w = width;
+  }
   const px = (t: number) => t * TILE;
   const floors: FloorPatch[] = [];
   const props: ExteriorProp[] = [];
@@ -128,13 +134,28 @@ export function layoutExterior(cols: number, season: ExteriorSeason = 'summer'):
     }
   }
 
+  // Extend the landscape rather than exposing a flat canvas around the existing scene.
+  for (let x = bounds.x + 2; x < bounds.x + bounds.w - 2; x += 5) {
+    if (x >= original.x && x <= original.x + original.w) continue;
+    for (let y = bounds.y + 3; y < bounds.y + bounds.h - 2; y += 6) {
+      if (y >= south + 1 && y <= south + 12) continue;
+      if (Math.abs(y - (south + 43)) < 4) continue;
+      props.push({ kind: rng() < .3 ? 'pine' : 'tree', x: px(x) + Math.floor(rng() * 24), y: px(y) + Math.floor(rng() * 24), seed: Math.floor(rng() * 1e9) });
+      if (rng() < .25) props.push({ kind: 'bush', x: px(x + 2), y: px(y + 1), seed: Math.floor(rng() * 1e9) });
+    }
+  }
+
   if (CORE_COLS > 2) {
     const life = outdoorLifeLayout(cols);
     // Clear walking paths and points of interest before adding the curated objects.
     for (let i = props.length - 1; i >= 0; i--) {
       if (props[i].kind !== 'lamp' && outdoorReserved(props[i].x, props[i].y, life, 64)) props.splice(i, 1);
     }
-    props.push(...life.props);
+    for (const prop of life.props) {
+      if (prop.kind === 'station_track') props.push({ ...prop, x: px(bounds.x + bounds.w / 2), seed: px(bounds.w) });
+      else if (prop.kind === 'train') props.push({ ...prop, seed: px(bounds.w) });
+      else props.push(prop);
+    }
     // Keep the walking routes readable at night without flooding the surrounding woods.
     const lamp = (x: number, y: number) => props.push({ kind: 'lamp', x, y, seed: Math.round(x * 7 + y) });
     for (let x = bounds.x + 4; x < bounds.x + bounds.w - 2; x += 10) lamp(px(x), px(south + 10.5));
