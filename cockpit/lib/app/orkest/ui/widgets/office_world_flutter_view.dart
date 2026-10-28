@@ -474,11 +474,9 @@ class _OfficeWorldViewState extends State<OfficeWorldFlutterView> {
     _currentSessions = widget.sessions.whereType<TerminalSession>().toList();
     _baseProjects = widget.projects
         .where(
-          (p) =>
-              !p.isSystemTerminal &&
-              _currentSessions.any(
-                (s) => s.projectId == p.id && s.hasOfficeAgentPresence,
-              ),
+          (p) => _currentSessions.any(
+            (s) => s.projectId == p.id && s.hasOfficeAgentPresence,
+          ),
         )
         .toList();
     final currentMap = _currentMap;

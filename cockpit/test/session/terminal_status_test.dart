@@ -208,10 +208,9 @@ void main() {
     );
   });
   group('Office presence follows the open harness session', () {
-    for (final (executable, kind) in [
-      ('codex', HarnessKind.codex),
-      ('antigravity', HarnessKind.antigravity),
-    ]) {
+    for (final spec in HarnessCatalog.specs.values) {
+      final executable = spec.primaryEntryPoint;
+      final kind = spec.kind;
       for (final emitMarkers in [false, true]) {
         test(
           '$executable starts idle after launch Enter (shell markers: $emitMarkers)',
@@ -420,6 +419,75 @@ void main() {
       await s.dispose();
     });
   });
+  group('Office current turn activity', () {
+    test('identical completion text can finish successive turns', () async {
+      final s = _session();
+      s.applyClaudeStatus(status: TerminalStatus.idle, event: 'SessionStart');
+      for (var turn = 0; turn < 2; turn++) {
+        s.applyOfficeActivity(
+          kind: 'prompt',
+          phase: 'started',
+          summary: 'Work',
+        );
+        await Future<void>.delayed(const Duration(milliseconds: 1100));
+        s.refreshOfficeActivityFromScreen();
+        expect(s.status, TerminalStatus.working);
+        s.terminal.write('\x1b[2J\x1b[H');
+        await Future<void>.delayed(const Duration(milliseconds: 1100));
+        s.refreshOfficeActivityFromScreen();
+        expect(s.status, TerminalStatus.working);
+        s.terminal.write('Turn completed\r\n');
+        await Future<void>.delayed(const Duration(milliseconds: 1100));
+        s.refreshOfficeActivityFromScreen();
+        expect(s.status, TerminalStatus.idle, reason: 'Turn $turn completed');
+      }
+      await s.dispose();
+    });
+
+    test('old completion and ready prompt do not end a new turn', () async {
+      final s = _session();
+      s.terminal.write('Worked for 2m 10s\r\n› Ask Codex to do anything\r\n');
+      s.applyClaudeStatus(status: TerminalStatus.working, isTurnStart: true);
+      var completions = 0;
+      s.onTurnFinished = () => completions++;
+      s.refreshOfficeActivityFromScreen();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(s.status, TerminalStatus.working);
+      expect(completions, 0);
+      await Future<void>.delayed(const Duration(milliseconds: 1100));
+      s.terminal.write('Worked for 3m 20s\r\n› Ask Codex to do anything\r\n');
+      s.refreshOfficeActivityFromScreen();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(s.status, TerminalStatus.idle);
+      expect(completions, 1);
+      await s.dispose();
+    });
+
+    test('interruptible tools take precedence over completion text', () async {
+      final s = _session();
+      s.applyClaudeStatus(status: TerminalStatus.idle, event: 'SessionStart');
+      s.applyClaudeStatus(status: TerminalStatus.working, isTurnStart: true);
+      var completions = 0;
+      s.onTurnFinished = () => completions++;
+      s.terminal.write(
+        'Worked for 14m 17s\r\n'
+        '› Ask Codex to do anything\r\n'
+        '• Calling MCP tool (20s • esc to interrupt)\r\n',
+      );
+      s.refreshOfficeActivityFromScreen();
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(s.status, TerminalStatus.working);
+      expect(completions, 0);
+      expect(s.hasOfficeAgentPresence, true);
+      s.applyClaudeStatus(status: TerminalStatus.idle, event: 'Stop');
+      await Future<void>.delayed(const Duration(milliseconds: 100));
+      expect(s.status, TerminalStatus.idle);
+      expect(completions, 1);
+      expect(s.hasOfficeAgentPresence, true);
+      await s.dispose();
+    });
+  });
+
   group('Office approval screen isolation', () {
     test(
       'only the requesting PTY waits when two agents share a project',

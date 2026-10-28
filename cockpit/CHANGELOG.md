@@ -1,5 +1,12 @@
 # Changelog — Orkest Code
 
+## 0.1.12 (build 16) — 2026-10-28
+
+- Harnesses launched in the global Orkest terminal now appear in their Office room, consistently with their notifications.
+- Old completion rows and ready prompts no longer make an agent idle while its current turn is still running tools.
+- Completion detection is scoped to each turn, allowing successive tasks with identical completion text to finish correctly.
+- Preserved idle harness startup, session-specific approval requests and existing Office social routines.
+
 ## 0.1.11 (build 15) — 2026-10-28
 
 - Office agents remain present and resume idle social activities after a turn finishes, leaving only when their harness session ends; launching a harness no longer starts work without an instruction.

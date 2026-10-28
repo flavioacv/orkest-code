@@ -70,17 +70,19 @@ void main() {
     var now = DateTime.now().millisecondsSinceEpoch;
     final projects = List.generate(
       18,
-      (i) => Project(
-        id: 'p$i',
-        name: 'Project $i',
-        path: '/tmp',
-        colorValue: 0xff4488ff,
-        createdAt: DateTime.now(),
-      ),
+      (i) => i == 0
+          ? Project.systemTerminal()
+          : Project(
+              id: 'p$i',
+              name: 'Project $i',
+              path: '/tmp',
+              colorValue: 0xff4488ff,
+              createdAt: DateTime.now(),
+            ),
     );
     final sessions = List.generate(
       18,
-      (i) => _session(_Gateway(), id: 'many-$i', projectId: 'p$i'),
+      (i) => _session(_Gateway(), id: 'many-$i', projectId: projects[i].id),
     );
     for (final session in sessions) {
       session.applyOfficeActivity(
