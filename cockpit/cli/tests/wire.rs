@@ -365,6 +365,7 @@ fn activity_contract_needs_no_harness_and_preserves_execution_ids() {
         ("ci_failed", "completed", "ci-1"),
         ("ci_passed", "completed", "ci-2"),
         ("push", "completed", "push-1"),
+        ("git", "completed", "pull-1"),
         ("task_pending", "completed", "task-1"),
         ("task_started", "completed", "task-1"),
         ("task_completed", "completed", "task-1"),

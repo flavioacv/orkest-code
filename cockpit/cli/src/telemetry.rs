@@ -236,7 +236,11 @@ fn wrap(args: &[String]) -> ! {
     let (tx, rx) = mpsc::channel::<Msg>();
     let tab = self_tab_id();
     let run_for_sender = run_id.clone();
+    let capture_vcs = crate::vcs::command_operation(&opts.argv).is_some();
     let sender = thread::spawn(move || {
+        let mut vcs_out = String::new();
+        let mut vcs_err = String::new();
+        let mut vcs_overflow = false;
         let mut pending: Vec<(&'static str, Vec<String>)> = Vec::new();
         let mut last = Instant::now();
         let flush = |pending: &mut Vec<(&'static str, Vec<String>)>| {
@@ -253,6 +257,19 @@ fn wrap(args: &[String]) -> ! {
         loop {
             match rx.recv_timeout(BATCH_DELAY) {
                 Ok(Msg::Lines(stream, lines)) => {
+                    if capture_vcs && !vcs_overflow {
+                        for line in &lines {
+                            if vcs_out.len() + vcs_err.len() + line.len() + 1 > crate::vcs::MAX_RESULT {
+                                vcs_overflow = true;
+                                vcs_out.clear();
+                                vcs_err.clear();
+                                break;
+                            }
+                            let buffer = if stream == "err" { &mut vcs_err } else { &mut vcs_out };
+                            buffer.push_str(line);
+                            buffer.push('\n');
+                        }
+                    }
                     match pending.last_mut() {
                         Some((s, l)) if *s == stream => l.extend(lines),
                         _ => pending.push((stream, lines)),
@@ -265,7 +282,7 @@ fn wrap(args: &[String]) -> ! {
                 }
                 Ok(Msg::Done) => {
                     flush(&mut pending);
-                    return;
+                    return if capture_vcs && !vcs_overflow { Some((vcs_out, vcs_err)) } else { None };
                 }
                 Err(mpsc::RecvTimeoutError::Timeout) => {
                     if !pending.is_empty() {
@@ -275,7 +292,7 @@ fn wrap(args: &[String]) -> ! {
                 }
                 Err(mpsc::RecvTimeoutError::Disconnected) => {
                     flush(&mut pending);
-                    return;
+                    return if capture_vcs && !vcs_overflow { Some((vcs_out, vcs_err)) } else { None };
                 }
             }
         }
@@ -288,13 +305,16 @@ fn wrap(args: &[String]) -> ! {
         run_pipes(&opts.argv, &env, &tx)
     };
     let _ = tx.send(Msg::Done);
-    let _ = sender.join();
+    let vcs_output = sender.join().ok().flatten();
 
     let mut close = json!({"cmd": "telemetry-close", "args": {"run": run_id, "exit_code": code}});
     if let Some(id) = self_tab_id() {
         close["tabId"] = json!(id);
     }
     let resp = transport::request(close, QUERY_TIMEOUT);
+    if let Some((out, err)) = vcs_output {
+        crate::vcs::observe_command(&opts.argv, code, &out, &err, self_tab_id().as_deref());
+    }
     if !opts.quiet {
         let errors = resp["data"]["errors"].as_u64().unwrap_or(0);
         let warnings = resp["data"]["warnings"].as_u64().unwrap_or(0);

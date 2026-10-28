@@ -1713,7 +1713,8 @@ pub fn exec(args: &[String]) -> ! {
         cmd_args.insert("timeout".into(), json!(t));
     }
     let mut req = json!({"cmd": "exec", "args": Value::Object(cmd_args)});
-    with_tab_id(&mut req, tab_id.or_else(self_tab_id));
+    let target_tab = tab_id.or_else(self_tab_id);
+    with_tab_id(&mut req, target_tab.clone());
     // Folga sobre o timeout do processo: o app mata o filho e ainda responde.
     let wait = Duration::from_secs(timeout.unwrap_or(60) + 5);
     let resp = transport::request(req, wait);
@@ -1722,6 +1723,9 @@ pub fn exec(args: &[String]) -> ! {
     }
     let data = resp.get("data").cloned().unwrap_or_else(|| json!({}));
     let code = data.get("code").and_then(|v| v.as_i64()).unwrap_or(1) as i32;
+    if data.get("timedOut") != Some(&Value::Bool(true)) {
+        crate::vcs::observe_command(&command, code, &field(&data, "stdout"), &field(&data, "stderr"), target_tab.as_deref());
+    }
     if json_out {
         let mut out = data.clone();
         out["ok"] = json!(code == 0);

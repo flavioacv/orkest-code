@@ -8,7 +8,7 @@ use crate::util::{die, self_tab_id};
 const KINDS: &[&str] = &[
     "prompt", "thinking", "read", "search", "edit", "write", "command", "wait",
     "test", "web", "plan", "delegate", "needs_input", "respond", "done", "error", "other",
-    "pr_opened", "pr_merged", "release", "ci_failed", "ci_passed", "push",
+    "pr_opened", "pr_merged", "release", "ci_failed", "ci_passed", "push", "git",
     "task_pending", "task_started", "task_completed", "task_removed",
 ];
 const PHASES: &[&str] = &["started", "updated", "completed", "failed", "interrupted"];
@@ -17,16 +17,20 @@ const HELP: &str = "orkest activity <kind> --summary <text> [--phase <phase>] [-
   or transcript is read or sent. Use needs_input only when user action is required.
   Kinds: prompt, thinking, read, search, edit, write, command, wait, test, web,
          plan, delegate, needs_input, respond, done, error, other,
-         pr_opened, pr_merged, release, ci_failed, ci_passed, push,
+         pr_opened, pr_merged, release, ci_failed, ci_passed, push, git,
          task_pending, task_started, task_completed, task_removed
   Phases: started (default), updated, completed, failed, interrupted
   --id correlates parallel command/wait executions or deduplicates GitHub events.
   --harness is optional descriptive metadata, including unregistered producers.
   Reuse the same ID for all phases of an execution; use a new ID for a new run.
-  GitHub kinds require --phase completed and report a confirmed outcome only.
-  Task kinds require --id and --phase completed; --summary is the task title.";
+  Repository kinds require --phase completed and report a confirmed outcome only.
+  Task kinds require --id and --phase completed; --summary is the task title.
+  Use `orkest activity vcs --help` to normalize a command/API/MCP result from stdin.";
 
 pub fn activity(args: &[String]) -> ! {
+    if args.first().map(String::as_str) == Some("vcs") {
+        crate::vcs::report(&args[1..]);
+    }
     if args.is_empty() || args[0] == "--help" || args[0] == "-h" {
         println!("{HELP}");
         std::process::exit(if args.is_empty() { 2 } else { 0 });
@@ -70,9 +74,9 @@ pub fn activity(args: &[String]) -> ! {
             die("orkest activity: invalid --harness identifier", 2);
         }
     }
-    if ["pr_opened", "pr_merged", "release", "ci_failed", "ci_passed", "push"].contains(&kind)
+    if ["pr_opened", "pr_merged", "release", "ci_failed", "ci_passed", "push", "git"].contains(&kind)
         && phase != "completed" {
-        die("orkest activity: GitHub outcomes require --phase completed", 2);
+        die("orkest activity: repository outcomes require --phase completed", 2);
     }
     if ["task_pending", "task_started", "task_completed", "task_removed"].contains(&kind)
         && (activity_id.is_none() || phase != "completed") {

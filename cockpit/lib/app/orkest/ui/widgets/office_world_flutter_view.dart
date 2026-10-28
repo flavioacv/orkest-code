@@ -436,6 +436,10 @@ class _OfficeWorldViewState extends State<OfficeWorldFlutterView> {
     _lastTickMs = now;
     final map = _currentMap;
     if (map != null) {
+      // Match WebView polling when output arrives inside the scan throttle.
+      for (final session in _currentSessions) {
+        session.refreshOfficeActivityFromScreen();
+      }
       _syncAgents(_projectsForScene(_baseProjects), _currentSessions, map);
       for (final actor in _agents.values) {
         actor.advance(dt, now, map, widget.settings);

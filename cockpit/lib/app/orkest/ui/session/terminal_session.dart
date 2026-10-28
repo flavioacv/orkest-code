@@ -450,7 +450,9 @@ class TerminalSession extends PaneItem {
   int get latestWaitingEventSequence {
     for (final event in _officeStatusHistory.reversed) {
       if (event.activityKind == 'needs_input' ||
-          (event.status == TerminalStatus.waiting && event.event != null)) {
+          (event.status == TerminalStatus.waiting &&
+              event.event != null &&
+              event.activityKind == null)) {
         return event.sequence;
       }
     }
@@ -464,7 +466,9 @@ class TerminalSession extends PaneItem {
         if (event.activityPhase == 'observed') return null;
         return event.activitySummary;
       }
-      if (event.status == TerminalStatus.waiting && event.event != null) {
+      if (event.status == TerminalStatus.waiting &&
+          event.event != null &&
+          event.activityKind == null) {
         return 'Precisa de uma resposta no terminal';
       }
     }
@@ -602,6 +606,7 @@ class TerminalSession extends PaneItem {
   final Queue<int> _observedOfficeActivityOrder = Queue<int>();
   static const _gitEventDetector = GitTerminalEventDetector();
   DateTime? _lastOfficeActivityScanAt;
+  DateTime? _lastOfficeGitScanAt;
   List<String>? _previousGitScreenLines;
   bool _awaitingGitPushResult = false;
   bool _officeAgentActivityObserved = false;
@@ -719,6 +724,33 @@ class TerminalSession extends PaneItem {
     }
     if (activityId != null &&
         !RegExp(r'^[A-Za-z0-9_.:/-]{1,160}$').hasMatch(activityId)) {
+      return;
+    }
+    // Repository outcomes describe the project, not the agent's current turn.
+    // Keep working/idle/waiting and all command lifetimes intact.
+    if (safeKind == 'git') {
+      if (safePhase != 'completed' && safePhase != 'observed') return;
+      if (activityId != null) {
+        final key = 'event:git:$activityId';
+        if (_finishedOfficeActivities.contains(key)) return;
+        _rememberOfficeActivity(key);
+      }
+      _officeStatusHistory.add(
+        TerminalStatusEvent(
+          _status,
+          DateTime.now(),
+          event: 'OfficeActivity',
+          activityKind: 'git',
+          activityPhase: safePhase,
+          activitySummary: safeSummary.substring(
+            0,
+            safeSummary.length > 160 ? 160 : safeSummary.length,
+          ),
+          sequence: _officeEventSequence++,
+        ),
+      );
+      if (_officeStatusHistory.length > 200) _officeStatusHistory.removeAt(0);
+      notifyListeners();
       return;
     }
     if (const {
@@ -955,6 +987,8 @@ class TerminalSession extends PaneItem {
   /// chunks and full line contents are neither persisted nor forwarded. The
   /// recognizer intentionally returns fixed labels, never a command or path.
   void _observeTerminalActivity() {
+    if (_disposed || _processExited) return;
+    _observeGitTerminalActivity();
     if (_agentSessionEnded || _officeTurnCompleted) return;
     final now = DateTime.now();
     final lastScan = _lastOfficeActivityScanAt;
@@ -1012,6 +1046,39 @@ class TerminalSession extends PaneItem {
       }
     }
 
+    for (final raw in terminal.plainLines(limit: 80)) {
+      final line = raw.trim();
+      if (line.isEmpty) continue;
+
+      final observation = _mapOfficeActivityLine(line);
+      if (observation == null) continue;
+      final (kind, summary, phase, fingerprint) = observation;
+      // The visible-screen transition above emits permission requests. Do not
+      // replay matching prompts from scrollback or deduplicate them forever.
+      if (kind == 'needs_input') continue;
+      // Startup banners and restored output are not proof of a new turn.
+      if (!_turnActive && _status == TerminalStatus.idle) continue;
+      _officeAgentActivityObserved = true;
+      if (_status == TerminalStatus.waiting && kind != 'needs_input') continue;
+      if (!_observedOfficeActivityFingerprints.add(fingerprint)) continue;
+      _observedOfficeActivityOrder.addLast(fingerprint);
+      if (_observedOfficeActivityOrder.length > 256) {
+        _observedOfficeActivityFingerprints.remove(
+          _observedOfficeActivityOrder.removeFirst(),
+        );
+      }
+      applyOfficeActivity(kind: kind, phase: phase, summary: summary);
+    }
+  }
+
+  void _observeGitTerminalActivity() {
+    final now = DateTime.now();
+    final lastScan = _lastOfficeGitScanAt;
+    if (lastScan != null &&
+        now.difference(lastScan) < const Duration(seconds: 1)) {
+      return;
+    }
+    _lastOfficeGitScanAt = now;
     final screenLines = terminal.plainLines(limit: 80).toList(growable: false);
     final previousGitLines = _previousGitScreenLines;
     _previousGitScreenLines = screenLines;
@@ -1036,6 +1103,9 @@ class TerminalSession extends PaneItem {
         _awaitingGitPushResult = false;
       }
       if (gitEvent != null) {
+        // A URL alone may come from pr/release view, documentation or a query.
+        // URL results require command context from the VCS result adapter.
+        if (gitEvent.url != null) continue;
         final gitFp = Object.hash('git', gitEvent.kind, gitEvent.summary, line);
         if (_observedOfficeActivityFingerprints.add(gitFp)) {
           _observedOfficeActivityOrder.addLast(gitFp);
@@ -1047,25 +1117,6 @@ class TerminalSession extends PaneItem {
           _handleObservedGitEvent(gitEvent);
         }
       }
-
-      final observation = _mapOfficeActivityLine(line);
-      if (observation == null) continue;
-      final (kind, summary, phase, fingerprint) = observation;
-      // The visible-screen transition above emits permission requests. Do not
-      // replay matching prompts from scrollback or deduplicate them forever.
-      if (kind == 'needs_input') continue;
-      // Startup banners and restored output are not proof of a new turn.
-      if (!_turnActive && _status == TerminalStatus.idle) continue;
-      _officeAgentActivityObserved = true;
-      if (_status == TerminalStatus.waiting && kind != 'needs_input') continue;
-      if (!_observedOfficeActivityFingerprints.add(fingerprint)) continue;
-      _observedOfficeActivityOrder.addLast(fingerprint);
-      if (_observedOfficeActivityOrder.length > 256) {
-        _observedOfficeActivityFingerprints.remove(
-          _observedOfficeActivityOrder.removeFirst(),
-        );
-      }
-      applyOfficeActivity(kind: kind, phase: phase, summary: summary);
     }
   }
 

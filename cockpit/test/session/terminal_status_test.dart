@@ -78,6 +78,135 @@ TerminalSession _session({
 );
 
 void main() {
+  group('VCS outcomes are independent of agent activity', () {
+    test(
+      'an uncorrelated PR URL does not celebrate a read or resurrect work',
+      () async {
+        final s = _session(projectId: 'read-only-pr');
+        s.applyClaudeStatus(status: TerminalStatus.idle, event: 'SessionStart');
+        s.refreshOfficeActivityFromScreen();
+        s.terminal.write('https://github.com/org/repo/pull/7\r\n');
+        await Future<void>.delayed(const Duration(milliseconds: 1100));
+        s.refreshOfficeActivityFromScreen();
+        expect(
+          OfficeRoomEffectsManager.instance.getEffect(
+            s.projectId,
+            DateTime.now().millisecondsSinceEpoch,
+          ),
+          isNull,
+        );
+        expect(s.status, TerminalStatus.idle);
+        await s.dispose();
+      },
+    );
+    for (final status in TerminalStatus.values) {
+      test(
+        'repository events preserve $status and pending command lifetimes',
+        () async {
+          final s = _session();
+          final other = _session(id: 'other', projectId: 'other-project');
+          final effects = OfficeRoomEffectsManager.instance;
+          effects.prune(DateTime.now().millisecondsSinceEpoch + 1000000);
+          s.beginOfficeCommand('run', 'Background build');
+          s.applyClaudeStatus(
+            status: status,
+            isTurnStart: status == TerminalStatus.working,
+            event: status == TerminalStatus.waiting
+                ? 'PermissionRequest'
+                : status == TerminalStatus.idle
+                ? 'Stop'
+                : 'UserPromptSubmit',
+          );
+          final commands = s.officeShells;
+          final waitingSequence = s.latestWaitingEventSequence;
+          for (final kind in [
+            'pr_opened',
+            'pr_merged',
+            'release',
+            'push',
+            'git',
+            'ci_failed',
+            'ci_passed',
+          ]) {
+            s.applyOfficeActivity(
+              kind: kind,
+              phase: 'completed',
+              summary: 'Confirmed repository outcome',
+              activityId: kind,
+            );
+            expect(s.status, status);
+            expect(s.officeShells, commands);
+            expect(s.latestWaitingEventSequence, waitingSequence);
+            expect(other.status, TerminalStatus.idle);
+            expect(
+              effects.getEffect(
+                other.projectId,
+                DateTime.now().millisecondsSinceEpoch,
+              ),
+              isNull,
+            );
+          }
+          expect(
+            effects
+                .getEffect(s.projectId, DateTime.now().millisecondsSinceEpoch)
+                ?.kind,
+            OfficeRoomEffectKind.party,
+          );
+          await s.dispose();
+          await other.dispose();
+        },
+      );
+    }
+
+    test(
+      'ordinary Git activity is deduplicated without inventing an agent or a party',
+      () async {
+        final s = _session(projectId: 'shell-only');
+        for (var i = 0; i < 2; i++) {
+          s.applyOfficeActivity(
+            kind: 'git',
+            phase: 'completed',
+            summary: 'Git pull concluído',
+            activityId: 'pull-1',
+          );
+        }
+        expect(s.status, TerminalStatus.idle);
+        expect(s.hasOfficeAgentPresence, false);
+        expect(s.officeStatusHistory, hasLength(1));
+        expect(
+          OfficeRoomEffectsManager.instance.getEffect(
+            s.projectId,
+            DateTime.now().millisecondsSinceEpoch,
+          ),
+          isNull,
+        );
+        await s.dispose();
+      },
+    );
+
+    test(
+      'new Git output remains observable after Stop without reviving work or permission',
+      () async {
+        final s = _session(projectId: 'idle-git');
+        s.applyClaudeStatus(status: TerminalStatus.idle, event: 'SessionStart');
+        s.refreshOfficeActivityFromScreen();
+        s.applyClaudeStatus(status: TerminalStatus.idle, event: 'Stop');
+        s.terminal.write('✓ Merged pull request #7 into main\r\n');
+        await Future<void>.delayed(const Duration(milliseconds: 1100));
+        s.refreshOfficeActivityFromScreen();
+        expect(
+          OfficeRoomEffectsManager.instance
+              .getEffect(s.projectId, DateTime.now().millisecondsSinceEpoch)
+              ?.kind,
+          OfficeRoomEffectKind.party,
+        );
+        expect(s.status, TerminalStatus.idle);
+        expect(s.latestWaitingEventSequence, -1);
+        expect(s.hasOfficeAgentPresence, true);
+        await s.dispose();
+      },
+    );
+  });
   group('Office presence follows the open harness session', () {
     for (final (executable, kind) in [
       ('codex', HarnessKind.codex),
@@ -97,7 +226,15 @@ void main() {
             );
             provider.snapshots = [shell];
             final gateway = _NoopGateway();
-            final monitor = TerminalHarnessMonitor(provider: provider);
+            // Drive snapshots explicitly; launch retry timers must not race
+            // the transition assertions when the machine is under test load.
+            final monitor = TerminalHarnessMonitor(
+              provider: provider,
+              pollInterval: const Duration(days: 1),
+              idlePollInterval: const Duration(days: 1),
+              urgentPollInterval: const Duration(days: 1),
+              activityPollInterval: const Duration(days: 1),
+            );
             final s = _session(monitor: monitor, gateway: gateway);
             s.setVisible(true);
             await Future<void>.delayed(Duration.zero);

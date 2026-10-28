@@ -16,6 +16,8 @@ USAGE:
                                                report it finishing and leaving
   orkest activity <kind> --summary <text> [--phase <phase>] [--tab-id <id>]
                                                report provider-neutral Office activity
+  orkest activity vcs --operation <op> --exit-code <n> --stdin [--tab-id <id>]
+                                               normalize a confirmed Git/API/MCP result
   orkest open      [--tab-id <id>] <file>     open the file in the app's viewer
   orkest <file>                               shortcut for `open` (e.g. orkest .zprofile)
   orkest read-tab  [<label|tab-id>]           read a tab's rendered output (alias: read-pane)

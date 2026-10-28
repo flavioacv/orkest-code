@@ -16,6 +16,7 @@
 mod commands;
 mod agent;
 mod activity;
+mod vcs;
 mod flags;
 mod hook;
 mod keys;

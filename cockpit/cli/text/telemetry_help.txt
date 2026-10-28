@@ -11,6 +11,9 @@ RUN A COMMAND (the wrapper):
   orkest telemetry -q -- ./script.sh              `--` forces "everything after is the command"
   Prints, at exit:  telemetry: run r_42 · 3 errors · 12 warnings · orkest telemetry errors --run r_42
   The child's exit code is returned unchanged.
+  Recognized Git, gh, az repos and GitHub/Azure API commands also report confirmed
+  repository outcomes to the originating Office tab. Read-only PR requests,
+  dry runs and queued merges do not celebrate. Unknown shell scripts are not inferred.
 
 QUERY:
   orkest telemetry errors   [filters]             open cases, grouped by fingerprint (default: --level error)
