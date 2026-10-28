@@ -25,8 +25,8 @@ export function layoutCorridor(cols: number): AreaLayout {
     const x = c * COL_W;
     const last = c === cols - 1;
     if (c === 0) {
-      b.furn('plant_tall', x + 2, 4, 'palm', { order: 0.5 });
-      b.furn('plant_small', x + 13, 4, 'flower', { order: 0.5 });
+      b.furn('plant_tall', x + 2, CORRIDOR_H - 1, 'palm', { order: 0.5 });
+      b.furn('plant_small', x + 13, CORRIDOR_H - 1, 'flower', { order: 0.5 });
     } else if (c === 1) {
       const bench = b.furn('bench', x + 2, 0, undefined, { order: 0.5 });
       for (let i = 0; i < 2; i++) b.seat('bench', 'bench', x + 2 + i, 0, 'down', undefined, { noFurniture: true, furnitureId: bench });
@@ -43,15 +43,15 @@ export function layoutCorridor(cols: number): AreaLayout {
         for (let i = 0; i < 2; i++) b.seat('bench', 'bench', x + 11 + i, 0, 'down', undefined, { noFurniture: true, furnitureId: bench });
         b.furn('plant_tall', x + 13, 0, TALL[k % TALL.length], { order: 0.5 });
       }
-      if (k % 2 === 1) b.furn('plant_small', x + 12, 4, SMALL[(k + 1) % SMALL.length], { order: 0.5 });
+      if (k % 2 === 1) b.furn('plant_small', x + 12, CORRIDOR_H - 1, SMALL[(k + 1) % SMALL.length], { order: 0.5 });
     }
     // planta alta onde as paredes das salas se encontram (uma coluna sim, outra não)
-    if (!last && c % 2 === 1) b.furn('plant_tall', x + 15, 4, TALL[(c + 1) % TALL.length], { order: 0.5 });
+    if (!last && c % 2 === 1) b.furn('plant_tall', x + 15, CORRIDOR_H - 1, TALL[(c + 1) % TALL.length], { order: 0.5 });
     // passadeira estreita (um trecho por coluna), centrada no corredor
-    b.rug(x + 2, 1.95, COL_W - 4, 1.1, RUNNERS[c % RUNNERS.length], 502 + c);
+    b.rug(x + 2, CORRIDOR_H / 2 - 0.55, COL_W - 4, 1.1, RUNNERS[c % RUNNERS.length], 502 + c);
     // pontos de conversa no meio do corredor
-    b.spot('talk', x + 5, 2, 'right', { group: `talk:corredor:${c}`, dx: -1 });
-    b.spot('talk', x + 6, 2, 'left', { group: `talk:corredor:${c}`, dx: 1 });
+    b.spot('talk', x + 5, Math.floor(CORRIDOR_H / 2), 'right', { group: `talk:corredor:${c}`, dx: -1 });
+    b.spot('talk', x + 6, Math.floor(CORRIDOR_H / 2), 'left', { group: `talk:corredor:${c}`, dx: 1 });
   }
   return b.build();
 }

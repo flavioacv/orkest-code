@@ -33,6 +33,10 @@ export function normalizeFurniture(kind: FurnitureKind, variant?: string, state?
 
 function build(kind: FurnitureKind, variant: string | undefined, state: number, seed: number): BufFurniture {
   switch (kind) {
+    case 'focus_pod': return O.desk('white', seed);
+    case 'coworking_set': return C.sofa('down');
+    case 'meeting_pair': return C.cafeTable();
+    case 'meeting_set': return O.meetingTable(seed);
     case 'desk':
       return O.desk(variant, seed);
     case 'desk_back':

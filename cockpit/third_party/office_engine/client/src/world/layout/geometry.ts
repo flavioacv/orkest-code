@@ -16,7 +16,7 @@ export function slotSide(slot: number): Side {
 
 /** Retângulo (tiles) de uma sala em uma coluna/lado. */
 export function cellRect(col: number, side: Side): TileRect {
-  return { x: col * COL_W, y: side === 'north' ? NORTH_Y : SOUTH_Y, w: COL_W, h: ROOM_H };
+  return { x: col * COL_W, y: side === 'north' ? NORTH_Y : SOUTH_Y, w: 16, h: ROOM_H };
 }
 
 export function slotRect(slot: number): TileRect {

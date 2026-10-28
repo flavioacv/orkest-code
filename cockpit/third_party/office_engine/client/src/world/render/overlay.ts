@@ -7,7 +7,7 @@
 import { TILE } from '../../art/api';
 import type { WorldOptions } from '../api';
 import type { Camera } from '../camera';
-import { COL_W, CORRIDOR_Y, SOUTH_Y } from '../constants';
+import { COL_W, CORE_COLS, CORRIDOR_Y, SOUTH_Y } from '../constants';
 import type { Character } from '../sim/character';
 import { shellAgeKey, shellBubbleAlpha, shellBubbleText, STORM_LIFT, unitHash } from '../sim/shell';
 import type { Sim } from '../sim/sim';
@@ -51,11 +51,13 @@ const CORE_NAMES: Record<string, string> = {
   'core:banheiros': 'Banheiros',
   'core:copa': 'Copa',
   'core:lounge': 'Lounge',
+  'core:coworking': 'Trabalho individual',
+  'core:coworking-lounge': 'Coworking · convivência',
 };
 
 export function coreAreaName(id: string): string | undefined {
   const source = CORE_NAMES[id];
-  return source == null ? undefined : tr(source);
+  return source == null ? undefined : id === 'core:lounge' && CORE_COLS > 2 ? `${tr(source)} · coworking` : tr(source);
 }
 
 /** 'shell' = espera de shell: balão escuro de terminal com texto verde. 'say' = fala das rodas (papo, torcida, apostas). */
@@ -424,7 +426,7 @@ export class Overlay {
       const anim = room ? buildAnim(room.phase, room.progress(now)) : null;
       // texto da placa quando ela fica grande o bastante para ler; senão, o nome flutuante
       const rect = this.renderer.signRect(vis);
-      const text = room ? room.info.name : vis.id === 'core:recepcao' ? 'Orkest Code' : null;
+      const text = room ? room.info.name : vis.id === 'core:recepcao' ? 'Orkest Code' : coreAreaName(vis.id) ?? null;
       const readable = !!rect && rect.h * zoom >= SIGN_MIN_PX;
       if (readable && rect && text && (!anim || anim.sign >= 1)) {
         const ax = this.sx(rect.x);

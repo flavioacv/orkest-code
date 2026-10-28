@@ -5,15 +5,19 @@ import { DEFAULT_SOUND_SETTINGS, type SoundSettings } from '../../third_party/of
 import { DEFAULT_WORLD_OPTIONS, exteriorSeasonFor, seasonalThemeFor } from '../../third_party/office_engine/client/src/world/api.ts';
 import type { WorldOptions } from '../../third_party/office_engine/client/src/world/api.ts';
 import { Camera, overviewFrame } from '../../third_party/office_engine/client/src/world/camera.ts';
-import { BUILDING_H, COL_W, TILE } from '../../third_party/office_engine/client/src/world/constants.ts';
+import { BUILDING_H, COL_W, TILE, configureOfficeLayout } from '../../third_party/office_engine/client/src/world/constants.ts';
 import { attachInput } from '../../third_party/office_engine/client/src/world/input.ts';
 import { Overlay } from '../../third_party/office_engine/client/src/world/render/overlay.ts';
 import { Renderer } from '../../third_party/office_engine/client/src/world/render/renderer.ts';
-import { OrkestSim } from './sim.ts';
+import { OrkestSim, type CoworkingZone, type CoworkingTestState } from './sim.ts';
 import { SoundCues } from '../../third_party/office_engine/client/src/world/sound-cues.ts';
 import { __OFFICE_ASSETS__ } from './assets.ts';
 import { setLocale, normalizeLocale } from '../../third_party/office_engine/shared/i18n.ts';
+import { outdoorLifeLayout } from '../../third_party/office_engine/client/src/world/layout/outdoor-life.ts';
+import { OutdoorPeople } from './outdoor_people.ts';
+import { installSpriteMix } from './sprite_mix.ts';
 
+configureOfficeLayout(true);
 const canvas = document.querySelector<HTMLCanvasElement>('#office')!;
 let options: WorldOptions = { ...DEFAULT_WORLD_OPTIONS };
 const camera = new Camera();
@@ -21,6 +25,8 @@ const sim = new OrkestSim(art, () => options, null);
 const soundBoard = new SoundBoard();
 const soundCues = new SoundCues(sim, camera);
 const renderer = new Renderer(canvas, art, sim, camera);
+const outdoorPeople = new OutdoorPeople(art);
+renderer.outdoorActors = dt => outdoorPeople.update(dt, sim.building.cols, exteriorSeasonFor(options.season, new Date()));
 const overlay = new Overlay(renderer.ctx, sim, renderer, camera);
 let snapshotRev = 0;
 let selectedAgent: string | null = null;
@@ -30,6 +36,11 @@ let lastCols = -1;
 let lastTs = 0;
 let raf = 0;
 let destroyed = false;
+let disposeSpriteMix: (() => void) | null = null;
+void installSpriteMix(renderer, sim, percent => outdoorPeople.setFurnitureScale(percent)).then(dispose => {
+  if (destroyed) dispose();
+  else disposeSpriteMix = dispose;
+});
 let receivedFirstSnapshot = false;
 let soundEnabled = false;
 const lastAgentStatuses = new Map<string, string>();
@@ -97,14 +108,17 @@ function buildingRect() {
 }
 
 function updateBounds() {
-  const bounds = buildingRect();
-  camera.bounds = { x: bounds.x - 7 * TILE, y: bounds.y - 6 * TILE, w: bounds.w + 14 * TILE, h: bounds.h + 18 * TILE };
-  camera.minZoom = Math.min(1, Math.max(0.25, camera.fitZoom(bounds, 16)));
+  const e = renderer.exterior.bounds;
+  const bounds = { x: e.x * TILE, y: e.y * TILE, w: e.w * TILE, h: e.h * TILE };
+  camera.bounds = bounds;
+  camera.minZoom = Math.min(0.5, Math.max(0.15, camera.fitZoom(bounds, 16) * .75));
   camera.clamp();
 }
 
-function overview(animate: boolean) {
-  const frame = overviewFrame(buildingRect(), camera.viewW, camera.viewH, camera.insets);
+function overview(animate: boolean, exterior = false) {
+  const bounds = buildingRect();
+  const e = renderer.exterior.bounds;
+  const frame = overviewFrame(exterior ? { x: e.x * TILE, y: e.y * TILE, w: e.w * TILE, h: e.h * TILE } : bounds, camera.viewW, camera.viewH, camera.insets);
   const fit = Math.max(camera.minZoom, frame.zoom);
   const snapped = camera.snapZoom(fit, 'down');
   const zoom = Math.min(4, snapped >= fit * 0.82 ? snapped : fit);
@@ -211,6 +225,33 @@ function portraitCanvas(source: HTMLCanvasElement): HTMLCanvasElement {
 }
 
 window.orkestOfficeWorld = {
+  focusOutdoor(place: string) {
+    const layout = outdoorLifeLayout(sim.building.cols);
+    const target = place === 'camp' ? layout.camp : place === 'pond' ? layout.pond : place === 'fountain' ? layout.fountain : place === 'garden' ? layout.garden : place === 'station' ? layout.station : place === 'woodland' ? layout.woodland : place === 'market' ? layout.market : null;
+    if (!target) return;
+    userMoved = true; camera.follow = null;
+    const zoom = Math.min(2, camera.viewW / (place === 'station' ? 1000 : 560), camera.viewH / 400);
+    const center = camera.centerFor(target.x, target.y - 70, zoom);
+    camera.animateTo(center.x, center.y, zoom, Date.now(), 420);
+  },
+  testCoworking(zone: CoworkingZone) {
+    const result = sim.startCoworkingTest(zone, selectedAgent ?? undefined);
+    const state = sim.getCoworkingTest();
+    if (result.ok && state) focusAgent(state.agentId, true);
+    return result;
+  },
+  testCoworkingGroup() { return sim.startCoworkingGroup(); },
+  getCoworkingTests() { return sim.getCoworkingTests(); },
+  stopCoworkingTest() { sim.stopCoworkingTest(); camera.follow = null; },
+  getCoworkingTest() { return sim.getCoworkingTest(); },
+  focusArea(id: string) {
+    const area = renderer.areas.get(id); if (!area) return;
+    userMoved = true; camera.follow = null;
+    const zoom = Math.min(2, camera.viewW / (area.px.w + 64), camera.viewH / (area.px.h + 96));
+    const center = camera.centerFor(area.px.x + area.px.w / 2, area.px.y + area.px.h / 2, zoom);
+    camera.animateTo(center.x, center.y, zoom, Date.now(), 420);
+  },
+  overview() { userMoved = false; camera.follow = null; overview(true, true); },
   getSocialSnapshot() { return sim.sessionSocial.snapshot(); },
   getAppearance(seed: number, look: 'f' | 'm', parts: AppearanceParts = {}) {
     const appearance = art.fitToOptions({ ...art.appearanceFromSeed(seed, { look }), ...parts });
@@ -296,6 +337,8 @@ window.orkestOfficeWorld = {
   },
   destroy() {
     destroyed = true;
+    disposeSpriteMix?.();
+    renderer.outdoorActors = null;
     cancelAnimationFrame(raf);
     window.removeEventListener('pointerdown', unlockAudio);
     window.removeEventListener('keydown', unlockAudio);
@@ -313,6 +356,14 @@ raf = requestAnimationFrame(loop);
 declare global {
   interface Window {
     orkestOfficeWorld: {
+      focusOutdoor(place: string): void;
+      testCoworking(zone: CoworkingZone): { ok: boolean; message: string };
+      testCoworkingGroup(): { ok: boolean; message: string; count: number };
+      getCoworkingTests(): CoworkingTestState[];
+      stopCoworkingTest(): void;
+      getCoworkingTest(): CoworkingTestState | null;
+      focusArea(id: string): void;
+      overview(): void;
       getSocialSnapshot(): unknown;
       getAppearance(seed: number, look: 'f' | 'm', parts?: Record<string, string>): {
         parts: Record<string, string>;
