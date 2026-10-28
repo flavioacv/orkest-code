@@ -16,6 +16,44 @@ import { layoutExterior } from '../../third_party/office_engine/client/src/world
 import { BUILDING_H, TILE } from '../../third_party/office_engine/client/src/world/constants.ts';
 import { Camera } from '../../third_party/office_engine/client/src/world/camera.ts';
 
+test('responsive terrain expands the landscape without moving offices or outdoor landmarks', () => {
+  configureOfficeLayout(true);
+  try {
+    for (const cols of [3, 4, 8, 16]) for (const aspect of [16 / 9, 21 / 9, 32 / 9, 3 / 2, 1 / 2]) {
+      const original = layoutExterior(cols);
+      const expanded = layoutExterior(cols, 'summer', aspect);
+      const b = expanded.bounds;
+      assert.ok(b.w >= b.h * Math.max(16 / 9, aspect));
+      assert.equal(b.x + b.w / 2, original.bounds.x + original.bounds.w / 2);
+      assert.equal(b.y, original.bounds.y);
+      assert.equal(b.h, original.bounds.h);
+      assert.ok(b.x <= original.bounds.x);
+      assert.ok(b.x + b.w >= original.bounds.x + original.bounds.w);
+      assert.deepEqual(expanded.lanes, original.lanes);
+      for (const kind of ['station_shelter', 'fountain_large', 'garden_set']) {
+        assert.deepEqual(expanded.props.find(prop => prop.kind === kind), original.props.find(prop => prop.kind === kind));
+      }
+      const track = expanded.props.find(prop => prop.kind === 'station_track')!;
+      const train = expanded.props.find(prop => prop.kind === 'train')!;
+      assert.equal(track.seed, b.w * TILE);
+      assert.equal(track.x, (b.x + b.w / 2) * TILE);
+      assert.equal(train.seed, track.seed);
+      const street = expanded.floors.find(floor => floor.kind === 'street')!;
+      assert.equal(street.x, b.x * TILE);
+      assert.equal(street.w, b.w * TILE);
+      if (b.w > original.bounds.w + 20) {
+        assert.ok(expanded.props.some(prop => prop.kind === 'tree' && prop.x < original.bounds.x * TILE));
+        assert.ok(expanded.props.some(prop => prop.kind === 'tree' && prop.x > (original.bounds.x + original.bounds.w) * TILE));
+      }
+    }
+  } finally { configureOfficeLayout(false); }
+});
+
+test('legacy native terrain ignores browser aspect ratio', () => {
+  configureOfficeLayout(false);
+  assert.deepEqual(layoutExterior(4, 'summer', 32 / 9), layoutExterior(4));
+});
+
 test('camera fits and centers the full terrain without allowing a farther zoom out', () => {
   for (const [width, height] of [[1600, 900], [700, 1300], [900, 900]]) {
     const camera = new Camera();

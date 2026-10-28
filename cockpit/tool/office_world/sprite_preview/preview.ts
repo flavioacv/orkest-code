@@ -21,7 +21,6 @@ const snapshot = () => ({
   })),
 });
 window.orkestOfficeWorld.update(snapshot());
-requestAnimationFrame(() => requestAnimationFrame(() => window.orkestOfficeWorld.overview()));
 const timer = setInterval(() => window.orkestOfficeWorld.update(snapshot()), 1500);
 window.addEventListener('pagehide', () => { clearInterval(timer); window.orkestOfficeWorld.destroy(); }, { once: true });
 document.querySelector<HTMLSelectElement>('#season')!.onchange = event => {

@@ -99,6 +99,7 @@ function resize() {
     canvas.height = height;
   }
   camera.setView(rect.width, rect.height, dpr);
+  renderer.sync(seasonalThemeFor(options.theme, new Date()), exteriorSeasonFor(options.season, new Date()));
   updateBounds();
   if (sim.initialized && !userMoved) overview(false);
 }
@@ -111,14 +112,19 @@ function updateBounds() {
   const e = renderer.exterior.bounds;
   const bounds = { x: e.x * TILE, y: e.y * TILE, w: e.w * TILE, h: e.h * TILE };
   camera.bounds = bounds;
-  camera.minZoom = Math.min(6, camera.fitZoom(bounds, 24));
+  camera.minZoom = Math.min(6, Math.max(
+    (camera.viewW - camera.insets.left - camera.insets.right) / bounds.w,
+    (camera.viewH - camera.insets.top - camera.insets.bottom) / bounds.h,
+  ));
   camera.clamp();
 }
 
 function overview(animate: boolean, exterior = false) {
   const bounds = buildingRect();
   const e = renderer.exterior.bounds;
-  const frame = overviewFrame(exterior ? { x: e.x * TILE, y: e.y * TILE, w: e.w * TILE, h: e.h * TILE } : bounds, camera.viewW, camera.viewH, camera.insets);
+  const frame = exterior
+    ? { zoom: camera.minZoom, cx: (e.x + e.w / 2) * TILE, cy: (e.y + e.h / 2) * TILE, dy: 0 }
+    : overviewFrame(bounds, camera.viewW, camera.viewH, camera.insets);
   const fit = Math.max(camera.minZoom, frame.zoom);
   const snapped = camera.snapZoom(fit, 'down');
   const zoom = Math.min(4, snapped >= fit * 0.82 ? snapped : fit);
@@ -251,7 +257,7 @@ window.orkestOfficeWorld = {
     const center = camera.centerFor(area.px.x + area.px.w / 2, area.px.y + area.px.h / 2, zoom);
     camera.animateTo(center.x, center.y, zoom, Date.now(), 420);
   },
-  overview() { userMoved = false; camera.follow = null; overview(true, true); },
+  overview() { userMoved = true; camera.follow = null; overview(true, true); },
   getSocialSnapshot() { return sim.sessionSocial.snapshot(); },
   getAppearance(seed: number, look: 'f' | 'm', parts: AppearanceParts = {}) {
     const appearance = art.fitToOptions({ ...art.appearanceFromSeed(seed, { look }), ...parts });
