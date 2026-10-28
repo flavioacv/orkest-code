@@ -1,5 +1,11 @@
 # Changelog — Orkest Code
 
+## 0.1.10 (build 14) — 2026-10-27
+
+- Office includes a shared coworking lounge, accessible seats and individual workstations while preserving dynamic project rooms and existing furniture.
+- Added sprite assets and independent sprite scale controls for the Office map.
+- The seasonal exterior includes vegetation, outdoor interactions, vendors, tents, a river and a moving train with full-width tracks.
+
 ## 0.1.9 (build 13) — 2026-10-27
 
 - Files and diffs open the Office workspace window directly, without requiring an agent terminal to be open; its header follows the active tab and project.
