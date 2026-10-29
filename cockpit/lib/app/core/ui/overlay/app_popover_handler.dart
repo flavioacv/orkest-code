@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/core/ui/widgets/apple_glass_surface.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 /// Handler de popover do app — substitui o `PopoverOverlayHandler` do shadcn em
@@ -144,11 +145,11 @@ class AppPopoverOverlayHandler extends OverlayHandler {
                   value: isClosed.value ? 0.0 : 1.0,
                   initialValue: 0.0,
                   curve: isClosed.value
-                      ? const Interval(0, 2 / 3)
-                      : Curves.linear,
+                      ? const Interval(0, 2 / 3, curve: Curves.easeIn)
+                      : kAppleDecelerateCurve,
                   duration: isClosed.value
-                      ? (showDuration ?? kDefaultDuration)
-                      : (dismissDuration ?? const Duration(milliseconds: 100)),
+                      ? (dismissDuration ?? const Duration(milliseconds: 110))
+                      : (showDuration ?? const Duration(milliseconds: 160)),
                   onEnd: (value) {
                     if (value == 0.0 && isClosed.value) {
                       popoverEntry.remove();

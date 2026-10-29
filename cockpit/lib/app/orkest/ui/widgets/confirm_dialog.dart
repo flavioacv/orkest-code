@@ -4,6 +4,12 @@ import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 /// Cor do barrier (escurece o fundo) — o `showDialog` do shadcn usa barrier
 /// transparente por padrão; aqui damos o leve dim que o modal pedia.
+///
+/// Todos os diálogos usam `surfaceBlur: 24` e `surfaceOpacity: 0.86` para
+/// reproduzir os alertas translúcidos (*Liquid Glass* / Vibrancy) do macOS/iOS
+/// segundo o Apple HIG.
+const double _kDialogSurfaceBlur = 24;
+const double _kDialogSurfaceOpacity = 0.86;
 
 /// Dialog informativo genérico (tema do orkest) — só botão "OK".
 Future<void> showInfoDialog(
@@ -18,6 +24,8 @@ Future<void> showInfoDialog(
     builder: (context) {
       final colors = context.colors;
       return AlertDialog(
+        surfaceBlur: _kDialogSurfaceBlur,
+        surfaceOpacity: _kDialogSurfaceOpacity,
         title: Text(
           title,
           style: context.typo.title.copyWith(fontSize: 15, color: colors.text),
@@ -59,6 +67,8 @@ Future<CloseDirtyChoice> showCloseDirtyDialog(
       final colors = context.colors;
       final tr = context.t.orkest.confirmDialog;
       return AlertDialog(
+        surfaceBlur: _kDialogSurfaceBlur,
+        surfaceOpacity: _kDialogSurfaceOpacity,
         title: Text(
           tr.unsavedChangesTitle,
           style: context.typo.title.copyWith(fontSize: 15, color: colors.text),
@@ -111,6 +121,8 @@ Future<bool> showConfirmDialog(
       final confirm = confirmLabel ?? context.t.common.confirm;
       final cancel = cancelLabel ?? context.t.common.cancel;
       return AlertDialog(
+        surfaceBlur: _kDialogSurfaceBlur,
+        surfaceOpacity: _kDialogSurfaceOpacity,
         title: Text(
           title,
           style: context.typo.title.copyWith(fontSize: 15, color: colors.text),

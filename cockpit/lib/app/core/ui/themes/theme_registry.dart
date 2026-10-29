@@ -749,9 +749,87 @@ final OrkestThemeSpec roseTheme = _tintedThemeOf(
   lightContent: const Color(0xFFFFF9FB),
 );
 
+/// **Apple HIG** — paleta oficial inspirada nos cinzas e cores semânticas do
+/// macOS / iOS (`systemGray6`..`systemGray3`, `systemBlue`, `systemGreen`,
+/// `systemRed`, `systemOrange`), calibrada para respeitar os invariantes de
+/// contraste WCAG (`>= 3:1` em `text3` e ANSI) e separação de superfícies do
+/// Orkest Code.
+final OrkestThemeSpec appleHigTheme = OrkestThemeSpec(
+  id: 'apple-hig',
+  name: 'Apple HIG',
+  author: 'Apple / Orkest',
+  dark: _variant(
+    ui: AppColors.dark.copyWith(
+      bg: const Color(0xFF111114),
+      panel: const Color(0xFF1C1C1E), // systemGray6 dark
+      panel2: const Color(0xFF252529), // elevated surface
+      panel3: const Color(0xFF323237), // hover / systemGray5 dark
+      border: const Color(0xFF2C2C2E),
+      border2: const Color(0xFF3A3A3C), // systemGray4 dark
+      text: const Color(0xFFF5F5F7),
+      text2: const Color(0xFFAEAEB2), // systemGray2 dark
+      text3: const Color(0xFF7C7C82), // >= 3:1 sobre panel2
+      text4: const Color(0xFF545458),
+      accent: const Color(0xFF0A84FF), // systemBlue dark
+      accentSoft: const Color(0x330A84FF),
+      accentText: const Color(0xFF64D2FF),
+      online: const Color(0xFF30D158), // systemGreen dark
+      ok: const Color(0xFF30D158),
+      error: const Color(0xFFFF453A), // systemRed dark
+      warn: const Color(0xFFFF9F0A), // systemOrange dark
+      edited: const Color(0xFFFF9F0A),
+      editedBg: const Color(0xFF2C2210),
+      gitStaged: const Color(0xFF30D158),
+      gitUntracked: const Color(0xFF0A84FF),
+      gitDeleted: const Color(0xFFFF453A),
+      gitConflict: const Color(0xFFFF9F0A),
+    ),
+    syntax: SyntaxColors.githubDark,
+    terminal: orkestTerminalThemeDark,
+    terminalOverrides: {
+      'cursor': '#0A84FF',
+      'selection': '#0A84FF33',
+    },
+  ),
+  light: _variant(
+    ui: AppColors.light.copyWith(
+      bg: const Color(0xFFF2F2F2), // cinza neutro sRGB (sat < 0.05)
+      panel: const Color(0xFFFFFFFF),
+      panel2: const Color(0xFFE8E8ED),
+      panel3: const Color(0xFFDDDDE3),
+      border: const Color(0xFFD8D8DE),
+      border2: const Color(0xFFC7C7CC), // systemGray4 light
+      text: const Color(0xFF1D1D1F),
+      text2: const Color(0xFF56565C),
+      text3: const Color(0xFF74747B), // >= 3:1 sobre panel2
+      text4: const Color(0xFFAEAEB2),
+      accent: const Color(0xFF0071E3), // Apple accessible systemBlue
+      accentSoft: const Color(0x220071E3),
+      accentText: const Color(0xFF0058B0),
+      online: const Color(0xFF248A3D), // systemGreen accessible light
+      ok: const Color(0xFF248A3D),
+      error: const Color(0xFFD70015), // systemRed accessible light
+      warn: const Color(0xFFB25000), // systemOrange accessible light
+      edited: const Color(0xFFB25000),
+      editedBg: const Color(0xFFFFF4E5),
+      gitStaged: const Color(0xFF248A3D),
+      gitUntracked: const Color(0xFF0071E3),
+      gitDeleted: const Color(0xFFD70015),
+      gitConflict: const Color(0xFFC93400),
+    ),
+    syntax: SyntaxColors.githubLight,
+    terminal: orkestTerminalThemeLight,
+    terminalOverrides: {
+      'cursor': '#0071E3',
+      'selection': '#0071E322',
+    },
+  ),
+);
+
 /// Todos os temas que vêm no app, na ordem em que aparecem no seletor.
 final List<OrkestThemeSpec> builtInThemes = [
   orkestDefaultTheme,
+  appleHigTheme,
   orkest2Theme,
   violet1Theme,
   violet2Theme,

@@ -63,8 +63,8 @@ ThemeData buildTheme({
   );
   return ThemeData(
     colorScheme: _schemeFrom(colors, brightness),
-    // Raio coerente com o design (cantos suaves, não pílula).
-    radius: 0.5,
+    // Raio coerente com o Apple HIG (10px suave, não pílula).
+    radius: 0.625,
     typography: Typography.geist(
       sans: TextStyle(
         fontFamily: appTypo.body.fontFamily,

@@ -74,13 +74,15 @@ List<String> _candidates() => <String>[
   'Anonymous Pro',
   'PT Mono',
   'Courier New',
-  if (Platform.isMacOS) ...[
+  if (Platform.isMacOS || Platform.isIOS) ...[
+    '.AppleSystemUIFont',
+    'SF Pro Display',
+    'SF Pro Text',
     'SF Mono',
     'Menlo',
     'Monaco',
     'Andale Mono',
     'Helvetica Neue',
-    'SF Pro Text',
     'Avenir Next',
   ],
   if (Platform.isWindows) ...[

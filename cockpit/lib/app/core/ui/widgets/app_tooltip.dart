@@ -1,5 +1,7 @@
 import 'dart:async' show Timer;
 
+import 'package:orkest_code/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/app/core/ui/widgets/apple_glass_surface.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 /// Tooltip do app — substitui o `Tooltip` do shadcn onde a posição importa.
@@ -53,7 +55,30 @@ class _AppTooltipState extends State<AppTooltip> {
       follow: false,
       consumeOutsideTaps: false,
       dismissBackdropFocus: false,
-      builder: (context) => TooltipContainer(child: Text(widget.message)),
+      builder: (context) {
+        final colors = context.colors;
+        return AppleGlassSurface(
+          radius: 7,
+          blurSigma: 20,
+          surfaceColor: colors.panel2,
+          opacity: 0.88,
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+          shadows: [
+            BoxShadow(
+              color: colors.shadow,
+              blurRadius: 12,
+              offset: const Offset(0, 4),
+            ),
+          ],
+          child: Text(
+            widget.message,
+            style: context.typo.label.copyWith(
+              fontSize: 11.5,
+              color: colors.text,
+            ),
+          ),
+        );
+      },
     );
   }
 

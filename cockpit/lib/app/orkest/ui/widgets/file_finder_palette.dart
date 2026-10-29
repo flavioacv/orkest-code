@@ -2,6 +2,7 @@ import 'dart:async';
 
 import 'package:orkest_code/app/core/ui/file_icons/file_icons.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/app/core/ui/widgets/apple_glass_surface.dart';
 import 'package:orkest_code/app/core/ui/widgets/hover_tap.dart';
 import 'package:flutter/services.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -126,21 +127,20 @@ class _FileFinderPaletteState extends State<_FileFinderPalette> {
     final colors = context.colors;
     return Align(
       alignment: const Alignment(0, -0.55),
-      child: Container(
+      child: AppleGlassSurface(
         width: 560,
         constraints: const BoxConstraints(maxHeight: 420),
-        decoration: BoxDecoration(
-          color: colors.panel,
-          borderRadius: BorderRadius.circular(10),
-          border: Border.all(color: colors.border),
-          boxShadow: [
-            BoxShadow(
-              color: colors.shadow,
-              blurRadius: 24,
-              offset: Offset(0, 10),
-            ),
-          ],
-        ),
+        radius: 14,
+        blurSigma: 28,
+        surfaceColor: colors.panel,
+        opacity: 0.85,
+        shadows: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 32,
+            offset: const Offset(0, 14),
+          ),
+        ],
         child: Focus(
           onKeyEvent: _onKey,
           child: Column(
@@ -157,7 +157,7 @@ class _FileFinderPaletteState extends State<_FileFinderPalette> {
                   ),
                   style: context.typo.body.copyWith(color: colors.text),
                   border: Border.all(color: colors.border),
-                  borderRadius: BorderRadius.circular(7),
+                  borderRadius: BorderRadius.circular(8),
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
                     vertical: 9,
@@ -165,10 +165,11 @@ class _FileFinderPaletteState extends State<_FileFinderPalette> {
                   onChanged: _onChanged,
                 ),
               ),
+              Container(height: 1, color: colors.border.withValues(alpha: 0.6)),
               Flexible(
                 child: _results.isEmpty
                     ? Padding(
-                        padding: const EdgeInsets.fromLTRB(14, 4, 14, 16),
+                        padding: const EdgeInsets.fromLTRB(14, 10, 14, 16),
                         child: Align(
                           alignment: Alignment.centerLeft,
                           child: Text(
@@ -181,7 +182,10 @@ class _FileFinderPaletteState extends State<_FileFinderPalette> {
                       )
                     : ListView.builder(
                         controller: _scroll,
-                        padding: const EdgeInsets.only(bottom: 8),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 6,
+                          vertical: 6,
+                        ),
                         itemCount: _results.length,
                         itemBuilder: (context, i) => _row(context, i),
                       ),
@@ -204,24 +208,32 @@ class _FileFinderPaletteState extends State<_FileFinderPalette> {
     final selected = index == _selected;
 
     return HoverTap(
-      color: selected ? colors.panel2 : null,
-      hoverColor: colors.panel2,
+      color: selected ? colors.accentSoft : null,
+      hoverColor: selected ? colors.accentSoft : colors.panel2,
+      borderRadius: BorderRadius.circular(8),
       onTap: () => _pick(index),
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
       child: Row(
         children: [
           FileTypeIcon.file(name, size: 16),
           const SizedBox(width: 8),
           Text(
             name,
-            style: typo.body.copyWith(fontSize: 13, color: colors.text),
+            style: typo.body.copyWith(
+              fontSize: 13,
+              fontWeight: selected ? FontWeight.w500 : FontWeight.w400,
+              color: selected ? colors.accentText : colors.text,
+            ),
           ),
           const SizedBox(width: 8),
           Expanded(
             child: Text(
               dir,
               overflow: TextOverflow.ellipsis,
-              style: typo.label.copyWith(fontSize: 11, color: colors.text4),
+              style: typo.label.copyWith(
+                fontSize: 11,
+                color: selected ? colors.text2 : colors.text4,
+              ),
             ),
           ),
         ],

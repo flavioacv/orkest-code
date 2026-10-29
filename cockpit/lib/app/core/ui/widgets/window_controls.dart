@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/app/core/ui/window_activity_controller.dart';
 import 'package:orkest_code/app/core/data/diagnostics/diagnostics_log.dart';
 import 'package:orkest_code/app/core/data/diagnostics/performance_diagnostics.dart';
 import 'package:orkest_code/i18n/strings.g.dart';
@@ -254,33 +255,75 @@ class _WindowControlsState extends State<WindowControls> {
   @override
   Widget build(BuildContext context) {
     if (!Platform.isMacOS) return const SizedBox.shrink();
+    final isWindowActive =
+        WindowActivityScope.maybeOf(context)?.isActive ?? true;
+    final showTrafficColors = isWindowActive || _hover;
+
     return MouseRegion(
       onEnter: (_) => setState(() => _hover = true),
       onExit: (_) => setState(() => _hover = false),
       child: Row(
         children: [
-          _light(const Color(0xFFFF5F57), Icons.close, windowManager.close),
+          _light(
+            context,
+            activeColor: const Color(0xFFFF5F57),
+            showColor: showTrafficColors,
+            icon: Icons.close,
+            onTap: windowManager.close,
+          ),
           const SizedBox(width: 8),
-          _light(const Color(0xFFFEBC2E), Icons.remove, windowManager.minimize),
+          _light(
+            context,
+            activeColor: const Color(0xFFFEBC2E),
+            showColor: showTrafficColors,
+            icon: Icons.remove,
+            onTap: windowManager.minimize,
+          ),
           const SizedBox(width: 8),
-          _light(const Color(0xFF28C840), Icons.add, _toggleMaximize),
+          _light(
+            context,
+            activeColor: const Color(0xFF28C840),
+            showColor: showTrafficColors,
+            icon: Icons.add,
+            onTap: _toggleMaximize,
+          ),
         ],
       ),
     );
   }
 
-  Widget _light(Color color, IconData icon, VoidCallback onTap) {
+  Widget _light(
+    BuildContext context, {
+    required Color activeColor,
+    required bool showColor,
+    required IconData icon,
+    required VoidCallback onTap,
+  }) {
+    final colors = context.colors;
+    // Em janela inativa e sem hover, o macOS HIG renderiza os três botões de
+    // semáforo num cinza neutro discreto com borda sutil.
+    final fillColor = showColor ? activeColor : colors.border2;
     return GestureDetector(
       onTap: onTap,
       child: MouseRegion(
         cursor: SystemMouseCursors.click,
-        child: Container(
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 140),
           width: 12,
           height: 12,
           alignment: Alignment.center,
-          decoration: BoxDecoration(color: color, shape: BoxShape.circle),
+          decoration: BoxDecoration(
+            color: fillColor,
+            shape: BoxShape.circle,
+            border: Border.all(
+              color: showColor
+                  ? Colors.black.withValues(alpha: 0.12)
+                  : colors.border,
+              width: 0.5,
+            ),
+          ),
           child: _hover
-              ? Icon(icon, size: 8, color: Colors.black.withValues(alpha: 0.55))
+              ? Icon(icon, size: 8, color: Colors.black.withValues(alpha: 0.6))
               : null,
         ),
       ),

@@ -1,4 +1,5 @@
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/app/core/ui/widgets/apple_glass_surface.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 /// Um item de [showAppMenu]: ícone (opcional) à esquerda + rótulo, com check à
@@ -128,32 +129,47 @@ Future<T?> showAppMenu<T>(
       regionGroupId: groupId,
       builder: (subContext) => ConstrainedBox(
         constraints: const BoxConstraints(minWidth: 180, maxWidth: 320),
-        child: DropdownMenu(
-          children: [
-            for (final child in item.children!)
-              MenuButton(
-                enabled: child.enabled,
-                leading: child.icon != null
-                    ? Icon(
-                        child.icon,
-                        size: 15,
-                        color: !child.enabled ? colors.text4 : colors.text3,
-                      )
-                    : null,
-                onPressed: (_) {
-                  closeSubMenu();
-                  closeOverlay<T>(menuContext, child.value);
-                },
-                child: Text(
-                  child.label,
-                  overflow: TextOverflow.ellipsis,
-                  style: subContext.typo.body.copyWith(
-                    fontSize: 13,
-                    color: !child.enabled ? colors.text4 : colors.text,
+        child: AppleGlassSurface(
+          radius: 10,
+          blurSigma: 24,
+          surfaceColor: colors.panel2,
+          opacity: 0.78,
+          shadows: [
+            BoxShadow(
+              color: colors.shadow,
+              blurRadius: 24,
+              offset: const Offset(0, 10),
+            ),
+          ],
+          child: DropdownMenu(
+            surfaceOpacity: 0.0,
+            surfaceBlur: 0,
+            children: [
+              for (final child in item.children!)
+                MenuButton(
+                  enabled: child.enabled,
+                  leading: child.icon != null
+                      ? Icon(
+                          child.icon,
+                          size: 15,
+                          color: !child.enabled ? colors.text4 : colors.text3,
+                        )
+                      : null,
+                  onPressed: (_) {
+                    closeSubMenu();
+                    closeOverlay<T>(menuContext, child.value);
+                  },
+                  child: Text(
+                    child.label,
+                    overflow: TextOverflow.ellipsis,
+                    style: subContext.typo.body.copyWith(
+                      fontSize: 13,
+                      color: !child.enabled ? colors.text4 : colors.text,
+                    ),
                   ),
                 ),
-              ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -174,65 +190,85 @@ Future<T?> showAppMenu<T>(
     regionGroupId: groupId,
     builder: (menuContext) {
       // DropdownMenu embrulha os MenuButton num MenuGroup (exigido) + MenuPopup.
-      Widget buildMenu(List<AppMenuItem<T>> visible) => DropdownMenu(
-        children: [
-          for (final item in visible)
-            if (item.isDivider)
-              const MenuDivider()
-            else
-              // Wrapper hover-aware (o DropdownMenu só aceita MenuItem): o
-              // context do wrapper é a âncora do submenu, e o hover replica o
-              // comportamento nativo — item com filhos abre o submenu, item
-              // comum fecha o que estiver aberto.
-              _AppMenuEntry(
-                hasLeading: item.leading != null || item.icon != null,
-                onEnter: (itemContext) => item.children != null && item.enabled
-                    ? openSubMenu(menuContext, itemContext, item)
-                    : closeSubMenu(),
-                child: MenuButton(
-                  enabled: item.enabled,
-                  leading:
-                      item.leading ??
-                      (item.icon != null
-                          ? Icon(
-                              item.icon,
-                              size: 15,
-                              color: !item.enabled
-                                  ? colors.text4
-                                  : (item.danger ? colors.error : colors.text3),
-                            )
-                          : null),
-                  trailing: item.selected
-                      ? Icon(Icons.check, size: 14, color: colors.accentText)
-                      : (item.children != null
+      // Envolvemos em AppleGlassSurface para aplicar Liquid Glass (blur + squircle)
+      // conforme o Apple HIG.
+      Widget buildMenu(List<AppMenuItem<T>> visible) => AppleGlassSurface(
+        radius: 10,
+        blurSigma: 24,
+        surfaceColor: colors.panel2,
+        opacity: 0.78,
+        shadows: [
+          BoxShadow(
+            color: colors.shadow,
+            blurRadius: 24,
+            offset: const Offset(0, 10),
+          ),
+        ],
+        child: DropdownMenu(
+          surfaceOpacity: 0.0,
+          surfaceBlur: 0,
+          children: [
+            for (final item in visible)
+              if (item.isDivider)
+                const MenuDivider()
+              else
+                // Wrapper hover-aware (o DropdownMenu só aceita MenuItem): o
+                // context do wrapper é a âncora do submenu, e o hover replica o
+                // comportamento nativo — item com filhos abre o submenu, item
+                // comum fecha o que estiver aberto.
+                _AppMenuEntry(
+                  hasLeading: item.leading != null || item.icon != null,
+                  onEnter: (itemContext) =>
+                      item.children != null && item.enabled
+                      ? openSubMenu(menuContext, itemContext, item)
+                      : closeSubMenu(),
+                  child: MenuButton(
+                    enabled: item.enabled,
+                    leading:
+                        item.leading ??
+                        (item.icon != null
                             ? Icon(
-                                Icons.chevron_right,
-                                size: 14,
-                                color: colors.text3,
+                                item.icon,
+                                size: 15,
+                                color: !item.enabled
+                                    ? colors.text4
+                                    : (item.danger
+                                          ? colors.error
+                                          : colors.text3),
                               )
                             : null),
-                  // Com filhos, o clique no pai não escolhe nada — só abre o
-                  // submenu (redundante com o hover, cobre toque/teclado).
-                  onPressed: item.children != null
-                      ? (ctx) => openSubMenu(menuContext, ctx, item)
-                      : (ctx) {
-                          closeOverlay<T>(ctx, item.value);
-                        },
-                  child:
-                      item.labelWidget ??
-                      Text(
-                        item.label,
-                        overflow: TextOverflow.ellipsis,
-                        style: menuContext.typo.body.copyWith(
-                          fontSize: 13,
-                          color: !item.enabled
-                              ? colors.text4
-                              : (item.danger ? colors.error : colors.text),
+                    trailing: item.selected
+                        ? Icon(Icons.check, size: 14, color: colors.accentText)
+                        : (item.children != null
+                              ? Icon(
+                                  Icons.chevron_right,
+                                  size: 14,
+                                  color: colors.text3,
+                                )
+                              : null),
+                    // Com filhos, o clique no pai não escolhe nada — só abre o
+                    // submenu (redundante com o hover, cobre toque/teclado).
+                    onPressed: item.children != null
+                        ? (ctx) => openSubMenu(menuContext, ctx, item)
+                        : (ctx) {
+                            closeOverlay<T>(ctx, item.value);
+                          },
+                    child:
+                        item.labelWidget ??
+                        Text(
+                          item.label,
+                          overflow: TextOverflow.ellipsis,
+                          style: menuContext.typo.body.copyWith(
+                            fontSize: 13,
+                            color: !item.enabled
+                                ? colors.text4
+                                : (item.danger ? colors.error : colors.text),
+                          ),
                         ),
-                      ),
+                  ),
                 ),
-              ),
-        ],
+          ],
+        ),
       );
 
       // Lista longa (catálogo de modelos de um harness, por exemplo) ganha um
@@ -351,29 +387,32 @@ class _SearchableMenuState<T> extends State<_SearchableMenu<T>> {
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Container(
-          margin: const EdgeInsets.only(bottom: 4),
-          decoration: BoxDecoration(
-            color: colors.panel,
-            borderRadius: BorderRadius.circular(8),
-            border: Border.all(color: colors.border),
-          ),
-          padding: const EdgeInsets.all(6),
-          child: TextField(
-            controller: _controller,
-            autofocus: true,
-            placeholder: Text(
-              widget.hint,
+        Padding(
+          padding: const EdgeInsets.only(bottom: 6),
+          child: AppleGlassSurface(
+            radius: 10,
+            blurSigma: 24,
+            surfaceColor: colors.panel2,
+            padding: const EdgeInsets.all(6),
+            child: TextField(
+              controller: _controller,
+              autofocus: true,
+              placeholder: Text(
+                widget.hint,
+                style: context.typo.body.copyWith(
+                  fontSize: 13,
+                  color: colors.text4,
+                ),
+              ),
               style: context.typo.body.copyWith(
                 fontSize: 13,
-                color: colors.text4,
+                color: colors.text,
               ),
+              border: Border.all(color: colors.border),
+              borderRadius: BorderRadius.circular(7),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+              onChanged: (value) => setState(() => _query = value),
             ),
-            style: context.typo.body.copyWith(fontSize: 13, color: colors.text),
-            border: Border.all(color: colors.border),
-            borderRadius: BorderRadius.circular(6),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            onChanged: (value) => setState(() => _query = value),
           ),
         ),
         Flexible(child: widget.buildMenu(_visible)),

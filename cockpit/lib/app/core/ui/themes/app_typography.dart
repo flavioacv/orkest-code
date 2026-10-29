@@ -1,10 +1,13 @@
-import 'package:flutter/foundation.dart' show listEquals;
+import 'dart:io' show Platform;
+
+import 'package:flutter/foundation.dart' show immutable, listEquals;
 import 'package:flutter/widgets.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-/// Tipografia do Orkest — espelha o design: Space Grotesk (display/títulos),
-/// Hanken Grotesk (UI/texto), JetBrains Mono (código). Servidas via
-/// `google_fonts` (runtime + cache), sem bundle de .ttf.
+/// Tipografia do Orkest — segue o padrão Apple HIG (San Francisco / SF Pro
+/// Display / SF Pro Text como fonte primária no macOS/iOS, com fallback para
+/// Space Grotesk / Hanken Grotesk em outras plataformas e JetBrains Mono / SF
+/// Mono para código).
 @immutable
 class AppTypography {
   const AppTypography({
@@ -16,22 +19,22 @@ class AppTypography {
     required this.mono,
   });
 
-  /// Space Grotesk — títulos grandes (heading do transcript).
+  /// SF Pro Display / Space Grotesk — títulos grandes (heading do transcript).
   final TextStyle display;
 
-  /// Space Grotesk — nomes de workspace/aba/seção.
+  /// SF Pro Text / Space Grotesk — nomes de workspace/aba/seção.
   final TextStyle title;
 
-  /// Hanken Grotesk — corpo do transcript e inputs.
+  /// SF Pro Text / Hanken Grotesk — corpo do transcript e inputs.
   final TextStyle body;
 
-  /// Hanken Grotesk — rótulos pequenos.
+  /// SF Pro Text / Hanken Grotesk — rótulos pequenos.
   final TextStyle label;
 
-  /// Space Grotesk — texto das abas.
+  /// SF Pro Text / Space Grotesk — texto das abas.
   final TextStyle tab;
 
-  /// JetBrains Mono — código, args de tool, métricas.
+  /// JetBrains Mono / SF Mono — código, args de tool, métricas.
   final TextStyle mono;
 
   /// Igualdade por valor, pela mesma razão do [AppColors]: o `OrkestTheme`
@@ -46,11 +49,12 @@ class AppTypography {
   @override
   int get hashCode => Object.hashAll(_props);
 
-  /// Monta a tipografia. Sem args = defaults do design. [uiFont]/[monoFont]
-  /// vazios mantêm Space Grotesk/Hanken e JetBrains Mono; preenchidos trocam a
-  /// família (resolução pelo SO). [codeSize] define o tamanho do mono. O
-  /// "tamanho da interface" NÃO escala aqui — é aplicado globalmente via
-  /// `MediaQuery.textScaler` (zoom de texto em todo o app).
+  /// Monta a tipografia segundo a escala e tracking óptico do Apple HIG.
+  /// Sem args = defaults do sistema (SF Pro no macOS/iOS com fallback para
+  /// Space Grotesk/Hanken; JetBrains Mono com fallback SF Mono no código).
+  /// [uiFont]/[monoFont] preenchidos trocam a família (resolução pelo SO).
+  /// [codeSize] define o tamanho do mono. O "tamanho da interface" NÃO escala
+  /// aqui — é aplicado globalmente via `MediaQuery.textScaler`.
   factory AppTypography.build({
     String? uiFont,
     String? monoFont,
@@ -58,30 +62,70 @@ class AppTypography {
   }) {
     final hasUi = uiFont != null && uiFont.trim().isNotEmpty;
     final hasMono = monoFont != null && monoFont.trim().isNotEmpty;
-    // Display/títulos: Space Grotesk por padrão; corpo/rótulos: Hanken. Com uma
-    // fonte custom de interface, ela manda em tudo.
+    final isApple = Platform.isMacOS || Platform.isIOS;
+
     final TextStyle displayBase = hasUi
         ? TextStyle(fontFamily: uiFont)
+        : isApple
+        ? const TextStyle(
+            fontFamily: '.AppleSystemUIFont',
+            fontFamilyFallback: [
+              'SF Pro Display',
+              'SF Pro Text',
+              '-apple-system',
+              'Helvetica Neue',
+            ],
+          )
         : GoogleFonts.spaceGrotesk();
+
     final TextStyle ui = hasUi
         ? TextStyle(fontFamily: uiFont)
+        : isApple
+        ? const TextStyle(
+            fontFamily: '.AppleSystemUIFont',
+            fontFamilyFallback: [
+              'SF Pro Text',
+              'SF Pro Display',
+              '-apple-system',
+              'Helvetica Neue',
+            ],
+          )
         : GoogleFonts.hankenGrotesk();
+
     final TextStyle mono = hasMono
         ? TextStyle(fontFamily: monoFont)
-        : GoogleFonts.jetBrainsMono();
+        : GoogleFonts.jetBrainsMono().copyWith(
+            fontFamilyFallback: const ['SF Mono', 'Menlo', 'Monaco'],
+          );
 
     return AppTypography(
       display: displayBase.copyWith(
         fontSize: 22,
         fontWeight: FontWeight.w600,
-        height: 1.25,
-        letterSpacing: -0.2,
+        height: 1.22,
+        letterSpacing: -0.4,
       ),
-      title: displayBase.copyWith(fontSize: 13, fontWeight: FontWeight.w600),
-      body: ui.copyWith(fontSize: 14.5, height: 1.6),
-      label: ui.copyWith(fontSize: 12, height: 1.3),
-      tab: displayBase.copyWith(fontSize: 12.5, fontWeight: FontWeight.w500),
-      mono: mono.copyWith(fontSize: codeSize, height: 1.55),
+      title: displayBase.copyWith(
+        fontSize: 13,
+        fontWeight: FontWeight.w600,
+        letterSpacing: -0.12,
+      ),
+      body: ui.copyWith(
+        fontSize: 13.5,
+        height: 1.48,
+        letterSpacing: -0.08,
+      ),
+      label: ui.copyWith(
+        fontSize: 11.5,
+        height: 1.3,
+        letterSpacing: -0.04,
+      ),
+      tab: displayBase.copyWith(
+        fontSize: 12.5,
+        fontWeight: FontWeight.w500,
+        letterSpacing: -0.08,
+      ),
+      mono: mono.copyWith(fontSize: codeSize, height: 1.52),
     );
   }
 
