@@ -1,5 +1,14 @@
 # Changelog — Orkest Code
 
+## 0.1.13 (build 17) — 2026-10-29
+
+- Implementado sistema de design Apple Human Interface Guidelines (Apple HIG) com tema integrado `apple-hig` (paletas dark e light calibradas com conformidade WCAG AA).
+- Superfícies translúcidas Liquid Glass com desfoque gaussiano em popovers, submenus, Command Palette, tooltips e diálogos (`AppleGlassSurface`).
+- Geometria contínua com curvatura Apple Squircle (`ContinuousRectangleBorder`) e curvas de transição `kAppleDecelerateCurve`.
+- Tipografia do sistema San Francisco (`.AppleSystemUIFont` / `SF Pro Display`, `SF Pro Text`, `SF Mono`) com tracking óptico Apple.
+- Controles de janela macOS (traffic lights) integrados ao ciclo de vida de foco de janela (`WindowActivityScope`), atenuando o semáforo quando a janela está em segundo plano.
+- Correção de carregamento de assets SVG de cadernos e painéis na Galeria (`orkest-notebook.svg` e `orkest-panel.svg`).
+
 ## 0.1.12 (build 16) — 2026-10-28
 
 - Removed the automatic Halloween vampire cape, preserving original character silhouettes in every direction.
