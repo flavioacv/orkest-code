@@ -508,6 +508,7 @@ class _OfficeAgentProfileDialogState extends State<_OfficeAgentProfileDialog> {
           'plan' => tr.organizingTasks,
           'delegate' => tr.callingSubagents,
           'done' => tr.turnCompleted,
+          'git' => localizedOfficeVcsSummary(event.activitySummary!),
           'error' => tr.activityError,
           'mcp' || 'other' => tr.usingTool,
           _ => event.activitySummary!,

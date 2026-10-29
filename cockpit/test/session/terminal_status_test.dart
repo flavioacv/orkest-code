@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'package:orkest_code/i18n/strings.g.dart';
 
 import 'package:orkest_code/app/core/domain/entities/harness.dart';
 import 'package:orkest_code/app/orkest/domain/contracts/process_tree_provider.dart';
@@ -185,7 +186,7 @@ void main() {
     );
 
     test(
-      'new Git output remains observable after Stop without reviving work or permission',
+      'plain Git prose cannot invent repository outcomes after Stop',
       () async {
         final s = _session(projectId: 'idle-git');
         s.applyClaudeStatus(status: TerminalStatus.idle, event: 'SessionStart');
@@ -198,7 +199,7 @@ void main() {
           OfficeRoomEffectsManager.instance
               .getEffect(s.projectId, DateTime.now().millisecondsSinceEpoch)
               ?.kind,
-          OfficeRoomEffectKind.party,
+          isNull,
         );
         expect(s.status, TerminalStatus.idle);
         expect(s.latestWaitingEventSequence, -1);
@@ -488,7 +489,117 @@ void main() {
     });
   });
 
+  test(
+    'application-owned activity labels follow IDE language changes',
+    () async {
+      final previous = LocaleSettings.currentLocale;
+      final event = TerminalStatusEvent(
+        TerminalStatus.working,
+        DateTime.now(),
+        activityKind: 'read',
+        activityPhase: 'observed',
+        activitySummary: 'Lendo arquivo',
+      );
+      try {
+        await LocaleSettings.setLocale(AppLocale.en);
+        expect(localizedOfficeVcsSummary('Push concluído'), 'Push completed');
+        expect(
+          localizedOfficeActivitySummary(event),
+          t.orkest.officeWorld.readingFile,
+        );
+        await LocaleSettings.setLocale(AppLocale.es);
+        expect(localizedOfficeVcsSummary('Push concluído'), 'Push completado');
+        expect(
+          localizedOfficeActivitySummary(event),
+          t.orkest.officeWorld.readingFile,
+        );
+        expect(
+          localizedOfficeVcsSummary('Custom producer text'),
+          'Custom producer text',
+        );
+      } finally {
+        await LocaleSettings.setLocale(previous);
+      }
+    },
+  );
+
   group('Office approval screen isolation', () {
+    test('MCP tool approval waits only in its requesting session', () async {
+      final active = _session(id: 'active');
+      final idle = _session(id: 'idle');
+      idle.applyClaudeStatus(
+        status: TerminalStatus.idle,
+        event: 'SessionStart',
+      );
+      idle.applyClaudeStatus(status: TerminalStatus.working, isTurnStart: true);
+      idle.applyClaudeStatus(status: TerminalStatus.idle, event: 'Stop');
+      final idleHistory = idle.officeStatusHistory.length;
+      active.applyClaudeStatus(
+        status: TerminalStatus.working,
+        isTurnStart: true,
+      );
+      active.terminal.write(
+        'MCP\r\nrea/inspect_web_page\r\n'
+        'Allow calling this tool?\r\n'
+        '> 1. Yes, allow tool call\r\n'
+        '  2. Yes, and always allow tool in this conversation\r\n'
+        '  3. Yes, and always allow tool (persist to settings.json)\r\n'
+        '  4. No, deny tool call\r\n'
+        '  5. No, and always deny tool in this conversation\r\n'
+        '  6. No, and always deny tool (persist to settings.json)\r\n',
+      );
+      active.refreshOfficeActivityFromScreen();
+      expect(active.status, TerminalStatus.waiting);
+      final sequence = active.latestWaitingEventSequence;
+      await Future<void>.delayed(const Duration(milliseconds: 1100));
+      active.refreshOfficeActivityFromScreen();
+      idle.refreshOfficeActivityFromScreen();
+      expect(active.latestWaitingEventSequence, sequence);
+      expect(idle.status, TerminalStatus.idle);
+      expect(idle.officeStatusHistory.length, idleHistory);
+      active.terminal.write('\x1b[2J\x1b[H');
+      await Future<void>.delayed(const Duration(milliseconds: 1100));
+      active.refreshOfficeActivityFromScreen();
+      expect(active.status, TerminalStatus.working);
+      expect(idle.officeStatusHistory.length, idleHistory);
+      await active.dispose();
+      await idle.dispose();
+    });
+
+    test('duplicate Stop does not create another completion', () async {
+      final s = _session();
+      s.applyClaudeStatus(status: TerminalStatus.working, isTurnStart: true);
+      s.applyClaudeStatus(status: TerminalStatus.idle, event: 'Stop');
+      final history = s.officeStatusHistory.length;
+      s.applyClaudeStatus(status: TerminalStatus.idle, event: 'Stop');
+      expect(s.officeStatusHistory.length, history);
+      s.applyClaudeStatus(status: TerminalStatus.working, isTurnStart: true);
+      s.applyClaudeStatus(status: TerminalStatus.idle, event: 'Stop');
+      expect(s.officeStatusHistory.length, history + 2);
+      await s.dispose();
+    });
+
+    test('Stop after observed completion preserves resume identity', () async {
+      final s = _session();
+      s.applyOfficeActivity(kind: 'prompt', phase: 'started', summary: 'Work');
+      s.applyOfficeActivity(
+        kind: 'done',
+        phase: 'observed',
+        summary: 'Finished',
+      );
+      final history = s.officeStatusHistory.length;
+      s.applyClaudeStatus(
+        status: TerminalStatus.idle,
+        event: 'Stop',
+        sessionId: 'resume-id',
+        transcriptPath: '/tmp/transcript.jsonl',
+      );
+      expect(s.claudeSessionId, 'resume-id');
+      expect(s.transcriptPath, '/tmp/transcript.jsonl');
+      expect(s.officeStatusHistory.length, history);
+      await s.dispose();
+    });
+
     test(
       'only the requesting PTY waits when two agents share a project',
       () async {
@@ -575,6 +686,103 @@ void main() {
     });
   });
   group('Office agent session isolation', () {
+    test('all event branches reject ended or foreign generations', () async {
+      final s = _session();
+      s.applyClaudeStatus(
+        status: TerminalStatus.working,
+        isTurnStart: true,
+        sessionId: 'owner',
+      );
+      s.applyClaudeStatus(
+        status: TerminalStatus.idle,
+        event: 'SessionStart',
+        sessionId: 'foreign',
+      );
+      expect(s.claudeSessionId, 'owner');
+      expect(s.status, TerminalStatus.working);
+      s.applyClaudeStatus(
+        status: TerminalStatus.idle,
+        event: 'SessionStart',
+        sessionId: 'owner',
+      );
+      expect(s.status, TerminalStatus.working);
+      expect(s.acceptHarnessEvent(generation: 'old-pty'), false);
+      s.applyClaudeStatus(
+        status: TerminalStatus.idle,
+        event: 'SessionEnd',
+        sessionId: 'owner',
+      );
+      s.applyClaudeStatus(
+        status: TerminalStatus.idle,
+        event: 'SessionStart',
+        sessionId: 'owner',
+      );
+      s.applyOfficeActivity(
+        kind: 'needs_input',
+        phase: 'started',
+        summary: 'Late permission',
+      );
+      s.applySubagentEvent(id: 'late-child', type: 'worker', started: true);
+      expect(s.status, TerminalStatus.idle);
+      expect(s.officeSubagents, isEmpty);
+      await s.dispose();
+    });
+
+    test('previous turn hooks cannot finish or restart a newer turn', () async {
+      final s = _session();
+      for (final turn in ['one', 'two']) {
+        s.applyClaudeStatus(
+          status: TerminalStatus.working,
+          isTurnStart: true,
+          event: 'UserPromptSubmit',
+          sessionId: 'owner',
+          turnId: turn,
+        );
+      }
+      s.applyClaudeStatus(
+        status: TerminalStatus.idle,
+        event: 'Stop',
+        sessionId: 'owner',
+        turnId: 'one',
+      );
+      expect(s.status, TerminalStatus.working);
+      expect(
+        s.acceptHarnessEvent(event: 'UserPromptSubmit', turnId: 'one'),
+        false,
+      );
+      s.applyClaudeStatus(
+        status: TerminalStatus.idle,
+        event: 'Stop',
+        sessionId: 'owner',
+        turnId: 'two',
+      );
+      expect(s.status, TerminalStatus.idle);
+      await s.dispose();
+    });
+
+    test('generic completion is paid once per execution', () async {
+      final s = _session();
+      s.applyOfficeActivity(kind: 'prompt', phase: 'started', summary: 'Work');
+      s.applyOfficeActivity(
+        kind: 'done',
+        phase: 'completed',
+        summary: 'Done',
+        activityId: 'turn1',
+      );
+      final history = s.officeStatusHistory.length;
+      s.applyOfficeActivity(
+        kind: 'done',
+        phase: 'completed',
+        summary: 'Done',
+        activityId: 'turn1',
+      );
+      expect(s.officeStatusHistory.length, history);
+      s.beginOfficeCommand('exec-only', 'Command');
+      s.finishOfficeCommand('exec-only', 0, 'Finished');
+      expect(s.status, TerminalStatus.idle);
+      await s.dispose();
+    });
+
     test(
       'process exit clears permission and rejects late hooks with the PTY open',
       () async {

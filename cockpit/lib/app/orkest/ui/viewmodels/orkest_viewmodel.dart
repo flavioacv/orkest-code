@@ -231,7 +231,7 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
   StreamSubscription<TaskPreviewUrl>? _previewSub;
 
   /// Assinatura do turn-status remoto (Wave G); cancelada no dispose.
-  StreamSubscription<RemoteTurnStatus>? _remoteTurnSub;
+  StreamSubscription<(String, RemoteTurnStatus)>? _remoteTurnSub;
 
   /// Assinatura dos comandos da CLI vindos dos hosts; cancelada no dispose.
   StreamSubscription<RemoteCliCommand>? _remoteCliSub;
@@ -3014,25 +3014,35 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
     // server o reenvia pelo protocolo, e aqui cai no MESMO caminho do local
     // (roteado por paneId → spinner/chime). Sem isso, terminal remoto não tem
     // som/spinner (o socket local do cliente é inalcançável do host).
-    void onRemoteTurn(RemoteTurnStatus s) => _onClaudeStatus(
-      ClaudeStatusUpdate(
-        paneId: s.paneId,
-        status: s.status,
-        event: s.event,
-        toolName: s.toolName,
-        sessionId: s.sid,
-        transcriptPath: s.transcriptPath,
-        harness: s.harness,
-        subagentId: s.subagentId,
-        subagentType: s.subagentType,
-        subagentOutcome: s.subagentOutcome,
-        subagentParentId: s.subagentParentId,
-        activityKind: s.activityKind,
-        activityPhase: s.activityPhase,
-        activitySummary: s.activitySummary,
-        activityId: s.activityId,
-      ),
-    );
+    void onRemoteTurn((String, RemoteTurnStatus) update) {
+      final (hostId, s) = update;
+      final session = _sessions[s.paneId];
+      if (session == null ||
+          remote.hostForWorkspace(session.projectId)?.id != hostId) {
+        return;
+      }
+      _onClaudeStatus(
+        ClaudeStatusUpdate(
+          paneId: s.paneId,
+          status: s.status,
+          event: s.event,
+          toolName: s.toolName,
+          sessionId: s.sid,
+          transcriptPath: s.transcriptPath,
+          harness: s.harness,
+          subagentId: s.subagentId,
+          subagentType: s.subagentType,
+          subagentOutcome: s.subagentOutcome,
+          subagentParentId: s.subagentParentId,
+          activityKind: s.activityKind,
+          activityPhase: s.activityPhase,
+          activitySummary: s.activitySummary,
+          activityId: s.activityId,
+          turnId: s.turnId,
+          generation: s.generation,
+        ),
+      );
+    }
 
     _remoteTurnSub = _remoteHosts.turnStatus.listen(onRemoteTurn);
     // CLI `orkest` rodando NUM HOST remoto: o comando viaja pelo protocolo e
@@ -6165,6 +6175,14 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
   void _onClaudeStatus(ClaudeStatusUpdate u) {
     final s = _sessions[u.paneId];
     if (s is! TerminalSession) return;
+    if (!s.acceptHarnessEvent(
+      sessionId: u.sessionId,
+      event: u.event,
+      turnId: u.turnId,
+      generation: u.generation,
+    )) {
+      return;
+    }
     if (u.activityKind != null &&
         u.activityPhase != null &&
         u.activitySummary != null) {
@@ -6196,8 +6214,7 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
       );
     }
     final hadSid = s.claudeSessionId;
-    if (u.status.isNotEmpty &&
-        u.status != 'activity' &&
+    if (const {'working', 'waiting', 'idle'}.contains(u.status) &&
         u.activityKind != 'needs_input') {
       s.applyClaudeStatus(
         status: switch (u.status) {
@@ -6213,6 +6230,8 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
         event: u.event,
         toolName: u.toolName,
         sessionId: u.sessionId,
+        turnId: u.turnId,
+        generation: u.generation,
         transcriptPath: u.transcriptPath,
         harness: AgentHarness.fromWire(u.harness),
       );
@@ -6246,6 +6265,8 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
     if (tabId != null && tabId.isNotEmpty) ...{
       'ORKEST_TAB_ID': tabId,
       'ORKEST_PANE_ID': tabId,
+      if (_sessions[tabId] case final TerminalSession session)
+        'ORKEST_SESSION_TOKEN': session.hookGeneration,
     },
     ..._statusServer.hookEnv,
     ..._cliPathEnv(),

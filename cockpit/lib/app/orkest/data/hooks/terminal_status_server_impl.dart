@@ -218,6 +218,8 @@ class TerminalStatusServerImpl implements TerminalStatusServer {
           activityPhase: activityPhase.isEmpty ? null : activityPhase,
           activitySummary: activitySummary.isEmpty ? null : activitySummary,
           activityId: decoded['activityId'] as String?,
+          turnId: decoded['tid'] as String?,
+          generation: decoded['gen'] as String?,
         ),
       );
       return (null, null);

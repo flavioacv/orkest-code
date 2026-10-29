@@ -24,6 +24,15 @@ import 'package:flutter/foundation.dart';
 ///   deixou toda aba de terminal ~5.8s mais lenta na 1.28.0, com o bundle
 ///   universal quebrado pelo `lipo`.
 class SidecarTerminalConnector implements TurnStatusSource {
+  SidecarTerminalConnector({
+    this.socketPathOverride,
+    this.serverBinaryOverride,
+  });
+
+  @visibleForTesting
+  final String? socketPathOverride;
+  @visibleForTesting
+  final String? serverBinaryOverride;
   RemoteConnection? _connection;
   RemoteTerminalService? _service;
   Future<RemoteTerminalService?>? _inflight;
@@ -66,6 +75,17 @@ class SidecarTerminalConnector implements TurnStatusSource {
           sessionId: s.sid,
           transcriptPath: s.transcriptPath,
           harness: s.harness,
+          toolName: s.toolName,
+          subagentId: s.subagentId,
+          subagentType: s.subagentType,
+          subagentOutcome: s.subagentOutcome,
+          subagentParentId: s.subagentParentId,
+          activityKind: s.activityKind,
+          activityPhase: s.activityPhase,
+          activitySummary: s.activitySummary,
+          activityId: s.activityId,
+          turnId: s.turnId,
+          generation: s.generation,
         ),
       ),
     );
@@ -88,7 +108,7 @@ class SidecarTerminalConnector implements TurnStatusSource {
       if (socketPath == null) return _giveUp('no home directory');
 
       // 1. Descoberta: já existe servidor atendendo este socket?
-      final binary = _resolveServerBinary();
+      final binary = serverBinaryOverride ?? _resolveServerBinary();
       final adopted = await _tryConnect(socketPath);
       if (adopted != null) {
         if (_isOurBinary(adopted, binary)) return _adopt(adopted);
@@ -247,6 +267,7 @@ class SidecarTerminalConnector implements TurnStatusSource {
   }
 
   String? _socketPath() {
+    if (socketPathOverride != null) return socketPathOverride;
     final home = userHome();
     if (home == null) return null;
     final dir = Directory('$home/.orkest');

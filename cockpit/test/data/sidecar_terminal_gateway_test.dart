@@ -18,6 +18,9 @@ void main() {
   // O caminho antigo fica como fallback pra bundle gerado por versão anterior.
   final binary =
       [
+        File(
+          'build/macos/Build/Products/Debug/Orkest Code.app/Contents/Resources/orkest-server-bundle/bin/orkest-server',
+        ),
         File('build/server-bundle/bin/orkest-server'),
         File('build/wave0/orkest-server'),
       ].firstWhere(
@@ -33,7 +36,12 @@ void main() {
       return;
     }
 
-    final connector = SidecarTerminalConnector();
+    final dir = Directory.systemTemp.createTempSync('orkest-sidecar-test-');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final connector = SidecarTerminalConnector(
+      socketPathOverride: '${dir.path}/s.sock',
+      serverBinaryOverride: binary.absolute.path,
+    );
     addTearDown(connector.dispose);
 
     final gateway = SidecarTerminalGatewayFactory(connector).create();
@@ -48,7 +56,11 @@ void main() {
         executable: '/bin/zsh',
         args: ['-f'],
       ),
-      extraEnv: const {'WAVE1_MARKER': 'sidecar'},
+      extraEnv: const {
+        'WAVE1_MARKER': 'sidecar',
+        'ORKEST_TAB_ID': 'audit-tab',
+        'ORKEST_SESSION_TOKEN': 'audit-generation',
+      },
     );
     final sub = gateway.output.listen((data) {
       chunks++;
@@ -61,6 +73,37 @@ void main() {
 
     await _until(() => collected.toString().contains('wave1-sidecar-42'));
     expect(chunks, greaterThan(0));
+    final status = connector.turnStatus.first;
+    final sender = await Socket.connect(
+      InternetAddress(
+        '${dir.path}/s.sock.status',
+        type: InternetAddressType.unix,
+      ),
+      0,
+    );
+    sender.writeln(
+      jsonEncode({
+        'paneId': 'audit-tab',
+        'st': 'activity',
+        'gen': 'audit-generation',
+        'tid': 'turn-one',
+        'tool': 'fixture-tool',
+        'sub': 'fixture-child',
+        'activityKind': 'read',
+        'activityPhase': 'started',
+        'activitySummary': 'Fixture activity',
+        'activityId': 'fixture-run',
+      }),
+    );
+    await sender.flush();
+    await sender.close();
+    final event = await status.timeout(const Duration(seconds: 5));
+    expect(event.activityKind, 'read');
+    expect(event.activityId, 'fixture-run');
+    expect(event.toolName, 'fixture-tool');
+    expect(event.subagentId, 'fixture-child');
+    expect(event.turnId, 'turn-one');
+    expect(event.generation, 'audit-generation');
 
     gateway.resize(40, 120);
     gateway.write(utf8.encode('stty size\n'));
@@ -83,7 +126,12 @@ void main() {
       return;
     }
 
-    final connector = SidecarTerminalConnector();
+    final dir = Directory.systemTemp.createTempSync('orkest-sidecar-test-');
+    addTearDown(() => dir.deleteSync(recursive: true));
+    final connector = SidecarTerminalConnector(
+      socketPathOverride: '${dir.path}/s.sock',
+      serverBinaryOverride: binary.absolute.path,
+    );
     addTearDown(connector.dispose);
     final factory = SidecarTerminalGatewayFactory(connector);
 

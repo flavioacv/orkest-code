@@ -14,10 +14,16 @@ class RemoteProcService {
   Future<Map<String, Object?>> run(
     String command, {
     String? cwd,
+    List<String>? argv,
+    String? tabId,
+    String? generation,
     int timeoutSeconds = 60,
   }) async {
     final result = await _connection.call('proc.run', {
       'command': command,
+      'argv': ?argv,
+      'tabId': ?tabId,
+      'generation': ?generation,
       if (cwd != null && cwd.isNotEmpty) 'cwd': cwd,
       'timeout': timeoutSeconds,
     });

@@ -213,6 +213,9 @@ pub fn transport_configured() -> bool {
 /// Dart). Falha de rede também é exit 3; resposta ausente/malformada vira um
 /// `{"ok": false, "error": …}` pro chamador tratar como erro de aplicação.
 pub fn request(mut req: Value, timeout: Duration) -> Value {
+    if req.get("tabId").and_then(Value::as_str) == crate::util::self_tab_id().as_deref() {
+        if let Ok(generation) = std::env::var("ORKEST_SESSION_TOKEN") { req["gen"] = json!(generation); }
+    }
     if !transport_configured() {
         die(
             "orkest: no Orkest app to talk to (ORKEST_STATUS_SOCK is unset and \
@@ -279,6 +282,12 @@ no socket found in ~/.orkest). Is the app running?",
 /// [request], não marca o envelope como comando: o socket e o sidecar o
 /// encaminham pelo fluxo de status de turno, local ou remoto.
 pub fn notify(mut event: Value) -> Result<(), String> {
+    if let Ok(generation) = std::env::var("ORKEST_SESSION_TOKEN") {
+        // Explicit targeting of another tab must not carry this PTY's token.
+        if event.get("paneId").and_then(Value::as_str) == crate::util::self_tab_id().as_deref() {
+            event["gen"] = json!(generation);
+        }
+    }
     if !transport_configured() {
         return Err("no Orkest app to talk to (is the app running?)".to_string());
     }

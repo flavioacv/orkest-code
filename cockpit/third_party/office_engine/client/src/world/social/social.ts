@@ -62,13 +62,13 @@ const COIN_COLOR = '#ffd34d';
 const LOSS_COLOR = '#ff8a8a';
 
 const KIND_LIST = Object.keys(KINDS) as GatherKind[];
-const PLACES: Readonly<Record<string, string>> = { [LOUNGE_ID]: tr('Lounge'), [CAFE_ID]: tr('Copa'), [RECEPTION_ID]: tr('Recepção'), [RESTROOM_ID]: tr('Banheiros') };
+const PLACES: Readonly<Record<string, string>> = { get [LOUNGE_ID]() { return tr('Lounge'); }, get [CAFE_ID]() { return tr('Copa'); }, get [RECEPTION_ID]() { return tr('Recepção'); }, get [RESTROOM_ID]() { return tr('Banheiros'); } };
 /** O que se perde/ganha em cada jogo (texto do extrato: "Perdeu no jokenpô para Rafaela"). */
 const MATCH_WHAT: Partial<Record<GatherKind, string>> = {
-  rps: tr('no jokenpô'),
-  pingpong: tr('no pingue-pongue'),
-  videogame: tr('no videogame'),
-  arcade: tr('no fliperama'),
+  get rps() { return tr('no jokenpô'); },
+  get pingpong() { return tr('no pingue-pongue'); },
+  get videogame() { return tr('no videogame'); },
+  get arcade() { return tr('no fliperama'); },
 };
 
 function between(rng: () => number, a: number, b: number): number {
@@ -1170,7 +1170,7 @@ export class Social {
     const label = g.kind === 'tv' && g.program ? tr('Vendo {0} na TV', [g.program === 'futebol' ? tr('futebol') : g.program === 'novela' ? tr('novela') : tr('desenho')]) : KINDS[g.kind].label;
     const going = g.phase === 'gather' ? tr(' (a caminho)') : '';
     const bet = g.bet && KINDS[g.kind].match ? tr(' · valendo 🪙{0}', [g.bet]) : '';
-    return `${KINDS[g.kind].emoji} ${label}${others.length ? ` com ${joinNames(others)}` : ''}${bet}${going}`;
+    return `${KINDS[g.kind].emoji} ${label}${others.length ? tr(' com {0}', [joinNames(others)]) : ''}${bet}${going}`;
   }
 
   /** Tudo o que a interface mostra da vida social de um agente presente (null se não está no escritório). */
@@ -1261,6 +1261,6 @@ export class Social {
 
 function joinNames(names: string[]): string {
   if (names.length <= 1) return names[0] ?? '';
-  if (names.length === 2) return `${names[0]} e ${names[1]}`;
-  return `${names.slice(0, -1).join(', ')} e ${names[names.length - 1]}`;
+  if (names.length === 2) return tr('{0} e {1}', [names[0], names[1]]);
+  return tr('{0} e {1}', [names.slice(0, -1).join(', '), names[names.length - 1]]);
 }

@@ -55,6 +55,56 @@ class TerminalStatusEvent {
   final int sequence;
 }
 
+// Normalize only application-owned VCS labels; producer/user text stays intact.
+String localizedOfficeVcsSummary(String text) {
+  final tr = t.orkest.officeWorld;
+  if (text.startsWith('Enviou commits para ') ||
+      text == 'Enviou commits ao Git') {
+    return tr.vcsPush;
+  }
+  return switch (text) {
+    'Pull request criado' => tr.vcsPrOpened,
+    'Pull request mergeado' => tr.vcsPrMerged,
+    'Release publicada' => tr.vcsRelease,
+    'Push concluído' => tr.vcsPush,
+    'CI falhou' => tr.vcsCiFailed,
+    'CI passou' => tr.vcsCiPassed,
+    'Git pull concluído' => tr.vcsPull,
+    'Git fetch concluído' => tr.vcsFetch,
+    'Commit criado' => tr.vcsCommit,
+    'Merge local concluído' => tr.vcsMerge,
+    _ => text,
+  };
+}
+
+String? localizedOfficeActivitySummary(TerminalStatusEvent? event) {
+  if (event == null) return null;
+  if (event.activityKind == 'git') {
+    return localizedOfficeVcsSummary(event.activitySummary ?? '');
+  }
+  if (event.activityPhase != 'observed') return event.activitySummary;
+  final tr = t.orkest.officeWorld;
+  return switch (event.activityKind) {
+    'prompt' => tr.promptReceived,
+    'respond' => tr.agentResponded,
+    'thinking' => tr.agentThinking,
+    'read' => tr.readingFile,
+    'search' => tr.searchingCode,
+    'edit' => tr.editingFile,
+    'write' => tr.writingFile,
+    'command' || 'wait' => tr.runningCommand,
+    'needs_input' => tr.waitingInTerminal,
+    'test' => tr.runningTests,
+    'web' => tr.browsingWeb,
+    'plan' => tr.organizingTasks,
+    'delegate' => tr.callingSubagents,
+    'done' => tr.turnCompleted,
+    'error' => tr.activityError,
+    'mcp' || 'other' => tr.usingTool,
+    _ => event.activitySummary,
+  };
+}
+
 /// Ciclo de vida efêmero de um subagente observado pelos hooks do harness.
 class OfficeSubagent {
   const OfficeSubagent({
@@ -135,7 +185,7 @@ class TerminalSession extends PaneItem {
       profile: profile,
       rows: 25,
       columns: 80,
-      extraEnv: spawnEnv,
+      extraEnv: {...spawnEnv, 'ORKEST_SESSION_TOKEN': hookGeneration},
     );
     // A pasta do workspace pode ter sumido entre dois boots (o layout salvo
     // ainda aponta pra lá). O gateway abre no ancestral mais próximo em vez de
@@ -240,6 +290,12 @@ class TerminalSession extends PaneItem {
       wslDistro: profile.wslDistro,
       onHarnessChanged: (newHarness) {
         if (_activeHarness != newHarness) {
+          if (newHarness != null && _agentSessionEnded) {
+            claudeSessionId = null;
+            transcriptPath = null;
+            _activeTurnId = null;
+            _retiredTurnIds.clear();
+          }
           _activeHarness = newHarness;
           if (newHarness == null) {
             _agentSessionEnded = true;
@@ -277,6 +333,9 @@ class TerminalSession extends PaneItem {
   /// usuário parou, não no cwd inicial da aba.
   VoidCallback? onCwdChanged;
   final OfficeSocialState officeSocial;
+  final String hookGeneration = newOfficeIdentity();
+  String? _activeTurnId;
+  final Set<String> _retiredTurnIds = {};
   String get officeIdentity => officeSocial.identity;
   String? officeParentIdentity;
   VoidCallback? onOfficeStateChanged;
@@ -341,6 +400,7 @@ class TerminalSession extends PaneItem {
   }
 
   final Map<String, Map<String, dynamic>> _officeCommands = {};
+  bool _returnIdleAfterCommands = false;
   final _finishedOfficeActivities = <String>{};
   void _rememberOfficeActivity(String id) {
     _finishedOfficeActivities.add(id);
@@ -356,7 +416,18 @@ class TerminalSession extends PaneItem {
   Map<String, dynamic>? get officeShell => officeShells.firstOrNull;
   Map<String, dynamic>? get officeShellDone => _officeShellDone;
   void beginOfficeCommand(String runId, String label) {
-    if (_disposed || _officeCommands.containsKey(runId)) return;
+    if (_disposed ||
+        _processExited ||
+        _agentSessionEnded ||
+        _officeCommands.containsKey(runId) ||
+        _finishedOfficeActivities.contains('command:$runId')) {
+      return;
+    }
+    if (_status == TerminalStatus.idle &&
+        !_turnActive &&
+        _officeCommands.isEmpty) {
+      _returnIdleAfterCommands = true;
+    }
     _officeCommands[runId] = {
       'id': runId,
       'label': label,
@@ -369,6 +440,7 @@ class TerminalSession extends PaneItem {
 
   void finishOfficeCommand(String runId, int exitCode, String label) {
     if (_disposed || _officeCommands.remove(runId) == null) return;
+    _rememberOfficeActivity('command:$runId');
     final phase = exitCode == 0
         ? 'completed'
         : exitCode >= 128
@@ -384,6 +456,12 @@ class TerminalSession extends PaneItem {
       'at': DateTime.now().millisecondsSinceEpoch,
       'error': exitCode != 0,
     };
+    if (_returnIdleAfterCommands && _officeCommands.isEmpty) {
+      _returnIdleAfterCommands = false;
+      if (!_turnActive && _status != TerminalStatus.waiting) {
+        _setStatus(TerminalStatus.idle, recordHistory: false);
+      }
+    }
     notifyListeners();
   }
 
@@ -469,7 +547,7 @@ class TerminalSession extends PaneItem {
       if (event.status == TerminalStatus.waiting &&
           event.event != null &&
           event.activityKind == null) {
-        return 'Precisa de uma resposta no terminal';
+        return t.orkest.officeWorld.waitingInTerminal;
       }
     }
     return null;
@@ -493,6 +571,7 @@ class TerminalSession extends PaneItem {
     String? parentSubagentId,
     required bool started,
   }) {
+    if (_disposed || _processExited || _agentSessionEnded) return;
     final safeId = id.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '').trim();
     if (safeId.isEmpty) return;
     final rawType = type?.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '').trim();
@@ -634,8 +713,17 @@ class TerminalSession extends PaneItem {
     String? sessionId,
     String? transcriptPath,
     AgentHarness? harness,
+    String? turnId,
+    String? generation,
   }) {
-    if (_disposed) return;
+    if (!acceptHarnessEvent(
+      sessionId: sessionId,
+      event: event,
+      turnId: turnId,
+      generation: generation,
+    )) {
+      return;
+    }
     final startsSession = event == 'SessionStart';
     // A terminal can outlive its agent. Late hooks must neither revive an
     // ended session nor replace its resume identity with another agent's ID.
@@ -648,6 +736,13 @@ class TerminalSession extends PaneItem {
       return;
     }
     if (startsSession) {
+      if (_agentSessionEnded) {
+        _officeCommands.clear();
+        _officeShell = null;
+        _officeShellDone = null;
+        _activeTurnId = null;
+        _retiredTurnIds.clear();
+      }
       _agentSessionEnded = false;
       _officeAgentActivityObserved = true;
     }
@@ -661,6 +756,7 @@ class TerminalSession extends PaneItem {
       _suppressVisiblePermissionPrompt = false;
     }
     if (event == 'SessionEnd') {
+      _officeSubagents.clear();
       _agentSessionEnded = true;
       _turnActive = false;
       _officePermissionPromptVisible = false;
@@ -675,8 +771,26 @@ class TerminalSession extends PaneItem {
       this.transcriptPath = transcriptPath;
     }
 
+    // A hook may be delivered again after the screen observer or an earlier
+    // Stop already completed this turn. Preserve its resume metadata above,
+    // but do not mint another Office completion (and reward) while idle.
+    if (event == 'Stop' &&
+        status == TerminalStatus.idle &&
+        _status == TerminalStatus.idle &&
+        _officeTurnCompleted) {
+      return;
+    }
+
     // Ciclo de vida do turno a partir da semântica do evento.
     if (isTurnStart) {
+      _returnIdleAfterCommands = false;
+      if (turnId != null && turnId.isNotEmpty && turnId != _activeTurnId) {
+        if (_activeTurnId != null) _retiredTurnIds.add(_activeTurnId!);
+        if (_retiredTurnIds.length > 128) {
+          _retiredTurnIds.remove(_retiredTurnIds.first);
+        }
+        _activeTurnId = turnId;
+      }
       _turnActive = true;
       _officeShell = null;
     }
@@ -701,6 +815,44 @@ class TerminalSession extends PaneItem {
     _setStatus(status, event: event, toolName: toolName);
   }
 
+  // Validate every hook branch before it can mutate activity or child state.
+  bool acceptHarnessEvent({
+    String? sessionId,
+    String? event,
+    String? turnId,
+    String? generation,
+  }) {
+    if (_disposed || _processExited) return false;
+    if (generation != null && generation != hookGeneration) return false;
+    final startsSession = event == 'SessionStart';
+    // A delayed/replayed start from the same ended or busy agent is not a
+    // new process. A newly detected harness clears its binding before start.
+    if (startsSession &&
+        sessionId != null &&
+        sessionId == claudeSessionId &&
+        (_agentSessionEnded || _status != TerminalStatus.idle)) {
+      return false;
+    }
+    if (_agentSessionEnded && !startsSession) return false;
+    if (sessionId != null &&
+        sessionId.isNotEmpty &&
+        claudeSessionId != null &&
+        sessionId != claudeSessionId &&
+        !(startsSession && _agentSessionEnded)) {
+      return false;
+    }
+    if (turnId != null && turnId.isNotEmpty) {
+      if (_retiredTurnIds.contains(turnId)) return false;
+      if (_activeTurnId != null &&
+          turnId != _activeTurnId &&
+          event != 'UserPromptSubmit' &&
+          !startsSession) {
+        return false;
+      }
+    }
+    return true;
+  }
+
   /// Adds a provider-neutral activity event without inspecting PTY output.
   /// The Orkest CLI and future adapters can report the same bounded contract.
   void applyOfficeActivity({
@@ -712,6 +864,7 @@ class TerminalSession extends PaneItem {
   }) {
     final safeKind = kind.trim().toLowerCase();
     final safePhase = phase.trim().toLowerCase();
+    if (_disposed || _processExited || _agentSessionEnded) return;
     // A terminal has one current approval surface. Repeated reports of the
     // pending request must not create fresh notification sequences.
     if (safeKind == 'needs_input' && _status == TerminalStatus.waiting) return;
@@ -728,6 +881,15 @@ class TerminalSession extends PaneItem {
     if (activityId != null &&
         !RegExp(r'^[A-Za-z0-9_.:/-]{1,160}$').hasMatch(activityId)) {
       return;
+    }
+    if (safeKind == 'done') {
+      if (activityId != null) {
+        final key = 'event:done:$activityId';
+        if (_finishedOfficeActivities.contains(key)) return;
+        _rememberOfficeActivity(key);
+      } else if (_status == TerminalStatus.idle && _officeTurnCompleted) {
+        return;
+      }
     }
     // Repository outcomes describe the project, not the agent's current turn.
     // Keep working/idle/waiting and all command lifetimes intact.
@@ -903,6 +1065,7 @@ class TerminalSession extends PaneItem {
       _officeShell = null;
     }
     if (safeKind == 'prompt' || safeKind == 'respond') {
+      _returnIdleAfterCommands = false;
       _turnActive = true;
     } else if (safeKind == 'done' || safeKind == 'error') {
       _turnActive = false;
@@ -1137,7 +1300,7 @@ class TerminalSession extends PaneItem {
       if (gitEvent?.kind == GitTerminalEventKind.push) {
         _awaitingGitPushResult = false;
       }
-      if (gitEvent != null) {
+      if (gitEvent != null && gitEvent.kind == GitTerminalEventKind.push) {
         // A URL alone may come from pr/release view, documentation or a query.
         // URL results require command context from the VCS result adapter.
         if (gitEvent.url != null) continue;
@@ -1214,6 +1377,7 @@ class TerminalSession extends PaneItem {
       r'^(waiting|needs|requires)\b.{0,80}\b(your\s+)?(approval|permission|input|response)\b|'
       r'^(do you want|would you like)\b.{0,100}\b(allow|approve|authorize|run|execute|proceed|continue)\b|'
       r'^(allow|approve|authorize)\s+(this|the|once|always|command|action|request)\b.{0,100}(\?|$)|'
+      r'^allow\s+calling\s+this\s+tool\s*\?\s*$|'
       r'^(run|execute|apply)\s+(this|the)\s+(command|action|change)\b.{0,100}(\?|$)|'
       r'^(select|choose|press)\b.{0,100}\b(allow|approve|yes|deny|reject|once|always|option)\b|'
       r'^(select|choose)\s+an\s+option\b',

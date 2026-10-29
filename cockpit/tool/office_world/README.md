@@ -140,3 +140,35 @@ No additional package or external Habblaud checkout is needed.
 
 The Portuguese animation matrix and trigger report is in
 [`docs/office-animations.md`](../../docs/office-animations.md).
+
+## Reliable execution and live IDE language
+
+Office follows the IDE locale (`pt-BR`, `en`, `es`) on every snapshot. Dialogue
+pools, cached personalities, traits and map labels translate at display time.
+The map disables the browser/WebView context menu. Snapshot delivery is
+serialized and acknowledged by revision; a terminated WebView reloads and
+receives the current session snapshot again.
+
+`orkest exec -- python3 -c "print('spaces remain intact')"` preserves argv.
+Use `orkest exec --shell 'git status && git log -1'` for a raw shell expression.
+Commands receive a session-scoped execution lifecycle; timeouts terminate the
+process tree on the execution host. Script/API producers must declare the
+operation they actually performed rather than relying on terminal prose:
+
+```sh
+orkest exec --vcs-operation pr.create -- python3 create_pr.py
+orkest telemetry --vcs-operation push python3 push_changes.py
+```
+
+The result still must match the confirmed-operation schema. `activity vcs`
+returns exit code 4 for an unrecognized result, without emitting an Office
+event. Automatic wrappers preserve the executed program's exit code and
+report unrecognized/undelivered VCS events on stderr. Printed PR/CI statements
+are not authoritative events and do not trigger project effects.
+
+New hook/activity envelopes retain optional PTY generation (`gen`) and turn
+identity (`tid`) through local, sidecar and remote transports. The app validates
+them before every activity/subagent/status branch. Remote status is delivered
+to the owning client, disambiguated by generation; ambiguous legacy IDs are
+rejected. The client also validates the originating host. Generic completion
+IDs are idempotent and an ended agent cannot be revived by a late activity.

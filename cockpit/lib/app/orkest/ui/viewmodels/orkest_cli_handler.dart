@@ -787,58 +787,32 @@ class OrkestCliHandler {
       // da CLI (`ORKEST_TAB_ID`, socket, PATH do `orkest`), então o comando
       // pode chamar `orkest` de volta.
       case 'exec':
-        final command = (c.args['command'] ?? '').toString();
-        if (command.trim().isEmpty) {
-          return const OrkestCommandResult.fail('missing command');
-        }
-        final cwd = (c.args['cwd'] ?? '').toString();
-        final timeoutRaw = c.args['timeout'];
-        final timeout = timeoutRaw is num ? timeoutRaw.toInt() : 60;
-        // Aba remota: o comando e o cwd são do HOST. Roda lá via `proc.run`
-        // (orkest-server ≥ 2.1.13); antes executava aqui, com um cwd que
-        // não existe neste disco, e o `.panel` remoto recebia erro em tudo.
-        if (_isRemoteTab(c.tabId)) {
-          final session = _vm.session(c.tabId!);
-          final host = session == null
-              ? null
-              : _vm.remote.hostForWorkspace(session.projectId);
-          if (host == null) {
-            return const OrkestCommandResult.fail('remote host not found');
-          }
-          try {
-            final proc = await _vm.remoteHosts.procServiceFor(host);
-            final data = await proc.run(
-              command,
-              cwd: cwd,
-              timeoutSeconds: timeout <= 0 ? 60 : timeout,
-            );
-            return OrkestCommandResult.ok(data);
-          } on RemoteRpcException catch (e) {
-            return OrkestCommandResult.fail(switch (e.code) {
-              'cwd_not_found' => 'cwd not found on host: "$cwd"',
-              'unknown_method' =>
-                'the orkest-server on this host is too old for exec '
-                    '(update it: curl -fsSL '
-                    'https://raw.githubusercontent.com/flavioacv/remote_pi/main/cockpit/install-server.sh | bash)',
-              _ => 'exec failed on host: ${e.detail ?? e.code}',
-            });
-          } on RemoteHostException catch (e) {
-            return OrkestCommandResult.fail(
-              'host unreachable: ${e.kind.name}',
-            );
-          }
-        }
-        if (cwd.isNotEmpty && !await Directory(cwd).exists()) {
-          return OrkestCommandResult.fail('cwd not found: "$cwd"');
-        }
-        final result = await runShellCommand(
-          command,
-          cwd: cwd.isEmpty ? null : cwd,
-          environment: _vm.cliEnvironment(tabId: c.tabId),
-          timeout: Duration(seconds: timeout <= 0 ? 60 : timeout),
-          profile: _vm.defaultTerminalProfile,
+        final session = c.tabId == null ? null : _vm.session(c.tabId!);
+        final terminal =
+            session is TerminalSession && session.hasOfficeAgentPresence
+            ? session
+            : null;
+        final runId = 'exec:${++_execSerial}';
+        terminal?.beginOfficeCommand(
+          runId,
+          t.orkest.officeWorld.runningCommand,
         );
-        return OrkestCommandResult.ok(result.toJson());
+        var exitCode = 1;
+        try {
+          final result = await _execute(c);
+          if (result.ok && result.data is Map) {
+            exitCode = ((result.data as Map)['code'] as num?)?.toInt() ?? 1;
+          }
+          return result;
+        } finally {
+          terminal?.finishOfficeCommand(
+            runId,
+            exitCode,
+            exitCode == 0
+                ? t.orkest.officeWorld.toolCompleted
+                : t.orkest.officeWorld.activityError,
+          );
+        }
 
       // `orkest panel screenshot [<label|tab-id|file.panel>] [--out x.png]`
       // (plano 69): PNG da webview de um .panel aberto, pro agente ver o que
@@ -897,10 +871,7 @@ class OrkestCliHandler {
               );
         await file.parent.create(recursive: true);
         await file.writeAsBytes(png, flush: true);
-        return OrkestCommandResult.ok({
-          'path': file.path,
-          'bytes': png.length,
-        });
+        return OrkestCommandResult.ok({'path': file.path, 'bytes': png.length});
 
       // `orkest list-tasks` — tasks do workspace do pane emissor (tabId,
       // default da CLI = a própria tab; fallback: workspace selecionado).
@@ -1547,6 +1518,68 @@ class OrkestCliHandler {
   /// Aviso quando `--workspace` mira um workspace de OUTRA máquina que não a da
   /// aba emissora.
   ///
+  int _execSerial = 0;
+
+  Future<OrkestCommandResult> _execute(OrkestCommand c) async {
+    final command = (c.args['command'] ?? '').toString();
+    if (command.trim().isEmpty) {
+      return const OrkestCommandResult.fail('missing command');
+    }
+    final argv = (c.args['argv'] as List?)?.cast<String>();
+    final cwd = (c.args['cwd'] ?? '').toString();
+    final timeoutRaw = c.args['timeout'];
+    final timeout = timeoutRaw is num ? timeoutRaw.toInt() : 60;
+    // Aba remota: o comando e o cwd são do HOST. Roda lá via `proc.run`
+    // (orkest-server ≥ 2.1.13); antes executava aqui, com um cwd que
+    // não existe neste disco, e o `.panel` remoto recebia erro em tudo.
+    if (_isRemoteTab(c.tabId)) {
+      final session = _vm.session(c.tabId!);
+      final host = session == null
+          ? null
+          : _vm.remote.hostForWorkspace(session.projectId);
+      if (host == null) {
+        return const OrkestCommandResult.fail('remote host not found');
+      }
+      try {
+        final proc = await _vm.remoteHosts.procServiceFor(host);
+        final data = await proc.run(
+          command,
+          cwd: cwd,
+          argv: argv,
+          tabId: c.tabId,
+          generation: session is TerminalSession
+              ? session.hookGeneration
+              : null,
+          timeoutSeconds: timeout <= 0 ? 60 : timeout,
+        );
+        return OrkestCommandResult.ok(data);
+      } on RemoteRpcException catch (e) {
+        return OrkestCommandResult.fail(switch (e.code) {
+          'cwd_not_found' => 'cwd not found on host: "$cwd"',
+          'unknown_method' =>
+            'the orkest-server on this host is too old for exec '
+                '(update it: curl -fsSL '
+                'https://raw.githubusercontent.com/flavioacv/remote_pi/main/cockpit/install-server.sh | bash)',
+          _ => 'exec failed on host: ${e.detail ?? e.code}',
+        });
+      } on RemoteHostException catch (e) {
+        return OrkestCommandResult.fail('host unreachable: ${e.kind.name}');
+      }
+    }
+    if (cwd.isNotEmpty && !await Directory(cwd).exists()) {
+      return OrkestCommandResult.fail('cwd not found: "$cwd"');
+    }
+    final result = await runShellCommand(
+      command,
+      cwd: cwd.isEmpty ? null : cwd,
+      environment: _vm.cliEnvironment(tabId: c.tabId),
+      timeout: Duration(seconds: timeout <= 0 ? 60 : timeout),
+      profile: _vm.defaultTerminalProfile,
+      argv: argv,
+    );
+    return OrkestCommandResult.ok(result.toJson());
+  }
+
   /// A execução sempre acontece onde o workspace vive — essa parte está certa.
   /// O problema é o silêncio: um agente numa aba do host, ao apontar para um
   /// workspace local, recebe de volta o estado da máquina do CLIENTE com toda a

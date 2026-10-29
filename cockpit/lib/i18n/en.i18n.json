@@ -99,6 +99,16 @@
   },
   "orkest": {
     "officeWorld": {
+      "vcsPrOpened": "Pull request created",
+      "vcsPrMerged": "Pull request merged",
+      "vcsRelease": "Release published",
+      "vcsPush": "Push completed",
+      "vcsCiFailed": "CI failed",
+      "vcsCiPassed": "CI passed",
+      "vcsPull": "Git pull completed",
+      "vcsFetch": "Git fetch completed",
+      "vcsCommit": "Commit created",
+      "vcsMerge": "Local merge completed",
       "reception": "Reception",
       "cafe": "Café",
       "restrooms": "Restrooms",

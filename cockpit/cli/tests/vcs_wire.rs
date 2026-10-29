@@ -121,7 +121,28 @@ fn unsuccessful_or_queued_results_send_no_notification() {
             .args(["activity", "vcs", "--operation", "pr.merge", "--exit-code", "0", "--stdin"])
             .stdin(Stdio::piped()).stdout(Stdio::piped()).stderr(Stdio::piped()).spawn().unwrap();
         child.stdin.take().unwrap().write_all(raw.as_bytes()).unwrap();
-        assert!(child.wait_with_output().unwrap().status.success());
+        let output = child.wait_with_output().unwrap();
+        assert_eq!(output.status.code(), Some(4));
+        assert!(String::from_utf8_lossy(&output.stderr).contains("no Office event emitted"));
     }
+    std::fs::remove_dir_all(dir).unwrap();
+}
+
+#[test]
+fn exec_preserves_python_arguments_and_explicit_vcs_context() {
+    let dir = directory();
+    let socket = dir.join("status.sock");
+    let listener = UnixListener::bind(&socket).unwrap();
+    let server = std::thread::spawn(move || {
+        let execution = request(&listener, Some(json!({"ok":true,"data":{"code":0,"stdout":"{\"number\":42,\"state\":\"open\",\"html_url\":\"https://github.com/o/r/pull/42\"}","stderr":"","timedOut":false}})));
+        let event = request(&listener, None);
+        (execution,event)
+    });
+    let code = "print('space and quotes')";
+    let output = cli(&socket).args(["exec","--vcs-operation","pr.create","--","python3","-c",code]).output().unwrap();
+    assert!(output.status.success());
+    let (execution,event) = server.join().unwrap();
+    assert_eq!(execution["args"]["argv"],json!(["python3","-c",code]));
+    assert_eq!(event["activityKind"],"pr_opened");
     std::fs::remove_dir_all(dir).unwrap();
 }

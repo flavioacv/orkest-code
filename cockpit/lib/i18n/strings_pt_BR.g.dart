@@ -312,6 +312,16 @@ class _Translations$orkest$officeWorld$pt_BR extends Translations$orkest$officeW
 	final TranslationsPtBr _root; // ignore: unused_field
 
 	// Translations
+	@override String get vcsPrOpened => 'Pull request criado';
+	@override String get vcsPrMerged => 'Pull request mergeado';
+	@override String get vcsRelease => 'Release publicada';
+	@override String get vcsPush => 'Push concluído';
+	@override String get vcsCiFailed => 'CI falhou';
+	@override String get vcsCiPassed => 'CI passou';
+	@override String get vcsPull => 'Git pull concluído';
+	@override String get vcsFetch => 'Git fetch concluído';
+	@override String get vcsCommit => 'Commit criado';
+	@override String get vcsMerge => 'Merge local concluído';
 	@override String get reception => 'Recepção';
 	@override String get cafe => 'Copa';
 	@override String get restrooms => 'Banheiros';
@@ -2160,6 +2170,16 @@ extension on TranslationsPtBr {
 			'common.copyCode' => 'Copiar código',
 			'common.search' => 'Buscar',
 			'common.noResults' => 'Nenhum resultado',
+			'orkest.officeWorld.vcsPrOpened' => 'Pull request criado',
+			'orkest.officeWorld.vcsPrMerged' => 'Pull request mergeado',
+			'orkest.officeWorld.vcsRelease' => 'Release publicada',
+			'orkest.officeWorld.vcsPush' => 'Push concluído',
+			'orkest.officeWorld.vcsCiFailed' => 'CI falhou',
+			'orkest.officeWorld.vcsCiPassed' => 'CI passou',
+			'orkest.officeWorld.vcsPull' => 'Git pull concluído',
+			'orkest.officeWorld.vcsFetch' => 'Git fetch concluído',
+			'orkest.officeWorld.vcsCommit' => 'Commit criado',
+			'orkest.officeWorld.vcsMerge' => 'Merge local concluído',
 			'orkest.officeWorld.reception' => 'Recepção',
 			'orkest.officeWorld.cafe' => 'Copa',
 			'orkest.officeWorld.restrooms' => 'Banheiros',
@@ -2582,6 +2602,8 @@ extension on TranslationsPtBr {
 			'orkest.dbRedisTable.deleteKeyMessage' => ({required Object key}) => 'Excluir "${key}" deste banco Redis?',
 			'orkest.dbRedisTable.refresh' => 'Atualizar',
 			'orkest.dbRedisTable.newKey' => 'Nova chave',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.dbRedisTable.columnKey' => 'CHAVE',
 			'orkest.dbRedisTable.columnValue' => 'VALOR',
 			'orkest.dbRedisTable.columnType' => 'TIPO',
@@ -2592,8 +2614,6 @@ extension on TranslationsPtBr {
 			'orkest.dbRedisTable.loadMore' => 'Carregar mais',
 			'orkest.dbRedisTable.loadingFullValue' => 'Carregando valor completo…',
 			'orkest.dbRedisTable.ttlMustBeNumber' => 'TTL deve ser um número de segundos.',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.dbRedisTable.addKey' => 'Adicionar chave',
 			'orkest.dbRedisTable.keyFieldHint' => 'chave',
 			'orkest.dbRedisTable.ttlFieldHint' => 'ttl (s, opcional)',
@@ -3096,6 +3116,8 @@ extension on TranslationsPtBr {
 			'settings.page.appearance.modeOnlyDark' => ({required Object theme}) => '"${theme}" só traz a variante escura, então isto não tem efeito.',
 			'settings.page.appearance.modeOnlyLight' => ({required Object theme}) => '"${theme}" só traz a variante clara, então isto não tem efeito.',
 			'settings.page.appearance.themeFileTitle' => 'Arquivo de tema',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.appearance.themeFileDesc' => 'Importe um tema de um arquivo JSON, ou exporte o tema ativo.',
 			'settings.page.appearance.previewCode' => 'Código',
 			'settings.page.appearance.previewTerminal' => 'Terminal',
@@ -3106,8 +3128,6 @@ extension on TranslationsPtBr {
 			'settings.page.appearance.interfaceFontTitle' => 'Fonte da interface',
 			'settings.page.appearance.interfaceFontDesc' => 'Usada em todo o aplicativo. Vazio = padrão do sistema.',
 			'settings.page.appearance.interfaceSizeTitle' => 'Tamanho da interface',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.appearance.codeFontTitle' => 'Fonte do código',
 			'settings.page.appearance.codeFontDesc' => 'Código e diffs. Vazio = padrão do sistema.',
 			'settings.page.appearance.codeSizeTitle' => 'Tamanho do código',

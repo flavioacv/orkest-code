@@ -1630,10 +1630,11 @@ pub fn note(args: &[String]) -> ! {
 
 // ---- exec (plano 67) --------------------------------------------------------
 
-const EXEC_HELP: &str = "orkest exec [--cwd <dir>] [--timeout <s>] [--json] [--] <command...>
+const EXEC_HELP: &str = "orkest exec [--cwd <dir>] [--timeout <s>] [--json] [--shell] [--vcs-operation <operation>] [--] <command...>
   Runs <command> through the app (a login shell on this machine) and prints
-  its output. Everything after the flags (or after `--`) is the command line,
-  passed to the shell as-is, so pipes and quotes work like in a terminal.
+  its output. Multiple arguments retain their boundaries. A single string
+  or --shell runs a raw shell line (pipes and shell expansion are explicit).
+  --vcs-operation classifies results from scripts/API adapters, e.g. pr.create.
   --cwd      working directory (default: current directory)
   --timeout  seconds before the process is killed (default 60)
   --json     print {ok, code, stdout, stderr, timedOut} as one JSON line
@@ -1643,6 +1644,8 @@ pub fn exec(args: &[String]) -> ! {
     let mut cwd: Option<String> = None;
     let mut timeout: Option<u64> = None;
     let mut json_out = false;
+    let mut shell_mode = false;
+    let mut vcs_operation = None;
     let mut tab_id: Option<String> = None;
     let mut command: Vec<String> = Vec::new();
     let mut i = 0usize;
@@ -1673,6 +1676,12 @@ pub fn exec(args: &[String]) -> ! {
                 });
             }
             "--json" => json_out = true,
+            "--shell" => shell_mode = true,
+            "--vcs-operation" => {
+                i += 1;
+                vcs_operation = args.get(i).and_then(|s| crate::vcs::Operation::parse(s));
+                if vcs_operation.is_none() { die("invalid --vcs-operation", 2); }
+            },
             "--tab-id" | "-t" => {
                 i += 1;
                 tab_id = Some(
@@ -1706,6 +1715,9 @@ pub fn exec(args: &[String]) -> ! {
     });
     let mut cmd_args = Map::new();
     cmd_args.insert("command".into(), json!(line));
+    if !shell_mode && command.len() > 1 {
+        cmd_args.insert("argv".into(), json!(command));
+    }
     if let Some(d) = dir {
         cmd_args.insert("cwd".into(), json!(d));
     }
@@ -1724,7 +1736,7 @@ pub fn exec(args: &[String]) -> ! {
     let data = resp.get("data").cloned().unwrap_or_else(|| json!({}));
     let code = data.get("code").and_then(|v| v.as_i64()).unwrap_or(1) as i32;
     if data.get("timedOut") != Some(&Value::Bool(true)) {
-        crate::vcs::observe_command(&command, code, &field(&data, "stdout"), &field(&data, "stderr"), target_tab.as_deref());
+        crate::vcs::observe_operation(vcs_operation.or_else(|| crate::vcs::command_operation(&command)), code, &field(&data, "stdout"), &field(&data, "stderr"), target_tab.as_deref());
     }
     if json_out {
         let mut out = data.clone();

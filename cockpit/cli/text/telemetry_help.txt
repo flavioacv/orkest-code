@@ -57,3 +57,7 @@ LOOP (how an agent should use it):
 FLAGS:
   --tab-id <id>       act as another tab (workspace resolution)
   --workspace <id>    explicit workspace (see `orkest list-workspaces`)
+
+VCS-producing scripts: orkest telemetry --vcs-operation pr.create python3 script.py
+Use the actual operation (pr.create, pr.merge, push, pull, merge, commit,
+fetch, release, ci). Raw results are validated before any Office event.

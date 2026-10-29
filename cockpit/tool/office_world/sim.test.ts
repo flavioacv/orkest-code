@@ -1,3 +1,9 @@
+import * as lines from '../../third_party/office_engine/client/src/world/social/lines.ts';
+import { personaFor } from '../../third_party/office_engine/client/src/world/social/persona.ts';
+import { KINDS } from '../../third_party/office_engine/client/src/world/social/gathering.ts';
+import { TRAITS } from '../../third_party/office_engine/shared/world/traits.ts';
+import { EN } from '../../third_party/office_engine/shared/locales/en.ts';
+import { ES } from '../../third_party/office_engine/shared/locales/es.ts';
 import assert from 'node:assert/strict';
 import test from 'node:test';
 import * as art from '../../third_party/office_engine/client/src/art/index.ts';
@@ -6,7 +12,7 @@ import { layoutExterior, slotShell } from '../../third_party/office_engine/clien
 import { Sim } from '../../third_party/office_engine/client/src/world/sim/sim.ts';
 import { OrkestSim, repairCharacterVisibility } from './sim.ts';
 import { coreAreaName } from '../../third_party/office_engine/client/src/world/render/overlay.ts';
-import { setLocale } from '../../third_party/office_engine/shared/i18n.ts';
+import { setLocale, tr } from '../../third_party/office_engine/shared/i18n.ts';
 
 const now = 1_800_000_000_000;
 
@@ -184,6 +190,26 @@ test('reliable shell waits activate all age stages and preserve human approval p
   }
 });
 
+test('one session approval and completion do not reward or reactivate idle peers', () => {
+  const input = snapshot('idle');
+  input.agents[0].activity = { id: 'idle-completion', kind: 'done', text: 'Completed', icon: '✅', at: now };
+  const sim = new OrkestSim(art, () => DEFAULT_WORLD_OPTIONS, null);
+  sim.applySnapshot(input, now);
+  const idle = sim.chars.get('orchestrator')!;
+  const coins = sim.social.wallets.coins(idle.id);
+  const activity = idle.lastActivityId;
+  for (const [index, status] of ['waiting', 'working', 'idle', 'working', 'waiting', 'idle'].entries()) {
+    input.agents[1] = { ...input.agents[1], status, activity: {
+      id: `active-${index}`, kind: status === 'idle' ? 'done' : status === 'waiting' ? 'ask' : 'run',
+      text: status, icon: '', at: now + index + 1,
+    } } as any;
+    sim.applySnapshot(input, now + index + 1);
+    assert.equal(idle.info.status, 'idle');
+    assert.equal(idle.lastActivityId, activity);
+    assert.equal(sim.social.wallets.coins(idle.id), coins);
+  }
+});
+
 test('unregistered harness metadata and task rewards survive snapshots', () => {
   const input = snapshot();
   input.accounts[0].provider = 'apple-fm';
@@ -269,3 +295,25 @@ test('layoutExterior and slotShell apply seasonal floor tints and seasonal props
   assert.equal(shellWinter.floors[0].tint, 'winter');
   assert.ok(shellWinter.props.some((p) => (p.kind as string) === 'snowman' || (p.kind as string) === 'snowdrift'));
 });
+
+ test('all dialogue pools and cached personalities follow live IDE locale', () => {
+  const collect = (value: unknown): string[] => typeof value === 'string' ? [value] :
+    value && typeof value === 'object' ? Object.values(value).flatMap(collect) : [];
+  const pools = Object.entries(lines).filter(([key]) => key !== 'TRAIT_TOPICS').flatMap(([, value]) => collect(value));
+  setLocale('pt-BR');
+  const persona = personaFor(12345);
+  const original = persona.catchphrase;
+  try {
+    for (const [locale, dict] of [['en', EN], ['es', ES]] as const) {
+      setLocale(locale);
+      for (const source of pools.filter(text => /[a-zA-ZÀ-ÿ]/.test(text))) {
+        assert.ok(Object.hasOwn(dict, source), `${locale}: missing dialogue ${source}`);
+      }
+      assert.equal(persona.catchphrase, tr(original));
+      assert.equal(lines.pick(lines.ACCEPT, () => 0), tr('Bora!'));
+      assert.equal(KINDS.tv.label, tr('Vendo TV'));
+      assert.equal(TRAITS.cafeina.label, tr('Cafeína'));
+      assert.equal(coreAreaName('core:coworking'), locale === 'en' ? 'Individual work' : 'Trabajo individual');
+    }
+  } finally { setLocale('pt-BR'); }
+ });

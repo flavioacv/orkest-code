@@ -484,6 +484,8 @@ class TurnStatus extends RemoteMessage {
     this.activityPhase,
     this.activitySummary,
     this.activityId,
+    this.turnId,
+    this.generation,
   });
   static const kType = 'turn.status';
 
@@ -508,6 +510,8 @@ class TurnStatus extends RemoteMessage {
   final String? activityPhase;
   final String? activitySummary;
   final String? activityId;
+  final String? turnId;
+  final String? generation;
 
   factory TurnStatus.fromJson(Map<String, Object?> j) => TurnStatus(
     paneId: j['pane'] as String,
@@ -525,6 +529,8 @@ class TurnStatus extends RemoteMessage {
     activityPhase: j['activityPhase'] as String?,
     activitySummary: j['activitySummary'] as String?,
     activityId: j['activityId'] as String?,
+    turnId: j['tid'] as String?,
+    generation: j['gen'] as String?,
   );
 
   @override
@@ -547,6 +553,8 @@ class TurnStatus extends RemoteMessage {
     if (activityPhase != null) 'activityPhase': activityPhase,
     if (activitySummary != null) 'activitySummary': activitySummary,
     if (activityId != null) 'activityId': activityId,
+    if (turnId != null) 'tid': turnId,
+    if (generation != null) 'gen': generation,
   };
 }
 
