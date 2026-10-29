@@ -99,6 +99,9 @@ fn try_run(harness: String) -> Option<()> {
     // Só o Codex manda `turn_id`. Transportamos quando existe: identifica o
     // turno sem depender da ordem de chegada dos hooks (o `ev` continua sendo
     // o que o app consome hoje).
+    if let Ok(generation) = std::env::var("ORKEST_SESSION_TOKEN") {
+        payload["gen"] = json!(generation);
+    }
     let turn = str_field(&decoded, "turn_id");
     if !turn.is_empty() {
         payload["tid"] = json!(turn);

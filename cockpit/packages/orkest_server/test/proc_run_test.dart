@@ -29,6 +29,21 @@ void main() {
     return _connectClient(path);
   }
 
+  test(
+    'argv keeps whitespace and metacharacters literal on the host',
+    () async {
+      final client = await boot();
+      final reply = await _call(client, 'proc.run', {
+        'command': 'display only',
+        'argv': ['/usr/bin/printf', '%s', r'spaces "quotes" $HOME ; literal'],
+      });
+      expect(reply.ok, true);
+      expect((reply.data as Map)['code'], 0);
+      expect((reply.data as Map)['stdout'], r'spaces "quotes" $HOME ; literal');
+    },
+    skip: Platform.isWindows,
+  );
+
   test('roda a linha no host e devolve stdout/code', () async {
     final client = await boot();
     final reply = await _call(client, 'proc.run', {

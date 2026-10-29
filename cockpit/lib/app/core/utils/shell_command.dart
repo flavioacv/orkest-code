@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
 import 'dart:typed_data';
+import 'package:orkest_core/orkest_core.dart';
 
 import '../data/diagnostics/diagnostics_log.dart';
 import '../data/diagnostics/performance_diagnostics.dart';
@@ -158,8 +159,20 @@ Future<ShellCommandResult> runShellCommand(
   Map<String, String>? environment,
   Duration timeout = const Duration(seconds: 60),
   TerminalProfile? profile,
+  List<String>? argv,
 }) async {
-  final invocation = shellInvocationFor(command, profile: profile);
+  final shell = shellInvocationFor(command, profile: profile);
+  final hasArgv = argv != null && argv.isNotEmpty;
+  final invocation = !hasArgv
+      ? shell
+      : !Platform.isWindows
+      ? ShellInvocation(shell.executable, [
+          ...shell.arguments.take(shell.arguments.length - 1),
+          r'exec "$@"',
+          'orkest-exec',
+          ...argv,
+        ])
+      : ShellInvocation(argv.first, argv.skip(1).toList());
   final exe = invocation.executable;
   final args = invocation.arguments;
   final Process proc;
@@ -201,9 +214,9 @@ Future<ShellCommandResult> runShellCommand(
   var timedOut = false;
   final code = await proc.exitCode.timeout(
     timeout,
-    onTimeout: () {
+    onTimeout: () async {
       timedOut = true;
-      proc.kill(ProcessSignal.sigkill);
+      await terminateProcessTree(proc);
       return 124;
     },
   );

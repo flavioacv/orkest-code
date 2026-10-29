@@ -641,14 +641,20 @@ extension _NativeOfficeEffects on _WorldPainter {
       final py = (cycle / 3.2) * map.height;
       final inBuilding =
           map.core.any(
-            (r) => _rect(r['x']!, r['y']!, r['w']!, r['h']!).contains(
-              Offset(px, py),
-            ),
+            (r) => _rect(
+              r['x']!,
+              r['y']!,
+              r['w']!,
+              r['h']!,
+            ).contains(Offset(px, py)),
           ) ||
           map.rooms.any(
-            (r) => _rect(r['x']!, r['y']!, r['w']!, r['h']!).contains(
-              Offset(px, py),
-            ),
+            (r) => _rect(
+              r['x']!,
+              r['y']!,
+              r['w']!,
+              r['h']!,
+            ).contains(Offset(px, py)),
           );
       if (inBuilding) continue;
       final color = switch (season) {
@@ -771,7 +777,7 @@ extension _NativeOfficeEffects on _WorldPainter {
           canvas,
           r.center.dx,
           r.top + 24 * _unit,
-          fx.text,
+          localizedOfficeVcsSummary(fx.text),
           fx.kind == OfficeRoomEffectKind.party
               ? const Color(0xee7c5728)
               : const Color(0xee842e39),
@@ -949,7 +955,7 @@ extension _NativeOfficeEffects on _WorldPainter {
                   (recent ||
                       settings.officeBubbles == 'all' &&
                           actor.mode == 'working')))) {
-        final label = activity?.activitySummary;
+        final label = localizedOfficeActivitySummary(activity);
         if (label != null && label.isNotEmpty) {
           _badge(
             canvas,

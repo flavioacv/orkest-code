@@ -21,7 +21,7 @@ const HELP: &str = "orkest activity vcs --operation <pr.create|pr.merge|push|pul
 pub enum Operation { PrCreate, PrMerge, Push, Pull, Merge, Commit, Fetch, Release, Ci }
 
 impl Operation {
-    fn parse(value: &str) -> Option<Self> {
+    pub fn parse(value: &str) -> Option<Self> {
         Some(match value {
             "pr.create" => Self::PrCreate, "pr.merge" => Self::PrMerge,
             "push" => Self::Push, "pull" => Self::Pull, "merge" => Self::Merge,
@@ -269,12 +269,17 @@ fn api_operation(args: &[String], tool: &str) -> Option<Operation> {
     }
 }
 
-pub fn observe_command(argv: &[String], code: i32, stdout: &str, stderr: &str, tab: Option<&str>) {
-    let Some(tab) = tab.filter(|s| !s.is_empty()) else { return };
-    let Some(op) = command_operation(argv) else { return };
+pub fn observe_operation(op: Option<Operation>, code: i32, stdout: &str, stderr: &str, tab: Option<&str>) {
+    let Some(op) = op else { return };
+    let Some(tab) = tab.filter(|s| !s.is_empty()) else {
+        eprintln!("orkest: no originating tab for VCS event; use --tab-id");
+        return;
+    };
     if let Some(event) = normalize(op, code, stdout, stderr) {
         // Reporting is best effort and never changes the child's exit code.
         if let Err(e) = transport::notify(event.payload(tab)) { eprintln!("orkest: VCS event not delivered: {e}"); }
+    } else if code == 0 {
+        eprintln!("orkest: no confirmed VCS result recognized; no Office event emitted");
     }
 }
 
@@ -310,6 +315,8 @@ pub fn report(args: &[String]) -> ! {
     if let Some(mut event) = normalize(op, code, &raw, "") {
         if let Some(id) = id { event.id = id; }
         if let Err(e) = transport::notify(event.payload(&tab)) { die(&format!("orkest activity vcs: {e}"), 3); }
+    } else {
+        die("orkest activity vcs: result not recognized; no Office event emitted", 4);
     }
     std::process::exit(0)
 }

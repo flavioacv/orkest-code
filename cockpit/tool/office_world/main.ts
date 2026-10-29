@@ -1,3 +1,4 @@
+document.addEventListener('contextmenu', event => event.preventDefault(), { capture: true });
 import * as art from '../../third_party/office_engine/client/src/art/index.ts';
 import { PART_KEYS, type AppearanceParts, type PartKey } from '../../third_party/office_engine/shared/appearance.ts';
 import { SoundBoard } from '../../third_party/office_engine/client/src/audio/board.ts';
@@ -12,7 +13,7 @@ import { Renderer } from '../../third_party/office_engine/client/src/world/rende
 import { OrkestSim, type CoworkingZone, type CoworkingTestState } from './sim.ts';
 import { SoundCues } from '../../third_party/office_engine/client/src/world/sound-cues.ts';
 import { __OFFICE_ASSETS__ } from './assets.ts';
-import { setLocale, normalizeLocale } from '../../third_party/office_engine/shared/i18n.ts';
+import { setLocale, getLocale, normalizeLocale } from '../../third_party/office_engine/shared/i18n.ts';
 import { outdoorLifeLayout } from '../../third_party/office_engine/client/src/world/layout/outdoor-life.ts';
 import { OutdoorPeople } from './outdoor_people.ts';
 import { installSpriteMix } from './sprite_mix.ts';
@@ -278,7 +279,19 @@ window.orkestOfficeWorld = {
     const now = Date.now();
     if (snapshot?.options && typeof snapshot.options === 'object') {
       const next = snapshot.options;
-      if (typeof next.locale === 'string') setLocale(normalizeLocale(next.locale) ?? 'pt-BR');
+      if (typeof next.locale === 'string') {
+        const locale = normalizeLocale(next.locale) ?? 'pt-BR';
+        if (locale !== getLocale()) {
+          setLocale(locale);
+          for (const gathering of sim.social.gatherings) {
+            gathering.pending.length = 0;
+            gathering.lastLine = '';
+          }
+          for (const ch of sim.chars.values()) {
+            ch.sayText = ''; ch.sayUntil = 0; ch.bubbleText = null;
+          }
+        }
+      }
       options = {
         ...options,
         ...(typeof next.showNames === 'boolean' ? { showNames: next.showNames } : {}),
@@ -331,6 +344,7 @@ window.orkestOfficeWorld = {
       updateBounds();
       if (sim.initialized && !userMoved) overview(false);
     }
+    return snapshot.rev;
   },
   selectAgent(id: string | null) { selectedAgent = id; },
   focusAgent(id: string, follow = false) { focusAgent(id, follow); },
@@ -377,7 +391,7 @@ declare global {
         preview: string;
         avatar: string;
       };
-      update(snapshot: unknown): void;
+      update(snapshot: unknown): number | undefined;
       selectAgent(id: string | null): void;
       focusAgent(id: string, follow?: boolean): void;
       setFollowAgent(id: string, follow: boolean): void;

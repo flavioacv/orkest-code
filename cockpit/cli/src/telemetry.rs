@@ -152,6 +152,7 @@ fn key_of(flag: &str) -> String {
 // ---- wrapper ----------------------------------------------------------------
 
 struct WrapOpts {
+    vcs_operation: Option<crate::vcs::Operation>,
     name: Option<String>,
     quiet: bool,
     argv: Vec<String>,
@@ -160,6 +161,7 @@ struct WrapOpts {
 fn parse_wrap(args: &[String]) -> WrapOpts {
     let mut name = None;
     let mut quiet = false;
+    let mut vcs_operation = None;
     let mut i = 0;
     while i < args.len() {
         match args[i].as_str() {
@@ -168,6 +170,11 @@ fn parse_wrap(args: &[String]) -> WrapOpts {
                 break;
             }
             "-q" | "--quiet" => quiet = true,
+            "--vcs-operation" => {
+                i += 1;
+                vcs_operation = args.get(i).and_then(|s| crate::vcs::Operation::parse(s));
+                if vcs_operation.is_none() { die("invalid --vcs-operation", 2); }
+            },
             "--name" => {
                 i += 1;
                 name = args.get(i).cloned();
@@ -184,7 +191,7 @@ fn parse_wrap(args: &[String]) -> WrapOpts {
     if argv.is_empty() {
         die("orkest telemetry: missing command to run (see --help)", 2);
     }
-    WrapOpts { name, quiet, argv }
+    WrapOpts { name, quiet, argv, vcs_operation }
 }
 
 /// Mensagem enviada pela thread de IO pra thread que fala com o app.
@@ -236,7 +243,8 @@ fn wrap(args: &[String]) -> ! {
     let (tx, rx) = mpsc::channel::<Msg>();
     let tab = self_tab_id();
     let run_for_sender = run_id.clone();
-    let capture_vcs = crate::vcs::command_operation(&opts.argv).is_some();
+    let operation = opts.vcs_operation.or_else(|| crate::vcs::command_operation(&opts.argv));
+    let capture_vcs = operation.is_some();
     let sender = thread::spawn(move || {
         let mut vcs_out = String::new();
         let mut vcs_err = String::new();
@@ -261,6 +269,7 @@ fn wrap(args: &[String]) -> ! {
                         for line in &lines {
                             if vcs_out.len() + vcs_err.len() + line.len() + 1 > crate::vcs::MAX_RESULT {
                                 vcs_overflow = true;
+                                eprintln!("orkest: VCS output exceeds the result limit; use activity vcs with a bounded response");
                                 vcs_out.clear();
                                 vcs_err.clear();
                                 break;
@@ -313,7 +322,7 @@ fn wrap(args: &[String]) -> ! {
     }
     let resp = transport::request(close, QUERY_TIMEOUT);
     if let Some((out, err)) = vcs_output {
-        crate::vcs::observe_command(&opts.argv, code, &out, &err, self_tab_id().as_deref());
+        crate::vcs::observe_operation(operation, code, &out, &err, self_tab_id().as_deref());
     }
     if !opts.quiet {
         let errors = resp["data"]["errors"].as_u64().unwrap_or(0);

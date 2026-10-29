@@ -56,8 +56,8 @@ class RemoteHostsController extends ChangeNotifier {
 
   /// Status de turno (spinner/chime) de TODOS os hosts remotos, mesclado. A VM
   /// assina e roteia por `paneId` pro mesmo caminho do status local (Wave G).
-  final _turnStatus = StreamController<RemoteTurnStatus>.broadcast();
-  Stream<RemoteTurnStatus> get turnStatus => _turnStatus.stream;
+  final _turnStatus = StreamController<(String, RemoteTurnStatus)>.broadcast();
+  Stream<(String, RemoteTurnStatus)> get turnStatus => _turnStatus.stream;
 
   /// Comandos da CLI `orkest` de TODOS os hosts, mesclados — a VM assina e
   /// devolve ao `OrkestCliHandler`, o mesmo que atende a CLI local.
@@ -84,7 +84,7 @@ class RemoteHostsController extends ChangeNotifier {
       // Lido no tique do retry, não aqui: o foco muda o tempo todo.
       isFocused: () => isHostFocused?.call(host.id) ?? true,
     );
-    connector.turnStatus.listen(_turnStatus.add);
+    connector.turnStatus.listen((status) => _turnStatus.add((host.id, status)));
     connector.cliCommands.listen(_cliCommands.add);
     // Fases notificam AQUI (e não só em terminalGateway): o badge e o botão
     // de reconectar precisam repintar mesmo em host sem aba de terminal

@@ -62,6 +62,7 @@ class RemoteServer {
 
   ServerSocket? _listener;
   final Set<_Connection> _connections = {};
+  final Map<String, ({String tabId, String? generation})> _ptyRouting = {};
 
   /// Receptor do status de turno (socket local do host onde o hook do agente
   /// escreve). `null` até o [bind]. Cada linha vira um [TurnStatus] broadcast
@@ -202,12 +203,24 @@ class RemoteServer {
     final tabId = (request['tabId'] ?? '').toString();
     _Connection? connection;
     if (tabId.isNotEmpty) {
-      for (final c in _connections) {
-        if (c.ownsTab(tabId)) {
-          connection = c;
-          break;
-        }
+      final generation = request['gen'] as String?;
+      final owners = _connections
+          .where(
+            (c) =>
+                c.ownsTab(tabId) &&
+                (generation == null || c._tabGenerations[tabId] == generation),
+          )
+          .toList();
+      if (owners.length > 1) {
+        return {
+          'ok': false,
+          'error': 'ambiguous tab identity; reopen the terminal',
+        };
       }
+      if (generation != null && owners.isEmpty) {
+        return {'ok': false, 'error': 'stale terminal generation'};
+      }
+      if (owners.length == 1) connection = owners.single;
     }
     // Ninguém reivindica a aba (ela nasceu antes deste servidor, ou o comando
     // veio de fora de uma aba). Com um cliente só, ele é a resposta óbvia;
@@ -272,9 +285,8 @@ class RemoteServer {
   /// Reenvia um status de turno (vindo do hook no host) pra todos os clientes
   /// conectados. O cliente roteia por `paneId` — típico 1 cliente por host.
   void _broadcastTurnStatus(TurnStatus status) {
-    for (final connection in _connections) {
-      connection._send(status);
-    }
+    final owners = _connections.where((c) => c.ownsStatus(status)).toList();
+    if (owners.length == 1) owners.single._send(status);
   }
 
   Future<void> close() async {
@@ -307,6 +319,7 @@ class RemoteServer {
       serverVersion,
       _statusEnv,
       _endpoint?.token,
+      _ptyRouting,
     );
     _connections.add(connection);
     _idleTimer?.cancel();
@@ -337,6 +350,7 @@ class _Connection {
     this._serverVersion,
     this._statusEnv,
     this._expectedToken,
+    this._ptyRouting,
   ) {
     // Erro no socket chega TAMBÉM por aqui (assíncrono, fora de qualquer
     // try/catch de escrita); sem o catch, vira exceção não tratada e mata o
@@ -366,9 +380,16 @@ class _Connection {
   /// é a aba quando um comando de CLI chega do host: com dois clientes no
   /// mesmo servidor (o desktop e o iPad, por exemplo), mandar para o último
   /// que conectou responderia com as abas do dispositivo errado.
+  final Map<String, ({String tabId, String? generation})> _ptyRouting;
+  final Map<String, String?> _tabGenerations = {};
+
   final Set<String> _tabIds = <String>{};
 
   bool ownsTab(String tabId) => _tabIds.contains(tabId);
+  bool ownsStatus(TurnStatus status) =>
+      ownsTab(status.paneId) &&
+      (status.generation == null ||
+          _tabGenerations[status.paneId] == status.generation);
 
   /// Descritor de conexão do payload, **com o segredo do host preenchido**
   /// (plano 62).
@@ -583,7 +604,7 @@ class _Connection {
                   // mandar o dele: destruiria o PATH desta máquina).
                   ..._cliPathEnv(fromClient['PATH']),
                 };
-          final tabId = env['ORKEST_TAB_ID'];
+          final tabId = env['ORKEST_TAB_ID'] ?? env['ORKEST_PANE_ID'];
           if (tabId != null && tabId.isNotEmpty) _tabIds.add(tabId);
           final info = await _terminals.open(
             PtySpawnSpec(
@@ -595,6 +616,11 @@ class _Connection {
               columns: message.columns,
             ),
           );
+          if (tabId != null && tabId.isNotEmpty) {
+            final generation = env['ORKEST_SESSION_TOKEN'];
+            _tabGenerations[tabId] = generation;
+            _ptyRouting[info.id] = (tabId: tabId, generation: generation);
+          }
           // Ecoa o `rid`: é ele que diz ao cliente QUAL `pty.open` esta
           // resposta atende. Sem isso, dois opens simultâneos casavam com a
           // mesma resposta e os dois terminais adotavam o mesmo sessionId.
@@ -621,6 +647,11 @@ class _Connection {
           );
 
         case PtyAttach():
+          final route = _ptyRouting[message.sessionId];
+          if (route != null) {
+            _tabIds.add(route.tabId);
+            _tabGenerations[route.tabId] = route.generation;
+          }
           await _detach(message.sessionId);
           final sessionId = message.sessionId;
           final coalescer = PtyOutputCoalescer(
@@ -709,19 +740,39 @@ class _Connection {
     if (command.trim().isEmpty) {
       throw const RemoteRpcFailure('bad_request', 'missing command');
     }
+    final argv = (p['argv'] as List?)?.cast<String>();
+    final tabId = p['tabId'] as String?;
+    if (tabId != null && !ownsTab(tabId))
+      throw const RemoteRpcFailure(
+        'bad_request',
+        'tab not owned by this client',
+      );
+    if (tabId != null &&
+        p['generation'] != null &&
+        p['generation'] != _tabGenerations[tabId]) {
+      throw const RemoteRpcFailure('bad_request', 'stale terminal generation');
+    }
     final cwd = (p['cwd'] ?? '').toString();
     if (cwd.isNotEmpty && !await Directory(cwd).exists()) {
       throw RemoteRpcFailure('cwd_not_found', cwd);
     }
     final timeoutRaw = p['timeout'];
     final seconds = (timeoutRaw is num ? timeoutRaw.toInt() : 60).clamp(1, 600);
-    final env = <String, String>{..._statusEnv, ..._cliPathEnv(null)};
+    final env = <String, String>{
+      ..._statusEnv,
+      ..._cliPathEnv(null),
+      if (tabId != null) ...{'ORKEST_TAB_ID': tabId, 'ORKEST_PANE_ID': tabId},
+      if (p['generation'] is String)
+        'ORKEST_SESSION_TOKEN': p['generation'] as String,
+    };
     final shell = Platform.environment['SHELL'] ?? '/bin/sh';
     final Process proc;
     try {
       proc = await Process.start(
         shell,
-        <String>['-lc', command],
+        argv != null && argv.isNotEmpty
+            ? <String>['-lc', r'exec "$@"', 'orkest-exec', ...argv]
+            : <String>['-lc', command],
         workingDirectory: cwd.isEmpty ? null : cwd,
         environment: env,
         includeParentEnvironment: true,
@@ -743,9 +794,9 @@ class _Connection {
     var timedOut = false;
     final code = await proc.exitCode.timeout(
       Duration(seconds: seconds),
-      onTimeout: () {
+      onTimeout: () async {
         timedOut = true;
-        proc.kill(ProcessSignal.sigkill);
+        await terminateProcessTree(proc);
         return 124;
       },
     );
@@ -1085,6 +1136,8 @@ class TurnStatusReceiver {
         activityPhase: json['activityPhase'] as String?,
         activitySummary: json['activitySummary'] as String?,
         activityId: json['activityId'] as String?,
+        turnId: json['tid'] as String?,
+        generation: json['gen'] as String?,
       ),
     );
   }

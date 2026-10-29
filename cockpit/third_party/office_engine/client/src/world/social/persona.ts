@@ -12,18 +12,18 @@ export { TRAIT_IDS, TRAITS, type Trait, type TraitId } from '../../../../shared/
 
 /** Bordões: cada um tem o seu (aparece de vez em quando nas falas). */
 export const CATCHPHRASES = [
-  tr('Bora!'),
-  tr('Partiu!'),
-  tr('Tá pago!'),
-  tr('É hoje!'),
-  tr('Simbora!'),
-  tr('Bora codar!'),
-  tr('Deu bom!'),
-  tr('Que isso!'),
-  tr('Show de bola!'),
-  tr('Tamo junto!'),
-  tr('Sem estresse.'),
-  tr('Vai dar certo!'),
+  'Bora!',
+  'Partiu!',
+  'Tá pago!',
+  'É hoje!',
+  'Simbora!',
+  'Bora codar!',
+  'Deu bom!',
+  'Que isso!',
+  'Show de bola!',
+  'Tamo junto!',
+  'Sem estresse.',
+  'Vai dar certo!',
 ] as const;
 
 export interface Persona {
@@ -66,7 +66,7 @@ export function personaFor(seed: number): Persona {
   if (traits.includes('esporte')) skill += 0.15;
   if (traits.includes('sonecas')) skill -= 0.1;
   const catchphrase = CATCHPHRASES[Math.floor(rng() * CATCHPHRASES.length) % CATCHPHRASES.length];
-  const p: Persona = { traits, sociability: clamp01(sociability), skill: clamp01(skill), catchphrase };
+  const p: Persona = { traits, sociability: clamp01(sociability), skill: clamp01(skill), get catchphrase() { return tr(catchphrase); } };
   if (cache.size > 500) cache.clear();
   cache.set(seed, p);
   return p;

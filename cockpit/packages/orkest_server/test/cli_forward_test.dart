@@ -95,23 +95,93 @@ void main() {
     expect(reply['error'], contains('no Orkest client'));
   });
 
+  test('turn status is delivered only to its owning client', () async {
+    final server = _server();
+    await server.bind(path);
+    addTearDown(server.close);
+    final owner = await _connectClient(path);
+    final other = await _connectClient(path);
+    await _claimTab(owner, 'owner-tab');
+    await _claimTab(other, 'other-tab');
+    final seen = <TurnStatus>[];
+    final sub = other.messages
+        .where((m) => m is TurnStatus)
+        .cast<TurnStatus>()
+        .listen(seen.add);
+    addTearDown(sub.cancel);
+    final delivered = owner.messages.firstWhere((m) => m is TurnStatus);
+    final socket = await _connectStatus(server);
+    socket.writeln(
+      jsonEncode({
+        'paneId': 'owner-tab',
+        'st': 'waiting',
+        'tok': _token(server),
+      }),
+    );
+    await socket.flush();
+    expect(
+      (await delivered.timeout(const Duration(seconds: 5)) as TurnStatus)
+          .paneId,
+      'owner-tab',
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    expect(seen, isEmpty);
+  });
+
+  test('equal tab IDs are disambiguated by PTY generation', () async {
+    final server = _server();
+    await server.bind(path);
+    addTearDown(server.close);
+    final owner = await _connectClient(path);
+    final other = await _connectClient(path);
+    await _claimTab(owner, 't1', 'owner-generation');
+    await _claimTab(other, 't1', 'other-generation');
+    final seen = <TurnStatus>[];
+    final sub = other.messages
+        .where((m) => m is TurnStatus)
+        .cast<TurnStatus>()
+        .listen(seen.add);
+    addTearDown(sub.cancel);
+    final delivered = owner.messages.firstWhere((m) => m is TurnStatus);
+    final socket = await _connectStatus(server);
+    socket.writeln(
+      jsonEncode({
+        'paneId': 't1',
+        'st': 'waiting',
+        'gen': 'owner-generation',
+        'tok': _token(server),
+      }),
+    );
+    await socket.flush();
+    expect(
+      (await delivered.timeout(const Duration(seconds: 5)) as TurnStatus)
+          .generation,
+      'owner-generation',
+    );
+    await Future<void>.delayed(const Duration(milliseconds: 100));
+    expect(seen, isEmpty);
+  });
+
   test('status de turno segue funcionando no mesmo socket', () async {
     final server = _server();
     await server.bind(path);
     addTearDown(server.close);
 
     final client = await _connectClient(path);
+    await _claimTab(client, 't1', 'pty-1');
     final status = client.messages.firstWhere((m) => m is TurnStatus);
 
     final socket = await _connectStatus(server);
     socket.write(
-      '${jsonEncode({'paneId': 't1', 'st': 'working', 'tok': _token(server)})}\n',
+      '${jsonEncode({'paneId': 't1', 'st': 'working', 'tid': 'turn-1', 'gen': 'pty-1', 'tok': _token(server)})}\n',
     );
     await socket.flush();
 
     final received = await status.timeout(const Duration(seconds: 5));
     expect((received as TurnStatus).paneId, 't1');
     expect(received.status, 'working');
+    expect(received.turnId, 'turn-1');
+    expect(received.generation, 'pty-1');
     await socket.close();
   });
   test('structured Office activities reach the remote client intact', () async {
@@ -119,6 +189,7 @@ void main() {
     await server.bind(path);
     addTearDown(server.close);
     final client = await _connectClient(path);
+    await _claimTab(client, 't1');
     final status = client.messages.firstWhere((m) => m is TurnStatus);
     final socket = await _connectStatus(server);
     addTearDown(socket.destroy);
@@ -197,6 +268,25 @@ void main() {
     expect(reply['error'], contains('no attached Orkest owns tab'));
   });
 
+  test(
+    'a stale generation never falls back to the only connected client',
+    () async {
+      final server = _server();
+      await server.bind(path);
+      addTearDown(server.close);
+      final client = await _connectClient(path);
+      await _claimTab(client, 't1', 'current');
+      final reply = await _sendCliCommand(server, {
+        'type': 'cmd',
+        'cmd': 'list-panes',
+        'tabId': 't1',
+        'gen': 'stale',
+      });
+      expect(reply['ok'], false);
+      expect(reply['error'], contains('stale terminal generation'));
+    },
+  );
+
   test('cliente único responde mesmo sem reivindicar a aba', () async {
     // Aba aberta antes deste servidor (processo reiniciado): com um cliente só
     // não há ambiguidade, então segue funcionando.
@@ -222,10 +312,20 @@ void main() {
 
 /// Abre uma PTY por esta conexão declarando `ORKEST_TAB_ID` — é assim que o
 /// servidor aprende de quem é a aba.
-Future<void> _claimTab(_TestClient client, String tabId) async {
+Future<void> _claimTab(
+  _TestClient client,
+  String tabId, [
+  String? generation,
+]) async {
   final opened = client.messages.firstWhere((m) => m is PtyOpened);
   client.send(
-    PtyOpen(executable: '/bin/zsh', environment: {'ORKEST_TAB_ID': tabId}),
+    PtyOpen(
+      executable: '/bin/zsh',
+      environment: {
+        'ORKEST_TAB_ID': tabId,
+        if (generation != null) 'ORKEST_SESSION_TOKEN': generation,
+      },
+    ),
   );
   await opened.timeout(const Duration(seconds: 5));
 }

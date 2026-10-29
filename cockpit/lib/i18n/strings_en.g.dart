@@ -475,6 +475,36 @@ class Translations$orkest$officeWorld$en {
 
 	// Translations
 
+	/// en: 'Pull request created'
+	String get vcsPrOpened => 'Pull request created';
+
+	/// en: 'Pull request merged'
+	String get vcsPrMerged => 'Pull request merged';
+
+	/// en: 'Release published'
+	String get vcsRelease => 'Release published';
+
+	/// en: 'Push completed'
+	String get vcsPush => 'Push completed';
+
+	/// en: 'CI failed'
+	String get vcsCiFailed => 'CI failed';
+
+	/// en: 'CI passed'
+	String get vcsCiPassed => 'CI passed';
+
+	/// en: 'Git pull completed'
+	String get vcsPull => 'Git pull completed';
+
+	/// en: 'Git fetch completed'
+	String get vcsFetch => 'Git fetch completed';
+
+	/// en: 'Commit created'
+	String get vcsCommit => 'Commit created';
+
+	/// en: 'Local merge completed'
+	String get vcsMerge => 'Local merge completed';
+
 	/// en: 'Reception'
 	String get reception => 'Reception';
 
@@ -4535,6 +4565,16 @@ extension on Translations {
 			'common.copyCode' => 'Copy code',
 			'common.search' => 'Search',
 			'common.noResults' => 'No results',
+			'orkest.officeWorld.vcsPrOpened' => 'Pull request created',
+			'orkest.officeWorld.vcsPrMerged' => 'Pull request merged',
+			'orkest.officeWorld.vcsRelease' => 'Release published',
+			'orkest.officeWorld.vcsPush' => 'Push completed',
+			'orkest.officeWorld.vcsCiFailed' => 'CI failed',
+			'orkest.officeWorld.vcsCiPassed' => 'CI passed',
+			'orkest.officeWorld.vcsPull' => 'Git pull completed',
+			'orkest.officeWorld.vcsFetch' => 'Git fetch completed',
+			'orkest.officeWorld.vcsCommit' => 'Commit created',
+			'orkest.officeWorld.vcsMerge' => 'Local merge completed',
 			'orkest.officeWorld.reception' => 'Reception',
 			'orkest.officeWorld.cafe' => 'Café',
 			'orkest.officeWorld.restrooms' => 'Restrooms',
@@ -4957,6 +4997,8 @@ extension on Translations {
 			'orkest.dbRedisTable.deleteKeyMessage' => ({required Object key}) => 'Delete "${key}" from this Redis database?',
 			'orkest.dbRedisTable.refresh' => 'Refresh',
 			'orkest.dbRedisTable.newKey' => 'New key',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.dbRedisTable.columnKey' => 'KEY',
 			'orkest.dbRedisTable.columnValue' => 'VALUE',
 			'orkest.dbRedisTable.columnType' => 'TYPE',
@@ -4967,8 +5009,6 @@ extension on Translations {
 			'orkest.dbRedisTable.loadMore' => 'Load more',
 			'orkest.dbRedisTable.loadingFullValue' => 'Loading full value…',
 			'orkest.dbRedisTable.ttlMustBeNumber' => 'TTL must be a number of seconds.',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.dbRedisTable.addKey' => 'Add key',
 			'orkest.dbRedisTable.keyFieldHint' => 'key',
 			'orkest.dbRedisTable.ttlFieldHint' => 'ttl (s, optional)',
@@ -5471,6 +5511,8 @@ extension on Translations {
 			'settings.page.appearance.modeOnlyDark' => ({required Object theme}) => '"${theme}" only ships a dark variant, so this has no effect.',
 			'settings.page.appearance.modeOnlyLight' => ({required Object theme}) => '"${theme}" only ships a light variant, so this has no effect.',
 			'settings.page.appearance.themeFileTitle' => 'Theme file',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.appearance.themeFileDesc' => 'Import a theme from a JSON file, or export the active one.',
 			'settings.page.appearance.previewCode' => 'Code',
 			'settings.page.appearance.previewTerminal' => 'Terminal',
@@ -5481,8 +5523,6 @@ extension on Translations {
 			'settings.page.appearance.interfaceFontTitle' => 'Interface font',
 			'settings.page.appearance.interfaceFontDesc' => 'Used across the whole app. Empty = system default.',
 			'settings.page.appearance.interfaceSizeTitle' => 'Interface size',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.appearance.codeFontTitle' => 'Code font',
 			'settings.page.appearance.codeFontDesc' => 'Code and diffs. Empty = system default.',
 			'settings.page.appearance.codeSizeTitle' => 'Code size',

@@ -3507,7 +3507,19 @@
     "Carimbos da portaria: nenhum ainda": "Stamps at the front desk: none yet",
     "Carimbo deixado na portaria: {0}": "Stamp left at the front desk: {0}",
     "Entre no pr\xE9dio ou chegue mais perto da porta para carimbar.": "Go into the building or get closer to the door to stamp.",
-    "O carimbo n\xE3o foi deixado. Tente de novo.": "The stamp wasn't left. Try again."
+    "O carimbo n\xE3o foi deixado. Tente de novo.": "The stamp wasn't left. Try again.",
+    "Trabalho individual": "Individual work",
+    "Fechado! \u{1F91D}": "Deal! \u{1F91D}",
+    "{a} a {b}! \u{1F3C6}": "{a} to {b}! \u{1F3C6}",
+    " com {0}": " with {0}",
+    "{0} e {1}": "{0} and {1}",
+    "Arrasei \u2728": "Nailed it \u2728",
+    "Combo! \u{1F4A5}": "Combo! \u{1F4A5}",
+    "Finalmente! \u{1F60D}": "Finally! \u{1F60D}",
+    "GOOOL! \u26BD": "GOAL! \u26BD",
+    "KKKKK": "LOL",
+    "KKKKK \u{1F602}": "LOL \u{1F602}",
+    "Uuuuh! \u{1F631}": "Oooh! \u{1F631}"
   };
 
   // third_party/office_engine/shared/locales/es.ts
@@ -6652,7 +6664,19 @@
     "Carimbos da portaria: nenhum ainda": "Sellos de la recepci\xF3n: ninguno todav\xEDa",
     "Carimbo deixado na portaria: {0}": "Sello dejado en la recepci\xF3n: {0}",
     "Entre no pr\xE9dio ou chegue mais perto da porta para carimbar.": "Entra al edificio o ac\xE9rcate m\xE1s a la puerta para sellar.",
-    "O carimbo n\xE3o foi deixado. Tente de novo.": "El sello no se dej\xF3. Int\xE9ntalo de nuevo."
+    "O carimbo n\xE3o foi deixado. Tente de novo.": "El sello no se dej\xF3. Int\xE9ntalo de nuevo.",
+    "Trabalho individual": "Trabajo individual",
+    "Fechado! \u{1F91D}": "\xA1Trato hecho! \u{1F91D}",
+    "{a} a {b}! \u{1F3C6}": "\xA1{a} a {b}! \u{1F3C6}",
+    " com {0}": " con {0}",
+    "{0} e {1}": "{0} y {1}",
+    "Arrasei \u2728": "\xA1Lo logr\xE9! \u2728",
+    "Combo! \u{1F4A5}": "\xA1Combo! \u{1F4A5}",
+    "Finalmente! \u{1F60D}": "\xA1Por fin! \u{1F60D}",
+    "GOOOL! \u26BD": "\xA1GOOOL! \u26BD",
+    "KKKKK": "JAJAJA",
+    "KKKKK \u{1F602}": "JAJAJA \u{1F602}",
+    "Uuuuh! \u{1F631}": "\xA1Uuuh! \u{1F631}"
   };
 
   // third_party/office_engine/shared/locales/fr.ts
@@ -9857,17 +9881,12 @@
     return serverLocale(env2, intl);
   }
   var current = detect();
-  function setLocale(value) {
-  const next = normalizeLocale(value) ?? "pt-BR";
-  if (current === next) return;
-  current = next;
-  if (typeof KINDS !== "undefined") {
-    const labels = {tv:"Vendo TV",videogame:"Jogando videogame",arcade:"Duelo no fliperama",pingpong:"Jogando pingue-pongue",kitchen:"Papo na copa",talk:"Conversando",rps:"Jokenpô",mirror:"Se arrumando no espelho"};
-    for (const [kind, label] of Object.entries(labels)) KINDS[kind].label = tr(label);
-    PLACES = { [LOUNGE_ID]: tr("Lounge"), [CAFE_ID]: tr("Copa"), [RECEPTION_ID]: tr("Recepção"), [RESTROOM_ID]: tr("Banheiros") };
-    MATCH_WHAT = { rps: tr("no jokenpô"), pingpong: tr("no pingue-pongue"), videogame: tr("no videogame"), arcade: tr("no fliperama") };
+  function getLocale() {
+    return current;
   }
-}
+  function setLocale(l) {
+    current = l;
+  }
   function tr(src, args) {
     const dict = DICTS[current];
     const s = dict && dict[src] || src;
@@ -23388,20 +23407,76 @@
 
   // third_party/office_engine/shared/world/traits.ts
   var TRAITS = {
-    competicao: { id: "competicao", emoji: "\u{1F3C6}", label: tr("Competi\xE7\xE3o"), desc: tr("Adora competir: desafia os colegas no ping-pong, no videogame e no jokenp\xF4.") },
-    apostas: { id: "apostas", emoji: "\u{1F3B2}", label: tr("Apostas"), desc: tr("Topa qualquer aposta e aposta alto no jokenp\xF4.") },
-    games: { id: "games", emoji: "\u{1F3AE}", label: tr("Games"), desc: tr("Vive no videogame do lounge e nos fliperamas \u2014 e costuma ganhar.") },
-    series: { id: "series", emoji: "\u{1F4FA}", label: tr("S\xE9ries e TV"), desc: tr("N\xE3o perde um programa na TV do lounge (de prefer\xEAncia com pipoca).") },
-    fofoca: { id: "fofoca", emoji: "\u{1F5E3}\uFE0F", label: tr("Fofoca"), desc: tr("Puxa papo na copa e sabe de tudo o que acontece nas salas.") },
-    vaidade: { id: "vaidade", emoji: "\u{1F484}", label: tr("Vaidade"), desc: tr("Passa no espelho do banheiro para se arrumar sempre que pode.") },
-    cafeina: { id: "cafeina", emoji: "\u2615", label: tr("Cafe\xEDna"), desc: tr("Movido a caf\xE9: a cafeteira da copa \xE9 a segunda casa.") },
-    piadas: { id: "piadas", emoji: "\u{1F602}", label: tr("Piadas"), desc: tr("Conta piada em toda conversa e faz a roda rir.") },
-    esporte: { id: "esporte", emoji: "\u{1F3D3}", label: tr("Esporte"), desc: tr("Joga ping-pong, se alonga e vibra com o futebol na TV.") },
-    timidez: { id: "timidez", emoji: "\u{1F648}", label: tr("Timidez"), desc: tr("Prefere ficar na sua: l\xEA, olha a janela e entra menos nas rodas.") },
-    economia: { id: "economia", emoji: "\u{1F4B0}", label: tr("Economia"), desc: tr("P\xE3o-duro: aposta pouco e \xE0s vezes foge da aposta.") },
-    sonecas: { id: "sonecas", emoji: "\u{1F634}", label: tr("Sonecas"), desc: tr("Qualquer sof\xE1 ou puff vira cama.") },
-    calma: { id: "calma", emoji: "\u{1F9D8}", label: tr("Calma"), desc: tr("Zen: alongamentos, janela e conversas tranquilas.") },
-    leitura: { id: "leitura", emoji: "\u{1F4DA}", label: tr("Leitura"), desc: tr("Sempre com um livro da estante (ou o celular) na m\xE3o.") }
+    competicao: { id: "competicao", emoji: "\u{1F3C6}", get label() {
+      return tr("Competi\xE7\xE3o");
+    }, get desc() {
+      return tr("Adora competir: desafia os colegas no ping-pong, no videogame e no jokenp\xF4.");
+    } },
+    apostas: { id: "apostas", emoji: "\u{1F3B2}", get label() {
+      return tr("Apostas");
+    }, get desc() {
+      return tr("Topa qualquer aposta e aposta alto no jokenp\xF4.");
+    } },
+    games: { id: "games", emoji: "\u{1F3AE}", get label() {
+      return tr("Games");
+    }, get desc() {
+      return tr("Vive no videogame do lounge e nos fliperamas \u2014 e costuma ganhar.");
+    } },
+    series: { id: "series", emoji: "\u{1F4FA}", get label() {
+      return tr("S\xE9ries e TV");
+    }, get desc() {
+      return tr("N\xE3o perde um programa na TV do lounge (de prefer\xEAncia com pipoca).");
+    } },
+    fofoca: { id: "fofoca", emoji: "\u{1F5E3}\uFE0F", get label() {
+      return tr("Fofoca");
+    }, get desc() {
+      return tr("Puxa papo na copa e sabe de tudo o que acontece nas salas.");
+    } },
+    vaidade: { id: "vaidade", emoji: "\u{1F484}", get label() {
+      return tr("Vaidade");
+    }, get desc() {
+      return tr("Passa no espelho do banheiro para se arrumar sempre que pode.");
+    } },
+    cafeina: { id: "cafeina", emoji: "\u2615", get label() {
+      return tr("Cafe\xEDna");
+    }, get desc() {
+      return tr("Movido a caf\xE9: a cafeteira da copa \xE9 a segunda casa.");
+    } },
+    piadas: { id: "piadas", emoji: "\u{1F602}", get label() {
+      return tr("Piadas");
+    }, get desc() {
+      return tr("Conta piada em toda conversa e faz a roda rir.");
+    } },
+    esporte: { id: "esporte", emoji: "\u{1F3D3}", get label() {
+      return tr("Esporte");
+    }, get desc() {
+      return tr("Joga ping-pong, se alonga e vibra com o futebol na TV.");
+    } },
+    timidez: { id: "timidez", emoji: "\u{1F648}", get label() {
+      return tr("Timidez");
+    }, get desc() {
+      return tr("Prefere ficar na sua: l\xEA, olha a janela e entra menos nas rodas.");
+    } },
+    economia: { id: "economia", emoji: "\u{1F4B0}", get label() {
+      return tr("Economia");
+    }, get desc() {
+      return tr("P\xE3o-duro: aposta pouco e \xE0s vezes foge da aposta.");
+    } },
+    sonecas: { id: "sonecas", emoji: "\u{1F634}", get label() {
+      return tr("Sonecas");
+    }, get desc() {
+      return tr("Qualquer sof\xE1 ou puff vira cama.");
+    } },
+    calma: { id: "calma", emoji: "\u{1F9D8}", get label() {
+      return tr("Calma");
+    }, get desc() {
+      return tr("Zen: alongamentos, janela e conversas tranquilas.");
+    } },
+    leitura: { id: "leitura", emoji: "\u{1F4DA}", get label() {
+      return tr("Leitura");
+    }, get desc() {
+      return tr("Sempre com um livro da estante (ou o celular) na m\xE3o.");
+    } }
   };
   function traitsClash(a, b) {
     return TRAIT_CLASHES.some(([x, y]) => x === a && y === b || x === b && y === a);
@@ -23409,18 +23484,18 @@
 
   // third_party/office_engine/client/src/world/social/persona.ts
   var CATCHPHRASES = [
-    tr("Bora!"),
-    tr("Partiu!"),
-    tr("T\xE1 pago!"),
-    tr("\xC9 hoje!"),
-    tr("Simbora!"),
-    tr("Bora codar!"),
-    tr("Deu bom!"),
-    tr("Que isso!"),
-    tr("Show de bola!"),
-    tr("Tamo junto!"),
-    tr("Sem estresse."),
-    tr("Vai dar certo!")
+    "Bora!",
+    "Partiu!",
+    "T\xE1 pago!",
+    "\xC9 hoje!",
+    "Simbora!",
+    "Bora codar!",
+    "Deu bom!",
+    "Que isso!",
+    "Show de bola!",
+    "Tamo junto!",
+    "Sem estresse.",
+    "Vai dar certo!"
   ];
   function mix2(seed) {
     let h = (seed ^ 1540483477) >>> 0;
@@ -23449,7 +23524,9 @@
     if (traits.includes("esporte")) skill += 0.15;
     if (traits.includes("sonecas")) skill -= 0.1;
     const catchphrase = CATCHPHRASES[Math.floor(rng() * CATCHPHRASES.length) % CATCHPHRASES.length];
-    const p = { traits, sociability: clamp013(sociability), skill: clamp013(skill), catchphrase };
+    const p = { traits, sociability: clamp013(sociability), skill: clamp013(skill), get catchphrase() {
+      return tr(catchphrase);
+    } };
     if (cache2.size > 500) cache2.clear();
     cache2.set(seed, p);
     return p;
@@ -23495,14 +23572,30 @@
   // third_party/office_engine/client/src/world/social/gathering.ts
   var PROGRAM_SEED = { futebol: 0, novela: 1, desenho: 2 };
   var KINDS = {
-    tv: { label: tr("Vendo TV"), emoji: "\u{1F4FA}", min: 2, max: 5 },
-    videogame: { label: tr("Jogando videogame"), emoji: "\u{1F3AE}", min: 2, max: 5, match: true },
-    arcade: { label: tr("Duelo no fliperama"), emoji: "\u{1F47E}", min: 2, max: 2, match: true },
-    pingpong: { label: tr("Jogando pingue-pongue"), emoji: "\u{1F3D3}", min: 2, max: 4, match: true },
-    kitchen: { label: tr("Papo na copa"), emoji: "\u2615", min: 2, max: 4 },
-    talk: { label: tr("Conversando"), emoji: "\u{1F4AC}", min: 2, max: 2 },
-    rps: { label: tr("Jokenp\xF4"), emoji: "\u270A", min: 2, max: 4, match: true },
-    mirror: { label: tr("Se arrumando no espelho"), emoji: "\u{1F484}", min: 1, max: 2, solo: true }
+    tv: { get label() {
+      return tr("Vendo TV");
+    }, emoji: "\u{1F4FA}", min: 2, max: 5 },
+    videogame: { get label() {
+      return tr("Jogando videogame");
+    }, emoji: "\u{1F3AE}", min: 2, max: 5, match: true },
+    arcade: { get label() {
+      return tr("Duelo no fliperama");
+    }, emoji: "\u{1F47E}", min: 2, max: 2, match: true },
+    pingpong: { get label() {
+      return tr("Jogando pingue-pongue");
+    }, emoji: "\u{1F3D3}", min: 2, max: 4, match: true },
+    kitchen: { get label() {
+      return tr("Papo na copa");
+    }, emoji: "\u2615", min: 2, max: 4 },
+    talk: { get label() {
+      return tr("Conversando");
+    }, emoji: "\u{1F4AC}", min: 2, max: 2 },
+    rps: { get label() {
+      return tr("Jokenp\xF4");
+    }, emoji: "\u270A", min: 2, max: 4, match: true },
+    mirror: { get label() {
+      return tr("Se arrumando no espelho");
+    }, emoji: "\u{1F484}", min: 1, max: 2, solo: true }
   };
   function ownerTag(g) {
     return `g:${g.id}`;
@@ -23770,88 +23863,88 @@
 
   // third_party/office_engine/client/src/world/social/lines.ts
   var INVITE = {
-    tv: [tr("Bora ver TV? \u{1F4FA}"), tr("Sess\xE3o pipoca? \u{1F37F}"), tr("Vai come\xE7ar o programa!"), tr("Bora ver um pouco de TV?")],
-    futebol: [tr("Vai come\xE7ar o jogo! \u26BD"), tr("Bora ver o futebol?"), tr("T\xE1 passando o cl\xE1ssico! \u26BD")],
-    novela: [tr("T\xE1 passando a novela! \u{1F4FA}"), tr("Bora ver o cap\xEDtulo de hoje?")],
-    desenho: [tr("T\xE1 passando desenho! \u{1F604}"), tr("Bora ver desenho?")],
-    videogame: [tr("Bora uma partida no videogame? \u{1F3AE}"), tr("Duvido voc\xEA me ganhar \u{1F3AE}"), tr("Videogame? Melhor de tr\xEAs!")],
-    arcade: [tr("Fliperama? \u{1F47E}"), tr("Aposto que bato teu recorde \u{1F47E}"), tr("Bora no fliperama?")],
-    pingpong: [tr("Pingue-pongue? \u{1F3D3}"), tr("Bora uma partidinha? \u{1F3D3}"), tr("Vem jogar ping-pong!")],
-    pingpongRival: [tr("Vem tomar uma surra no ping-pong \u{1F60F}"), tr("Revanche no ping-pong? \u{1F3D3}")],
-    kitchen: [tr("Bora tomar um caf\xE9? \u2615"), tr("Pausa pro caf\xE9? \u2615"), tr("Bora dar uma pausa na copa?")],
-    kitchenGossip: [tr("Tenho uma fofoca\u2026 \u{1F440}"), tr("Copa. Agora. Tenho novidade \u{1F440}")],
-    talk: [tr("E a\xED, tudo certo?"), tr("Ei, {nome}!"), tr("Bora trocar uma ideia?"), tr("Opa, {nome}! Beleza?")],
-    rps: [tr("Jokenp\xF4 valendo \u{1FA99}{v}?"), tr("Aposto \u{1FA99}{v} no jokenp\xF4!"), tr("Pedra, papel e tesoura? \u{1FA99}{v}!")],
-    rpsHonor: [tr("Jokenp\xF4? S\xF3 pela honra \u{1F605}"), tr("Jokenp\xF4 valendo nada?")],
-    mirror: [tr("Bora dar um tapa no visual? \u{1F484}"), tr("Espelho? Preciso me arrumar \u2728")]
+    tv: ["Bora ver TV? \u{1F4FA}", "Sess\xE3o pipoca? \u{1F37F}", "Vai come\xE7ar o programa!", "Bora ver um pouco de TV?"],
+    futebol: ["Vai come\xE7ar o jogo! \u26BD", "Bora ver o futebol?", "T\xE1 passando o cl\xE1ssico! \u26BD"],
+    novela: ["T\xE1 passando a novela! \u{1F4FA}", "Bora ver o cap\xEDtulo de hoje?"],
+    desenho: ["T\xE1 passando desenho! \u{1F604}", "Bora ver desenho?"],
+    videogame: ["Bora uma partida no videogame? \u{1F3AE}", "Duvido voc\xEA me ganhar \u{1F3AE}", "Videogame? Melhor de tr\xEAs!"],
+    arcade: ["Fliperama? \u{1F47E}", "Aposto que bato teu recorde \u{1F47E}", "Bora no fliperama?"],
+    pingpong: ["Pingue-pongue? \u{1F3D3}", "Bora uma partidinha? \u{1F3D3}", "Vem jogar ping-pong!"],
+    pingpongRival: ["Vem tomar uma surra no ping-pong \u{1F60F}", "Revanche no ping-pong? \u{1F3D3}"],
+    kitchen: ["Bora tomar um caf\xE9? \u2615", "Pausa pro caf\xE9? \u2615", "Bora dar uma pausa na copa?"],
+    kitchenGossip: ["Tenho uma fofoca\u2026 \u{1F440}", "Copa. Agora. Tenho novidade \u{1F440}"],
+    talk: ["E a\xED, tudo certo?", "Ei, {nome}!", "Bora trocar uma ideia?", "Opa, {nome}! Beleza?"],
+    rps: ["Jokenp\xF4 valendo \u{1FA99}{v}?", "Aposto \u{1FA99}{v} no jokenp\xF4!", "Pedra, papel e tesoura? \u{1FA99}{v}!"],
+    rpsHonor: ["Jokenp\xF4? S\xF3 pela honra \u{1F605}", "Jokenp\xF4 valendo nada?"],
+    mirror: ["Bora dar um tapa no visual? \u{1F484}", "Espelho? Preciso me arrumar \u2728"]
   };
-  var ACCEPT = [tr("Bora!"), tr("Partiu!"), "Fechado! \u{1F91D}", tr("S\xF3 se for agora!"), tr("Opa!"), tr("J\xE1 \xE9!"), tr("Demorou!")];
-  var ACCEPT_BET = ["Fechado! \u{1F91D}", tr("Prepara o bolso \u{1F4B0}"), tr("Vai perder!"), tr("Aceito!")];
-  var ACCEPT_BROKE = [tr("T\xF4 liso \u{1F605} S\xF3 pela honra!"), tr("Sem \u{1FA99}\u2026 valendo nada?")];
-  var ACCEPT_SLEEPY = [tr("H\xE3? Ah\u2026 bora \u{1F634}"), tr("Acordei! Bora."), tr("Cinco minutinhos\u2026 t\xE1, bora.")];
-  var ACCEPT_SHELL = [tr("Enquanto o build roda\u2026 bora! \u23F3"), tr("Meu comando t\xE1 rodando, d\xE1 tempo \u23F3"), tr("T\xF4 esperando o terminal mesmo\u2026")];
-  var ACCEPT_STINGY = [tr("Aposta? S\xF3 um pouquinho \u{1F4B0}"), tr("Valendo pouco, hein")];
+  var ACCEPT = ["Bora!", "Partiu!", "Fechado! \u{1F91D}", "S\xF3 se for agora!", "Opa!", "J\xE1 \xE9!", "Demorou!"];
+  var ACCEPT_BET = ["Fechado! \u{1F91D}", "Prepara o bolso \u{1F4B0}", "Vai perder!", "Aceito!"];
+  var ACCEPT_BROKE = ["T\xF4 liso \u{1F605} S\xF3 pela honra!", "Sem \u{1FA99}\u2026 valendo nada?"];
+  var ACCEPT_SLEEPY = ["H\xE3? Ah\u2026 bora \u{1F634}", "Acordei! Bora.", "Cinco minutinhos\u2026 t\xE1, bora."];
+  var ACCEPT_SHELL = ["Enquanto o build roda\u2026 bora! \u23F3", "Meu comando t\xE1 rodando, d\xE1 tempo \u23F3", "T\xF4 esperando o terminal mesmo\u2026"];
+  var ACCEPT_STINGY = ["Aposta? S\xF3 um pouquinho \u{1F4B0}", "Valendo pouco, hein"];
   var TV = {
     futebol: {
-      goal: ["GOOOL! \u26BD", tr("\xC9 GOL!!"), tr("GOLA\xC7O! \u26BD"), tr("Que gola\xE7o!")],
-      miss: ["Uuuuh! \u{1F631}", tr("Na trave!"), tr("Quase!"), tr("Perdeu essa?!")],
-      against: [tr("Ah n\xE3o! Gol deles \u{1F629}"), tr("Que fase\u2026"), tr("Acorda, zaga!"), tr("N\xE3o acredito\u2026")],
-      talk: [tr("Juiz ladr\xE3o! \u{1F624}"), tr("Que jogada!"), tr("Esse goleiro \xE9 bom demais"), tr("Bora, time!"), tr("Isso foi p\xEAnalti!"), tr("T\xE1 jogando muito!")]
+      goal: ["GOOOL! \u26BD", "\xC9 GOL!!", "GOLA\xC7O! \u26BD", "Que gola\xE7o!"],
+      miss: ["Uuuuh! \u{1F631}", "Na trave!", "Quase!", "Perdeu essa?!"],
+      against: ["Ah n\xE3o! Gol deles \u{1F629}", "Que fase\u2026", "Acorda, zaga!", "N\xE3o acredito\u2026"],
+      talk: ["Juiz ladr\xE3o! \u{1F624}", "Que jogada!", "Esse goleiro \xE9 bom demais", "Bora, time!", "Isso foi p\xEAnalti!", "T\xE1 jogando muito!"]
     },
     novela: {
-      twist: [tr("N\xE3o acredito! \u{1F631}"), tr("Eu sabia!"), tr("Que reviravolta!"), tr("Mentira!!")],
-      love: [tr("Esse casal! \u{1F60D}"), "Finalmente! \u{1F60D}", tr("Que romance\u2026")],
-      talk: [tr("Shhh, vai come\xE7ar!"), tr("Chora n\xE3o\u2026 \u{1F62D}"), tr("Esse vil\xE3o n\xE3o presta"), tr("Amanh\xE3 \xE9 o \xFAltimo cap\xEDtulo!")]
+      twist: ["N\xE3o acredito! \u{1F631}", "Eu sabia!", "Que reviravolta!", "Mentira!!"],
+      love: ["Esse casal! \u{1F60D}", "Finalmente! \u{1F60D}", "Que romance\u2026"],
+      talk: ["Shhh, vai come\xE7ar!", "Chora n\xE3o\u2026 \u{1F62D}", "Esse vil\xE3o n\xE3o presta", "Amanh\xE3 \xE9 o \xFAltimo cap\xEDtulo!"]
     },
     desenho: {
-      funny: ["KKKKK \u{1F602}", tr("Hahaha!"), tr("Muito bom \u{1F602}"), tr("Esse desenho \xE9 demais!")],
-      talk: [tr("Eu assistia isso crian\xE7a!"), tr("Cl\xE1ssico!"), tr("Olha a cara dele \u{1F602}")]
+      funny: ["KKKKK \u{1F602}", "Hahaha!", "Muito bom \u{1F602}", "Esse desenho \xE9 demais!"],
+      talk: ["Eu assistia isso crian\xE7a!", "Cl\xE1ssico!", "Olha a cara dele \u{1F602}"]
     },
-    end: [tr("Bom demais!"), tr("Amanh\xE3 tem mais \u{1F4FA}"), tr("Que epis\xF3dio!"), tr("Valeu a pausa!")]
+    end: ["Bom demais!", "Amanh\xE3 tem mais \u{1F4FA}", "Que epis\xF3dio!", "Valeu a pausa!"]
   };
   var GAME = {
-    trash: [tr("Vou te passar! \u{1F3CE}\uFE0F"), tr("Que lag \xE9 esse?!"), "Combo! \u{1F4A5}", tr("N\xE3o vale!"), tr("T\xE1 f\xE1cil \u{1F60E}"), tr("S\xF3 aquecendo\u2026"), tr("Ningu\xE9m me para!"), tr("Olha essa!")],
-    round: [tr("Ganhei essa! \u{1F3C6}"), tr("Uma a zero!"), tr("Toma!")],
-    cheer: [tr("Vai, {nome}!"), tr("Uooou!"), tr("Que jogada!"), tr("Aperta o bot\xE3o!")]
+    trash: ["Vou te passar! \u{1F3CE}\uFE0F", "Que lag \xE9 esse?!", "Combo! \u{1F4A5}", "N\xE3o vale!", "T\xE1 f\xE1cil \u{1F60E}", "S\xF3 aquecendo\u2026", "Ningu\xE9m me para!", "Olha essa!"],
+    round: ["Ganhei essa! \u{1F3C6}", "Uma a zero!", "Toma!"],
+    cheer: ["Vai, {nome}!", "Uooou!", "Que jogada!", "Aperta o bot\xE3o!"]
   };
   var PINGPONG = {
-    point: [tr("Ponto! \u{1F3D3}"), tr("Toma!"), tr("Na quina!"), tr("Corta!"), tr("Defende essa!")],
-    cheer: [tr("Boa!"), tr("Vai, {nome}!"), tr("Uooou!"), tr("Que ralo!")],
-    final: ["{a} a {b}! \u{1F3C6}", tr("Ganhei de {a} a {b}! \u{1F3C6}")]
+    point: ["Ponto! \u{1F3D3}", "Toma!", "Na quina!", "Corta!", "Defende essa!"],
+    cheer: ["Boa!", "Vai, {nome}!", "Uooou!", "Que ralo!"],
+    final: ["{a} a {b}! \u{1F3C6}", "Ganhei de {a} a {b}! \u{1F3C6}"]
   };
   var RPS = {
-    count: [tr("Jo\u2026"), tr("Ken\u2026"), tr("P\xF4!")],
-    tie: [tr("Empate! De novo!"), tr("Pensamos igual \u{1F602}"), tr("De novo!")],
-    win: [tr("Ganhei! \u{1F4B0}"), tr("Hoje \xE9 meu dia!"), tr("Passa o \u{1FA99}!"), tr("Mole demais \u{1F60E}"), tr("Sabia!")],
-    winHonor: [tr("Ganhei! \u{1F60E}"), tr("Sabia!"), tr("Hoje \xE9 meu dia!")],
-    lose: [tr("N\xE3o valeu!"), tr("Sorte sua\u2026"), tr("Meu dinheiro\u2026 \u{1F62D}"), tr("T\xE1, t\xE1\u2026"), tr("Era pra ser pedra!")],
-    rematch: [tr("Revanche!"), tr("Melhor de tr\xEAs!"), tr("De novo, valendo!")],
-    stalemate: [tr("Deixa quieto \u{1F605}"), tr("Empatamos, ent\xE3o.")],
-    watch: ["KKKKK", tr("Uou!"), tr("Eita!"), tr("Paga!")]
+    count: ["Jo\u2026", "Ken\u2026", "P\xF4!"],
+    tie: ["Empate! De novo!", "Pensamos igual \u{1F602}", "De novo!"],
+    win: ["Ganhei! \u{1F4B0}", "Hoje \xE9 meu dia!", "Passa o \u{1FA99}!", "Mole demais \u{1F60E}", "Sabia!"],
+    winHonor: ["Ganhei! \u{1F60E}", "Sabia!", "Hoje \xE9 meu dia!"],
+    lose: ["N\xE3o valeu!", "Sorte sua\u2026", "Meu dinheiro\u2026 \u{1F62D}", "T\xE1, t\xE1\u2026", "Era pra ser pedra!"],
+    rematch: ["Revanche!", "Melhor de tr\xEAs!", "De novo, valendo!"],
+    stalemate: ["Deixa quieto \u{1F605}", "Empatamos, ent\xE3o."],
+    watch: ["KKKKK", "Uou!", "Eita!", "Paga!"]
   };
   var MIRROR = {
-    solo: ["Arrasei \u2728", tr("Hoje eu t\xF4 on \u{1F60E}"), tr("Cabelo no lugar \u2705"), tr("Look aprovado \u2728"), tr("Esse cabelo n\xE3o colabora\u2026"), tr("Pronto pra pr\xF3xima reuni\xE3o \u2728")],
-    lipstick: [tr("Batom perfeito \u{1F484}"), tr("Agora sim \u{1F48B}")],
-    duo: [tr("Empresta o pente?"), tr("Ficou \xF3timo!"), tr("Que tal?"), tr("T\xE1 arrasando!")]
+    solo: ["Arrasei \u2728", "Hoje eu t\xF4 on \u{1F60E}", "Cabelo no lugar \u2705", "Look aprovado \u2728", "Esse cabelo n\xE3o colabora\u2026", "Pronto pra pr\xF3xima reuni\xE3o \u2728"],
+    lipstick: ["Batom perfeito \u{1F484}", "Agora sim \u{1F48B}"],
+    duo: ["Empresta o pente?", "Ficou \xF3timo!", "Que tal?", "T\xE1 arrasando!"]
   };
   var CHAT = {
-    fofoca: [tr("Viram o commit de {nome}? \u{1F440}"), tr("Dizem que {sala} vai pro ar hoje\u2026"), tr("{nome} t\xE1 h\xE1 horas no mesmo bug \u{1F92B}"), tr("Ouvi dizer que vai ter pizza \u{1F355}"), tr("Sabia que {nome} aposta tudo no jokenp\xF4?")],
-    work: [tr("Meu build passou de primeira \u{1F60E}"), tr("Esse bug em {sala} t\xE1 osso"), tr("Deploy na sexta? \u{1F608}"), tr("Quem mexeu no package-lock?!"), tr("Os testes est\xE3o verdes \u2705"), tr("T\xF4 esperando o review\u2026"), tr("Escrevi 300 linhas e apaguei 400"), tr("Refatorei {sala} inteiro hoje")],
-    cafeina: [tr("Esse caf\xE9 t\xE1 forte!"), tr("J\xE1 \xE9 o quinto caf\xE9 \u2615"), tr("Sem caf\xE9 n\xE3o compila \u2615")],
-    piadas: [tr("Funciona na minha m\xE1quina! \u{1F602}"), tr("Por que o dev foi ao m\xE9dico? Muitos bugs \u{1F41B}"), tr("Existem 10 tipos de pessoas\u2026 \u{1F60F}"), tr('Commit: "ajustes finais (agora vai)"'), tr("Meu c\xF3digo n\xE3o tem bug, tem feature surpresa")],
-    esporte: [tr("Viu o jogo ontem? \u26BD"), tr("Bora correr no fim de semana?")],
-    series: [tr("Viram o \xFAltimo epis\xF3dio? \u{1F4FA}"), tr("Sem spoiler, por favor!")],
-    games: [tr("Zerei aquele jogo ontem \u{1F3AE}"), tr("Bora jogar online hoje?")],
-    leitura: [tr("T\xF4 lendo um livro \xF3timo \u{1F4DA}"), tr("Terminei aquele livro!")],
-    calma: [tr("Respira\u2026 tudo vai compilar \u{1F9D8}"), tr("Um passo de cada vez.")],
-    apostas: [tr("Quem topa um jokenp\xF4 depois? \u{1F3B2}"), tr("T\xF4 com sorte hoje \u{1F340}")],
-    economia: [tr("T\xF4 juntando \u{1FA99} pra f\xE9rias"), tr("Caf\xE9 de gra\xE7a \xE9 o melhor caf\xE9")],
-    generic: [tr("E o fim de semana?"), tr("Preciso de f\xE9rias \u{1F3D6}\uFE0F"), tr("Que dia, hein"), tr("T\xE1 tudo corrido hoje")],
-    react: ["KKKKK", tr("S\xE9rio?!"), tr("N\xE3o acredito \u{1F62E}"), tr("Verdade!"), tr("Hahaha"), tr("Nem me fala\u2026"), "\u{1F440}", tr("Pois \xE9"), tr("Mentira!"), tr("Que isso!")],
-    laugh: ["KKKKK", tr("Hahaha!"), "\u{1F602}\u{1F602}\u{1F602}"]
+    fofoca: ["Viram o commit de {nome}? \u{1F440}", "Dizem que {sala} vai pro ar hoje\u2026", "{nome} t\xE1 h\xE1 horas no mesmo bug \u{1F92B}", "Ouvi dizer que vai ter pizza \u{1F355}", "Sabia que {nome} aposta tudo no jokenp\xF4?"],
+    work: ["Meu build passou de primeira \u{1F60E}", "Esse bug em {sala} t\xE1 osso", "Deploy na sexta? \u{1F608}", "Quem mexeu no package-lock?!", "Os testes est\xE3o verdes \u2705", "T\xF4 esperando o review\u2026", "Escrevi 300 linhas e apaguei 400", "Refatorei {sala} inteiro hoje"],
+    cafeina: ["Esse caf\xE9 t\xE1 forte!", "J\xE1 \xE9 o quinto caf\xE9 \u2615", "Sem caf\xE9 n\xE3o compila \u2615"],
+    piadas: ["Funciona na minha m\xE1quina! \u{1F602}", "Por que o dev foi ao m\xE9dico? Muitos bugs \u{1F41B}", "Existem 10 tipos de pessoas\u2026 \u{1F60F}", 'Commit: "ajustes finais (agora vai)"', "Meu c\xF3digo n\xE3o tem bug, tem feature surpresa"],
+    esporte: ["Viu o jogo ontem? \u26BD", "Bora correr no fim de semana?"],
+    series: ["Viram o \xFAltimo epis\xF3dio? \u{1F4FA}", "Sem spoiler, por favor!"],
+    games: ["Zerei aquele jogo ontem \u{1F3AE}", "Bora jogar online hoje?"],
+    leitura: ["T\xF4 lendo um livro \xF3timo \u{1F4DA}", "Terminei aquele livro!"],
+    calma: ["Respira\u2026 tudo vai compilar \u{1F9D8}", "Um passo de cada vez."],
+    apostas: ["Quem topa um jokenp\xF4 depois? \u{1F3B2}", "T\xF4 com sorte hoje \u{1F340}"],
+    economia: ["T\xF4 juntando \u{1FA99} pra f\xE9rias", "Caf\xE9 de gra\xE7a \xE9 o melhor caf\xE9"],
+    generic: ["E o fim de semana?", "Preciso de f\xE9rias \u{1F3D6}\uFE0F", "Que dia, hein", "T\xE1 tudo corrido hoje"],
+    react: ["KKKKK", "S\xE9rio?!", "N\xE3o acredito \u{1F62E}", "Verdade!", "Hahaha", "Nem me fala\u2026", "\u{1F440}", "Pois \xE9", "Mentira!", "Que isso!"],
+    laugh: ["KKKKK", "Hahaha!", "\u{1F602}\u{1F602}\u{1F602}"]
   };
-  var CALLED = [tr("Opa, me chamaram! \u{1F3C3}"), tr("Fui! Trabalho chegou"), tr("Volto j\xE1!"), tr("Ih, tenho que ir!")];
-  var SHELL_DONE = [tr("Meu comando terminou! \u{1F3C3}"), tr("Terminou o build, fui!")];
+  var CALLED = ["Opa, me chamaram! \u{1F3C3}", "Fui! Trabalho chegou", "Volto j\xE1!", "Ih, tenho que ir!"];
+  var SHELL_DONE = ["Meu comando terminou! \u{1F3C3}", "Terminou o build, fui!"];
   var TRAIT_TOPICS = {
     fofoca: "fofoca",
     cafeina: "cafeina",
@@ -23876,7 +23969,7 @@
   }
   function fill2(line, vars) {
     let ok = true;
-    const out = line.replace(/\{(nome|sala|v|a|b)\}/g, (_, k) => {
+    const out = tr(line).replace(/\{(nome|sala|v|a|b)\}/g, (_, k) => {
       const v = vars[k];
       if (v === void 0 || v === "") {
         ok = false;
@@ -23896,7 +23989,7 @@
       if (s !== avoid) return s;
       fallback ??= s;
     }
-    return fallback ?? pool.find((l) => !/\{\w+\}/.test(l)) ?? "\u2026";
+    return fallback ?? tr(pool.find((l) => !/\{\w+\}/.test(l)) ?? "\u2026");
   }
 
   // third_party/office_engine/shared/world/office-from-world.ts
@@ -24110,12 +24203,28 @@
   var COIN_COLOR = "#ffd34d";
   var LOSS_COLOR = "#ff8a8a";
   var KIND_LIST = Object.keys(KINDS);
-  var PLACES = { [LOUNGE_ID]: tr("Lounge"), [CAFE_ID]: tr("Copa"), [RECEPTION_ID]: tr("Recep\xE7\xE3o"), [RESTROOM_ID]: tr("Banheiros") };
+  var PLACES = { get [LOUNGE_ID]() {
+    return tr("Lounge");
+  }, get [CAFE_ID]() {
+    return tr("Copa");
+  }, get [RECEPTION_ID]() {
+    return tr("Recep\xE7\xE3o");
+  }, get [RESTROOM_ID]() {
+    return tr("Banheiros");
+  } };
   var MATCH_WHAT = {
-    rps: tr("no jokenp\xF4"),
-    pingpong: tr("no pingue-pongue"),
-    videogame: tr("no videogame"),
-    arcade: tr("no fliperama")
+    get rps() {
+      return tr("no jokenp\xF4");
+    },
+    get pingpong() {
+      return tr("no pingue-pongue");
+    },
+    get videogame() {
+      return tr("no videogame");
+    },
+    get arcade() {
+      return tr("no fliperama");
+    }
   };
   function between(rng, a, b) {
     return a + rng() * (b - a);
@@ -25121,7 +25230,7 @@
       const label = g.kind === "tv" && g.program ? tr("Vendo {0} na TV", [g.program === "futebol" ? tr("futebol") : g.program === "novela" ? tr("novela") : tr("desenho")]) : KINDS[g.kind].label;
       const going = g.phase === "gather" ? tr(" (a caminho)") : "";
       const bet = g.bet && KINDS[g.kind].match ? tr(" \xB7 valendo \u{1FA99}{0}", [g.bet]) : "";
-      return `${KINDS[g.kind].emoji} ${label}${others.length ? ` com ${joinNames(others)}` : ""}${bet}${going}`;
+      return `${KINDS[g.kind].emoji} ${label}${others.length ? tr(" com {0}", [joinNames(others)]) : ""}${bet}${going}`;
     }
     /** Tudo o que a interface mostra da vida social de um agente presente (null se não está no escritório). */
     info(id) {
@@ -25200,8 +25309,8 @@
   };
   function joinNames(names) {
     if (names.length <= 1) return names[0] ?? "";
-    if (names.length === 2) return `${names[0]} e ${names[1]}`;
-    return `${names.slice(0, -1).join(", ")} e ${names[names.length - 1]}`;
+    if (names.length === 2) return tr("{0} e {1}", [names[0], names[1]]);
+    return tr("{0} e {1}", [names.slice(0, -1).join(", "), names[names.length - 1]]);
   }
 
   // third_party/office_engine/client/src/world/sim/elevator.ts
@@ -28509,6 +28618,7 @@
   }
 
   // tool/office_world/main.ts
+  document.addEventListener("contextmenu", (event) => event.preventDefault(), { capture: true });
   configureOfficeLayout(true);
   var canvas2 = document.querySelector("#office");
   var options = { ...DEFAULT_WORLD_OPTIONS };
@@ -28783,7 +28893,21 @@
       const now = Date.now();
       if (snapshot?.options && typeof snapshot.options === "object") {
         const next = snapshot.options;
-        if (typeof next.locale === "string") setLocale(normalizeLocale(next.locale) ?? "pt-BR");
+        if (typeof next.locale === "string") {
+          const locale = normalizeLocale(next.locale) ?? "pt-BR";
+          if (locale !== getLocale()) {
+            setLocale(locale);
+            for (const gathering of sim.social.gatherings) {
+              gathering.pending.length = 0;
+              gathering.lastLine = "";
+            }
+            for (const ch of sim.chars.values()) {
+              ch.sayText = "";
+              ch.sayUntil = 0;
+              ch.bubbleText = null;
+            }
+          }
+        }
         options = {
           ...options,
           ...typeof next.showNames === "boolean" ? { showNames: next.showNames } : {},
@@ -28831,6 +28955,7 @@
         updateBounds();
         if (sim.initialized && !userMoved) overview(false);
       }
+      return snapshot.rev;
     },
     selectAgent(id) {
       selectedAgent = id;

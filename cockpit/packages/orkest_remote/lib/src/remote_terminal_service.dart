@@ -27,6 +27,8 @@ class RemoteTurnStatus {
     this.activityPhase,
     this.activitySummary,
     this.activityId,
+    this.turnId,
+    this.generation,
   });
 
   final String paneId;
@@ -44,6 +46,8 @@ class RemoteTurnStatus {
   final String? activityPhase;
   final String? activitySummary;
   final String? activityId;
+  final String? turnId;
+  final String? generation;
 }
 
 /// Um comando da CLI do host à espera de resposta deste cliente.
@@ -113,6 +117,8 @@ class RemoteTerminalService implements TerminalService {
           activityPhase: m.activityPhase,
           activitySummary: m.activitySummary,
           activityId: m.activityId,
+          turnId: m.turnId,
+          generation: m.generation,
         ),
       );
 

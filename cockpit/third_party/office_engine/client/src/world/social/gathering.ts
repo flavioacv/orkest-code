@@ -28,14 +28,14 @@ export interface KindInfo {
 }
 
 export const KINDS: Readonly<Record<GatherKind, KindInfo>> = {
-  tv: { label: tr('Vendo TV'), emoji: '📺', min: 2, max: 5 },
-  videogame: { label: tr('Jogando videogame'), emoji: '🎮', min: 2, max: 5, match: true },
-  arcade: { label: tr('Duelo no fliperama'), emoji: '👾', min: 2, max: 2, match: true },
-  pingpong: { label: tr('Jogando pingue-pongue'), emoji: '🏓', min: 2, max: 4, match: true },
-  kitchen: { label: tr('Papo na copa'), emoji: '☕', min: 2, max: 4 },
-  talk: { label: tr('Conversando'), emoji: '💬', min: 2, max: 2 },
-  rps: { label: tr('Jokenpô'), emoji: '✊', min: 2, max: 4, match: true },
-  mirror: { label: tr('Se arrumando no espelho'), emoji: '💄', min: 1, max: 2, solo: true },
+  tv: { get label() { return tr('Vendo TV'); }, emoji: '📺', min: 2, max: 5 },
+  videogame: { get label() { return tr('Jogando videogame'); }, emoji: '🎮', min: 2, max: 5, match: true },
+  arcade: { get label() { return tr('Duelo no fliperama'); }, emoji: '👾', min: 2, max: 2, match: true },
+  pingpong: { get label() { return tr('Jogando pingue-pongue'); }, emoji: '🏓', min: 2, max: 4, match: true },
+  kitchen: { get label() { return tr('Papo na copa'); }, emoji: '☕', min: 2, max: 4 },
+  talk: { get label() { return tr('Conversando'); }, emoji: '💬', min: 2, max: 2 },
+  rps: { get label() { return tr('Jokenpô'); }, emoji: '✊', min: 2, max: 4, match: true },
+  mirror: { get label() { return tr('Se arrumando no espelho'); }, emoji: '💄', min: 1, max: 2, solo: true },
 };
 
 export interface Member {

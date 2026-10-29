@@ -54,6 +54,9 @@ class _HabblaudWorldWebViewState extends State<HabblaudWorldWebView> {
   Timer? _snapshotTimer;
   Timer? _panelRefreshTimer;
   String? _lastSnapshotSignature;
+  bool _snapshotInFlight = false;
+  bool _snapshotFailed = false;
+  int _webLoadGeneration = 0;
   String? _lastOpenedAgent;
   int _lastOpenedAt = 0;
   bool _sidebarVisible = true;
@@ -357,7 +360,10 @@ canvas{display:block;image-rendering:pixelated;outline:none}
           'createdAt': occupiedProjects[slot].createdAt.millisecondsSinceEpoch,
           if (effects.getEffect(occupiedProjects[slot].id, now)
               case final effect?)
-            'effect': effect.toMap(),
+            'effect': {
+              ...effect.toMap(),
+              'text': localizedOfficeVcsSummary(effect.text),
+            },
         },
     ];
     final accounts = [
@@ -417,7 +423,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
       return;
     }
     final web = _web;
-    if (!_loaded || web == null) return;
+    if (!_loaded || web == null || _snapshotInFlight) return;
     context.read<SettingsController>().migrateOfficeCharacterParts({
       for (final session in _officeSessions)
         session.projectId: _legacyAppearanceOwner(session),
@@ -430,11 +436,36 @@ canvas{display:block;image-rendering:pixelated;outline:none}
     }
     final signature = _snapshotSignature();
     if (signature == _lastSnapshotSignature) return;
-    final encoded = jsonEncode(_snapshot());
-    await web.evaluateJavascript(
-      source: 'window.orkestOfficeWorld?.update($encoded);',
-    );
-    _lastSnapshotSignature = signature;
+    final loadGeneration = _webLoadGeneration;
+    final snapshot = _snapshot();
+    final encoded = jsonEncode(snapshot);
+    _snapshotInFlight = true;
+    try {
+      final receipt = await web.evaluateJavascript(
+        source: 'window.orkestOfficeWorld?.update($encoded);',
+      );
+      if (mounted &&
+          _loaded &&
+          loadGeneration == _webLoadGeneration &&
+          identical(web, _web) &&
+          receipt == snapshot['rev']) {
+        _lastSnapshotSignature = signature;
+        _snapshotFailed = false;
+      }
+    } catch (error, stack) {
+      if (!_snapshotFailed && mounted) {
+        _snapshotFailed = true;
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stack,
+            library: 'Orkest Office snapshot bridge',
+          ),
+        );
+      }
+    } finally {
+      _snapshotInFlight = false;
+    }
   }
 
   String _snapshotSignature() => jsonEncode([
@@ -711,7 +742,8 @@ canvas{display:block;image-rendering:pixelated;outline:none}
                     initialUserScripts: kWebViewUserScripts,
                     initialSettings: InAppWebViewSettings(
                       javaScriptEnabled: true,
-                      isInspectable: true,
+                      isInspectable: false,
+                      disableContextMenu: true,
                       underPageBackgroundColor: webViewBackground(context),
                       pageZoom: contentZoom,
                       supportZoom: false,
@@ -723,6 +755,17 @@ canvas{display:block;image-rendering:pixelated;outline:none}
                         callback: _handleAgentClick,
                       );
                       WebViewPointerRelay.register(web, context, contentZoom);
+                    },
+                    onWebContentProcessDidTerminate: (web) async {
+                      if (!mounted) return;
+                      _loaded = false;
+                      _lastSnapshotSignature = null;
+                      await web.reload();
+                    },
+                    onLoadStart: (web, _) {
+                      _webLoadGeneration++;
+                      _loaded = false;
+                      _lastSnapshotSignature = null;
                     },
                     onLoadStop: (web, _) {
                       if (!mounted) return;
@@ -1266,6 +1309,7 @@ Map<String, dynamic> _officeStatusActivity(
       'plan' => planning,
       'delegate' => delegate,
       'done' => idle,
+      'git' => localizedOfficeVcsSummary(activitySummary),
       'error' => activityError,
       'mcp' || 'other' => usingTool,
       _ => activitySummary,
