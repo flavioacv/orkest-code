@@ -1,3 +1,5 @@
+import {pixelInventory} from './pixel-inventory.mjs';
+import {unifiedAssets} from './asset-registry.js';
 import {readdir,readFile,mkdir,cp,writeFile} from 'node:fs/promises';
 import {resolve,relative,extname} from 'node:path';
 import {createHash} from 'node:crypto';
@@ -17,3 +19,9 @@ await writeFile(resolve(output,'inventory.json'),JSON.stringify(manifest,null,2)
 console.log(`Preparado: ${files.length} arquivos inventariados; fontes preservadas em ${source}`);
 
 await cp(resolve(root,'../../assets/panel/lib/orkest.css'),resolve(output,'orkest.css'));
+
+const catalog=JSON.parse(await readFile(resolve(output,'study/catalog.json'),'utf8'));
+const pixels=await pixelInventory(resolve(root,'../../assets/sprites'));
+const unified=unifiedAssets(catalog);unified.entries.push(...pixels.entries);unified.pixelSummary={files:pixels.files,unique:pixels.unique,duplicates:pixels.duplicates};
+await writeFile(resolve(output,'unified-assets.json'),JSON.stringify(unified,null,2));
+console.log(`Pixel art: ${pixels.files} arquivos, ${pixels.unique} conteúdos únicos, ${pixels.duplicates} duplicatas consolidadas.`);
