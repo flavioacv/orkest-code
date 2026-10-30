@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import {PROFILES,CATALOG_PROPS} from './scene-plan.js';
+import {LIFE_PROPS} from './life-plan.js';
 import {styleCharacter} from './character-style.js';
 
 /** Copies vertex data across Three.js versions; never mixes renderer objects. */
@@ -32,7 +33,7 @@ export async function loadCatalogAssets(){
  const [{t:Geo},shapes,people,bridge,materials,cars]=await Promise.all([
   import(base+'geo-6J3HrpC4.js'),import(base+'shapes-CJnSlBeI.js'),import(base+'people-Bo_XNOUZ.js'),import(base+'study-meshes-bridge.js'),import(base+'materials-CtfbYfPn.js'),import(base+'vehicles-Bp2dhUqA.js')]);
  const catalog=await (await fetch('./generated/study/catalog.json')).json();
- const wanted=[...CATALOG_PROPS.map(p=>p.source),'y4_bike_sc'];
+ const wanted=[...CATALOG_PROPS.map(p=>p.source),...LIFE_PROPS.map(p=>p.id),'y4_bike_sc'];
  const modules=[...new Set(wanted.map(id=>{const item=catalog.items.find(i=>i.id===id);if(!item)throw Error('Modelo não catalogado: '+id);return item.module;}))];
  await Promise.all(modules.map(name=>import(base+name)));
  const material=new THREE.MeshStandardMaterial({vertexColors:true,roughness:.88,flatShading:true});
@@ -48,8 +49,10 @@ export async function loadCatalogAssets(){
    geometry.translate(-center.x,-bounds.min.y,-center.z);geometry.scale(height/size.y,height/size.y,height/size.y);geometry.userData.catalogShared=true;cache.set(key,geometry);
   }const object=mesh(cache.get(key));object.userData.catalogId=id;return object;
  }
- function character(index){
-  const profile=PROFILES[index%PROFILES.length],group=new THREE.Group(),palette={1:profile.top,2:profile.bottom,3:profile.skin,4:profile.hair};
+ function character(index,overrides={}){
+  const baseProfile=PROFILES[index%PROFILES.length],variation=index<8?{}:{id:'variant-'+index,top:PROFILES[(index+Math.floor(index/8))%8].top,hair:PROFILES[(index*3+Math.floor(index/8))%8].hair};
+  const profile={...baseProfile,...variation,...overrides},group=new THREE.Group(),palette={1:profile.top,2:profile.bottom,3:profile.skin,4:profile.hair};
+
   function poseGeometry(pose){
    // Strip only original hair triangles; authored hair replaces them, not overlays them.
    const source=people.d(0,pose).toGeometry(),geometry=copyGeometry(source,palette),slots=source.attributes.aSlot;
@@ -74,12 +77,13 @@ export async function loadCatalogAssets(){
   function update(dt){bridge.studyUpdateCrane(handle,dt,core);for(const [a,b]of pairs){b.position.copy(a.position);b.quaternion.copy(a.quaternion);b.scale.copy(a.scale);b.visible=a.visible;}}
   update(0);return {object,update};
  }
- function vehicle(id){
+ function vehicle(id,bodyColor){
   const source=cars.u()[id];if(!source)throw Error('Veículo indisponível: '+id);
-  const color={sedan:'#a5674f',hatch:'#6f9b91',suv:'#d5c6a4',van:'#7b8eaa',bus:'#c79858'}[id];
+  const color=bodyColor||{sedan:'#a5674f',hatch:'#6f9b91',suv:'#d5c6a4',van:'#7b8eaa',bus:'#c79858'}[id];
   const geometry=copyGeometry(source,{1:color,2:'#435965',3:'#8b9c9d',4:'#d5c39c'}),model=mesh(geometry),object=new THREE.Group();
   const size=geometry.boundingBox.getSize(new THREE.Vector3());if(size.x>size.z)model.rotation.y=-Math.PI/2;object.add(model);object.userData.catalogId=id;return object;
  }
+ function disposeCharacter(actor){const geometries=new Set(),privateMaterials=new Set();actor.traverse(o=>{if(o.geometry)geometries.add(o.geometry);if(o.material&&o.material!==material)privateMaterials.add(o.material);});for(const g of geometries)g.dispose();for(const m of privateMaterials)m.dispose();}
  function dispose(){const geometries=new Set(cache.values());for(const geometry of geometries)geometry.dispose();material.dispose();}
- return {stamp,character,crane,vehicle,dispose,catalog};
+ return {stamp,character,crane,vehicle,disposeCharacter,dispose,catalog};
 }

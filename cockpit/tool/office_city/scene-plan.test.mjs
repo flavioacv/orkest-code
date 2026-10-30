@@ -15,7 +15,7 @@ test('tráfego mantém continuidade e sentido nas curvas e no fechamento do circ
  const end=trafficState(total);assert.ok(Math.hypot(end.x-trafficState(0).x,end.z-trafficState(0).z)<1e-8);
 });
 test('empresas validam identidade, capacidade e nomes sem aceitar duplicatas',()=>{
- assert.deepEqual(validateCompanies([{id:'a',name:' A '}]),[{id:'a',name:'A'}]);
+ const c=validateCompanies([{id:'a',name:' A '}])[0];assert.equal(c.name,'A');assert.equal(c.agentCount,8);assert.equal(c.agents.length,8);
  for(const input of [null,[{id:'a',name:''}],[{id:'a',name:'A'},{id:'a',name:'B'}],Array.from({length:4},(_,i)=>({id:String(i),name:'A'}))])assert.throws(()=>validateCompanies(input));
 });
 test('catálogo unificado é único, props existem e aparências diferem em geometria e paleta',async()=>{
@@ -30,7 +30,7 @@ test('catálogo unificado é único, props existem e aparências diferem em geom
 });
 
 test('estações não duplicam ocupantes e percurso não atravessa tampos',()=>{
- assert.equal(new Set(STATIONS.map(p=>p.join(':'))).size,4);
+ assert.equal(new Set(STATIONS.map(p=>p.join(':'))).size,8);
  const end=characterState(WALK_SECONDS);assert.ok(Math.abs(end.x-STATIONS[0][0])<1e-8);assert.ok(Math.abs(end.z-STATIONS[0][1]-1.05)<1e-8);
  for(let t=0;t<WALK_SECONDS;t+=.02){const p=characterState(t);for(const [x,z]of STATIONS)assert.ok(Math.abs(p.x-x)>1.075+.15||Math.abs(p.z-z)>.5+.15);}
 });

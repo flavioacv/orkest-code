@@ -1,3 +1,4 @@
+import {normalizeAgents,OFFICE_STATIONS} from './office-plan.js';
 /** Authored lots, metres; roads occupy the corridors between them. */
 export const LOTS=[
  {id:'company-1',label:'Orkest · sede',kind:'company',x:-20,z:-24,w:16,d:18},
@@ -10,7 +11,7 @@ export const LOTS=[
  {id:'market',label:'Mercado & bicicletas',kind:'market',x:0,z:24,w:16,d:18},
  {id:'construction',label:'Ateliê em construção',kind:'construction',x:20,z:24,w:16,d:18},
 ];
-export const STATIONS=[[-4,1],[-.8,-3],[-4,-3],[-.8,1]];
+export const STATIONS=OFFICE_STATIONS;
 export const COMPANY_SLOTS=LOTS.filter(l=>l.kind==='company');
 /** Semantic appearances use the same palette and part names as Habblaud pixel art. */
 export const PROFILES=[
@@ -37,7 +38,7 @@ export const CATALOG_PROPS=[
 ];
 export function validateCompanies(input){
  if(!Array.isArray(input)||input.length>COMPANY_SLOTS.length)throw Error('Informe até três empresas.');
- const ids=new Set();return input.map(c=>{if(!c||typeof c.id!=='string'||!c.id.trim()||ids.has(c.id)||typeof c.name!=='string'||!c.name.trim()||c.name.length>64)throw Error('Empresa inválida ou repetida.');ids.add(c.id);return{id:c.id,name:c.name.trim()};});
+ const ids=new Set(),agentIds=new Set();return input.map(c=>{if(!c||typeof c.id!=='string'||!c.id.trim()||ids.has(c.id)||typeof c.name!=='string'||!c.name.trim()||c.name.length>64)throw Error('Empresa inválida ou repetida.');ids.add(c.id);const agents=normalizeAgents(c);for(const agent of agents){if(agentIds.has(agent.id))throw Error("Agente pertence a mais de uma empresa.");agentIds.add(agent.id);}return{id:c.id,name:c.name.trim(),agentCount:agents.length,agents};});
 }
 /** Constant-speed continuous closed road, rounded corners. Coordinates never enter lots. */
 export function trafficState(distance,{halfX=30,halfZ=34,radius=5}={}){
