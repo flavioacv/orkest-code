@@ -13,26 +13,26 @@
 
 ## Links
 
-- **Official site** — <https://remote-pi.jacobmoura.work>
-- **Package documentation** — <https://pi.dev/packages/remote-pi?name=remote-pi>
-- **GitHub** — <https://github.com/jacobaraujo7/remote_pi>
+- **GitHub** — <https://github.com/flavioacv/remote_pi>
+- **Releases** — <https://github.com/flavioacv/remote_pi/releases>
+- **Official site** — *(Em breve)*
 
 ### Downloads
 
 | Platform | Status |
 |---|---|
-| Google Play (Android) | [Get it on Google Play](https://play.google.com/store/apps/details?id=work.jacobmoura.remotepi) |
-| App Store (iOS) | [Download on the App Store](https://apps.apple.com/app/remote-pi-coding-agent/id6773499691) |
-| APK (sideload, Android) | [GitHub Releases](https://github.com/jacobaraujo7/remote_pi/releases) |
+| Desktop (macOS / Windows / Linux) | [GitHub Releases](https://github.com/flavioacv/remote_pi/releases) |
+| Android APK | [GitHub Releases](https://github.com/flavioacv/remote_pi/releases) |
 
 ## What's in this repo
 
 | Package | Stack | Role |
 |---|---|---|
+| [`cockpit/`](./cockpit) | Flutter (macOS / Windows / Linux) | **Orkest Code** — Desktop AI orchestrator & environment |
 | [`app/`](./app) | Flutter (iOS / Android) | Mobile client |
 | [`pi-extension/`](./pi-extension) | Node + TypeScript | Pi extension exposing `/remote-pi` |
 | [`relay/`](./relay) | Rust + Tokio | WebSocket routing + signed mesh membership storage |
-| [`site/`](./site) | NextJS | Landing page + legal pages |
+| [`site/`](./site) | NextJS | Landing page *(em breve)* |
 
 ## Architecture
 
@@ -70,16 +70,7 @@ mobile pairing.
 
 ## Relay
 
-A free community relay is available at:
-
-```
-wss://relay-rp1.jacobmoura.work
-```
-
-It's enough to get started, but the relay operator can see the content of your
-messages and is a single point of trust for routing. **For sensitive work, we
-strongly recommend running your own relay** — it's a single Docker command and
-the only thing your traffic ever touches is your own infrastructure.
+For secure routing and low-latency communication, run your own self-hosted relay. It's a single Docker command and the only thing your traffic touches is your own infrastructure.
 
 Full security trade-offs and the self-hosting guide live in
 **[`relay/README.md`](./relay/README.md)**.
