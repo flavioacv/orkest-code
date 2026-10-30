@@ -266,7 +266,11 @@ Future<Module> buildOrkestModule({
         ..addInstance<LayoutLoader>(const CkpLayoutLoader())
         ..addInstance<AppLauncherGateway>(const AppLauncherImpl())
         ..addInstance<Notifier>(notifier)
-        ..addInstance<UpdateChecker>(const UpdateCheckerImpl())
+        ..addInstance<UpdateChecker>(
+          const UpdateCheckerImpl(
+            manifestUrl: '${AppIdentity.feedBaseUrl}/latest.json',
+          ),
+        )
         ..addInstance<UrlOpener>(const UrlOpenerImpl())
         ..addInstance<UpdateTarget>(_updateTarget(appVersion))
         // Self-update nativo (plano 47): Sparkle/WinSparkle quando há appcast
@@ -330,6 +334,9 @@ UpdateTarget _updateTarget(String version) {
       platform: 'macos',
       format: 'dmg',
       arch: 'universal',
+      selfUpdateFeedUrl: AppIdentity.updatesEnabled
+          ? '${AppIdentity.feedBaseUrl}/appcast-macos.xml'
+          : null,
     );
   }
   if (Platform.isWindows) {
@@ -338,6 +345,9 @@ UpdateTarget _updateTarget(String version) {
       platform: 'windows',
       format: 'exe',
       arch: 'x64',
+      selfUpdateFeedUrl: AppIdentity.updatesEnabled
+          ? '${AppIdentity.feedBaseUrl}/appcast-windows.xml'
+          : null,
     );
   }
   final arch = Platform.version.toLowerCase().contains('arm') ? 'arm64' : 'x64';

@@ -125,7 +125,7 @@ END
 // (verificado: sign_update e PyNaCl produzem assinatura idêntica). A privada
 // vive no iCloud + secret SPARKLE_PRIVATE_KEY. VALIDAR no Windows real.
 //
-// Orkest updates disabled until a publisher-owned EdDSA key is configured.
+EdDSAPub EDDSA {"Oo0xzg/O8biP6tbLaZhbslOctLZZUzPCg4RM5EW1IJQ="}
 /////////////////////////////////////////////////////////////////////////////
 
 
