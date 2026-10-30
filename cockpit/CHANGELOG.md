@@ -1,5 +1,11 @@
 # Changelog — Orkest Code
 
+## 0.1.14 (build 18) — 2026-10-30
+
+- Ativado sistema de atualização contínua e auto-update Sparkle / WinSparkle na nuvem via Cloudflare Pages (`orkest-updates.pages.dev`).
+- Integrado par de chaves EdDSA (Ed25519) para verificação criptográfica de artefatos em macOS e Windows.
+- Configuração de feed de release automático (`appcast-macos.xml`, `appcast-windows.xml` e `latest.json`).
+
 ## 0.1.13 (build 17) — 2026-10-29
 
 - Implementado sistema de design Apple Human Interface Guidelines (Apple HIG) com tema integrado `apple-hig` (paletas dark e light calibradas com conformidade WCAG AA).

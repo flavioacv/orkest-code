@@ -50,6 +50,8 @@
 	     houver delegate de feed E SUFeedURL juntos. Auto-check + auto-update
 	     silencioso (decisões B/C): baixa em background e instala no próximo
 	     quit; o nosso card reflete o estado. -->
+	<key>SUPublicEDKey</key>
+	<string>Oo0xzg/O8biP6tbLaZhbslOctLZZUzPCg4RM5EW1IJQ=</string>
 	<key>SUEnableAutomaticChecks</key>
 	<false/>
 	<key>SUAutomaticallyUpdate</key>
