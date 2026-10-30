@@ -6,7 +6,7 @@ abstract final class AppIdentity {
   static const applicationId = 'com.flavioacv.orkestcode';
   static const cli = 'orkest';
   static const homeDirectory = '.orkest';
-  static const repository = 'https://github.com/flavioacv/remote_pi';
+  static const repository = 'https://github.com/flavioacv/orkest-code';
   static const updatesEnabled = true;
   static const feedBaseUrl = 'https://orkest-updates.pages.dev/downloads/orkest';
 }

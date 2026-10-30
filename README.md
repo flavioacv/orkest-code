@@ -2,27 +2,26 @@
   <img src="branding/logo-full.svg" width="140" alt="Remote Pi logo" />
 </p>
 
-<h1 align="center">Remote Pi</h1>
+<h1 align="center">Orkest Code</h1>
 
 <p align="center">
-  Control your <a href="https://github.com/earendil-works/pi">Pi coding agent</a> from your phone.
-  Pair with a one-time QR code and chat with your local agent — even when you're away from your computer.
+  Orchestrate AI coding agents with multi-runtime terminals, workspaces, and interactive Office.
 </p>
 
 ---
 
 ## Links
 
-- **GitHub** — <https://github.com/flavioacv/remote_pi>
-- **Releases** — <https://github.com/flavioacv/remote_pi/releases>
+- **GitHub** — <https://github.com/flavioacv/orkest-code>
+- **Releases** — <https://github.com/flavioacv/orkest-code/releases>
 - **Official site** — *(Em breve)*
 
 ### Downloads
 
 | Platform | Status |
 |---|---|
-| Desktop (macOS / Windows / Linux) | [GitHub Releases](https://github.com/flavioacv/remote_pi/releases) |
-| Android APK | [GitHub Releases](https://github.com/flavioacv/remote_pi/releases) |
+| Desktop (macOS / Windows / Linux) | [GitHub Releases](https://github.com/flavioacv/orkest-code/releases) |
+| Android APK | [GitHub Releases](https://github.com/flavioacv/orkest-code/releases) |
 
 ## What's in this repo
 

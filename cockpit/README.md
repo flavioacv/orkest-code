@@ -10,7 +10,7 @@ interactive Office for AI agents. Harness communication remains provider-neutral
 - Application ID: `com.flavioacv.orkestcode`
 - User data: `~/.orkest` (isolated from Cockpit)
 - Workspace configuration: `.orkest/`, `.env.orkest`
-- Source: https://github.com/flavioacv/remote_pi
+- Source: https://github.com/flavioacv/orkest-code
 
 ## Develop
 
