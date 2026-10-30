@@ -10,7 +10,7 @@ interactive Office for AI agents. Harness communication remains provider-neutral
 - Application ID: `com.flavioacv.orkestcode`
 - User data: `~/.orkest` (isolated from Cockpit)
 - Workspace configuration: `.orkest/`, `.env.orkest`
-- Source: https://github.com/flavioacv/remote_pi
+- Source: https://github.com/flavioacv/orkest-code
 
 ## Develop
 
@@ -49,10 +49,8 @@ sandbox, then approve the CLI command. See the
 
 ## Distribution status
 
-Version `0.1.0+1` starts a separate version history. Automatic updates are
-disabled: no original manifest/appcast or signing key is used. Publishing
-requires our own release infrastructure and signing configuration. Original
-release workflows are archived under `.github/workflow-templates/legacy`.
+Automatic updates are powered by Sparkle (macOS) and WinSparkle (Windows) using Cloudflare Pages (`https://orkest-updates.pages.dev`).
+Releases are signed cryptographically with Ed25519 keys via GitHub Actions (`.github/workflows/orkest-release.yml`).
 The new app starts with independent data; old sessions/secrets are not imported.
 
 ## Attribution
