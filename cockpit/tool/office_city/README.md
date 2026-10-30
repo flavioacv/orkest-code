@@ -27,10 +27,32 @@ Abrir http://127.0.0.1:4175. O preparador aceita o caminho do City Studio como p
 
 “Tércio” não foi identificado como nome de modelo/pasta; foram verificadas as hipóteses third-party e Three.js. Se o termo indica outro projeto, ele ainda precisa ser identificado.
 
-## Primeiro teste
+## Cena de escritório e catálogo
 
-Cena própria com cidade procedural, escritório em terreno seco, seis estações de trabalho, personagens geométricos próprios estáticos, teto removível, câmera da cidade/escritório e seleção por clique. Os personagens originais continuam no catálogo de estudo, sem misturar os dois runtimes Three.js. Os estados exibidos são demonstrativos, sem ligação às sessões reais.
+O escritório ocupa um prédio próprio compacto de 9 × 9 unidades, em terreno seco. Fachada, porta, janelas e telhado são visíveis por fora; a vista de interior remove as superfícies que bloqueiam a câmera. Um personagem original do catálogo percorre a calçada, atravessa a porta e chega à estação em nove segundos; o interior aparece automaticamente depois da entrada. Repetir entrada reinicia o roteiro; Pausar/Continuar controla a animação. Ver prédio, Ver escritório e Ver obra enquadram os ambientes.
 
-Validação: dois testes passam (restrições de arquivos do servidor e integridade SHA-256 de todas as cópias src/study). Chrome real carregou a cena e completou os controles teto/cidade/escritório, sem page-errors; favicon ausente gera 404. Evidência REA: ev_19df7e86e30966d9292f0c16c12da0cd8fc9565ad3e706a22d78e04bbc992b6c. Captura visual inspecionada. Não mede FPS/GPU, não valida integração Flutter nem todas as peças do catálogo nesta execução.
+Modelos originais efetivamente utilizados na mesma cena:
 
-Próxima etapa: personagens articulados, animações de escritório e adaptação da ponte de snapshots/callbacks do OrkestCode. A substituição do escritório atual não foi realizada.
+| Modelo | Uso |
+| --- | --- |
+| people.d | Quatro personagens e três poses originais de caminhada |
+| y4_table_sh | Mesas de trabalho do catálogo (modelo inclui assentos) |
+| y4_luxchair_eu | Cadeiras junto às estações |
+| y4_sofa_cp | Sofá |
+| y4_planter_mp | Vasos |
+| y4_lamp_mp | Luminária |
+| y4_bench_mp | Banco externo |
+| construction-crane | Guindaste com gerador e atualização originais |
+| sedan / van | Veículos procedurais locais |
+
+Os monitores, teclados, edifício e estrutura do canteiro são próprios. `catalog-assets.js` copia posições/normais/cores/índices das geometrias capturadas para o Three.js do renderizador próprio, aplicando a paleta de slots dos personagens. Nenhum objeto do runtime capturado é enviado diretamente ao renderizador próprio. O guindaste usa uma hierarquia espelhada, com transformações sincronizadas ao gerador original. Os módulos capturados permanecem byte a byte intactos e ignorados no Git.
+
+A pose sentada é uma adaptação local da malha neutra original, não uma animação sentada recuperada do catálogo. O roteiro é determinístico, sem IA geral ou pathfinding. Estados demonstrativos ainda não recebem sessões reais. A mesa do catálogo tem aparência de mesa de convivência; ainda não equivale a um conjunto de móveis específico de escritório. A identidade visual pode ser refinada após avaliar esse reaproveitamento.
+
+## Validação
+
+Três testes Node passam: restrição de caminhos do servidor, hashes das cópias src/study e percurso atravessando o vão da porta antes de chegar à estação. Sintaxe JavaScript e `git diff --check` passam. O endpoint `/study/` é mapeado ao catálogo gerado para suportar suas URLs absolutas.
+
+Chrome real completou carregamento, reinício da entrada, chegada à estação, pausa e alternância fachada/interior: REA `ev_6062f8f2492b7079520181cced8f10cf68171acedceb5cafc76edebaf373b1ec`. O enquadramento do guindaste também passou: `ev_b136fc881692965e57199e04622911ec1b24ad986cf6ee67164cec06a78a3016`. Capturas de interior e obra foram inspecionadas. Zero page-errors. Há um aviso esperado por carregar duas versões Three.js, e quatro 404 dos packs binários ausentes que o gerador de veículos tenta carregar; sedan/van procedurais funcionam. Não foram fabricados packs substitutos.
+
+Sem benchmark GPU/FPS, validação Flutter ou integração com terminais. O escritório atual do aplicativo não foi substituído.
