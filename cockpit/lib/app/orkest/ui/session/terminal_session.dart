@@ -301,6 +301,8 @@ class TerminalSession extends PaneItem {
             _agentSessionEnded = true;
             _turnActive = false;
             _officePermissionPromptVisible = false;
+            _structuredPermissionPending = false;
+            _settledPermissionFingerprints.clear();
             _setStatus(TerminalStatus.idle, event: 'SessionEnd');
           } else {
             _agentSessionEnded = false;
@@ -693,7 +695,8 @@ class TerminalSession extends PaneItem {
   bool _awaitingGitPushResult = false;
   bool _officeAgentActivityObserved = false;
   bool _officePermissionPromptVisible = false;
-  bool _suppressVisiblePermissionPrompt = false;
+  bool _structuredPermissionPending = false;
+  final Set<int> _settledPermissionFingerprints = <int>{};
 
   /// Janela em que um `working` mid-turn órfão (sem turno ativo) pós-`idle` é
   /// tratado como reordenação. Generosa (a real reordenação chega em ms); turnos
@@ -746,15 +749,6 @@ class TerminalSession extends PaneItem {
       _agentSessionEnded = false;
       _officeAgentActivityObserved = true;
     }
-    if (status != TerminalStatus.waiting) {
-      // An authoritative hook settles any approval still painted in the TUI.
-      // Do not reinterpret that same screen as a new request on the next tick.
-      _suppressVisiblePermissionPrompt = _visiblePermissionPrompt();
-      _officePermissionPromptVisible = false;
-    } else {
-      _officePermissionPromptVisible = _visiblePermissionPrompt();
-      _suppressVisiblePermissionPrompt = false;
-    }
     if (event == 'SessionEnd') {
       _officeSubagents.clear();
       _agentSessionEnded = true;
@@ -803,12 +797,23 @@ class TerminalSession extends PaneItem {
     // acabou, entregue fora de ordem depois do `Stop`.
     if (status == TerminalStatus.working &&
         !isTurnStart &&
+        _status == TerminalStatus.idle &&
         !_turnActive &&
         _lastIdleAt != null &&
         DateTime.now().difference(_lastIdleAt!) < _staleWorkingGuard) {
       return;
     }
 
+    if (status == TerminalStatus.waiting) {
+      // Protocol/hook state survives a repaint until an explicit response or
+      // lifecycle event settles it. Screen disappearance is weaker evidence.
+      _structuredPermissionPending = true;
+      _officePermissionPromptVisible = _visiblePermissionPrompt();
+      _settledPermissionFingerprints.clear();
+    } else {
+      _settleVisiblePermission();
+      if (status == TerminalStatus.working) _turnActive = true;
+    }
     if (status == TerminalStatus.waiting && _status == TerminalStatus.waiting) {
       return;
     }
@@ -865,9 +870,6 @@ class TerminalSession extends PaneItem {
     final safeKind = kind.trim().toLowerCase();
     final safePhase = phase.trim().toLowerCase();
     if (_disposed || _processExited || _agentSessionEnded) return;
-    // A terminal has one current approval surface. Repeated reports of the
-    // pending request must not create fresh notification sequences.
-    if (safeKind == 'needs_input' && _status == TerminalStatus.waiting) return;
     final safeSummary = summary
         .replaceAll(RegExp(r'[\x00-\x1F\x7F]'), ' ')
         .replaceAll(RegExp(r'\s+'), ' ')
@@ -881,6 +883,14 @@ class TerminalSession extends PaneItem {
     if (activityId != null &&
         !RegExp(r'^[A-Za-z0-9_.:/-]{1,160}$').hasMatch(activityId)) {
       return;
+    }
+    if (safeKind == 'needs_input') {
+      if (safePhase != 'observed' || activityId != null) {
+        _structuredPermissionPending = true;
+      }
+      // A structured report can strengthen a screen observation without
+      // issuing another notification for the same pending interaction.
+      if (_status == TerminalStatus.waiting) return;
     }
     if (safeKind == 'done') {
       if (activityId != null) {
@@ -1065,9 +1075,11 @@ class TerminalSession extends PaneItem {
       _officeShell = null;
     }
     if (safeKind == 'prompt' || safeKind == 'respond') {
+      _settleVisiblePermission();
       _returnIdleAfterCommands = false;
       _turnActive = true;
     } else if (safeKind == 'done' || safeKind == 'error') {
+      _settleVisiblePermission();
       _turnActive = false;
     }
     _officeAgentActivityObserved = true;
@@ -1201,20 +1213,22 @@ class TerminalSession extends PaneItem {
           observation.$1 == 'done' &&
           !_officeCompletionBaseline.contains(observation.$4);
     });
-    if (!hasActiveWork &&
+    if (!_structuredPermissionPending &&
+        !hasActiveWork &&
         (!_turnActive || hasNewCompletion) &&
         readyIndex >= 0 &&
         readyIndex > permissionIndex) {
       _officePermissionPromptVisible = false;
-      _suppressVisiblePermissionPrompt = false;
+      _settledPermissionFingerprints.clear();
       _turnActive = false;
       _setStatus(TerminalStatus.idle);
       return;
     }
-    final rawPermissionPrompt = permissionIndex >= 0;
-    if (!rawPermissionPrompt) _suppressVisiblePermissionPrompt = false;
-    final hasVisiblePermissionPrompt =
-        rawPermissionPrompt && !_suppressVisiblePermissionPrompt;
+    final permissionFingerprints = _permissionFingerprints(visibleLines);
+    _settledPermissionFingerprints.retainAll(permissionFingerprints);
+    final hasVisiblePermissionPrompt = permissionFingerprints.any(
+      (fingerprint) => !_settledPermissionFingerprints.contains(fingerprint),
+    );
     if (hasVisiblePermissionPrompt && !_officePermissionPromptVisible) {
       _officePermissionPromptVisible = true;
       _officeAgentActivityObserved = true;
@@ -1229,7 +1243,9 @@ class TerminalSession extends PaneItem {
       // Generic PTYs may not send a structured permission-result event. When
       // a visible approval prompt disappears, treat it as answered and resume
       // the turn; a completion marker found below can settle it to idle.
-      if (promptWasVisible && _status == TerminalStatus.waiting) {
+      if (promptWasVisible &&
+          !_structuredPermissionPending &&
+          _status == TerminalStatus.waiting) {
         applyOfficeActivity(
           kind: 'respond',
           phase: 'observed',
@@ -1350,6 +1366,29 @@ class TerminalSession extends PaneItem {
   bool _visiblePermissionPrompt() => terminal
       .plainLines(limit: _viewportRows ?? 25)
       .any((line) => _mapOfficeActivityLine(line.trim())?.$1 == 'needs_input');
+
+  Set<int> _permissionFingerprints(Iterable<String> lines) => {
+    for (final line in lines)
+      if (_mapOfficeActivityLine(line.trim()) case (
+        'needs_input',
+        _,
+        _,
+        final fingerprint,
+      ))
+        fingerprint,
+  };
+
+  void _settleVisiblePermission() {
+    _structuredPermissionPending = false;
+    _officePermissionPromptVisible = false;
+    _settledPermissionFingerprints
+      ..clear()
+      ..addAll(
+        _permissionFingerprints(
+          terminal.plainLines(limit: _viewportRows ?? 25),
+        ),
+      );
+  }
 
   (String, String, String, int)? _mapOfficeActivityLine(String line) {
     // Common agent TUIs show this while a turn is active. It is an observed

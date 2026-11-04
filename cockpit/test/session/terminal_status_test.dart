@@ -524,6 +524,166 @@ void main() {
   );
 
   group('Office approval screen isolation', () {
+    for (final harness in [
+      'claude',
+      'codex',
+      'pi',
+      'gemini',
+      'kimi',
+      'custom',
+    ]) {
+      test('$harness structured wait outranks stale ready text', () async {
+        final s = _session(id: harness);
+        final other = _session(id: '$harness-other');
+        other.applyOfficeActivity(
+          kind: 'prompt',
+          phase: 'started',
+          summary: 'Independent work',
+          harness: harness,
+        );
+        s.terminal.write(
+          'Permission required for command\r\n'
+          '› Ask Codex to do anything\r\n',
+        );
+        s.applyOfficeActivity(
+          kind: 'needs_input',
+          phase: 'started',
+          summary: 'Approval',
+          activityId: 'request-1',
+          harness: harness,
+        );
+        s.refreshOfficeActivityFromScreen();
+        expect(s.status, TerminalStatus.waiting);
+        expect(other.status, TerminalStatus.working);
+        s.applyOfficeActivity(
+          kind: 'respond',
+          phase: 'started',
+          summary: 'Approved',
+          harness: harness,
+        );
+        expect(s.status, TerminalStatus.working);
+        s.applyOfficeActivity(
+          kind: 'done',
+          phase: 'completed',
+          summary: 'Finished',
+          harness: harness,
+        );
+        expect(s.status, TerminalStatus.idle);
+        expect(s.hasOfficeAgentPresence, true);
+        expect(other.status, TerminalStatus.working);
+        await s.dispose();
+        await other.dispose();
+      });
+    }
+
+    test(
+      'structured wait strengthens an existing screen observation',
+      () async {
+        final s = _session();
+        s.terminal.write('Permission required for command\r\n');
+        s.refreshOfficeActivityFromScreen();
+        expect(s.status, TerminalStatus.waiting);
+        final sequence = s.latestWaitingEventSequence;
+        s.applyOfficeActivity(
+          kind: 'needs_input',
+          phase: 'started',
+          summary: 'Approval',
+          activityId: 'request',
+        );
+        expect(s.latestWaitingEventSequence, sequence);
+        s.terminal.write('\x1b[2J\x1b[H');
+        await Future<void>.delayed(const Duration(milliseconds: 1100));
+        s.refreshOfficeActivityFromScreen();
+        expect(s.status, TerminalStatus.waiting);
+        expect(s.latestWaitingEventSequence, sequence);
+        await s.dispose();
+      },
+    );
+
+    test('structured permission survives a terminal repaint', () async {
+      final s = _session();
+      s.applyClaudeStatus(status: TerminalStatus.idle, event: 'SessionStart');
+      s.applyClaudeStatus(status: TerminalStatus.working, isTurnStart: true);
+      s.terminal.write('Permission required for command\r\n');
+      s.applyClaudeStatus(
+        status: TerminalStatus.waiting,
+        event: 'PermissionRequest',
+      );
+      final sequence = s.latestWaitingEventSequence;
+      s.terminal.write('\x1b[2J\x1b[H');
+      s.refreshOfficeActivityFromScreen();
+      expect(s.status, TerminalStatus.waiting);
+      expect(s.latestWaitingEventSequence, sequence);
+      s.applyClaudeStatus(status: TerminalStatus.working, event: 'PreToolUse');
+      expect(s.status, TerminalStatus.working);
+      await s.dispose();
+    });
+
+    test(
+      'hook resumes permission immediately after a completed turn',
+      () async {
+        final s = _session();
+        s.applyClaudeStatus(status: TerminalStatus.idle, event: 'SessionStart');
+        s.applyClaudeStatus(status: TerminalStatus.working, isTurnStart: true);
+        s.applyClaudeStatus(status: TerminalStatus.idle, event: 'Stop');
+        s.applyClaudeStatus(status: TerminalStatus.working, isTurnStart: true);
+        s.applyClaudeStatus(
+          status: TerminalStatus.waiting,
+          event: 'PermissionRequest',
+        );
+        s.applyClaudeStatus(
+          status: TerminalStatus.working,
+          event: 'PreToolUse',
+        );
+        expect(s.status, TerminalStatus.working);
+        s.applyClaudeStatus(status: TerminalStatus.idle, event: 'Stop');
+        s.applyClaudeStatus(
+          status: TerminalStatus.working,
+          event: 'PostToolUse',
+        );
+        expect(s.status, TerminalStatus.idle);
+        await s.dispose();
+      },
+    );
+
+    test('answer suppresses only the approval already on screen', () async {
+      final s = _session();
+      s.applyClaudeStatus(status: TerminalStatus.working, isTurnStart: true);
+      s.terminal.write('Permission required for command\r\n');
+      s.refreshOfficeActivityFromScreen();
+      expect(s.status, TerminalStatus.waiting);
+      s.insertText('\r');
+      expect(s.status, TerminalStatus.working);
+      await Future<void>.delayed(const Duration(milliseconds: 1100));
+      s.refreshOfficeActivityFromScreen();
+      expect(s.status, TerminalStatus.working);
+      s.terminal.write('Approval required for file change\r\n');
+      await Future<void>.delayed(const Duration(milliseconds: 1100));
+      s.refreshOfficeActivityFromScreen();
+      expect(s.status, TerminalStatus.waiting);
+      await s.dispose();
+    });
+
+    test(
+      'new approval is recognized while an answered one stays painted',
+      () async {
+        final s = _session();
+        s.applyClaudeStatus(status: TerminalStatus.working, isTurnStart: true);
+        s.terminal.write('Permission required for command\r\n');
+        s.refreshOfficeActivityFromScreen();
+        expect(s.status, TerminalStatus.waiting);
+        s.applyClaudeStatus(
+          status: TerminalStatus.working,
+          event: 'PreToolUse',
+        );
+        s.terminal.write('Approval required for file change\r\n');
+        await Future<void>.delayed(const Duration(milliseconds: 1100));
+        s.refreshOfficeActivityFromScreen();
+        expect(s.status, TerminalStatus.waiting);
+        await s.dispose();
+      },
+    );
+
     test('MCP tool approval waits only in its requesting session', () async {
       final active = _session(id: 'active');
       final idle = _session(id: 'idle');
