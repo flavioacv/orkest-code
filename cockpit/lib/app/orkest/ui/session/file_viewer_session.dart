@@ -106,6 +106,16 @@ class FileViewerSession extends PaneItem {
     notifyListeners();
   }
 
+  /// `true` se o arquivo foi alterado em disco externamente enquanto o buffer em
+  /// memória estava sujo (`dirty`). Previne perda de dados e avisa o usuário.
+  bool hasDiskConflict = false;
+
+  void setDiskConflict(bool value) {
+    if (value == hasDiskConflict) return;
+    hasDiskConflict = value;
+    notifyListeners();
+  }
+
   /// Grava o buffer atual do editor em disco. Registrado pelo `FileViewer`
   /// enquanto montado (e limpo ao desmontar); `null` quando não há editor ativo.
   /// Usado pelo "Salvar e fechar". Retorna `true` no sucesso.

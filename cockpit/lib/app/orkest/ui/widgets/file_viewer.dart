@@ -75,6 +75,7 @@ class _FileViewerState extends State<FileViewer> {
   bool _editing = false;
   bool _dirty = false;
   bool _saving = false;
+  bool _crlf = false;
   String _baseline = '';
   String? _lastObservedPath;
 
@@ -202,6 +203,7 @@ class _FileViewerState extends State<FileViewer> {
     final text = _editableText;
     if (text == null) return;
     _baseline = text;
+    _crlf = text.contains('\r\n');
     _ctrl = CodeEditingController(text: text, language: _language)
       ..addListener(_onCtrlChanged);
     // Expõe o save do buffer à sessão pro "Salvar e fechar" (limpo no dispose).
@@ -326,6 +328,7 @@ class _FileViewerState extends State<FileViewer> {
       final text = _editableText;
       if (text != null) {
         _baseline = text;
+        _crlf = text.contains('\r\n');
         _ctrl = CodeEditingController(text: text, language: _language)
           ..addListener(_onCtrlChanged);
         widget.session.saveDraft = _save;
@@ -346,21 +349,31 @@ class _FileViewerState extends State<FileViewer> {
       if (_editing) setState(() => _editing = false);
       return;
     }
-    // Recarga externa (watcher) sobre conteúdo **não** sujo → sincroniza o campo.
-    // Com edições pendentes, mantém o buffer do usuário (last-write-wins no save).
-    // Adia para pós-build: evitar setState durante build (setDirty -> notifyListeners).
-    if (!_dirty && _ctrl != null && _ctrl!.text != text) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        if (mounted && !_dirty && _ctrl != null && _ctrl!.text != text) {
-          _ctrl!.text = text;
-          _baseline = text;
-          widget.session.scmCoordinator?.onExternalContentAdopted();
-          // O disco mudou (agente editou) → mantém o LSP em sync.
-          if (_lspOn) {
-            unawaited(_vm?.lspChangeDocument(widget.session.path, text));
+    // Recarga externa (watcher) sobre conteúdo:
+    // 1. Buffer não sujo → sincroniza o campo de forma transparente e limpa conflito.
+    // 2. Buffer sujo e disco alterado → preserva o trabalho do usuário e sinaliza conflito.
+    if (_ctrl != null && _ctrl!.text != text) {
+      if (!_dirty) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && !_dirty && _ctrl != null && _ctrl!.text != text) {
+            _ctrl!.text = text;
+            _baseline = text;
+            _crlf = text.contains('\r\n');
+            widget.session.setDiskConflict(false);
+            widget.session.scmCoordinator?.onExternalContentAdopted();
+            // O disco mudou (agente editou) → mantém o LSP em sync.
+            if (_lspOn) {
+              unawaited(_vm?.lspChangeDocument(widget.session.path, text));
+            }
           }
-        }
-      });
+        });
+      } else if (text != _baseline) {
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _dirty && _ctrl != null && text != _baseline) {
+            widget.session.setDiskConflict(true);
+          }
+        });
+      }
     }
     // Virou a aba focada (seleção da tab) → joga o foco no editor.
     if (widget.focused && !old.focused) _focusEditorIfActive();
@@ -561,10 +574,14 @@ class _FileViewerState extends State<FileViewer> {
 
   void _discard() {
     final ctrl = _ctrl;
-    if (ctrl == null || !_dirty || _saving) return;
-    // Volta o buffer ao último conteúdo salvo (baseline) e zera o estado sujo.
-    ctrl.text = _baseline;
+    if (ctrl == null || (!_dirty && !widget.session.hasDiskConflict) || _saving) return;
+    // Adota a versão do disco mais recente, atualiza baseline e zera estado sujo/conflito.
+    final diskText = _editableText ?? _baseline;
+    ctrl.text = diskText;
+    _baseline = diskText;
+    _crlf = diskText.contains('\r\n');
     _updateDirty(false);
+    widget.session.setDiskConflict(false);
   }
 
   /// Comando de formatador externo (`%FILE%`) configurado pra linguagem deste
@@ -598,7 +615,10 @@ class _FileViewerState extends State<FileViewer> {
       }
     }
 
-    final content = ctrl.text;
+    var content = ctrl.text;
+    if (_crlf && !content.contains('\r\n')) {
+      content = content.replaceAll(RegExp(r'(?<!\r)\n'), '\r\n');
+    }
     setState(() => _saving = true);
     final ok = await widget.onSave(content);
     if (!mounted) return ok;
@@ -606,6 +626,7 @@ class _FileViewerState extends State<FileViewer> {
     if (ok) {
       _baseline = content;
       _updateDirty(false);
+      widget.session.setDiskConflict(false);
     }
 
     // Formatador externo: roda no arquivo já gravado e relê.
@@ -900,6 +921,7 @@ class _FileViewerState extends State<FileViewer> {
             editing: editingNow,
             previewing: _hasPreview && !_editing,
             dirty: _dirty,
+            crlf: _crlf,
             saving: _saving,
             onToggle: _toggleEditing,
             // Só o preview de HTML: é o único viewer que renderiza a partir do
@@ -1028,6 +1050,79 @@ class _FileViewerState extends State<FileViewer> {
               onToggleRegex: () => _toggleFind(() => _findRegex = !_findRegex),
             ),
           ),
+        if (widget.session.hasDiskConflict)
+          Positioned(
+            top: 0,
+            left: 0,
+            right: 0,
+            child: Container(
+              color: const Color(0xFF9A3412),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              child: Row(
+                children: [
+                  const Icon(
+                    Icons.warning_amber_rounded,
+                    size: 16,
+                    color: Color(0xFFFFFFFF),
+                  ),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Conflito: Arquivo alterado no disco externamente enquanto você editava.',
+                      style: TextStyle(
+                        color: Color(0xFFFFFFFF),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w500,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  HoverTap(
+                    onTap: () => widget.session.setDiskConflict(false),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        border: Border.all(color: const Color(0xB3FFFFFF)),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'Manter local',
+                        style: TextStyle(
+                          color: Color(0xFFFFFFFF),
+                          fontSize: 11,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  HoverTap(
+                    onTap: _discard,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 3,
+                      ),
+                      decoration: BoxDecoration(
+                        color: const Color(0xFFFFFFFF),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: const Text(
+                        'Recarregar do disco',
+                        style: TextStyle(
+                          color: Color(0xDD000000),
+                          fontSize: 11,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
       ],
     );
   }
@@ -1046,6 +1141,7 @@ class _Toolbar extends StatelessWidget {
     required this.dirty,
     required this.saving,
     required this.onToggle,
+    this.crlf = false,
     this.onReload,
   });
 
@@ -1062,6 +1158,7 @@ class _Toolbar extends StatelessWidget {
   final bool previewing;
   final bool dirty;
   final bool saving;
+  final bool crlf;
   final VoidCallback onToggle;
 
   /// Recarrega o render a partir do disco (preview de `.html`). `null` esconde
@@ -1082,6 +1179,18 @@ class _Toolbar extends StatelessWidget {
         children: [
           Expanded(child: leading),
           const SizedBox(width: 8),
+          if (editing)
+            Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: Text(
+                crlf ? 'CRLF' : 'LF',
+                style: context.typo.tab.copyWith(
+                  color: colors.text3,
+                  fontSize: 11,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
           if (dirty && !saving)
             Padding(
               padding: const EdgeInsets.only(right: 8),
