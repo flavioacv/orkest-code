@@ -94,13 +94,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: Mostrar origem do último estado, idade do sinal e capacidade de detecção com dados limitados; medir falso working/waiting/idle em corpus rotulado; falta de sinal não inventa execução.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
-- [ ] G05 · Integrar revisão de PR no contexto do código <!-- id: G05 labels: P2, git blockedBy: G01 -->
-      Porte: M. Dependências: G01.
-      Origem: ide-github e src/features/github.
-      Destino: Painel Git e ações de revisão.
-      Aceite: Listar/detalhar/criar PR, comentários/review/diff e checkout conforme ferramenta disponível; falhas de autenticação explícitas; nenhuma operação de publicação/merge fora de autorização.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] R04 · Expandir debug multilinguagem progressivamente <!-- id: R04 labels: P2, debug blockedBy: R02, L05 -->
       Porte: L. Dependências: R02, L05.
       Origem: debugpy, js-debug, codelldb e configs de linguagens.
@@ -198,11 +191,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] G04 · Adicionar gestão avançada de trabalho Git <!-- id: G04 labels: P2, git blockedBy: G02 -->
-      Porte: L. Dependências: G02.
-      Origem: ide-vcs/manage, shelf, patch, rebasePlan.
-      Destino: Serviços Git local/remoto.
-      Aceite: Worktrees, stash/shelf, changelists, patches, tags e rebase/cherry-pick/revert em subentregas; pré-condições/abort/recovery e processos cancelados testados, sem merge automático na main.
+- [ ] G05 · Integrar revisão de PR no contexto do código <!-- id: G05 labels: P2, git blockedBy: G01 -->
+      Porte: M. Dependências: G01.
+      Origem: ide-github e src/features/github.
+      Destino: Painel Git e ações de revisão.
+      Aceite: Listar/detalhar/criar PR, comentários/review/diff e checkout conforme ferramenta disponível; falhas de autenticação explícitas; nenhuma operação de publicação/merge fora de autorização.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -221,6 +214,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] G04 · Adicionar gestão avançada de trabalho Git <!-- id: G04 labels: P2, git blockedBy: G02 -->
+      Entrega: Modelos de trabalho GitStashEntry e GitTagEntry; serviço GitWorkService implementando operações completas de Stash (listStashes, stashPush com includeUntracked/keepIndex, stashApply, stashPop, stashDrop, stashDiff), Tags (listTags com delimitadores estruturados, createTag leve/anotada e deleteTag) e Patches (createPatch e applyPatch com verificação prévia checkOnly e reversão reverse); operações avançadas protegidas com cherryPick, revertCommit e rebase com exigência mandatória de working tree limpo e guardrail restritivo bloqueando qualquer alteração ou rebase direto na branch main; métodos expostos em GitController com invalidação automática de cache e refresh assíncrono.
+      Aceite: Worktrees, stash/shelf, changelists, patches, tags e rebase/cherry-pick/revert em subentregas; pré-condições/abort/recovery e processos cancelados testados, sem merge automático na main.
+      Validação: 5 testes automatizados de integração em repositório real aprovados em test/domain/git_work_service_test.dart cobrindo ciclo de vida de stash, tags, patches e prova de guardrail bloqueando operações na main; 44 testes da suíte completa de Git aprovados; análise estática dart analyze --fatal-infos limpa (zero issues).
+      Detalhes: [gestão avançada de trabalho Git](72-gestao-avancada-trabalho-git.md).
 
 - [x] G03 · Evoluir histórico, autoria e comparação <!-- id: G03 labels: P2, git blockedBy: G01 -->
       Entrega: Modelos de autoria GitBlameHunk, consulta avançada GitHistoryQuery e comparação entre revisões GitComparison; decodificador GitBlameParser para o formato estruturado git blame --porcelain com cache de metadados de commits repetidos; GitHistoryReaderImpl expandido com suporte a paginação (limit, skip), acompanhamento de renomeações de arquivos (--follow), filtros por autor (--author), busca por mensagem (--grep) e flag all; método compareRefs executando comparação atômica de arquivos e commits entre branches divergentes; componente visual GitBlameView com busca reativa por autor/mensagem, navegação direta por clique na linha e cópia de hash.

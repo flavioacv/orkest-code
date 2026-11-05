@@ -362,6 +362,9 @@ Destino: Serviços Git local/remoto.
 
 Aceite: Worktrees, stash/shelf, changelists, patches, tags e rebase/cherry-pick/revert em subentregas; pré-condições/abort/recovery e processos cancelados testados, sem merge automático na main.
 
+Entrega: Modelos estruturados de trabalho (`GitStashEntry` e `GitTagEntry`); serviço de operações Git desacoplado `GitWorkService` cobrindo Stash (operações completas: listagem, push com untracked/keep-index, aplicação, pop, drop e diff prévio), Tags (listagem formatada, criação anotada/leve e exclusão) e Patches unificados (geração via diff e aplicação com validação prévia `--check`); operações avançadas protegidas (`cherryPick`, `revertCommit` e `rebase`) com garantia de working tree limpo e bloqueio mandatório contra execuções diretas na branch `main`; métodos expostos em `GitController` com invalidação automática de cache de histórico e refresh assíncrono.
+Validação: 5 testes de integração em repositório real em `cockpit/test/domain/git_work_service_test.dart`; 44 testes da suíte completa de Git aprovados; análise estática `dart analyze --fatal-infos` limpa (0 issues). Concluído em 05/11/2026. Detalhes em `plan/72-gestao-avancada-trabalho-git.md`.
+
 ### G05 — Integrar revisão de PR no contexto do código
 
 Prioridade P2 · Porte M · Dependências: G01.
