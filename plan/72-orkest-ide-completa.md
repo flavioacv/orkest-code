@@ -437,6 +437,9 @@ Destino: DbDriver.schema, db_panel e conectores anaki existentes.
 
 Aceite: Matriz de schemas/tabelas/views/índices/FKs/routines por engine; DDL e navegação contextual com paginação/cache invalidável; manter Redis/Mongo e política de acesso atual.
 
+Entrega: Modelos estruturados de introspecção `SchemaIndex`, `SchemaForeignKey`, `SchemaRoutine` e `SchemaTableDetail` (`cockpit/lib/app/orkest/domain/entities/db_schema_entities.dart`); consultas SQL especializadas em `cockpit/lib/app/orkest/domain/db_schema_sql.dart` para extração de índices (`dbIndexesSql`), chaves estrangeiras (`dbForeignKeysSql`), rotinas e procedures (`dbRoutinesSql`) e definição textual de views (`dbViewDefinitionSql`) cobrindo SQLite, PostgreSQL, MySQL e MSSQL; gerador determinístico de DDL `DbDdlGenerator` (`cockpit/lib/app/orkest/domain/services/db_ddl_generator.dart`) gerando scripts `CREATE TABLE` (com PKs, FKs com regras ON DELETE/UPDATE, colunas tipadas e índices) e `CREATE VIEW`; integração de métodos assíncronos e caches dedicados em `DatabaseViewModel` com invalidação seletiva via `invalidateSchema(connName)`; interface atualizada no `DbPanel` (`_TableDetailList`) exibindo subseções expansíveis de colunas, índices e chaves estrangeiras, além de menu de contexto na tabela/view com ações "Copiar DDL" e "Copiar SELECT *".
+Validação: 24 testes unitários cobrindo consultas SQL, gerador de DDL e modelos de schema em `cockpit/test/domain/db_schema_sql_test.dart`, `cockpit/test/domain/db_ddl_generator_test.dart` e `cockpit/test/domain/db_schema_entities_test.dart`; 81 testes de regressão de toda a suíte de banco de dados aprovados com 100% de sucesso; análise estática `dart analyze --fatal-infos` limpa (0 issues). Concluído em 05/11/2026. Detalhes em `plan/72-introspeccao-navegacao-bancos.md`.
+
 ### B02 — Provar transações e edição persistente de dados
 
 Prioridade P2 · Porte L · Dependências: B01, A04.
