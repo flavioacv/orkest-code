@@ -1,0 +1,2228 @@
+{
+  "source": "/Volumes/Externo 1/projetos/zurc/openidea",
+  "commit": "8021a8cccaad4002704d0b0c6df9d1ab17d854b0",
+  "date": "2026-11-04",
+  "scope": "Candidate reference files only; no source or assets incorporated",
+  "declared_project_license": "Apache-2.0; preserve notices and inspect component/dependency licenses before reuse",
+  "transitive_license_clearance": "pending component selection; Cargo.lock recorded but not a legal clearance",
+  "language_profiles_added": [
+    "html",
+    "css",
+    "scss",
+    "less",
+    "json",
+    "jsonc",
+    "yaml",
+    "shellscript"
+  ],
+  "files": [
+    {
+      "path": "Cargo.lock",
+      "bytes": 271237,
+      "sha256": "ba85e82dc9ddaa305c49b396486253ce49f990507c56acb3c1a2a06451dc9691",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "Cargo.toml",
+      "bytes": 4197,
+      "sha256": "071aa2e76666a1fd2a85c443a4361c3cdf34ee82108769c887494952a77757c4",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "LICENSE",
+      "bytes": 11358,
+      "sha256": "cfc7749b96f63bd31c3c42b5c471bf756814053e847c10f3eb003417bc523d30",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "NOTICE",
+      "bytes": 807,
+      "sha256": "682a1ac37ab5a629459e66f21e5eb9f392ea74c886e09d6f5042fc1d49194bda",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "THIRD_PARTY_LICENSES.md",
+      "bytes": 26649,
+      "sha256": "3029b81d9ae26a9cb393ebccf212e9afce6af0caacf1a4958724570a713d1432",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/Cargo.toml",
+      "bytes": 760,
+      "sha256": "ad42dee28d02b2ceaf8b187dfe14d20e54dc1fae20e45546db4a5b948ade2d34",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/editor_settings.rs",
+      "bytes": 16718,
+      "sha256": "88406fbab27b55d5d4a33a2f7b10f4bc51c1fe851fd674f25e8a8f4a6c200bff",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/error.rs",
+      "bytes": 4010,
+      "sha256": "79e0bea504ad03a6a14676306b7eb38868aa4c9a9968ae0bbd09b9e63d58ec7a",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/event.rs",
+      "bytes": 8150,
+      "sha256": "cf35b69c21b011dd89830a8bf7fc7684cd1a194bb5ad1c08e92e7be3f7b1b264",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/ids.rs",
+      "bytes": 1901,
+      "sha256": "67c497b4fb3813a1a2a148ab08f2355c5b5557b81a37614e0b09655ac940f5d0",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/ignored.rs",
+      "bytes": 4107,
+      "sha256": "48ec3c484ecb9260b979bd9cfb0dcdd0e9e8caf45cf0da7e4ca810c9eeef476b",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/inspection_settings.rs",
+      "bytes": 4727,
+      "sha256": "b2645260ef177303da041d71e8fceb85231f7c96aa2b31d8681896b12a23a9d2",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/ipc_path.rs",
+      "bytes": 3440,
+      "sha256": "a4665784ff4b8033202775a58693ddfbe6306dfdd8cb33946c6ec881a293dcc0",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/java_runtime.rs",
+      "bytes": 1283,
+      "sha256": "7cd02a56c210ea0454f623e285aa44bfbc6868c834c3977b50ca84b426f29737",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/jsonc.rs",
+      "bytes": 2838,
+      "sha256": "b2b96385f5f71a1f7b0af202ef8d4b7702dfbf2eef4ebb7c375205e151d945ad",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/lib.rs",
+      "bytes": 894,
+      "sha256": "3cfbcb8272d090aa95eb6dd40ff0c69e0aa648975cac4a6acdd0c934155881df",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/output_encoding.rs",
+      "bytes": 29024,
+      "sha256": "5940ce44c99bd0aaf69d54d9662e2f5f29b2766f364569eba33774c08fb3ed5a",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/process.rs",
+      "bytes": 38426,
+      "sha256": "1919a25df4f03973398b82cf001b77bd83067be6bc5e4c0b5998f982a1de4a49",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/project_dir.rs",
+      "bytes": 327,
+      "sha256": "a44e81d5c513a43c558a3ddf98790fcbd4aea9611b946ea4250d9106647f68e8",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/proxy_settings.rs",
+      "bytes": 18088,
+      "sha256": "d40ced8235c7772e23787a716b48057e872eecdadc4dac961906f384a0ad2784",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/remote_settings.rs",
+      "bytes": 6277,
+      "sha256": "2c8766d2ba442c5460d903f28af7ce6426dbef5fe7f6fccef489669c2893a409",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/settings.rs",
+      "bytes": 46642,
+      "sha256": "8773a3419a9af6e782ce15b1ef77a587d316f69228c27e317d52ca7918f9cdca",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/task.rs",
+      "bytes": 4898,
+      "sha256": "c1de77913a4ec2f2ed46c2c72dcfdeb3738b754d64537e3205a3aca827c87447",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/text.rs",
+      "bytes": 10343,
+      "sha256": "56c740bb50ef2ef383bc42ce3c02350412dfd32edbdfef463e172a093a5c4f35",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/tool_path.rs",
+      "bytes": 10792,
+      "sha256": "f03739b836a996c528206bcd8204137a5e61097f9b5f12719685574d5a50e90d",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/version_managers.rs",
+      "bytes": 9979,
+      "sha256": "4f72b2b0fa6b3d3cb805379176bb5e3ea6abf8c478f96902f3abf0bbbd7327bc",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-core/src/workflow_settings.rs",
+      "bytes": 13366,
+      "sha256": "1f79d614a8adfb1f35632e9a16606addd4acf51520363908d186380b074e5ef4",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-dap/Cargo.toml",
+      "bytes": 663,
+      "sha256": "282bfe88d43adf703799b94f285a14e817bfa75cb1a5d218f3f0997966c0b100",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-dap/src/adapter.rs",
+      "bytes": 32011,
+      "sha256": "835ef9004fb1daf714429218a34fe409e7af57f928212c980761e2f5572c0940",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-dap/src/attach.rs",
+      "bytes": 12954,
+      "sha256": "a4b4105ddf584934d8dc58a2a903dd27512c43005b1bef8a5bd7fcc3eabec243",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-dap/src/cargo.rs",
+      "bytes": 4619,
+      "sha256": "f7dbabba261a62c573c6a801e23c87bab43405a4ec198c175f928719abc48181",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-dap/src/connection.rs",
+      "bytes": 11606,
+      "sha256": "7f29223b15b97648b672029278821cb9fe6506ba737435eddbd676f5d6c1a45a",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-dap/src/jdwp.rs",
+      "bytes": 4286,
+      "sha256": "bbc77f2510c0d60abddd21c54f01b9a3f87015ac2102ef372ace6debf407c3d7",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-dap/src/kotlin.rs",
+      "bytes": 8459,
+      "sha256": "79f9f9d79ed1146a752a9bfa1dc3f3fcb1dd1ba670c4018a3ad5792b34ba45bd",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-dap/src/kotlin_jdwp.rs",
+      "bytes": 6583,
+      "sha256": "965dac8a040a75d6cca7c53b73c3a5e98708d19e56f8c13802bd7ef531b94a81",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-dap/src/lib.rs",
+      "bytes": 62038,
+      "sha256": "d3531ffbb827433dc73a22f42ded9fab52281f06641cadf328b8797ad2a3d0dd",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-dap/src/session.rs",
+      "bytes": 24373,
+      "sha256": "ed12ed06bff4cc9d83914fa6b81487c29231ef9636d0eae859391195ca199c4e",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-dap/src/tests.rs",
+      "bytes": 57868,
+      "sha256": "d3bf8aa9e423af10ec041626d1849f2ec49c0c1abc91b976c5f5a5b0215e3bb1",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-dap/tests/debugpy.rs",
+      "bytes": 3619,
+      "sha256": "b9dd1a24852c42d6538c18a9f1e10c2c267302fa87f4f8931860ca7a4c3544e5",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-dap/tests/godot.rs",
+      "bytes": 6623,
+      "sha256": "a1f60450061d8f09a2aa9f33feb7dd1433276f13732cc5767ca30aa4ddb0f79e",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-dap/tests/real_adapters.rs",
+      "bytes": 27228,
+      "sha256": "dc9de55c1764cd7d2b96b36e40d4dc9373605d92036323ef97e2f3a68f40c0a1",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-dap/tests/script_debuggers.rs",
+      "bytes": 15874,
+      "sha256": "b46e680dc37a916dea47639b83377010df9b09faa2eb44353701c9976d963e28",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/Cargo.toml",
+      "bytes": 2215,
+      "sha256": "fe1361a71370c39de81b6ce05125d17e5860f2893e0d751951f6b2fa7c53a6b1",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/benches/plugins.rs",
+      "bytes": 5934,
+      "sha256": "96587ec309d2b5e175bd638624f4c389e8f425ab0171015a97b4d68221da4534",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/bin/openidea-plugin/main.rs",
+      "bytes": 45757,
+      "sha256": "b5145fae1b87980a8e152eab3b603faeae7fe58d0e9e3b802f4a5f1f4bbbf12d",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/bin/openidea-plugin/templates.rs",
+      "bytes": 9439,
+      "sha256": "76d3c3f256f8fa0b6fe54bb8cd8d4f01f3932ad86c501bec9f3f5a7e8223c6ac",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/bin/server.rs",
+      "bytes": 4444,
+      "sha256": "af749fffa5bd55a0ff2b5f91f4f6204e717d723465012e79169f46dd157a50e5",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/data_dirs.rs",
+      "bytes": 18977,
+      "sha256": "aec9de071cda6fc604bb415470572be4f88698c9612203fd8b13f4ff6b8aab46",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/environment.rs",
+      "bytes": 20977,
+      "sha256": "8ff6e5fdba0b5548c37675e76b3bc740f92e6c720d755ae1c598aba7c6a564ca",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/formatter.rs",
+      "bytes": 8682,
+      "sha256": "0ef6a6dae90c365a39870e860e6fba29398bd17cba1443205810a045aa417161",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/java_runtime.rs",
+      "bytes": 6804,
+      "sha256": "5ae2b5b38bf61defc15ecaefd47424c80a974f4f86217582dad4bb3c88fcd63b",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/kotlin_bridge.rs",
+      "bytes": 16501,
+      "sha256": "e47673d0f367e316951e2f39ef5205ab9fc5a41fe224ac3be82f14734cc18d83",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/lib.rs",
+      "bytes": 13718,
+      "sha256": "69753b814dd608c011b815304fa6c549f6890d0a0a4a6e0347f6fdb73ee240cf",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/notebook.rs",
+      "bytes": 32223,
+      "sha256": "3fec92b66af72584630a5033e3f9b7be0295ce8c4c1023b176fd014f728faf32",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/agent.rs",
+      "bytes": 13082,
+      "sha256": "0dfd48c9f0ccaecc467eee7727fe0a5a512b6707697744c89af1414f80442af6",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/analysis.rs",
+      "bytes": 10207,
+      "sha256": "4c66cfd9d82f1fa417c1ce4db127b930c80465599aa0c0530dd00326314be48d",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/build.rs",
+      "bytes": 19706,
+      "sha256": "33487a3663a7a0f1fb1d1e5bf106f1595d5b2ab2f603b23b53cf608cf6f14f87",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/bytes.rs",
+      "bytes": 1356,
+      "sha256": "bdba29265fd0790832229f1ba023d511c37887b0ecc7ae66183eeef5b9d7dd05",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/coverage.rs",
+      "bytes": 2146,
+      "sha256": "69471e0da7bb262ecdcb0806eab91dd425435bb7cd6eaef40c08c389303d9971",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/db.rs",
+      "bytes": 16643,
+      "sha256": "5a359f89685523e89e1b4cff93f83a4eea8148bd2601eedb4738235a17041e41",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/debug.rs",
+      "bytes": 19182,
+      "sha256": "23b5fb9bb016f5788762d2d0b90a8057d90324a6034f26f9c07769e7cadedcd7",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/debug/output.rs",
+      "bytes": 7622,
+      "sha256": "ee9b047ebc37faa48ba23b541f32fe7658562eda95f0d7405f0b396118e6884d",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/dependencies.rs",
+      "bytes": 5395,
+      "sha256": "257eeba21c4d261ea697b0bf4b47f196b01889e5a371f14abe171d30237f5012",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/deploy.rs",
+      "bytes": 8612,
+      "sha256": "46963fcd3176c11c2ed803e05b4cb4ba3fe3f9ed0ebfe64bea7ef6d402290331",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/doc.rs",
+      "bytes": 2084,
+      "sha256": "ecf9340387d6f81553da44112066c7ef56cfb6ba74bac86fa10af70b899596ea",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/doc/commands.rs",
+      "bytes": 6249,
+      "sha256": "dfc64ea4f0b50c020190a9695e5d87ed15a065ec387d03c2aedd127cb76ecd7f",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/doc/tests.rs",
+      "bytes": 8474,
+      "sha256": "3783604178228299302310b8741fe6cddad9a44c3339e448ecf93c0bbffb4e6b",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/docker.rs",
+      "bytes": 737,
+      "sha256": "af5e827c9827f733587289e51f07bfc9d2ed9dbb607080e28d167ad583576b10",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/env.rs",
+      "bytes": 896,
+      "sha256": "86fde858888797e548b229b194875b253a67bef889cb13604527288c00dc94d9",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/fs.rs",
+      "bytes": 6397,
+      "sha256": "f09ea09bd0ad77e01112092528b63c2f67116e0163c4993d9f6e7d0b659d2eca",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/history.rs",
+      "bytes": 2220,
+      "sha256": "d942a4035ac0168c2ac932d8b889c17b4d14313fbb91c8132b88e20735d2eef5",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/java.rs",
+      "bytes": 12834,
+      "sha256": "22c44d7b18feac536907a4c98a85b6b262b2441eb0f2b3ee050379890adb5b17",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/java/cache.rs",
+      "bytes": 16840,
+      "sha256": "ecf49c31296afdb0ea27c8ea1d2f43a82f4f033350ea1dbf535b3e27a59178ff",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/jvm_icons.rs",
+      "bytes": 5093,
+      "sha256": "7123ffc80b096b4ef3830e9ab08cbe622441a1a66640582a2d6e4bf790621fae",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/lsp.rs",
+      "bytes": 34136,
+      "sha256": "36e7c409eee1ed59f3b50cfc8e2bb7b39e04bbb549056590c29193de7209f614",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/mod.rs",
+      "bytes": 2507,
+      "sha256": "7d4807aa974d389f1897bc03df25bc8ed16edb8a38da9fb1d3f66a143b8b63c4",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/nav.rs",
+      "bytes": 7660,
+      "sha256": "5f4c369a022526d10315e7b840d977ac7ce7fa96c6462decf505aed4ef87ac17",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/notebook.rs",
+      "bytes": 6540,
+      "sha256": "a33eca852d01dfa701cf4c727698f1114a8240f38a1713f78207a3fd719938b9",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/project.rs",
+      "bytes": 8679,
+      "sha256": "fc49b85c7fa1555cd4c3eae15e5520b26160482ee8b918d89e061f4ea5076e00",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/python.rs",
+      "bytes": 4219,
+      "sha256": "40d5611e78d96261d407c438cddd5f64d3db30ce0e4b9ca080352b0fd2ed03a6",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/refactor.rs",
+      "bytes": 4326,
+      "sha256": "3421e4dfcf4c978340574d619934688f44feae6869e28c28beef90f17c83fe99",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/routes.rs",
+      "bytes": 5626,
+      "sha256": "cc1ee4ad796aebf4ac0320801ce1943771f2a7286f272fc905e72511b5bd6d86",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/run.rs",
+      "bytes": 11071,
+      "sha256": "b57963fcfb6c0657af73bbba390cc4975ca4439c8acc3614cd3594048a9f0c48",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/run/commands.rs",
+      "bytes": 12989,
+      "sha256": "d1ba264f03049b686dc765802f5248d70aaf4149fc83ded792defc71cd97bf4f",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/sdk.rs",
+      "bytes": 6372,
+      "sha256": "68322337cfe382ec9d21e8775556cb48ba663faeb47e9070eeffd6d91c732142",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/search.rs",
+      "bytes": 4199,
+      "sha256": "b3176e942412c0d759cec2dd4655653ea483ddf93110cba9f87190463a4297e0",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/search/commands.rs",
+      "bytes": 4516,
+      "sha256": "50533665a4f28c049003a78fa0c0203630d20d550dfec2fa773328886898289a",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/spell.rs",
+      "bytes": 3601,
+      "sha256": "99abcfc2ee68762ccf3e68f22301233fcf9a685ecf7fe69c9c8ac022077a7f4b",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/syntax.rs",
+      "bytes": 6717,
+      "sha256": "6b5bf8fd25240a138f82c1946c8e63b96c8d8a6e401de9f286383760c7783437",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/term.rs",
+      "bytes": 3634,
+      "sha256": "90be17e7ec076570b5e191c82a396d7e4fe0a4a63303611a8f0d1f46bfdc4587",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/term/images.rs",
+      "bytes": 21357,
+      "sha256": "c90f55284c2d418cc953314f733ae142d49eb66ca238cf6bfbf28179ccb6aa8e",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/tools.rs",
+      "bytes": 6992,
+      "sha256": "787c22e4c43a8985a6d3f4fef475a53a7649d87d74e244f7c3ba52edb1b84a0d",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/vcs.rs",
+      "bytes": 778,
+      "sha256": "82c26787148a54ca1fc35724aab1d0dda7fe2511487ac0605370975d93c14450",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/ops/vcs/commands.rs",
+      "bytes": 53935,
+      "sha256": "89970b6d1e14381a5483c31a7f25177afd32da1893b89ef1098253faff6f1118",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/plugins/api.rs",
+      "bytes": 32944,
+      "sha256": "c7ad6a39199ec78ba04da2acbf10bee49fe39ffc85bcf30bfc74650088de0f01",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/plugins/icon_extensions.rs",
+      "bytes": 6357,
+      "sha256": "00124ded110afa7bb0b99d4a7c5a2ff701e54222edeefb3f99dae8c28b613f06",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/plugins/icon_patterns.rs",
+      "bytes": 4199,
+      "sha256": "7be0d743f66079c8daa5ae4c0976d9d00f45330ff9a112506433bec4ae32b22a",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/plugins/icon_settings.rs",
+      "bytes": 5905,
+      "sha256": "069e36cd1ddb89bf9cc85dd1eabf37ee90bd17c349a4117c9dec21e1cee06c68",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/plugins/icons.rs",
+      "bytes": 32682,
+      "sha256": "027b410c2ef43955e59e2947d6e75eb515b30e685ae8e6aca2d83bfd9b9fbea6",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/plugins/install.rs",
+      "bytes": 12963,
+      "sha256": "7f17bf300509b5680ba76d8d376b7374de39617ee25f3f10f1dc71457753dd98",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/plugins/intellij.rs",
+      "bytes": 37330,
+      "sha256": "757972094850ae9329731372cd6cc880455639704f2cfa57388955ec754ac8dc",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/plugins/market.rs",
+      "bytes": 21166,
+      "sha256": "fb15668473b78396d6290336ea74d45eda16d1c95e306f75fc05745f4cad333e",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/plugins/mod.rs",
+      "bytes": 95188,
+      "sha256": "ba734e2eee52fde5bdaa8d74a0c7b1aa92b57bfa4f978b655901e199615e3cbf",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/plugins/points.rs",
+      "bytes": 3821,
+      "sha256": "b178e02aad5aeb3f56795fb8ff4508f81c8225a8441c0ecb3d7121653165723d",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/plugins/providers.rs",
+      "bytes": 13210,
+      "sha256": "c9aa5176638f70adef2c7f575945b4f3f2cd20a08131f95e99a47125e1dc0938",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/plugins/remote.rs",
+      "bytes": 9380,
+      "sha256": "02f546a4384f1bef12687b2b6a977eb3d04a1bab1c530d9e2cc3fe1a4ca364e7",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/plugins/remote_host.rs",
+      "bytes": 20171,
+      "sha256": "78cf5e965ae1f280d7d603b88f912bf8a938c6ee6af8d2a244104b54cede222a",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/plugins/run_detectors.rs",
+      "bytes": 5731,
+      "sha256": "c6631c1377a483d74082b4480a24bbdaa80b6ea2fe6a479ec3141d448c1d3263",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/plugins/theme.rs",
+      "bytes": 8619,
+      "sha256": "6edf9039853fc26c54e224560ca65af5f517bc3735ca3611b5210e19b6078903",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/plugins/types.rs",
+      "bytes": 9370,
+      "sha256": "8b80309e9eb291ee9282df9ca1ada7f2da443970bacb16ebb93e82541b042304",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/plugins/ui_points.rs",
+      "bytes": 19969,
+      "sha256": "4f037f3c3ce31ecee48b1b111c85d344aeb0789575c8ebe6d4767519574d97d0",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/plugins/views.rs",
+      "bytes": 3733,
+      "sha256": "d4b65035548a44d5f9369b7a2e4e751531366d5a1700ac8a8edf66cfb8692886",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/plugins/web.rs",
+      "bytes": 11139,
+      "sha256": "ec026f43cf8895383a2266088fda0e0e24de3f2b3dfa8ec76da897a08bd9c247",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/project.rs",
+      "bytes": 71821,
+      "sha256": "0bc7cdf63bc857d1db91d365abd83f67413f39f16224e0e33168c0132bc81f17",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/proxy.rs",
+      "bytes": 2026,
+      "sha256": "29332ee37f3f68f105d4ac0dbc83d69caa5e26033621c12f9cb59fce90fc6b7c",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/requests.rs",
+      "bytes": 3705,
+      "sha256": "fcfe902fa5d96179a3281e5c40ec28fccbba7e8e86dfe989eb841da8ba339ec4",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/rpc.rs",
+      "bytes": 15853,
+      "sha256": "fd926d6b38d5990280edf1a3eabbc1f59b9bd75574e45f40922d0ef06af82f65",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/shell_env.rs",
+      "bytes": 11562,
+      "sha256": "aa526c17306132175658048aec64201e72081a4735cf9d3927ada35b8749c557",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/src/trust.rs",
+      "bytes": 12895,
+      "sha256": "9a56b68c17d5cc5655588a6a87a1ea31bf269e53af8fbfc9de1389dc6b9cfa69",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/close_project.rs",
+      "bytes": 2302,
+      "sha256": "1154cbee5b4776443200c610b5b6128262f088c3251464fb4b1b986b515bfb26",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/data_dirs.rs",
+      "bytes": 1607,
+      "sha256": "2c80c1d1ff5595eb49172d3e1f229a3f490f00b02e413134d9e3496e68052f00",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/distribution.rs",
+      "bytes": 23198,
+      "sha256": "db6dfe47706f6786689b15bd0ba65c6fcb5abe9c8194ec78fa11420ae9157fa4",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/external_log.rs",
+      "bytes": 5152,
+      "sha256": "64eea3771dfbea6368d841a3edd2f40e005637e8a5b6d3ce89f42bb1140c8123",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/language_smoke.rs",
+      "bytes": 42429,
+      "sha256": "cedd1820d52952796dbeded0ff891f434783975b374e2517cf38fae9a13670c6",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/light_edit.rs",
+      "bytes": 8049,
+      "sha256": "1115a6cfe436ffe3e4a1622397b2872e46cd04acce381790b14ba0028d1415ed",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/plugins.rs",
+      "bytes": 117906,
+      "sha256": "fd9bd35e16ea9cef45bc2bade592529ee2075cc430f07cc04e42c6fd845e1b00",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/properties.rs",
+      "bytes": 8241,
+      "sha256": "25ee8e2f75ee65218372162133f2c74859695b3c84a38091deb94dc82cba54a3",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/proxy.rs",
+      "bytes": 3014,
+      "sha256": "ca74705aeb68d0f482424243efe74217bffb63de1cda1a6ea707a5e8ae27886b",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/remote_env.rs",
+      "bytes": 9309,
+      "sha256": "805fb6063f4eccd5534807635ead562cd9d1a72fc55b34042010e8e687073b7b",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/remote_plugins.rs",
+      "bytes": 14661,
+      "sha256": "a454bf681349f6ba9ea172a031879399d11d95cd7012a981d1f562692e7ba620",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/rpc.rs",
+      "bytes": 22265,
+      "sha256": "030434a52688785237e86281287cc7b943c8edfe9c6bd6b8fbea6ff14cf1e723",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/run_configs.rs",
+      "bytes": 6992,
+      "sha256": "6c168e13a500d4fdb07c101dd471b6b459a47ba1bf9c6853a33bf93b9740aa58",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/terminal_activation.rs",
+      "bytes": 2832,
+      "sha256": "ac0cae784fd13dca6097bbaf4ddd23774af866c472a129122a8dc4679e71e2a2",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/terminal_images.rs",
+      "bytes": 2215,
+      "sha256": "75d2029190d9219df296e3bcf3ed7b0e8178820bdb62a6c5b5bc3a2e0ba953c5",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/trust.rs",
+      "bytes": 17483,
+      "sha256": "c499e23d606744e2a8ababe8dec2f204f908609f2f19677dc3227ffb0a1b005d",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/trust_git_binary.rs",
+      "bytes": 1663,
+      "sha256": "3a98cc6cf39bfe53ae8f7d6621ffa8a9c57a12862123ec25a93d629a16caf028",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/unity.rs",
+      "bytes": 4974,
+      "sha256": "2b994a3c357eed1d1b27453f41269c84b707976eaccc343264d40fb9789d31d8",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/vcs_documents.rs",
+      "bytes": 10061,
+      "sha256": "f451e1e5491115d41d1db78cfd499546efd1def4fe714a1bdba649876d6b0105",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/vcs_encoding.rs",
+      "bytes": 5324,
+      "sha256": "0856a92385dd2e90511415879620d74023b7496eec7d36f2a98548805bd3ac52",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/vcs_flow.rs",
+      "bytes": 9619,
+      "sha256": "334911953ee00ebb937e29e4df260bde25debe28b54aac4ecf7c4ee6e88506f9",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/vcs_roots.rs",
+      "bytes": 3093,
+      "sha256": "1985c691d03b8de6812b5c365edaab99b5821ab58420e93329c1dcc1418e9480",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/vcs_shelf_roots.rs",
+      "bytes": 6418,
+      "sha256": "1abd8320f2142c199930abee1c88bb7de2613da56043c9db213a3f757978ec02",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/vcs_worktrees.rs",
+      "bytes": 3755,
+      "sha256": "15d87a53e93d9bd60bbd883cbb353cc4054926ba75cdc1814517a02bd1fa797f",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/workspace_edits.rs",
+      "bytes": 10676,
+      "sha256": "bc62eba618a41cadb417c72d3f92540470b1516c78f8a715aa89435289565371",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-host/tests/workspaces.rs",
+      "bytes": 5834,
+      "sha256": "82b91a705e4d75c09a6876727e1e7582ec70e1788dbe8c8316026caf71a24386",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-index/Cargo.toml",
+      "bytes": 783,
+      "sha256": "824ed41488be0efa2099e7421f45cee9c58b532ca959329b18827906281f9d89",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-index/benches/index.rs",
+      "bytes": 1284,
+      "sha256": "b65c531e02568247c911a95b4d03cddbc77679e4b8c5a215f84f6e3f3d47d675",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-index/src/data.rs",
+      "bytes": 10356,
+      "sha256": "f49728311b98bbe342782c4d1c6897d9d1b48b114255bf4c215dc32418606210",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-index/src/filter.rs",
+      "bytes": 19552,
+      "sha256": "320e97c5b10693d84e41998dc1b399936c7f5858b91622ebb37470ae61a3a663",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-index/src/lib.rs",
+      "bytes": 15723,
+      "sha256": "a2d65d675feb6676f70a202aa429e1ac6ccf67ccab7fa1d5de4ba3d917ee5d02",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-index/src/matching.rs",
+      "bytes": 18789,
+      "sha256": "fe791b0bda7e6042d5fcddef6fd0e91f5fff8eeb982f808e2612920239ca183d",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-index/src/store.rs",
+      "bytes": 7410,
+      "sha256": "cfcc154a3d22a2d006d5039777156512a89f5f39ba70a64ee0f97428e44b51bb",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-index/src/tests.rs",
+      "bytes": 25878,
+      "sha256": "fc25624cf94b51e56293e976c52fe5ebe2b23dcf88bafe32a50702b95947ff4f",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-index/src/worker.rs",
+      "bytes": 17800,
+      "sha256": "7d48122a35e67a179f47ae39a041bf1e91f901cc5bac4a7a3ef0e67fbaec4472",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-jsonrpc/Cargo.toml",
+      "bytes": 531,
+      "sha256": "80df3de0f188bea7da32fa8ac50d94d56733c5bef730d7561bd411d932f2cf5d",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-jsonrpc/src/lib.rs",
+      "bytes": 33802,
+      "sha256": "b8a6e87ba77875de2c3737fc342bac2d84633e11aa67f8656a2c5bee6c561e0f",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-jsonrpc/src/output.rs",
+      "bytes": 4810,
+      "sha256": "aa8d546ec58d67640fb0ea4479403b34ce3be939c65c451b3e0a2a37384df43a",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-jsonrpc/src/tests.rs",
+      "bytes": 22648,
+      "sha256": "4307fa5c80bee8809eeae98aca078625f399300c44bae8fe055280a24ce2ad42",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/Cargo.toml",
+      "bytes": 1782,
+      "sha256": "4e6edb38c34a7ff4f1921f86098f2ea365898f97519bd7bb9bafae673d26a401",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/benches/syntax.rs",
+      "bytes": 3571,
+      "sha256": "53af76f5c78706c7b0d7ad2df418644cd66cf65c2d65398687d6bc0b52f3a2ec",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/examples/startup_cost.rs",
+      "bytes": 812,
+      "sha256": "54c5c79e9d68e824b5927bee756827b94e8e1a906581f15e3523e8d170480a1d",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/examples/syntax_dump.rs",
+      "bytes": 1715,
+      "sha256": "818d8fab000b296901af3da8394a2694fd916c5cacf05be9f479586c446f7e83",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/README.md",
+      "bytes": 666,
+      "sha256": "08b9580f1ab4bdba447b4bb9321c01f8c2a925aa4d3a3adccdee233cf115c7ed",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/bash/outline.scm",
+      "bytes": 225,
+      "sha256": "0461ae19817990502174974803a9da6d9d9c85e3abfa32a1658f4b593528bcef",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/c/outline.scm",
+      "bytes": 1691,
+      "sha256": "e1d5b1c139b11476791edf7007a66d7a53ddf1d4732afeb859fa32f794e04752",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/cmake/outline.scm",
+      "bytes": 428,
+      "sha256": "e5e26bc50eb15b01ad97769e79294132eb793c77a359df9f96e1347d939f43c5",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/cpp/outline.scm",
+      "bytes": 2473,
+      "sha256": "c703b433631fbaf2cc7df2b533b099cf6a6bf4b0643d4529679a2c593ab77517",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/csharp/outline.scm",
+      "bytes": 1452,
+      "sha256": "189a43a4ca84a89b2a726c5ba3e3264ca9cb65e31d2d0858abf3416218e907a6",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/css/outline.scm",
+      "bytes": 293,
+      "sha256": "fb6edce6c6e1b570daaddba80fd460f1cdf859256d601554e7fc4cb89d69ce67",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/dart/outline.scm",
+      "bytes": 2096,
+      "sha256": "1982a683372cd8387b8151e4df3b6b0b23df7e420d85f799a40dd7bc5c8553ce",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/elixir/outline.scm",
+      "bytes": 783,
+      "sha256": "7193cdc36cff38f521a53c1edc22b99f74bf45845800bdf125a8089bd4fe6518",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/gdscript/highlights.scm",
+      "bytes": 2002,
+      "sha256": "3970fbfe61d7c4dafae1be76eac925f0afa2e59d1910637557ce22f82aed720b",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/gdscript/outline.scm",
+      "bytes": 883,
+      "sha256": "05304d4f0cc27f50b6084d7ba4be62463f3104c86eefa7f0625208a3976df04a",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/go/outline.scm",
+      "bytes": 1261,
+      "sha256": "806e383a0898812591350592de79dd08171019d82a5f0dd726a513b21265dadf",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/graphql/highlights.scm",
+      "bytes": 1541,
+      "sha256": "74535bf91978380ffb0e6f912d93a0da4a83e4e13d4038e53573b901cb028250",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/graphql/outline.scm",
+      "bytes": 708,
+      "sha256": "12bc0099a0a647b0972bb5ae79881ad7d7cbb871b196017ac7393364f38bb6c1",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/haskell/outline.scm",
+      "bytes": 737,
+      "sha256": "219f287819005d7b0e0ee66170ff51b553a9e508e3c7c2952b13e33007a20751",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/hcl/highlights.scm",
+      "bytes": 1098,
+      "sha256": "a0c8cd8b32e08954df75f40438516fb109bfdbf4839be3af4387ad1cbe662c0a",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/hcl/outline.scm",
+      "bytes": 170,
+      "sha256": "5005d8c3b6db5ae343037581b02887e9b6b239990ce705aa45f8419e893b1a74",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/html/outline.scm",
+      "bytes": 461,
+      "sha256": "1633411f21bf889610399bab478d6ab3040211d7750bb1e81327fce090c624ec",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/java/outline.scm",
+      "bytes": 902,
+      "sha256": "39c2a9a681f202be761f5840831f78f08b010f038cfcd0cf20ade2fea922ccf7",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/javascript/outline.scm",
+      "bytes": 1701,
+      "sha256": "8751d5c47a2038bd3db29f1ccf38bf402f69c56592e35da9051526c721cebce6",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/json/outline.scm",
+      "bytes": 40,
+      "sha256": "4561b2f032b8f5ce5dbeecef2107459fef4697c5d75bc725d0168463a29e8e27",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/kotlin/outline.scm",
+      "bytes": 835,
+      "sha256": "f15c070993a3c2f0c156d8ebc939b2d1b7cd2931612691bd542a6856bb673cee",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/lua/outline.scm",
+      "bytes": 923,
+      "sha256": "a22cd6add92b11c000ae8c3857fe0c37c3f58fe62efc1e71a83a653a127e9e38",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/make/outline.scm",
+      "bytes": 141,
+      "sha256": "8c0ff58067380aa05d3e0576843f7485fdc803e770fce75ca9624c0417a48050",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/markdown/outline.scm",
+      "bytes": 139,
+      "sha256": "8009f64e84e1187d472a0c74f4feddd5a71b17ac89bb0bd2e2a374c391b4adb0",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/nix/outline.scm",
+      "bytes": 136,
+      "sha256": "7cd11419ef42f6585d59b7426fc35193bb68a06ec31dcb731086377c79f9da38",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/ocaml/outline.scm",
+      "bytes": 1195,
+      "sha256": "fcda83e5b2168bf2ec97b9d3e546f2b98b963296f0c814f65c5401f1f8f263d7",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/ocaml_interface/outline.scm",
+      "bytes": 850,
+      "sha256": "381600a229aa8e8ee9269f70b1c0dad0ba3932582a4462897e53e0dae49d40c8",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/php/outline.scm",
+      "bytes": 728,
+      "sha256": "6417b99d704952731008a8ef56f46a7645e6402a7cb0bdb922b3d8edc247623b",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/proto/outline.scm",
+      "bytes": 372,
+      "sha256": "7272c7c57fa9c439069240e7bd4d980023191239af4a1bc73dd3ae25fed98045",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/python/outline.scm",
+      "bytes": 339,
+      "sha256": "6135f34766db777e72b489f6d0ca42081fc6c1f380139d8bcb3c6573f33e4f47",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/ruby/outline.scm",
+      "bytes": 507,
+      "sha256": "656f231368e71859b77f23e97a9c67cb95a2d3551e8a5f2b8673242b7bb8f875",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/rust/outline.scm",
+      "bytes": 988,
+      "sha256": "d33f9b98772b09620c0f232992db48246d5b998fa58c3990f84fdccd815b369e",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/scala/outline.scm",
+      "bytes": 1204,
+      "sha256": "8832686dc5e0dcda4f97f08112595ed144b8e8f6407999849b8636896cdfabc3",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/swift/outline.scm",
+      "bytes": 1362,
+      "sha256": "b0e86aaff6a7c06cd7430b646b544984452e4b806553f91b495bd2c781252f5d",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/toml/outline.scm",
+      "bytes": 217,
+      "sha256": "b596ebab2ac35084accdefc7fef196c09868c8aa1fd17881bb3cc4f7e8469bdc",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/typescript/outline.scm",
+      "bytes": 2574,
+      "sha256": "40aadb75dce47ea96a39df050be586c36472463046712ad390991b923035bcc4",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/xml/outline.scm",
+      "bytes": 98,
+      "sha256": "5522f139c9ce2f4ad1ab268010c0ebd6d5b24d993ae90376b14cb7fd230172c8",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/yaml/outline.scm",
+      "bytes": 89,
+      "sha256": "338aa7c9c20c15fa79c590ef82a4ed3a4e494bb64f7e0d6a2ee486787d5186c9",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/queries/zig/outline.scm",
+      "bytes": 831,
+      "sha256": "f8cd3372d8f6d1b9d6b2b29adb96f25075e45832eb71538dc59aad5f06fb1f0b",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/src/lib.rs",
+      "bytes": 11604,
+      "sha256": "9918bca98700054c182373256f240546a57eac9ca11b4ce62fe85ec40cc855e1",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/src/markers.rs",
+      "bytes": 6270,
+      "sha256": "e30740699529d35828b9c76ad7179ded085806da5500d0256474e839d50182ae",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/src/plugin_point.rs",
+      "bytes": 11953,
+      "sha256": "ae57aa5f348b6034b1805643ca204cf87c8a6ed13a3b0ca446b5a8a961e1a012",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/src/registry.rs",
+      "bytes": 43865,
+      "sha256": "4973cec04b0a58924879ec9d6928a9bf8e274dfaff4d3c90a3dbadbf9a8b96c9",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/src/syntax/cache.rs",
+      "bytes": 19637,
+      "sha256": "9faecfbca8d8a8c78489b8810b833364da29c65f30ca19d746e20d40f55b3c3f",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/src/syntax/configuration.rs",
+      "bytes": 12384,
+      "sha256": "cb75048f16229d78fc0641a9435cf1c7381436ac9b66319338e6fc8ee202db43",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/src/syntax/external.rs",
+      "bytes": 9347,
+      "sha256": "2d77fc076d5c03b61fd226cae73dab9f8909350651c2cee1961620a048da6b1a",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/src/syntax/folding.rs",
+      "bytes": 12844,
+      "sha256": "7a8ededd3ace1d73e2acf05aa0dc98bb25ee3af843a36eadb8f21bd4aa243108",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/src/syntax/grammars.rs",
+      "bytes": 14711,
+      "sha256": "cfb1bd16019b93ee0de96626061b940dba2dff02c75144ea216d07f881f960ca",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/src/syntax/highlight.rs",
+      "bytes": 19802,
+      "sha256": "a75012e41b65bf11fb4038ce9901e362969831c57538ad5f6878356d018a7338",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/src/syntax/lines.rs",
+      "bytes": 6261,
+      "sha256": "7cbd88814ed2c4dbfa6a5e04a55c7e461f1beca22e6c745f59d855ff4914b940",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/src/syntax/literals.rs",
+      "bytes": 4427,
+      "sha256": "dd39d144ac0e804cf3c6a667c82c660d572ca01ccd9575dfda20af848980b416",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/src/syntax/mod.rs",
+      "bytes": 15460,
+      "sha256": "a7ca12009113b67efd2d3e775b4537ca6e69adcb85dcac9f1aae892734805b8d",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/src/syntax/outline.rs",
+      "bytes": 18372,
+      "sha256": "3db4cafc5f5fdd7d456eab6cd7a1d7256fc7ef32a87d1bffc1c19c2755cf649c",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/src/syntax/selection.rs",
+      "bytes": 4732,
+      "sha256": "2e3bb42637951ad4908d0f67b08bda4ebf12f1ee2309d40c833370786e1c798a",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/src/syntax/tests.rs",
+      "bytes": 40753,
+      "sha256": "4e9c91c37bd752579e07d8be0778d0d1bdd6bb806fd3e908f3cd2860dc2401f3",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-language/src/syntax/web.rs",
+      "bytes": 14221,
+      "sha256": "f30d8dd3f678945f0c171eeea9e8f22359155184d4b744eb22b5fe76e4b7a469",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-search/Cargo.toml",
+      "bytes": 640,
+      "sha256": "775331166a1bbe3bb82003668984a6518812986f4eec5eeae7dbe3a4c56360f5",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-search/benches/search.rs",
+      "bytes": 2438,
+      "sha256": "1e7f943ddfa87b93fc4e8e5408bdb88873314a9d22c1ca5a5485f99114cdb887",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-search/src/engine.rs",
+      "bytes": 16959,
+      "sha256": "df7048bc72800e03da18dccef27a5c5e4695998fd85d2b3a86286df8d1bd8b98",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-search/src/files.rs",
+      "bytes": 5432,
+      "sha256": "327d0d4f683d66ee1978f1f30ef49a52d0c6e250f0ead7659c49f9f79eb4485c",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-search/src/iter.rs",
+      "bytes": 1742,
+      "sha256": "b2d42dbb0a3720bb686e6a3b261e99aa26752170893c6691c7d68a3f58d7fd4f",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-search/src/lib.rs",
+      "bytes": 10634,
+      "sha256": "486ad75cd1106eeb5e771e5323710974af5ade0ff3ae5406edcce5456214432b",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-search/src/line.rs",
+      "bytes": 6269,
+      "sha256": "9c28e46d49f90f56b24deb33fc2ad71e12f4b34c214ad63a0e526ada28718592",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-search/src/mask.rs",
+      "bytes": 4547,
+      "sha256": "6a884c96a6a457c9e9e806244d66093f4b6424cf8693957a1be0f69da5898a01",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-search/src/pattern.rs",
+      "bytes": 6275,
+      "sha256": "fc03f113019942676a9cc6d272b0474e741dad82acb53836bbff4470d85897c1",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-search/src/query.rs",
+      "bytes": 4128,
+      "sha256": "25d996f461e3fa87eff5bc2fc63d6c53a1d4c0df99a9a9db9b13618587bac43c",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-search/src/replace.rs",
+      "bytes": 8735,
+      "sha256": "84dce3d83d8ea83eff7174f639a624fc69e135b1d13defbb70d61f99672724d8",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-search/src/words.rs",
+      "bytes": 4936,
+      "sha256": "d5f6004adbe6c99c87518216e00882f589304e52e83c6b89047932a7eae8f281",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-search/tests/replace.rs",
+      "bytes": 6384,
+      "sha256": "26724f46c4279c18669c47cea5faf6f034bc6ba29c1bdf0ced58d99a62f8d906",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-search/tests/search.rs",
+      "bytes": 29354,
+      "sha256": "b89b1bc07eed35eb2c4a43d752bd9add992002bde1ee9c8a7a99afd92e67036e",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-search/tests/snapshots/search__literal_search_shape.snap",
+      "bytes": 522,
+      "sha256": "642fa8d55f0f1708232ba35439b00a017deb1ebef7ab0e05338786229a637ee4",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-search/tests/snapshots/search__multi_line_regex.snap",
+      "bytes": 197,
+      "sha256": "393896f0a557d5aad151844ec4774a1a8f9269813427735e2695e57e08938b4f",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-search/tests/snapshots/search__unicode_columns_are_utf16.snap",
+      "bytes": 469,
+      "sha256": "01816edf386266109a76866bec7e2ca0e87b8f370cb28626e9fcee112aef2242",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/Cargo.toml",
+      "bytes": 719,
+      "sha256": "a41eb936d642f6c74fd005133c5be9a56854f5273b6de0765b1bbb4a7611ad0d",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/bek.rs",
+      "bytes": 6790,
+      "sha256": "64a136f4db2bb1a32233cc55fbb1ac253e3015eb3da7034fada9c15f09a6678a",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/blame.rs",
+      "bytes": 2770,
+      "sha256": "123c7a9d435d76f4e5f282dc2da9b4af576a2bf8f7d9bd8c8cdb7cd1a431bdcb",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/block_history.rs",
+      "bytes": 8975,
+      "sha256": "efd0dc6a4173af1ecb0d3cd7c956000f811309891d81edeaf117347d94bb947a",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/changelists.rs",
+      "bytes": 4498,
+      "sha256": "d50ebb9783138b2532207cca615bb428df7fbbbbb7870d970d201999a5a6c130",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/cli.rs",
+      "bytes": 32006,
+      "sha256": "2430d6bb4157424c9f0c32fcd6d2abc6d57c37f106b4445ee03c0794bf2a2c26",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/compare.rs",
+      "bytes": 25167,
+      "sha256": "81a98fd68438986a9f22028ec97f11b3c6dc3c3892a190e3328a8c193115b905",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/diff.rs",
+      "bytes": 10048,
+      "sha256": "7d3dc0226503bfefd5763b2cce165ed685ced67649089e1be0c41c1e6eabe9f9",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/history.rs",
+      "bytes": 44309,
+      "sha256": "bb948dda1f1c2c11f1ffe98fb370386e02908d3b8363154903b3b6aa95ff7a42",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/ignore.rs",
+      "bytes": 14991,
+      "sha256": "95f0a83954de46902bd7b34171efb10ac5cdfdd0a09128cf3d9dd39bfc22ec0c",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/index_writes.rs",
+      "bytes": 3737,
+      "sha256": "39a303b23001ddef802687a4cd962e275a134d4a526cb06fa468b1d0a3827c80",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/lib.rs",
+      "bytes": 63380,
+      "sha256": "9631682fe7514baea0a6425aafc359ec10968125d4cdbda32568586e4e2e8295",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/log_index.rs",
+      "bytes": 15812,
+      "sha256": "0d430894f19e33de49474ce42dab9a7b299851010a6bfe2ef4ca05f8d29852df",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/manage.rs",
+      "bytes": 13513,
+      "sha256": "ec0f29fa23d89557b725be6b7368b1046c6d9b77b07e986cff1aba3b683ad9fe",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/ops.rs",
+      "bytes": 19348,
+      "sha256": "c962f5ab840a25fda3e36213d0d02d739f1c6b149eee241a4ea0cb7569244dfd",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/patch.rs",
+      "bytes": 18728,
+      "sha256": "38e6bc6c36d928b2ea0642851001595db3432beead80a341f9b29d5477ba5e8a",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/refs.rs",
+      "bytes": 5866,
+      "sha256": "f2b4b3ed5790f357c0d72ecab67411d1493f7cec53e00798c4baf96ed570c203",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/remotes.rs",
+      "bytes": 4665,
+      "sha256": "fb13ba8a85bb6ead84f614fb5938993cc4186b85a1e70dea0634fca93850c346",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/repo.rs",
+      "bytes": 10325,
+      "sha256": "8691d28bc2584f4a05703e559170e8ff94c81b1001609eb19aafdbad3282ecee",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/roots.rs",
+      "bytes": 11155,
+      "sha256": "667cc084878515b9b67ce925b3ee490fc317af08350c93e7a90eb551ccba433c",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/shelf.rs",
+      "bytes": 14539,
+      "sha256": "31e1c4ec6a2c04d0cea2472d65b96ad79b44c66ae1583ff183f378660fe5bc85",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/status.rs",
+      "bytes": 10682,
+      "sha256": "0ac98dd2fbbaae6c092bf61ce387e1db0ab16d20ef4146c13b1b4e5bb964e113",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/text_encoding.rs",
+      "bytes": 3372,
+      "sha256": "a01039b86fe8ad58778b80fe2ea9490d240e7cdc5c0574eb77df4611a33cacb6",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/src/write.rs",
+      "bytes": 40502,
+      "sha256": "87e4e286c5ba0902483ebfac3e2a2d47c374aab0ade51bdff7ccfb6f7aa53c4d",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/tests/block_history.rs",
+      "bytes": 4934,
+      "sha256": "4cc31c09577cf25c9b7a93b0d44961806ee945fa25308a15133d924bdad85c1b",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/tests/git_workflows.rs",
+      "bytes": 32780,
+      "sha256": "581465149efd885b2199533b742ae224481131bab4c07e250eec62904c566a7f",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/tests/history_ops.rs",
+      "bytes": 28540,
+      "sha256": "7716fe8275cb74c869767c2708471353e446e12521cc7c15202c9f8cf3a4c7e2",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/tests/ignore.rs",
+      "bytes": 14919,
+      "sha256": "adba0db4cbae6957fd6499bb814c4e86faa4048a9fa32072a182416583addfae",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/tests/log_projection.rs",
+      "bytes": 18513,
+      "sha256": "d849cfd010a4d59d2ddeae741d27e692c19a388085cadb5753a3714fa0d14e2c",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/tests/log_shape.rs",
+      "bytes": 10121,
+      "sha256": "b3905c89a653603b0ff2d3d2cbb8a95df043e53096d2ce5358d8064fec899ce8",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vcs/tests/repo.rs",
+      "bytes": 73609,
+      "sha256": "632f8f9afcf4876f5c7b4917e4686ae2e47ce9398c13c905c589c59c618173bc",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vfs/Cargo.toml",
+      "bytes": 714,
+      "sha256": "9187c09be14c17f416f704e61c998d7241407f51158c5f6d1423aef7fd98e916",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vfs/src/archive.rs",
+      "bytes": 14218,
+      "sha256": "89b6e54979edc38515c8cca03c12cfb441ace6c5f77732faaf2bc6ca2a09aeb6",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vfs/src/bytes.rs",
+      "bytes": 8026,
+      "sha256": "99e8e25864dc5b58feea477907930b010de0d7497bce940a6dd2846dd68b9ed6",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vfs/src/compare.rs",
+      "bytes": 20485,
+      "sha256": "6259f302ec784b2157576610af13ee6689280fd81f1758343bfbed766a162a69",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vfs/src/encoding.rs",
+      "bytes": 21430,
+      "sha256": "35fc3020ba453e3ce704596cce8d2645a2b514bc4d2bbedf85d030339ec487f2",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vfs/src/lib.rs",
+      "bytes": 15569,
+      "sha256": "1cc94ba2a711c8b4a5cde9c2c443f0bafc982cf3b5d1697bb88dfbc3393d4726",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vfs/src/ops.rs",
+      "bytes": 5710,
+      "sha256": "72f2d95086f945d7aa9d6d9bffbe9fa81eb7851da80ddf35e55b209dd1b58fa0",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vfs/src/rules.rs",
+      "bytes": 11350,
+      "sha256": "b1c343d6bd1dc7bb372005d537539e3c3a89d4999fccaaef3a0ad8383cbec493",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vfs/src/watch.rs",
+      "bytes": 50653,
+      "sha256": "49c7129b14622bf90d223930a026b6187fd3fedb5ca60c4d794b6f6af4b1bc55",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "crates/ide-vfs/tests/vfs.rs",
+      "bytes": 18300,
+      "sha256": "1dca4582baa398e7ca887b49843759ce44786eb3b7bfe5da6a266889b000462e",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/asciidoc.toml",
+      "bytes": 157,
+      "sha256": "8d246c2520f72ca1d9b569a666e6d622bb389618df1580b3051d9271cc367e97",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/bat.toml",
+      "bytes": 142,
+      "sha256": "3c4f2704c21f370cac5744615ae004898a836bcbb280f31ab8c83ca261bf1dd2",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/c.toml",
+      "bytes": 765,
+      "sha256": "40e8ef45fb00fda73c8174d8f7cefa770c829ce7c63aaf37d13acbad9f4f86ea",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/clojure.toml",
+      "bytes": 489,
+      "sha256": "8d6293110bef061bdf8061d6f2f21d7f17dbf54c206a72abd52eec006b226b7b",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/cmake.toml",
+      "bytes": 738,
+      "sha256": "4e3e71553767544787234b605337b161f05a798b912e06cd66059c38102b40b8",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/cpp.toml",
+      "bytes": 850,
+      "sha256": "bbcb03f2a798bcc91d71f103814a26578824083ee3eb90f4997f8283e44535e3",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/csharp.toml",
+      "bytes": 615,
+      "sha256": "262c3145f74afcf43494c1e62f74498ea1c7152ea905c1337064b6c3563d342e",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/css.toml",
+      "bytes": 498,
+      "sha256": "b81319ae4327ef1035af03ba3409c1ae300b3d75c5450d10bae94f9cfcc5de5b",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/d.toml",
+      "bytes": 386,
+      "sha256": "66053e10be5a6289d71174a44b449a4ae2e01f6dc4853a95efeebbde606e86f9",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/dart.toml",
+      "bytes": 598,
+      "sha256": "93e1d09127eb7bae5b98c6f44450560c47dc0713df99b9de0abac6916daecca9",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/diff.toml",
+      "bytes": 173,
+      "sha256": "66eb7f5e3bbdc390783ae89e78b8b908d1ffec5ae38c1e05dccd109113238ac4",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/dockerfile.toml",
+      "bytes": 489,
+      "sha256": "4216d12be13a6be51ab685f9340c7747e83861f370ff949d44d0a0b61f37114f",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/dotenv.toml",
+      "bytes": 189,
+      "sha256": "01c65e46c05a3e3814e9296c62c9c142c7b01d4d995f6713d0878e1d90c0d5c4",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/elixir.toml",
+      "bytes": 585,
+      "sha256": "2221a8f604518b9c1d5e0911d4e377af5662456e0f8804fb9b3ab92cfbbf2de9",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/erb.toml",
+      "bytes": 205,
+      "sha256": "5e96084777c02449619e8a77b148f73a9052700f3ebff3dacf4f7c19aebf3f8f",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/erlang.toml",
+      "bytes": 498,
+      "sha256": "32bfc1facce84e0faf10cb690d243da240c6edf1f4ab51c63a3945308b08e4b6",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/fsharp.toml",
+      "bytes": 688,
+      "sha256": "a4386ddf62822f29ae2232d731bfbe0866fb0f445e8238ad875339669b5889ee",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/gdscript.toml",
+      "bytes": 1194,
+      "sha256": "77fc1e6e5a5c3b44989004f78dc0acb27cd5ad636e07e9cf96fca56a141f0558",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/gdshader.toml",
+      "bytes": 262,
+      "sha256": "864c9f710eede97b494c0dc1de4132def634781e7a0f2a85ca1a0f538c5f151b",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/gitattributes.toml",
+      "bytes": 143,
+      "sha256": "ef2e46d3c11aa35ef9ef91328b5432af540fdd580cecc8811000471a3c3570d3",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/go.toml",
+      "bytes": 571,
+      "sha256": "ba9f91844164085b2f5220a72ba3d94e97d1d66866f7538b8d49c51838a5c5eb",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/godot-resource.toml",
+      "bytes": 356,
+      "sha256": "b205ff97e49232c2932bc6a7d7e4f9d80b4d8d25df5a9991fe28ace15aff2ce4",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/gomod.toml",
+      "bytes": 277,
+      "sha256": "f1aeb75d78d60c0709e937a8ea5439809003b9f5c6cd93d8d6949b92fdef0fdd",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/gowork.toml",
+      "bytes": 272,
+      "sha256": "c6bb486c81e6a8487102673844c85f0aff872030a2c0ca3b868e8f60c5e53a8b",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/graphql.toml",
+      "bytes": 587,
+      "sha256": "7bb11c399181f31f0ab6e762b7b79206c9b121c050cc6eae4e791441dd675b22",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/groovy.toml",
+      "bytes": 540,
+      "sha256": "b6cf86cdc93d415276bbe4ecf72c6ca76d55252a3670c83aee2cc860ac5d9787",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/haskell.toml",
+      "bytes": 449,
+      "sha256": "408b46b2aef2c0a822da407d2e0626cbc5e9ff38505ebd9d6e0541ec34d4af18",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/hcl.toml",
+      "bytes": 181,
+      "sha256": "4bae952eebcbb7eb228a855cb5358b5034fa30238fcd7a51ae26fae0a0c0fa7c",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/html.toml",
+      "bytes": 1281,
+      "sha256": "d964767534785f8b05375069ddb0fa5f00e8b543ccd1710167a22d64a130bf7f",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/http.toml",
+      "bytes": 241,
+      "sha256": "e9dbf65b1a584b1d6beb5da0bcf526a193ec316dcdeb06ca4f3465f064694641",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/ignore.toml",
+      "bytes": 441,
+      "sha256": "e9d2db4f472b0f4d214ef34ba2b38e7545c2d80e26f057315705d78d64a148d8",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/ini.toml",
+      "bytes": 460,
+      "sha256": "91a9a7531815e25f5adfd1146fd9b23233b02f0d78d829305a1078e292989a66",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/java.toml",
+      "bytes": 2677,
+      "sha256": "8ec163ecc4c91bd7400d78759bfe360fdf89d622efc8467c02422872041bb9f9",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/javascript.toml",
+      "bytes": 2193,
+      "sha256": "0a621b2902f1f2dc744b235ee81388476c5bcadd719e452008189982d2e48b84",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/javascriptreact.toml",
+      "bytes": 2133,
+      "sha256": "cb6fb26e1a04b35b6f0cd1546ca8ae2ae433af6eb3e2abfb8593a2f5bde4c1e8",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/json.toml",
+      "bytes": 587,
+      "sha256": "dccc24b902e0c34fc12b2d96cddfae03d63ed7670b4aff0f5aa5e206413f41e4",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/jsonc.toml",
+      "bytes": 930,
+      "sha256": "e90457f44f0cbf6889cc207e6276977782d464149c27efbcd401d68caf0b3170",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/jsp.toml",
+      "bytes": 189,
+      "sha256": "9b22718375a7b3370bcf417fe026f4d18a77f375d8fe4a1eec8959b2c75229e1",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/julia.toml",
+      "bytes": 469,
+      "sha256": "1473891c2c7a059797cc219b5f0f2e35bbf58da828f0c50afef6cb25a49c7711",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/kotlin.toml",
+      "bytes": 1216,
+      "sha256": "c735ffd1c08b8f66463f2bf77b617eb9b8906be7ad4384e62ec1f2b14eb801a6",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/latex.toml",
+      "bytes": 401,
+      "sha256": "e9f14813efab3515c3f602a1b335bfa491a9b51f9f9178602888a6e6e01a6b7b",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/less.toml",
+      "bytes": 484,
+      "sha256": "8af705b8e8073e8c6413d0de023aef83c76e6ea1654185ba80cbc36ddf8d9f26",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/log.toml",
+      "bytes": 93,
+      "sha256": "23127ed0097cb3e6eb38b9677f8f8fa9c2947094091ad2115e0bd1d1fd788f26",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/lua.toml",
+      "bytes": 532,
+      "sha256": "4b576b26850ab305b3b85b3c89649eee0ee3d713d54171c24ec991fe84c3674f",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/makefile.toml",
+      "bytes": 296,
+      "sha256": "348bc261e12e9e329e80bbca3218583971c30342a3a345e15d252fbd752d4038",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/markdown.toml",
+      "bytes": 525,
+      "sha256": "2ced624f026872e526757c7e6160578e25c7f48e51155f3fd0d3fb49e68c263e",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/nix.toml",
+      "bytes": 566,
+      "sha256": "f3e87098437ec1ed19a6650f48b2b92f593e181dd4a65017b1d841f175b4aa53",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/objective-c.toml",
+      "bytes": 548,
+      "sha256": "922f8614ddbfdfdfa564d57ddbb0cace9f5bb44de09f26de178ec25243c55667",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/objective-cpp.toml",
+      "bytes": 555,
+      "sha256": "61bd9f085e2139c80b929f4d9b069b95ee5352287153e2a8d48137127118ea92",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/ocaml-interface.toml",
+      "bytes": 392,
+      "sha256": "539157c89fa6442c341dd972e909eb7bc504079bfc77eddd936f733a4b188f04",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/ocaml.toml",
+      "bytes": 498,
+      "sha256": "ed61951e17ef9515dd4a46b2e74b165f2b3314b1dea832bb31bae0099964ac1a",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/perl.toml",
+      "bytes": 385,
+      "sha256": "cd1b5b6d0ae917591f24d714eded749c88026946e2edf43fc1164a7f03fd4eb5",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/php.toml",
+      "bytes": 1072,
+      "sha256": "e2a9c09302387d697278c1d549b99490d17516d44118a6a9c48fc8a11e64b620",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/plaintext.toml",
+      "bytes": 254,
+      "sha256": "b9793cf1b85dd16f07827af787da8de6c558af999896e50c136fc146aca80137",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/powershell.toml",
+      "bytes": 986,
+      "sha256": "e39af03b1bd8789ee1863bfe45c57a69916b0c85fa1bb12dc42848b4611f00e0",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/properties.toml",
+      "bytes": 225,
+      "sha256": "31b17a67358f4c8fb750a8995e1cf3ed1ac4cc8cf4015ee7ce0400277a4af4da",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/proto.toml",
+      "bytes": 423,
+      "sha256": "8924444c74d2ffcfc9fbc50a162203d5a03b625302fb76e96972885b644b50f3",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/python.toml",
+      "bytes": 2338,
+      "sha256": "b1821449beba698cafc4cc37bc55ba6dff2890d718929e3539bffb63872aef14",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/r.toml",
+      "bytes": 425,
+      "sha256": "163dde556241900c9a9b411208e89ad56a28340e09786529b532869cbbc8c983",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/ruby.toml",
+      "bytes": 848,
+      "sha256": "5b08e0835c6d2cff54753b2fd4deb9eff7c05419db23e7fa3ac1c2d8c9b0684a",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/rust.toml",
+      "bytes": 627,
+      "sha256": "7b7c9f1689f2aca595203b388a1af6673220e36bd3b9e8600c413618e82a4fea",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/sass.toml",
+      "bytes": 162,
+      "sha256": "2200d3b6f863e6a9aade74d1c9033ddc21e50da90fc49415a3e2e8286a0dde34",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/scala.toml",
+      "bytes": 436,
+      "sha256": "18d50daeb37a9e2e55e8d2f2177454433785807118dd9848679d5b7ce9d58714",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/scss.toml",
+      "bytes": 484,
+      "sha256": "5ff78d40c8f57b7029a8b8ca4505fc49213310531d6f0f904130efbf87ad9510",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/shellscript.toml",
+      "bytes": 852,
+      "sha256": "6ba801961e03c80e9a31860a8656c3a2733b7f70e4524f439079ab7f74261769",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/sql.toml",
+      "bytes": 314,
+      "sha256": "15b8e40378fc96f308e2d37558e2fb8ee4bfabbdb28afb016ac1476b8bfaa256",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/svelte.toml",
+      "bytes": 779,
+      "sha256": "1d4649d10dcc96d889f39622cbdf4c9704b08418d23781442a2a581a4b4b74ab",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/swift.toml",
+      "bytes": 633,
+      "sha256": "0451acbf7b68b792649886ab21b147086d2d802f52a5ace05014c5e3f935f670",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/terraform-vars.toml",
+      "bytes": 387,
+      "sha256": "f18f039fedc97c37bcede367a893a1bbc1ea6053248e89c08edbedb5d82e315e",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/terraform.toml",
+      "bytes": 479,
+      "sha256": "634a742d4669fb5207ba7b220f670e346b35fa139d36d759d950e2551919ac91",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/toml.toml",
+      "bytes": 412,
+      "sha256": "e063125e21dc3a9c9f622240ed139272f3b5f655b42e27aa3290a3b81b3e2bc4",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/typescript.toml",
+      "bytes": 2656,
+      "sha256": "aa7bbac541c0a91868e3a884a0ee6865fe3b52fb212e6976599294cfce46cfde",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/typescriptreact.toml",
+      "bytes": 2131,
+      "sha256": "95542819b4ba2c0a781f22af60797f8343e583d528e4ae1f6941293fe138044c",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/vue.toml",
+      "bytes": 1713,
+      "sha256": "af3a045680ecbc994f3cd24e7bafb57f3a492fd9917899774aae39f90bfa1cc0",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/xml.toml",
+      "bytes": 668,
+      "sha256": "f74f0cff3e7bebdff6bacdf17c868f7cea4d8c5967e364fbea88f2804bfc6ae3",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/yaml.toml",
+      "bytes": 499,
+      "sha256": "78acfa68589fc635246222111088a8be49f91ef7fcb8a40d10f13631c491018f",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "languages/zig.toml",
+      "bytes": 529,
+      "sha256": "b4ab85286020386e78eb395aefe04c3acae5ae52a38bd6999ac0d7cafa2cb2da",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "src/features/vcs/comparison/__tests__/idea.test.ts",
+      "bytes": 4834,
+      "sha256": "f96527032facd802e43bc0e229a3541f90dccf7d6abbedbaed01f05b1d4d198e",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "src/features/vcs/comparison/__tests__/ideaCases.json",
+      "bytes": 61756,
+      "sha256": "e71bb944f0b743cbc6e1b2d6d2d0b50e62ecbdaa97a64aa9ef534f635f98a486",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "src/features/vcs/comparison/byChar.ts",
+      "bytes": 1139,
+      "sha256": "8ff26bc572381ac1348acfda98c6bb98140f9a6c62424ce68966baba78aefb1a",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "src/features/vcs/comparison/byLine.ts",
+      "bytes": 7433,
+      "sha256": "8698349319a6c965f578a78cb7c68d5750ced89f95813bbb080ba51bc220eaa7",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "src/features/vcs/comparison/byWord.ts",
+      "bytes": 17159,
+      "sha256": "c4b76b16942ae211a0aab47a07c4368df44dd02cbd7b9ab773d5d7656019be4e",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "src/features/vcs/comparison/chunkOptimizer.ts",
+      "bytes": 7205,
+      "sha256": "68d0f2470b0f1dfdafce3302c474c62bc11d4f335c9cc44f30ca9ad31e36efb9",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "src/features/vcs/comparison/index.ts",
+      "bytes": 8912,
+      "sha256": "a3c5d4db6a4b80eba0f94a9839fcc3ebb4b92d3c145f2a9f26567ba1f75f81ee",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "src/features/vcs/comparison/iterables.ts",
+      "bytes": 5412,
+      "sha256": "b7d88e0a68459b4d8c4879227e92fe418cca2a410fe0768d36b4f4908963edca",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "src/features/vcs/comparison/lcs.ts",
+      "bytes": 17617,
+      "sha256": "0c2d5d69eea44ffc3fa70a73584bd8ce375962a49c0ce4826d4886cc4d980f72",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "src/features/vcs/comparison/moves.ts",
+      "bytes": 9599,
+      "sha256": "3e2694753885d8e561cae142f9f6479b7ec98c765be1ea24e8ee9dfe60d7fe9b",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "src/features/vcs/comparison/text.ts",
+      "bytes": 4962,
+      "sha256": "93593a8ca3ced7b5069b149e5a4914f7e450da4973367cc9faca1516d9e1ad91",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "src/features/vcs/graph.ts",
+      "bytes": 18441,
+      "sha256": "4816deb59364d375200db330ad9a2f596e5646b425b8103ca484ef70ab986d9a",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "src/features/vcs/mergeDiff3.ts",
+      "bytes": 9782,
+      "sha256": "6b1f8781f4407c090881d69039582bd17f8034c96ba87e273e61347b0fef1744",
+      "state": "reference_only_not_imported"
+    },
+    {
+      "path": "src/features/vcs/mergeModel.ts",
+      "bytes": 13294,
+      "sha256": "bde2e58cb7fcf64432419de94892d737fdeafffe4f8fafe65d015f84e0ded357",
+      "state": "reference_only_not_imported"
+    }
+  ]
+}

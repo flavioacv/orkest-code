@@ -1,0 +1,3827 @@
+{
+  "source": "/Volumes/Externo 1/projetos/zurc/openidea",
+  "commit": "8021a8cccaad4002704d0b0c6df9d1ab17d854b0",
+  "method": "static lexical inventory, not runtime validation",
+  "features": [
+    "agents",
+    "analysis",
+    "app",
+    "build",
+    "build-tools",
+    "code-insight",
+    "color-preview",
+    "coverage",
+    "database",
+    "debugger",
+    "dependencies",
+    "deployment",
+    "github",
+    "graphql",
+    "http-client",
+    "libraries",
+    "macros",
+    "notebook",
+    "perf",
+    "plugins",
+    "profiler",
+    "project-tree",
+    "project-trust",
+    "remote-dev",
+    "run",
+    "run-anything",
+    "scratch",
+    "search",
+    "services",
+    "settings",
+    "ssh",
+    "templates",
+    "terminal",
+    "todo",
+    "tools",
+    "vcs",
+    "viewers",
+    "vim",
+    "web",
+    "welcome"
+  ],
+  "crates": [
+    "ide-agent",
+    "ide-analysis",
+    "ide-build",
+    "ide-clipboard",
+    "ide-core",
+    "ide-coverage",
+    "ide-dap",
+    "ide-db",
+    "ide-docker",
+    "ide-extension",
+    "ide-fonts",
+    "ide-github",
+    "ide-host",
+    "ide-http",
+    "ide-index",
+    "ide-jsonrpc",
+    "ide-language",
+    "ide-lsp",
+    "ide-notebook",
+    "ide-plugin",
+    "ide-profiler",
+    "ide-remote",
+    "ide-run",
+    "ide-sdk",
+    "ide-search",
+    "ide-spell",
+    "ide-ssh",
+    "ide-syntax",
+    "ide-terminal",
+    "ide-text",
+    "ide-tools",
+    "ide-vcs",
+    "ide-vfs",
+    "ide-web",
+    "ide-workspace"
+  ],
+  "languages": [
+    {
+      "id": "asciidoc",
+      "name": "AsciiDoc",
+      "servers": [],
+      "debugger": "",
+      "source": "languages/asciidoc.toml"
+    },
+    {
+      "id": "bat",
+      "name": "Batch",
+      "servers": [],
+      "debugger": "",
+      "source": "languages/bat.toml"
+    },
+    {
+      "id": "c",
+      "name": "C",
+      "servers": [
+        "clangd"
+      ],
+      "debugger": "lldb-dap",
+      "source": "languages/c.toml"
+    },
+    {
+      "id": "clojure",
+      "name": "Clojure",
+      "servers": [
+        "clojure-lsp"
+      ],
+      "debugger": "",
+      "source": "languages/clojure.toml"
+    },
+    {
+      "id": "cmake",
+      "name": "CMake",
+      "servers": [
+        "neocmakelsp",
+        "cmake-language-server"
+      ],
+      "debugger": "",
+      "source": "languages/cmake.toml"
+    },
+    {
+      "id": "cpp",
+      "name": "C++",
+      "servers": [
+        "clangd"
+      ],
+      "debugger": "lldb-dap",
+      "source": "languages/cpp.toml"
+    },
+    {
+      "id": "csharp",
+      "name": "C#",
+      "servers": [
+        "csharp-ls"
+      ],
+      "debugger": "netcoredbg",
+      "source": "languages/csharp.toml"
+    },
+    {
+      "id": "css",
+      "name": "CSS",
+      "servers": [
+        "vscode-css-language-server"
+      ],
+      "debugger": "",
+      "source": "languages/css.toml"
+    },
+    {
+      "id": "d",
+      "name": "D",
+      "servers": [
+        "serve-d"
+      ],
+      "debugger": "",
+      "source": "languages/d.toml"
+    },
+    {
+      "id": "dart",
+      "name": "Dart",
+      "servers": [
+        "dart"
+      ],
+      "debugger": "dart",
+      "source": "languages/dart.toml"
+    },
+    {
+      "id": "diff",
+      "name": "Diff",
+      "servers": [],
+      "debugger": "",
+      "source": "languages/diff.toml"
+    },
+    {
+      "id": "dockerfile",
+      "name": "Dockerfile",
+      "servers": [
+        "dockerfile-language-server"
+      ],
+      "debugger": "",
+      "source": "languages/dockerfile.toml"
+    },
+    {
+      "id": "dotenv",
+      "name": ".env",
+      "servers": [],
+      "debugger": "",
+      "source": "languages/dotenv.toml"
+    },
+    {
+      "id": "elixir",
+      "name": "Elixir",
+      "servers": [
+        "elixir-ls"
+      ],
+      "debugger": "elixir-ls-debugger",
+      "source": "languages/elixir.toml"
+    },
+    {
+      "id": "erb",
+      "name": "ERB",
+      "servers": [],
+      "debugger": "",
+      "source": "languages/erb.toml"
+    },
+    {
+      "id": "erlang",
+      "name": "Erlang",
+      "servers": [
+        "elp"
+      ],
+      "debugger": "",
+      "source": "languages/erlang.toml"
+    },
+    {
+      "id": "fsharp",
+      "name": "F#",
+      "servers": [
+        "fsautocomplete"
+      ],
+      "debugger": "netcoredbg",
+      "source": "languages/fsharp.toml"
+    },
+    {
+      "id": "gdscript",
+      "name": "GDScript",
+      "servers": [
+        "godot"
+      ],
+      "debugger": "godot",
+      "source": "languages/gdscript.toml"
+    },
+    {
+      "id": "gdshader",
+      "name": "Godot Shader",
+      "servers": [],
+      "debugger": "",
+      "source": "languages/gdshader.toml"
+    },
+    {
+      "id": "gitattributes",
+      "name": "Git Attributes",
+      "servers": [],
+      "debugger": "",
+      "source": "languages/gitattributes.toml"
+    },
+    {
+      "id": "go",
+      "name": "Go",
+      "servers": [
+        "gopls"
+      ],
+      "debugger": "delve",
+      "source": "languages/go.toml"
+    },
+    {
+      "id": "godot-resource",
+      "name": "Godot Resource",
+      "servers": [],
+      "debugger": "",
+      "source": "languages/godot-resource.toml"
+    },
+    {
+      "id": "go.mod",
+      "name": "Go Module",
+      "servers": [
+        "gopls"
+      ],
+      "debugger": "",
+      "source": "languages/gomod.toml"
+    },
+    {
+      "id": "go.work",
+      "name": "Go Workspace",
+      "servers": [
+        "gopls"
+      ],
+      "debugger": "",
+      "source": "languages/gowork.toml"
+    },
+    {
+      "id": "graphql",
+      "name": "GraphQL",
+      "servers": [
+        "graphql-lsp"
+      ],
+      "debugger": "",
+      "source": "languages/graphql.toml"
+    },
+    {
+      "id": "groovy",
+      "name": "Groovy",
+      "servers": [
+        "groovy-language-server"
+      ],
+      "debugger": "",
+      "source": "languages/groovy.toml"
+    },
+    {
+      "id": "haskell",
+      "name": "Haskell",
+      "servers": [
+        "haskell-language-server"
+      ],
+      "debugger": "",
+      "source": "languages/haskell.toml"
+    },
+    {
+      "id": "hcl",
+      "name": "HCL",
+      "servers": [],
+      "debugger": "",
+      "source": "languages/hcl.toml"
+    },
+    {
+      "id": "html",
+      "name": "HTML",
+      "servers": [
+        "angular-language-server",
+        "vscode-html-language-server"
+      ],
+      "debugger": "",
+      "source": "languages/html.toml"
+    },
+    {
+      "id": "http",
+      "name": "HTTP Request",
+      "servers": [],
+      "debugger": "",
+      "source": "languages/http.toml"
+    },
+    {
+      "id": "ignore",
+      "name": "Ignore File",
+      "servers": [],
+      "debugger": "",
+      "source": "languages/ignore.toml"
+    },
+    {
+      "id": "ini",
+      "name": "INI",
+      "servers": [],
+      "debugger": "",
+      "source": "languages/ini.toml"
+    },
+    {
+      "id": "java",
+      "name": "Java",
+      "servers": [
+        "jdtls"
+      ],
+      "debugger": "java-debug",
+      "source": "languages/java.toml"
+    },
+    {
+      "id": "javascript",
+      "name": "JavaScript",
+      "servers": [
+        "vtsls",
+        "typescript-language-server",
+        "oxlint"
+      ],
+      "debugger": "js-debug",
+      "source": "languages/javascript.toml"
+    },
+    {
+      "id": "javascriptreact",
+      "name": "JavaScript JSX",
+      "servers": [
+        "vtsls",
+        "typescript-language-server",
+        "oxlint"
+      ],
+      "debugger": "js-debug",
+      "source": "languages/javascriptreact.toml"
+    },
+    {
+      "id": "json",
+      "name": "JSON",
+      "servers": [
+        "vscode-json-language-server"
+      ],
+      "debugger": "",
+      "source": "languages/json.toml"
+    },
+    {
+      "id": "jsonc",
+      "name": "JSON with Comments",
+      "servers": [
+        "vscode-json-language-server"
+      ],
+      "debugger": "",
+      "source": "languages/jsonc.toml"
+    },
+    {
+      "id": "jsp",
+      "name": "JSP",
+      "servers": [],
+      "debugger": "",
+      "source": "languages/jsp.toml"
+    },
+    {
+      "id": "julia",
+      "name": "Julia",
+      "servers": [
+        "julia-languageserver"
+      ],
+      "debugger": "",
+      "source": "languages/julia.toml"
+    },
+    {
+      "id": "kotlin",
+      "name": "Kotlin",
+      "servers": [
+        "kotlin-lsp",
+        "kotlin-language-server"
+      ],
+      "debugger": "kotlin-debug-adapter",
+      "source": "languages/kotlin.toml"
+    },
+    {
+      "id": "latex",
+      "name": "LaTeX",
+      "servers": [
+        "texlab"
+      ],
+      "debugger": "",
+      "source": "languages/latex.toml"
+    },
+    {
+      "id": "less",
+      "name": "Less",
+      "servers": [
+        "vscode-css-language-server"
+      ],
+      "debugger": "",
+      "source": "languages/less.toml"
+    },
+    {
+      "id": "log",
+      "name": "Log",
+      "servers": [],
+      "debugger": "",
+      "source": "languages/log.toml"
+    },
+    {
+      "id": "lua",
+      "name": "Lua",
+      "servers": [
+        "lua-language-server"
+      ],
+      "debugger": "",
+      "source": "languages/lua.toml"
+    },
+    {
+      "id": "makefile",
+      "name": "Makefile",
+      "servers": [],
+      "debugger": "",
+      "source": "languages/makefile.toml"
+    },
+    {
+      "id": "markdown",
+      "name": "Markdown",
+      "servers": [
+        "marksman"
+      ],
+      "debugger": "",
+      "source": "languages/markdown.toml"
+    },
+    {
+      "id": "nix",
+      "name": "Nix",
+      "servers": [
+        "nil",
+        "nixd"
+      ],
+      "debugger": "",
+      "source": "languages/nix.toml"
+    },
+    {
+      "id": "objective-c",
+      "name": "Objective-C",
+      "servers": [
+        "clangd"
+      ],
+      "debugger": "lldb-dap",
+      "source": "languages/objective-c.toml"
+    },
+    {
+      "id": "objective-cpp",
+      "name": "Objective-C++",
+      "servers": [
+        "clangd"
+      ],
+      "debugger": "lldb-dap",
+      "source": "languages/objective-cpp.toml"
+    },
+    {
+      "id": "ocaml.interface",
+      "name": "OCaml Interface",
+      "servers": [
+        "ocamllsp"
+      ],
+      "debugger": "",
+      "source": "languages/ocaml-interface.toml"
+    },
+    {
+      "id": "ocaml",
+      "name": "OCaml",
+      "servers": [
+        "ocamllsp"
+      ],
+      "debugger": "ocamlearlybird",
+      "source": "languages/ocaml.toml"
+    },
+    {
+      "id": "perl",
+      "name": "Perl",
+      "servers": [
+        "perlnavigator"
+      ],
+      "debugger": "",
+      "source": "languages/perl.toml"
+    },
+    {
+      "id": "php",
+      "name": "PHP",
+      "servers": [
+        "intelephense",
+        "phpactor"
+      ],
+      "debugger": "php-debug",
+      "source": "languages/php.toml"
+    },
+    {
+      "id": "plaintext",
+      "name": "Plain Text",
+      "servers": [],
+      "debugger": "",
+      "source": "languages/plaintext.toml"
+    },
+    {
+      "id": "powershell",
+      "name": "PowerShell",
+      "servers": [
+        "powershell-editor-services"
+      ],
+      "debugger": "",
+      "source": "languages/powershell.toml"
+    },
+    {
+      "id": "properties",
+      "name": "Properties",
+      "servers": [],
+      "debugger": "",
+      "source": "languages/properties.toml"
+    },
+    {
+      "id": "proto",
+      "name": "Protocol Buffers",
+      "servers": [
+        "buf"
+      ],
+      "debugger": "",
+      "source": "languages/proto.toml"
+    },
+    {
+      "id": "python",
+      "name": "Python",
+      "servers": [
+        "basedpyright",
+        "pyright",
+        "ty",
+        "pyrefly",
+        "ruff"
+      ],
+      "debugger": "debugpy",
+      "source": "languages/python.toml"
+    },
+    {
+      "id": "r",
+      "name": "R",
+      "servers": [
+        "r-languageserver"
+      ],
+      "debugger": "",
+      "source": "languages/r.toml"
+    },
+    {
+      "id": "ruby",
+      "name": "Ruby",
+      "servers": [
+        "ruby-lsp",
+        "solargraph"
+      ],
+      "debugger": "",
+      "source": "languages/ruby.toml"
+    },
+    {
+      "id": "rust",
+      "name": "Rust",
+      "servers": [
+        "rust-analyzer"
+      ],
+      "debugger": "codelldb",
+      "source": "languages/rust.toml"
+    },
+    {
+      "id": "sass",
+      "name": "Sass",
+      "servers": [],
+      "debugger": "",
+      "source": "languages/sass.toml"
+    },
+    {
+      "id": "scala",
+      "name": "Scala",
+      "servers": [
+        "metals"
+      ],
+      "debugger": "",
+      "source": "languages/scala.toml"
+    },
+    {
+      "id": "scss",
+      "name": "SCSS",
+      "servers": [
+        "vscode-css-language-server"
+      ],
+      "debugger": "",
+      "source": "languages/scss.toml"
+    },
+    {
+      "id": "shellscript",
+      "name": "Shell Script",
+      "servers": [
+        "bash-language-server"
+      ],
+      "debugger": "bash-debug",
+      "source": "languages/shellscript.toml"
+    },
+    {
+      "id": "sql",
+      "name": "SQL",
+      "servers": [
+        "sqls"
+      ],
+      "debugger": "",
+      "source": "languages/sql.toml"
+    },
+    {
+      "id": "svelte",
+      "name": "Svelte",
+      "servers": [
+        "svelte-language-server",
+        "oxlint"
+      ],
+      "debugger": "",
+      "source": "languages/svelte.toml"
+    },
+    {
+      "id": "swift",
+      "name": "Swift",
+      "servers": [
+        "sourcekit-lsp"
+      ],
+      "debugger": "lldb-dap",
+      "source": "languages/swift.toml"
+    },
+    {
+      "id": "terraform-vars",
+      "name": "Terraform Variables",
+      "servers": [
+        "terraform-ls"
+      ],
+      "debugger": "",
+      "source": "languages/terraform-vars.toml"
+    },
+    {
+      "id": "terraform",
+      "name": "Terraform",
+      "servers": [
+        "terraform-ls"
+      ],
+      "debugger": "",
+      "source": "languages/terraform.toml"
+    },
+    {
+      "id": "toml",
+      "name": "TOML",
+      "servers": [
+        "taplo"
+      ],
+      "debugger": "",
+      "source": "languages/toml.toml"
+    },
+    {
+      "id": "typescript",
+      "name": "TypeScript",
+      "servers": [
+        "vtsls",
+        "typescript-language-server",
+        "angular-language-server",
+        "oxlint"
+      ],
+      "debugger": "js-debug",
+      "source": "languages/typescript.toml"
+    },
+    {
+      "id": "typescriptreact",
+      "name": "TypeScript JSX",
+      "servers": [
+        "vtsls",
+        "typescript-language-server",
+        "oxlint"
+      ],
+      "debugger": "js-debug",
+      "source": "languages/typescriptreact.toml"
+    },
+    {
+      "id": "vue",
+      "name": "Vue",
+      "servers": [
+        "vue-language-server",
+        "vtsls",
+        "oxlint"
+      ],
+      "debugger": "",
+      "source": "languages/vue.toml"
+    },
+    {
+      "id": "xml",
+      "name": "XML",
+      "servers": [
+        "lemminx"
+      ],
+      "debugger": "",
+      "source": "languages/xml.toml"
+    },
+    {
+      "id": "yaml",
+      "name": "YAML",
+      "servers": [
+        "yaml-language-server"
+      ],
+      "debugger": "",
+      "source": "languages/yaml.toml"
+    },
+    {
+      "id": "zig",
+      "name": "Zig",
+      "servers": [
+        "zls"
+      ],
+      "debugger": "codelldb",
+      "source": "languages/zig.toml"
+    }
+  ],
+  "commands": [
+    {
+      "domain": "agent",
+      "name": "agent_subscribe",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 19
+    },
+    {
+      "domain": "agent",
+      "name": "agent_providers",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 35
+    },
+    {
+      "domain": "agent",
+      "name": "agent_set_command",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 43
+    },
+    {
+      "domain": "agent",
+      "name": "agent_set_env",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 56
+    },
+    {
+      "domain": "agent",
+      "name": "agent_registry_list",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 69
+    },
+    {
+      "domain": "agent",
+      "name": "agent_registry_install",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 81
+    },
+    {
+      "domain": "agent",
+      "name": "agent_registry_remove",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 94
+    },
+    {
+      "domain": "agent",
+      "name": "agent_commands",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 102
+    },
+    {
+      "domain": "agent",
+      "name": "agent_entries",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 114
+    },
+    {
+      "domain": "agent",
+      "name": "agent_create",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 125
+    },
+    {
+      "domain": "agent",
+      "name": "agent_prompt",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 132
+    },
+    {
+      "domain": "agent",
+      "name": "agent_unqueue",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 145
+    },
+    {
+      "domain": "agent",
+      "name": "agent_send_queued_now",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 157
+    },
+    {
+      "domain": "agent",
+      "name": "agent_set_config",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 169
+    },
+    {
+      "domain": "agent",
+      "name": "agent_fork",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 182
+    },
+    {
+      "domain": "agent",
+      "name": "agent_rollback",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 194
+    },
+    {
+      "domain": "agent",
+      "name": "agent_probe",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 207
+    },
+    {
+      "domain": "agent",
+      "name": "agent_cancel",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 219
+    },
+    {
+      "domain": "agent",
+      "name": "agent_respond",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 231
+    },
+    {
+      "domain": "agent",
+      "name": "agent_archive",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 243
+    },
+    {
+      "domain": "agent",
+      "name": "agent_unarchive",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 249
+    },
+    {
+      "domain": "agent",
+      "name": "agent_delete",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 255
+    },
+    {
+      "domain": "agent",
+      "name": "agent_changes",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 266
+    },
+    {
+      "domain": "agent",
+      "name": "agent_base_text",
+      "source": "src-tauri/src/commands/agent.rs",
+      "line": 273
+    },
+    {
+      "domain": "analysis",
+      "name": "inspect_code",
+      "source": "src-tauri/src/commands/analysis.rs",
+      "line": 16
+    },
+    {
+      "domain": "analysis",
+      "name": "analysis_locate_duplicates",
+      "source": "src-tauri/src/commands/analysis.rs",
+      "line": 36
+    },
+    {
+      "domain": "analysis",
+      "name": "structural_languages",
+      "source": "src-tauri/src/commands/analysis.rs",
+      "line": 49
+    },
+    {
+      "domain": "analysis",
+      "name": "structural_validate",
+      "source": "src-tauri/src/commands/analysis.rs",
+      "line": 56
+    },
+    {
+      "domain": "analysis",
+      "name": "structural_search",
+      "source": "src-tauri/src/commands/analysis.rs",
+      "line": 65
+    },
+    {
+      "domain": "app",
+      "name": "app_info",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 26
+    },
+    {
+      "domain": "app",
+      "name": "recent_projects",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 41
+    },
+    {
+      "domain": "app",
+      "name": "remove_recent_project",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 48
+    },
+    {
+      "domain": "app",
+      "name": "open_project",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 54
+    },
+    {
+      "domain": "app",
+      "name": "light_edit_open",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 79
+    },
+    {
+      "domain": "app",
+      "name": "project_rename",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 101
+    },
+    {
+      "domain": "app",
+      "name": "close_project",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 115
+    },
+    {
+      "domain": "app",
+      "name": "languages",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 127
+    },
+    {
+      "domain": "app",
+      "name": "settings_get",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 136
+    },
+    {
+      "domain": "app",
+      "name": "settings_get_global",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 145
+    },
+    {
+      "domain": "app",
+      "name": "settings_set",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 154
+    },
+    {
+      "domain": "app",
+      "name": "settings_export",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 183
+    },
+    {
+      "domain": "app",
+      "name": "settings_import",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 203
+    },
+    {
+      "domain": "app",
+      "name": "project_roots",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 224
+    },
+    {
+      "domain": "app",
+      "name": "project_current",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 231
+    },
+    {
+      "domain": "app",
+      "name": "cancel_request",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 237
+    },
+    {
+      "domain": "app",
+      "name": "cancel_task",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 245
+    },
+    {
+      "domain": "app",
+      "name": "log_frontend",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 261
+    },
+    {
+      "domain": "app",
+      "name": "project_trust_status",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 272
+    },
+    {
+      "domain": "app",
+      "name": "project_trust_list",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 278
+    },
+    {
+      "domain": "app",
+      "name": "project_trust_set",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 284
+    },
+    {
+      "domain": "app",
+      "name": "project_trust_remove_location",
+      "source": "src-tauri/src/commands/app.rs",
+      "line": 299
+    },
+    {
+      "domain": "build",
+      "name": "build_model",
+      "source": "src-tauri/src/commands/build.rs",
+      "line": 16
+    },
+    {
+      "domain": "build",
+      "name": "build_sync",
+      "source": "src-tauri/src/commands/build.rs",
+      "line": 25
+    },
+    {
+      "domain": "build",
+      "name": "gradle_dependencies",
+      "source": "src-tauri/src/commands/build.rs",
+      "line": 49
+    },
+    {
+      "domain": "build",
+      "name": "gradle_published_catalog",
+      "source": "src-tauri/src/commands/build.rs",
+      "line": 65
+    },
+    {
+      "domain": "build",
+      "name": "maven_dependency_declaration",
+      "source": "src-tauri/src/commands/build.rs",
+      "line": 76
+    },
+    {
+      "domain": "build",
+      "name": "maven_exclude_dependency",
+      "source": "src-tauri/src/commands/build.rs",
+      "line": 90
+    },
+    {
+      "domain": "build",
+      "name": "build_run",
+      "source": "src-tauri/src/commands/build.rs",
+      "line": 106
+    },
+    {
+      "domain": "bytes",
+      "name": "fs_probe",
+      "source": "src-tauri/src/commands/bytes.rs",
+      "line": 14
+    },
+    {
+      "domain": "bytes",
+      "name": "fs_read_range",
+      "source": "src-tauri/src/commands/bytes.rs",
+      "line": 21
+    },
+    {
+      "domain": "bytes",
+      "name": "fs_read_image",
+      "source": "src-tauri/src/commands/bytes.rs",
+      "line": 28
+    },
+    {
+      "domain": "caches",
+      "name": "caches_schedule_invalidation",
+      "source": "src-tauri/src/commands/caches.rs",
+      "line": 11
+    },
+    {
+      "domain": "caches",
+      "name": "app_restart",
+      "source": "src-tauri/src/commands/caches.rs",
+      "line": 25
+    },
+    {
+      "domain": "clipboard",
+      "name": "clipboard_file_list",
+      "source": "src-tauri/src/commands/clipboard.rs",
+      "line": 14
+    },
+    {
+      "domain": "clipboard",
+      "name": "clipboard_has_files",
+      "source": "src-tauri/src/commands/clipboard.rs",
+      "line": 21
+    },
+    {
+      "domain": "clipboard",
+      "name": "clipboard_set_file_list",
+      "source": "src-tauri/src/commands/clipboard.rs",
+      "line": 30
+    },
+    {
+      "domain": "coverage",
+      "name": "coverage_prepare",
+      "source": "src-tauri/src/commands/coverage.rs",
+      "line": 15
+    },
+    {
+      "domain": "coverage",
+      "name": "coverage_collect",
+      "source": "src-tauri/src/commands/coverage.rs",
+      "line": 26
+    },
+    {
+      "domain": "coverage",
+      "name": "coverage_import",
+      "source": "src-tauri/src/commands/coverage.rs",
+      "line": 38
+    },
+    {
+      "domain": "db",
+      "name": "db_sources",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 13
+    },
+    {
+      "domain": "db",
+      "name": "db_save_sources",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 19
+    },
+    {
+      "domain": "db",
+      "name": "db_set_password",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 25
+    },
+    {
+      "domain": "db",
+      "name": "db_test",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 37
+    },
+    {
+      "domain": "db",
+      "name": "db_set_ssh_secret",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 49
+    },
+    {
+      "domain": "db",
+      "name": "db_trust_ssh_host",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 61
+    },
+    {
+      "domain": "db",
+      "name": "db_connected",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 67
+    },
+    {
+      "domain": "db",
+      "name": "db_connect",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 73
+    },
+    {
+      "domain": "db",
+      "name": "db_set_manual_commit",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 79
+    },
+    {
+      "domain": "db",
+      "name": "db_finish_transaction",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 90
+    },
+    {
+      "domain": "db",
+      "name": "db_disconnect",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 101
+    },
+    {
+      "domain": "db",
+      "name": "db_databases",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 107
+    },
+    {
+      "domain": "db",
+      "name": "db_schemas",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 113
+    },
+    {
+      "domain": "db",
+      "name": "db_tables",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 119
+    },
+    {
+      "domain": "db",
+      "name": "db_table_details",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 130
+    },
+    {
+      "domain": "db",
+      "name": "db_ddl",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 142
+    },
+    {
+      "domain": "db",
+      "name": "db_schema_objects",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 154
+    },
+    {
+      "domain": "db",
+      "name": "db_object_ddl",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 165
+    },
+    {
+      "domain": "db",
+      "name": "db_explain",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 178
+    },
+    {
+      "domain": "db",
+      "name": "db_history",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 190
+    },
+    {
+      "domain": "db",
+      "name": "db_remove_history",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 200
+    },
+    {
+      "domain": "db",
+      "name": "db_export_file",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 214
+    },
+    {
+      "domain": "db",
+      "name": "db_completion",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 224
+    },
+    {
+      "domain": "db",
+      "name": "db_statements",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 234
+    },
+    {
+      "domain": "db",
+      "name": "db_execute",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 247
+    },
+    {
+      "domain": "db",
+      "name": "db_table_page",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 261
+    },
+    {
+      "domain": "db",
+      "name": "db_apply_edits",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 290
+    },
+    {
+      "domain": "db",
+      "name": "db_console_path",
+      "source": "src-tauri/src/commands/db.rs",
+      "line": 303
+    },
+    {
+      "domain": "debug",
+      "name": "debug_start",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 14
+    },
+    {
+      "domain": "debug",
+      "name": "debug_set_breakpoints",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 24
+    },
+    {
+      "domain": "debug",
+      "name": "debug_threads",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 34
+    },
+    {
+      "domain": "debug",
+      "name": "debug_stack_trace",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 40
+    },
+    {
+      "domain": "debug",
+      "name": "debug_scopes",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 50
+    },
+    {
+      "domain": "debug",
+      "name": "debug_variables",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 56
+    },
+    {
+      "domain": "debug",
+      "name": "debug_evaluate",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 66
+    },
+    {
+      "domain": "debug",
+      "name": "debug_completions",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 78
+    },
+    {
+      "domain": "debug",
+      "name": "debug_resume",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 91
+    },
+    {
+      "domain": "debug",
+      "name": "debug_pause",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 97
+    },
+    {
+      "domain": "debug",
+      "name": "debug_step",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 103
+    },
+    {
+      "domain": "debug",
+      "name": "debug_run_to",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 114
+    },
+    {
+      "domain": "debug",
+      "name": "debug_stop",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 127
+    },
+    {
+      "domain": "debug",
+      "name": "debug_evaluate_in",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 134
+    },
+    {
+      "domain": "debug",
+      "name": "debug_breakpoint_states",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 147
+    },
+    {
+      "domain": "debug",
+      "name": "debug_sessions",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 154
+    },
+    {
+      "domain": "debug",
+      "name": "debug_exception_filters",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 160
+    },
+    {
+      "domain": "debug",
+      "name": "debug_set_exception_breakpoints",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 166
+    },
+    {
+      "domain": "debug",
+      "name": "debug_set_variable",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 175
+    },
+    {
+      "domain": "debug",
+      "name": "debug_force_step_over",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 191
+    },
+    {
+      "domain": "debug",
+      "name": "debug_step_in_targets",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 202
+    },
+    {
+      "domain": "debug",
+      "name": "debug_step_in_target",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 212
+    },
+    {
+      "domain": "debug",
+      "name": "debug_restart_frame",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 224
+    },
+    {
+      "domain": "debug",
+      "name": "debug_capabilities",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 230
+    },
+    {
+      "domain": "debug",
+      "name": "debug_set_function_breakpoints",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 237
+    },
+    {
+      "domain": "debug",
+      "name": "debug_set_data_breakpoints",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 247
+    },
+    {
+      "domain": "debug",
+      "name": "debug_data_breakpoint_info",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 256
+    },
+    {
+      "domain": "debug",
+      "name": "debug_attachable_processes",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 269
+    },
+    {
+      "domain": "debug",
+      "name": "debug_listen_for_jvm",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 277
+    },
+    {
+      "domain": "debug",
+      "name": "debug_redefine_classes",
+      "source": "src-tauri/src/commands/debug.rs",
+      "line": 290
+    },
+    {
+      "domain": "dependencies",
+      "name": "dependency_versions",
+      "source": "src-tauri/src/commands/dependencies.rs",
+      "line": 9
+    },
+    {
+      "domain": "deploy",
+      "name": "deploy_coverage",
+      "source": "src-tauri/src/commands/deploy.rs",
+      "line": 9
+    },
+    {
+      "domain": "deploy",
+      "name": "deploy_upload",
+      "source": "src-tauri/src/commands/deploy.rs",
+      "line": 19
+    },
+    {
+      "domain": "deploy",
+      "name": "deploy_download",
+      "source": "src-tauri/src/commands/deploy.rs",
+      "line": 31
+    },
+    {
+      "domain": "deploy",
+      "name": "deploy_delete_remote",
+      "source": "src-tauri/src/commands/deploy.rs",
+      "line": 43
+    },
+    {
+      "domain": "deploy",
+      "name": "deploy_compare",
+      "source": "src-tauri/src/commands/deploy.rs",
+      "line": 54
+    },
+    {
+      "domain": "deploy",
+      "name": "deploy_sync",
+      "source": "src-tauri/src/commands/deploy.rs",
+      "line": 66
+    },
+    {
+      "domain": "deploy",
+      "name": "deploy_info",
+      "source": "src-tauri/src/commands/deploy.rs",
+      "line": 78
+    },
+    {
+      "domain": "deploy",
+      "name": "deploy_server_root",
+      "source": "src-tauri/src/commands/deploy.rs",
+      "line": 89
+    },
+    {
+      "domain": "deploy",
+      "name": "remote_list",
+      "source": "src-tauri/src/commands/deploy.rs",
+      "line": 99
+    },
+    {
+      "domain": "deploy",
+      "name": "remote_open",
+      "source": "src-tauri/src/commands/deploy.rs",
+      "line": 109
+    },
+    {
+      "domain": "deploy",
+      "name": "remote_of",
+      "source": "src-tauri/src/commands/deploy.rs",
+      "line": 115
+    },
+    {
+      "domain": "deploy",
+      "name": "remote_delete",
+      "source": "src-tauri/src/commands/deploy.rs",
+      "line": 121
+    },
+    {
+      "domain": "deploy",
+      "name": "remote_mkdir",
+      "source": "src-tauri/src/commands/deploy.rs",
+      "line": 127
+    },
+    {
+      "domain": "deploy",
+      "name": "remote_rename",
+      "source": "src-tauri/src/commands/deploy.rs",
+      "line": 133
+    },
+    {
+      "domain": "deploy",
+      "name": "deploy_test_connection",
+      "source": "src-tauri/src/commands/deploy.rs",
+      "line": 144
+    },
+    {
+      "domain": "doc",
+      "name": "doc_open",
+      "source": "src-tauri/src/commands/doc.rs",
+      "line": 17
+    },
+    {
+      "domain": "doc",
+      "name": "doc_close",
+      "source": "src-tauri/src/commands/doc.rs",
+      "line": 23
+    },
+    {
+      "domain": "doc",
+      "name": "doc_edit",
+      "source": "src-tauri/src/commands/doc.rs",
+      "line": 33
+    },
+    {
+      "domain": "doc",
+      "name": "doc_save",
+      "source": "src-tauri/src/commands/doc.rs",
+      "line": 53
+    },
+    {
+      "domain": "doc",
+      "name": "doc_save_all",
+      "source": "src-tauri/src/commands/doc.rs",
+      "line": 59
+    },
+    {
+      "domain": "doc",
+      "name": "doc_sync_from_disk",
+      "source": "src-tauri/src/commands/doc.rs",
+      "line": 65
+    },
+    {
+      "domain": "doc",
+      "name": "doc_snapshot",
+      "source": "src-tauri/src/commands/doc.rs",
+      "line": 71
+    },
+    {
+      "domain": "doc",
+      "name": "doc_open_virtual",
+      "source": "src-tauri/src/commands/doc.rs",
+      "line": 78
+    },
+    {
+      "domain": "doc",
+      "name": "doc_ui_mode",
+      "source": "src-tauri/src/commands/doc.rs",
+      "line": 86
+    },
+    {
+      "domain": "doc",
+      "name": "doc_set_encoding",
+      "source": "src-tauri/src/commands/doc.rs",
+      "line": 93
+    },
+    {
+      "domain": "doc",
+      "name": "doc_set_line_ending",
+      "source": "src-tauri/src/commands/doc.rs",
+      "line": 105
+    },
+    {
+      "domain": "doc",
+      "name": "doc_outline",
+      "source": "src-tauri/src/commands/doc.rs",
+      "line": 122
+    },
+    {
+      "domain": "doc",
+      "name": "doc_folding",
+      "source": "src-tauri/src/commands/doc.rs",
+      "line": 128
+    },
+    {
+      "domain": "doc",
+      "name": "doc_highlights",
+      "source": "src-tauri/src/commands/doc.rs",
+      "line": 136
+    },
+    {
+      "domain": "doc",
+      "name": "doc_selection_ranges",
+      "source": "src-tauri/src/commands/doc.rs",
+      "line": 144
+    },
+    {
+      "domain": "doc",
+      "name": "history_list",
+      "source": "src-tauri/src/commands/doc.rs",
+      "line": 155
+    },
+    {
+      "domain": "doc",
+      "name": "history_content",
+      "source": "src-tauri/src/commands/doc.rs",
+      "line": 161
+    },
+    {
+      "domain": "docker",
+      "name": "docker_snapshot",
+      "source": "src-tauri/src/commands/docker.rs",
+      "line": 31
+    },
+    {
+      "domain": "docker",
+      "name": "docker_container_op",
+      "source": "src-tauri/src/commands/docker.rs",
+      "line": 37
+    },
+    {
+      "domain": "docker",
+      "name": "docker_remove",
+      "source": "src-tauri/src/commands/docker.rs",
+      "line": 43
+    },
+    {
+      "domain": "docker",
+      "name": "docker_inspect",
+      "source": "src-tauri/src/commands/docker.rs",
+      "line": 55
+    },
+    {
+      "domain": "docker",
+      "name": "docker_logs",
+      "source": "src-tauri/src/commands/docker.rs",
+      "line": 63
+    },
+    {
+      "domain": "docker",
+      "name": "docker_events",
+      "source": "src-tauri/src/commands/docker.rs",
+      "line": 84
+    },
+    {
+      "domain": "docker",
+      "name": "docker_pull",
+      "source": "src-tauri/src/commands/docker.rs",
+      "line": 101
+    },
+    {
+      "domain": "docker",
+      "name": "docker_prune",
+      "source": "src-tauri/src/commands/docker.rs",
+      "line": 120
+    },
+    {
+      "domain": "docker",
+      "name": "docker_compose_op",
+      "source": "src-tauri/src/commands/docker.rs",
+      "line": 139
+    },
+    {
+      "domain": "docker",
+      "name": "docker_settings",
+      "source": "src-tauri/src/commands/docker.rs",
+      "line": 160
+    },
+    {
+      "domain": "docker",
+      "name": "docker_save_settings",
+      "source": "src-tauri/src/commands/docker.rs",
+      "line": 167
+    },
+    {
+      "domain": "docker",
+      "name": "docker_set_registry_password",
+      "source": "src-tauri/src/commands/docker.rs",
+      "line": 175
+    },
+    {
+      "domain": "docker",
+      "name": "docker_registry_login",
+      "source": "src-tauri/src/commands/docker.rs",
+      "line": 187
+    },
+    {
+      "domain": "docker",
+      "name": "docker_run_env",
+      "source": "src-tauri/src/commands/docker.rs",
+      "line": 208
+    },
+    {
+      "domain": "env",
+      "name": "env_reload",
+      "source": "src-tauri/src/commands/env.rs",
+      "line": 12
+    },
+    {
+      "domain": "fonts",
+      "name": "system_font_families",
+      "source": "src-tauri/src/commands/fonts.rs",
+      "line": 11
+    },
+    {
+      "domain": "fonts",
+      "name": "user_font_data",
+      "source": "src-tauri/src/commands/fonts.rs",
+      "line": 19
+    },
+    {
+      "domain": "fs",
+      "name": "fs_entry_kind",
+      "source": "src-tauri/src/commands/fs.rs",
+      "line": 10
+    },
+    {
+      "domain": "fs",
+      "name": "fs_compare_directories",
+      "source": "src-tauri/src/commands/fs.rs",
+      "line": 16
+    },
+    {
+      "domain": "fs",
+      "name": "fs_copy_merge",
+      "source": "src-tauri/src/commands/fs.rs",
+      "line": 29
+    },
+    {
+      "domain": "fs",
+      "name": "fs_read_dir",
+      "source": "src-tauri/src/commands/fs.rs",
+      "line": 42
+    },
+    {
+      "domain": "fs",
+      "name": "fs_create_file",
+      "source": "src-tauri/src/commands/fs.rs",
+      "line": 50
+    },
+    {
+      "domain": "fs",
+      "name": "fs_create_file_bytes",
+      "source": "src-tauri/src/commands/fs.rs",
+      "line": 56
+    },
+    {
+      "domain": "fs",
+      "name": "fs_create_dir",
+      "source": "src-tauri/src/commands/fs.rs",
+      "line": 62
+    },
+    {
+      "domain": "fs",
+      "name": "fs_rename",
+      "source": "src-tauri/src/commands/fs.rs",
+      "line": 68
+    },
+    {
+      "domain": "fs",
+      "name": "fs_set_writable",
+      "source": "src-tauri/src/commands/fs.rs",
+      "line": 76
+    },
+    {
+      "domain": "fs",
+      "name": "fs_delete",
+      "source": "src-tauri/src/commands/fs.rs",
+      "line": 83
+    },
+    {
+      "domain": "fs",
+      "name": "fs_copy",
+      "source": "src-tauri/src/commands/fs.rs",
+      "line": 89
+    },
+    {
+      "domain": "fs",
+      "name": "fs_read_text",
+      "source": "src-tauri/src/commands/fs.rs",
+      "line": 97
+    },
+    {
+      "domain": "github",
+      "name": "gh_account_repos",
+      "source": "src-tauri/src/commands/github.rs",
+      "line": 41
+    },
+    {
+      "domain": "github",
+      "name": "gh_availability",
+      "source": "src-tauri/src/commands/github.rs",
+      "line": 47
+    },
+    {
+      "domain": "github",
+      "name": "gh_pr_list",
+      "source": "src-tauri/src/commands/github.rs",
+      "line": 58
+    },
+    {
+      "domain": "github",
+      "name": "gh_pr_view",
+      "source": "src-tauri/src/commands/github.rs",
+      "line": 70
+    },
+    {
+      "domain": "github",
+      "name": "gh_pr_review_comments",
+      "source": "src-tauri/src/commands/github.rs",
+      "line": 82
+    },
+    {
+      "domain": "github",
+      "name": "gh_pr_checkout",
+      "source": "src-tauri/src/commands/github.rs",
+      "line": 94
+    },
+    {
+      "domain": "github",
+      "name": "gh_pr_create",
+      "source": "src-tauri/src/commands/github.rs",
+      "line": 119
+    },
+    {
+      "domain": "github",
+      "name": "gh_pr_review",
+      "source": "src-tauri/src/commands/github.rs",
+      "line": 143
+    },
+    {
+      "domain": "github",
+      "name": "gh_pr_comment",
+      "source": "src-tauri/src/commands/github.rs",
+      "line": 157
+    },
+    {
+      "domain": "github",
+      "name": "gh_api",
+      "source": "src-tauri/src/commands/github.rs",
+      "line": 171
+    },
+    {
+      "domain": "github",
+      "name": "gh_pr_prepare_diff",
+      "source": "src-tauri/src/commands/github.rs",
+      "line": 185
+    },
+    {
+      "domain": "history",
+      "name": "history_list_dir",
+      "source": "src-tauri/src/commands/history.rs",
+      "line": 14
+    },
+    {
+      "domain": "history",
+      "name": "history_put_label",
+      "source": "src-tauri/src/commands/history.rs",
+      "line": 25
+    },
+    {
+      "domain": "history",
+      "name": "history_restore",
+      "source": "src-tauri/src/commands/history.rs",
+      "line": 33
+    },
+    {
+      "domain": "http",
+      "name": "http_requests",
+      "source": "src-tauri/src/commands/http.rs",
+      "line": 9
+    },
+    {
+      "domain": "http",
+      "name": "http_environments",
+      "source": "src-tauri/src/commands/http.rs",
+      "line": 16
+    },
+    {
+      "domain": "http",
+      "name": "http_execute",
+      "source": "src-tauri/src/commands/http.rs",
+      "line": 31
+    },
+    {
+      "domain": "http",
+      "name": "http_history",
+      "source": "src-tauri/src/commands/http.rs",
+      "line": 64
+    },
+    {
+      "domain": "http",
+      "name": "http_history_get",
+      "source": "src-tauri/src/commands/http.rs",
+      "line": 70
+    },
+    {
+      "domain": "http",
+      "name": "http_history_clear",
+      "source": "src-tauri/src/commands/http.rs",
+      "line": 76
+    },
+    {
+      "domain": "http",
+      "name": "proxy_check_connection",
+      "source": "src-tauri/src/commands/http.rs",
+      "line": 84
+    },
+    {
+      "domain": "java",
+      "name": "java_resolve_launch",
+      "source": "src-tauri/src/commands/java.rs",
+      "line": 17
+    },
+    {
+      "domain": "java",
+      "name": "java_debug_server",
+      "source": "src-tauri/src/commands/java.rs",
+      "line": 31
+    },
+    {
+      "domain": "java",
+      "name": "java_build_workspace",
+      "source": "src-tauri/src/commands/java.rs",
+      "line": 38
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_completion",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 12
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_inline_completion",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 26
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_resolve_completion",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 39
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_hover",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 50
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_signature_help",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 62
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_goto",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 73
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_implementations",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 88
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_virtual_document",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 102
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_resolve_class_file",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 112
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_references",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 125
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_document_highlights",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 148
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_workspace_symbols",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 159
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_code_actions",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 170
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_code_action_query",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 183
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_resolve_code_action",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 197
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_apply_code_action",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 209
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_prepare_rename",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 220
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_rename",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 232
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_hierarchy_members",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 246
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_hierarchy_refactor",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 261
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_format",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 277
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_inlay_hints",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 289
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_semantic_tokens",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 300
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_code_lens",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 310
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_document_links",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 317
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_call_hierarchy",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 327
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_type_hierarchy",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 340
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_servers",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 352
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_resend_diagnostics",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 359
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_restart",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 365
+    },
+    {
+      "domain": "lsp",
+      "name": "apply_workspace_edit",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 372
+    },
+    {
+      "domain": "lsp",
+      "name": "prepare_workspace_edit",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 378
+    },
+    {
+      "domain": "lsp",
+      "name": "undo_workspace_edit",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 388
+    },
+    {
+      "domain": "lsp",
+      "name": "redo_workspace_edit",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 394
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_execute_command",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 402
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_resolve_command",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 413
+    },
+    {
+      "domain": "lsp",
+      "name": "lsp_execute_code_action",
+      "source": "src-tauri/src/commands/lsp.rs",
+      "line": 427
+    },
+    {
+      "domain": "nav",
+      "name": "index_status",
+      "source": "src-tauri/src/commands/nav.rs",
+      "line": 15
+    },
+    {
+      "domain": "nav",
+      "name": "index_file_extensions",
+      "source": "src-tauri/src/commands/nav.rs",
+      "line": 21
+    },
+    {
+      "domain": "nav",
+      "name": "find_files",
+      "source": "src-tauri/src/commands/nav.rs",
+      "line": 27
+    },
+    {
+      "domain": "nav",
+      "name": "find_dirs",
+      "source": "src-tauri/src/commands/nav.rs",
+      "line": 34
+    },
+    {
+      "domain": "nav",
+      "name": "spring_route_sources",
+      "source": "src-tauri/src/commands/nav.rs",
+      "line": 41
+    },
+    {
+      "domain": "nav",
+      "name": "find_symbols",
+      "source": "src-tauri/src/commands/nav.rs",
+      "line": 50
+    },
+    {
+      "domain": "nav",
+      "name": "mark_recent",
+      "source": "src-tauri/src/commands/nav.rs",
+      "line": 62
+    },
+    {
+      "domain": "nav",
+      "name": "remove_recent",
+      "source": "src-tauri/src/commands/nav.rs",
+      "line": 68
+    },
+    {
+      "domain": "nav",
+      "name": "recent_files",
+      "source": "src-tauri/src/commands/nav.rs",
+      "line": 75
+    },
+    {
+      "domain": "nav",
+      "name": "web_goto",
+      "source": "src-tauri/src/commands/nav.rs",
+      "line": 82
+    },
+    {
+      "domain": "nav",
+      "name": "fs_resolve_reference",
+      "source": "src-tauri/src/commands/nav.rs",
+      "line": 89
+    },
+    {
+      "domain": "nav",
+      "name": "path_completions",
+      "source": "src-tauri/src/commands/nav.rs",
+      "line": 101
+    },
+    {
+      "domain": "nav",
+      "name": "web_unresolved_references",
+      "source": "src-tauri/src/commands/nav.rs",
+      "line": 113
+    },
+    {
+      "domain": "notebook",
+      "name": "notebook_open",
+      "source": "src-tauri/src/commands/notebook.rs",
+      "line": 11
+    },
+    {
+      "domain": "notebook",
+      "name": "notebook_get",
+      "source": "src-tauri/src/commands/notebook.rs",
+      "line": 17
+    },
+    {
+      "domain": "notebook",
+      "name": "notebook_edit",
+      "source": "src-tauri/src/commands/notebook.rs",
+      "line": 23
+    },
+    {
+      "domain": "notebook",
+      "name": "notebook_save",
+      "source": "src-tauri/src/commands/notebook.rs",
+      "line": 35
+    },
+    {
+      "domain": "notebook",
+      "name": "notebook_reload",
+      "source": "src-tauri/src/commands/notebook.rs",
+      "line": 41
+    },
+    {
+      "domain": "notebook",
+      "name": "notebook_undo",
+      "source": "src-tauri/src/commands/notebook.rs",
+      "line": 47
+    },
+    {
+      "domain": "notebook",
+      "name": "notebook_redo",
+      "source": "src-tauri/src/commands/notebook.rs",
+      "line": 53
+    },
+    {
+      "domain": "notebook",
+      "name": "notebook_close",
+      "source": "src-tauri/src/commands/notebook.rs",
+      "line": 59
+    },
+    {
+      "domain": "notebook",
+      "name": "notebook_interrupt",
+      "source": "src-tauri/src/commands/notebook.rs",
+      "line": 65
+    },
+    {
+      "domain": "notebook",
+      "name": "notebook_restart",
+      "source": "src-tauri/src/commands/notebook.rs",
+      "line": 71
+    },
+    {
+      "domain": "notebook",
+      "name": "notebook_execute",
+      "source": "src-tauri/src/commands/notebook.rs",
+      "line": 78
+    },
+    {
+      "domain": "perf",
+      "name": "app_metrics",
+      "source": "src-tauri/src/commands/perf.rs",
+      "line": 62
+    },
+    {
+      "domain": "perf",
+      "name": "clear_caches",
+      "source": "src-tauri/src/commands/perf.rs",
+      "line": 222
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_subscribe",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 166
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_list",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 175
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_set_enabled",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 192
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_preview_install",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 200
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_install_dir",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 209
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_grant",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 217
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_set_capability",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 225
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_link",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 238
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_unlink",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 245
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_assets",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 253
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_activation_event",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 265
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_catalog",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 293
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_uninstall",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 305
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_reload",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 313
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_run_command",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 321
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_post_events",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 342
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_event_kinds",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 349
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_status_items",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 363
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_cancel_task",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 375
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_line_markers",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 382
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_view_render",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 394
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_view_event",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 410
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_web_page",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 426
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_web_save_file",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 441
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_web_read_file",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 458
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_market",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 479
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_market_url",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 489
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_set_market_url",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 496
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_market_download",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 503
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_unpack_package",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 511
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_read_intellij_theme",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 519
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_installed_intellij_themes",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 526
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_stage_package",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 533
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_roll_back",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 545
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_secrets",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 560
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_set_secret",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 567
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_set_active_file",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 611
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_set_theme",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 618
+    },
+    {
+      "domain": "plugin",
+      "name": "plugin_set_theme_frame",
+      "source": "src-tauri/src/commands/plugin.rs",
+      "line": 633
+    },
+    {
+      "domain": "profiler",
+      "name": "profiler_prepare",
+      "source": "src-tauri/src/commands/profiler.rs",
+      "line": 13
+    },
+    {
+      "domain": "profiler",
+      "name": "profiler_collect",
+      "source": "src-tauri/src/commands/profiler.rs",
+      "line": 30
+    },
+    {
+      "domain": "refactor",
+      "name": "refactor_file_move_edits",
+      "source": "src-tauri/src/commands/refactor.rs",
+      "line": 14
+    },
+    {
+      "domain": "refactor",
+      "name": "refactor_move_files",
+      "source": "src-tauri/src/commands/refactor.rs",
+      "line": 27
+    },
+    {
+      "domain": "refactor",
+      "name": "refactor_undo_file_move",
+      "source": "src-tauri/src/commands/refactor.rs",
+      "line": 40
+    },
+    {
+      "domain": "refactor",
+      "name": "refactor_can_undo_file_move",
+      "source": "src-tauri/src/commands/refactor.rs",
+      "line": 47
+    },
+    {
+      "domain": "refactor",
+      "name": "refactor_file_move_text_edits",
+      "source": "src-tauri/src/commands/refactor.rs",
+      "line": 55
+    },
+    {
+      "domain": "run",
+      "name": "run_dotnet_resolve",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 13
+    },
+    {
+      "domain": "run",
+      "name": "run_application_build",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 24
+    },
+    {
+      "domain": "run",
+      "name": "run_application_publish",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 35
+    },
+    {
+      "domain": "run",
+      "name": "run_configs",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 48
+    },
+    {
+      "domain": "run",
+      "name": "run_save_configs",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 58
+    },
+    {
+      "domain": "run",
+      "name": "run_without_derived",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 70
+    },
+    {
+      "domain": "run",
+      "name": "run_apply_settings",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 84
+    },
+    {
+      "domain": "run",
+      "name": "run_start",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 97
+    },
+    {
+      "domain": "run",
+      "name": "run_stop",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 111
+    },
+    {
+      "domain": "run",
+      "name": "run_stdin",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 117
+    },
+    {
+      "domain": "run",
+      "name": "run_resize",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 124
+    },
+    {
+      "domain": "run",
+      "name": "run_list",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 130
+    },
+    {
+      "domain": "run",
+      "name": "run_close_stdin",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 136
+    },
+    {
+      "domain": "run",
+      "name": "run_templates",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 142
+    },
+    {
+      "domain": "run",
+      "name": "run_save_templates",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 148
+    },
+    {
+      "domain": "run",
+      "name": "run_import_sources",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 155
+    },
+    {
+      "domain": "run",
+      "name": "run_import_configs",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 165
+    },
+    {
+      "domain": "run",
+      "name": "run_system_env",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 177
+    },
+    {
+      "domain": "run",
+      "name": "run_gradle_jvm_args_script",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 184
+    },
+    {
+      "domain": "run",
+      "name": "run_test_reports",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 196
+    },
+    {
+      "domain": "run",
+      "name": "run_tomcat_home",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 207
+    },
+    {
+      "domain": "run",
+      "name": "run_tomcat_artifacts",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 216
+    },
+    {
+      "domain": "run",
+      "name": "run_tomcat_build",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 224
+    },
+    {
+      "domain": "run",
+      "name": "run_tomcat_sync",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 233
+    },
+    {
+      "domain": "run",
+      "name": "run_tomcat_update",
+      "source": "src-tauri/src/commands/run.rs",
+      "line": 245
+    },
+    {
+      "domain": "sdk",
+      "name": "sdk_detect",
+      "source": "src-tauri/src/commands/sdk.rs",
+      "line": 16
+    },
+    {
+      "domain": "sdk",
+      "name": "sdk_python_effective",
+      "source": "src-tauri/src/commands/sdk.rs",
+      "line": 23
+    },
+    {
+      "domain": "sdk",
+      "name": "sdk_project_libraries",
+      "source": "src-tauri/src/commands/sdk.rs",
+      "line": 31
+    },
+    {
+      "domain": "sdk",
+      "name": "sdk_locate_tools",
+      "source": "src-tauri/src/commands/sdk.rs",
+      "line": 41
+    },
+    {
+      "domain": "sdk",
+      "name": "sdk_python_create_venv",
+      "source": "src-tauri/src/commands/sdk.rs",
+      "line": 53
+    },
+    {
+      "domain": "sdk",
+      "name": "sdk_python_packages",
+      "source": "src-tauri/src/commands/sdk.rs",
+      "line": 74
+    },
+    {
+      "domain": "sdk",
+      "name": "sdk_python_pip",
+      "source": "src-tauri/src/commands/sdk.rs",
+      "line": 87
+    },
+    {
+      "domain": "search",
+      "name": "search_start",
+      "source": "src-tauri/src/commands/search.rs",
+      "line": 16
+    },
+    {
+      "domain": "search",
+      "name": "replace_in_files",
+      "source": "src-tauri/src/commands/search.rs",
+      "line": 38
+    },
+    {
+      "domain": "search",
+      "name": "replace_preview",
+      "source": "src-tauri/src/commands/search.rs",
+      "line": 64
+    },
+    {
+      "domain": "search",
+      "name": "search_validate",
+      "source": "src-tauri/src/commands/search.rs",
+      "line": 80
+    },
+    {
+      "domain": "spell",
+      "name": "spell_check",
+      "source": "src-tauri/src/commands/spell.rs",
+      "line": 15
+    },
+    {
+      "domain": "spell",
+      "name": "spell_suggest",
+      "source": "src-tauri/src/commands/spell.rs",
+      "line": 28
+    },
+    {
+      "domain": "ssh",
+      "name": "ssh_test",
+      "source": "src-tauri/src/commands/ssh.rs",
+      "line": 17
+    },
+    {
+      "domain": "ssh",
+      "name": "ssh_set_secret",
+      "source": "src-tauri/src/commands/ssh.rs",
+      "line": 29
+    },
+    {
+      "domain": "ssh",
+      "name": "ssh_needs_secret",
+      "source": "src-tauri/src/commands/ssh.rs",
+      "line": 36
+    },
+    {
+      "domain": "ssh",
+      "name": "ssh_trust_host",
+      "source": "src-tauri/src/commands/ssh.rs",
+      "line": 43
+    },
+    {
+      "domain": "ssh",
+      "name": "ssh_connected",
+      "source": "src-tauri/src/commands/ssh.rs",
+      "line": 51
+    },
+    {
+      "domain": "ssh",
+      "name": "ssh_disconnect",
+      "source": "src-tauri/src/commands/ssh.rs",
+      "line": 57
+    },
+    {
+      "domain": "ssh",
+      "name": "ssh_askpass_answer",
+      "source": "src-tauri/src/commands/ssh.rs",
+      "line": 64
+    },
+    {
+      "domain": "ssh",
+      "name": "git_credentials",
+      "source": "src-tauri/src/commands/ssh.rs",
+      "line": 74
+    },
+    {
+      "domain": "ssh",
+      "name": "git_credential_forget",
+      "source": "src-tauri/src/commands/ssh.rs",
+      "line": 81
+    },
+    {
+      "domain": "ssh",
+      "name": "ssh_terminal_command",
+      "source": "src-tauri/src/commands/ssh.rs",
+      "line": 99
+    },
+    {
+      "domain": "syntax",
+      "name": "syntax_support",
+      "source": "src-tauri/src/commands/syntax.rs",
+      "line": 18
+    },
+    {
+      "domain": "syntax",
+      "name": "syntax_node_at",
+      "source": "src-tauri/src/commands/syntax.rs",
+      "line": 25
+    },
+    {
+      "domain": "syntax",
+      "name": "syntax_expression_at",
+      "source": "src-tauri/src/commands/syntax.rs",
+      "line": 39
+    },
+    {
+      "domain": "syntax",
+      "name": "syntax_errors",
+      "source": "src-tauri/src/commands/syntax.rs",
+      "line": 52
+    },
+    {
+      "domain": "syntax",
+      "name": "syntax_locals",
+      "source": "src-tauri/src/commands/syntax.rs",
+      "line": 65
+    },
+    {
+      "domain": "syntax",
+      "name": "syntax_identifiers",
+      "source": "src-tauri/src/commands/syntax.rs",
+      "line": 78
+    },
+    {
+      "domain": "syntax",
+      "name": "syntax_identifiers_in_files",
+      "source": "src-tauri/src/commands/syntax.rs",
+      "line": 92
+    },
+    {
+      "domain": "syntax",
+      "name": "syntax_structural_ranges",
+      "source": "src-tauri/src/commands/syntax.rs",
+      "line": 106
+    },
+    {
+      "domain": "syntax",
+      "name": "jvm_file_presentations",
+      "source": "src-tauri/src/commands/syntax.rs",
+      "line": 118
+    },
+    {
+      "domain": "term",
+      "name": "term_spawn",
+      "source": "src-tauri/src/commands/term.rs",
+      "line": 11
+    },
+    {
+      "domain": "term",
+      "name": "term_store_image",
+      "source": "src-tauri/src/commands/term.rs",
+      "line": 29
+    },
+    {
+      "domain": "term",
+      "name": "term_write",
+      "source": "src-tauri/src/commands/term.rs",
+      "line": 40
+    },
+    {
+      "domain": "term",
+      "name": "term_resize",
+      "source": "src-tauri/src/commands/term.rs",
+      "line": 46
+    },
+    {
+      "domain": "term",
+      "name": "term_kill",
+      "source": "src-tauri/src/commands/term.rs",
+      "line": 52
+    },
+    {
+      "domain": "term",
+      "name": "term_is_busy",
+      "source": "src-tauri/src/commands/term.rs",
+      "line": 60
+    },
+    {
+      "domain": "term",
+      "name": "term_default_shell",
+      "source": "src-tauri/src/commands/term.rs",
+      "line": 67
+    },
+    {
+      "domain": "term",
+      "name": "term_available_shells",
+      "source": "src-tauri/src/commands/term.rs",
+      "line": 74
+    },
+    {
+      "domain": "tools",
+      "name": "tools_list",
+      "source": "src-tauri/src/commands/tools.rs",
+      "line": 17
+    },
+    {
+      "domain": "tools",
+      "name": "tools_install",
+      "source": "src-tauri/src/commands/tools.rs",
+      "line": 25
+    },
+    {
+      "domain": "tools",
+      "name": "tools_uninstall",
+      "source": "src-tauri/src/commands/tools.rs",
+      "line": 39
+    },
+    {
+      "domain": "tools",
+      "name": "jdk_download_vendors",
+      "source": "src-tauri/src/commands/tools.rs",
+      "line": 46
+    },
+    {
+      "domain": "tools",
+      "name": "jdk_download_releases",
+      "source": "src-tauri/src/commands/tools.rs",
+      "line": 53
+    },
+    {
+      "domain": "tools",
+      "name": "jdk_download_location",
+      "source": "src-tauri/src/commands/tools.rs",
+      "line": 65
+    },
+    {
+      "domain": "tools",
+      "name": "jdk_download",
+      "source": "src-tauri/src/commands/tools.rs",
+      "line": 76
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_status",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 15
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_roots",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 21
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_branch_info",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 27
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_line_hunks",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 38
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_file_at",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 44
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_block_history",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 57
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_blame",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 70
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_log",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 82
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_log_refs",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 93
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_log_users",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 103
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_open_external_log",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 113
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_log_details",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 123
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_log_details_batch",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 134
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_log_index",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 145
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_revision_children",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 155
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_revision_files",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 167
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_commit_files",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 178
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_commits_changes",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 190
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_branches",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 201
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_stashes",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 207
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_stage",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 213
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_add_to_ignore",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 219
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_unstage",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 230
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_stage_patch",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 236
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_discard",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 242
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_commit",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 248
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_checkout",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 260
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_create_branch",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 274
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_undo_commit",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 289
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_delete_branch",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 300
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_restore_branch",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 312
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_rename_branch",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 323
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_merge",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 335
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_rebase",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 346
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_stash_push",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 357
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_stash_apply",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 370
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_stash_drop",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 384
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_remote",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 396
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_conflict_versions",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 411
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_diff_text",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 421
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_diff_hunks",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 433
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_stage_hunks",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 441
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_clone",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 453
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_init",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 467
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_git_version",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 475
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_detected_git",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 482
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_config_get",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 489
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_operation",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 502
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_create_tag",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 523
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_tags",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 537
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_merge_with",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 544
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_rebase_with",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 557
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_remotes",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 569
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_edit_remote",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 575
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_worktrees",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 586
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_add_worktree",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 596
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_remove_worktree",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 609
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_diff_with_worktree",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 622
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_diff_revisions",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 634
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_merge_base",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 647
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_create_patch",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 659
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_patch_preview",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 670
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_apply_patch",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 681
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_shelve",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 693
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_shelves",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 704
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_unshelve",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 712
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_shelf_delete",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 724
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_shelf_rename",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 730
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_shelf_patch",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 736
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_changelists_load",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 747
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_changelists_save",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 753
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_write_patch",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 760
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_shelf_diff",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 771
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_shelf_import",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 781
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_compare_scope",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 793
+    },
+    {
+      "domain": "vcs",
+      "name": "vcs_compare_paths",
+      "source": "src-tauri/src/commands/vcs.rs",
+      "line": 803
+    },
+    {
+      "domain": "web",
+      "name": "web_browsers",
+      "source": "src-tauri/src/commands/web.rs",
+      "line": 12
+    },
+    {
+      "domain": "web",
+      "name": "web_url",
+      "source": "src-tauri/src/commands/web.rs",
+      "line": 19
+    },
+    {
+      "domain": "web",
+      "name": "web_open",
+      "source": "src-tauri/src/commands/web.rs",
+      "line": 27
+    },
+    {
+      "domain": "window",
+      "name": "window_open_project",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 19
+    },
+    {
+      "domain": "window",
+      "name": "window_open_files",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 34
+    },
+    {
+      "domain": "window",
+      "name": "window_open_file_in_new_window",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 47
+    },
+    {
+      "domain": "window",
+      "name": "window_open_remote",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 59
+    },
+    {
+      "domain": "window",
+      "name": "window_new",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 71
+    },
+    {
+      "domain": "window",
+      "name": "window_open_settings",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 80
+    },
+    {
+      "domain": "window",
+      "name": "window_open_comparison",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 94
+    },
+    {
+      "domain": "window",
+      "name": "window_open_deployment",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 107
+    },
+    {
+      "domain": "window",
+      "name": "window_cycle",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 120
+    },
+    {
+      "domain": "window",
+      "name": "window_toggle_fullscreen",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 126
+    },
+    {
+      "domain": "window",
+      "name": "window_set_titlebar_height",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 133
+    },
+    {
+      "domain": "window",
+      "name": "window_take_launch",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 147
+    },
+    {
+      "domain": "window",
+      "name": "window_open_projects",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 163
+    },
+    {
+      "domain": "window",
+      "name": "window_close_context",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 192
+    },
+    {
+      "domain": "window",
+      "name": "app_quit",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 199
+    },
+    {
+      "domain": "window",
+      "name": "app_cancel_quit",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 210
+    },
+    {
+      "domain": "window",
+      "name": "menu_configure",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 220
+    },
+    {
+      "domain": "window",
+      "name": "menu_refresh",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 233
+    },
+    {
+      "domain": "window",
+      "name": "menu_model",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 240
+    },
+    {
+      "domain": "window",
+      "name": "menu_set_disabled",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 254
+    },
+    {
+      "domain": "window",
+      "name": "app_log_location",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 275
+    },
+    {
+      "domain": "window",
+      "name": "app_build_info",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 296
+    },
+    {
+      "domain": "window",
+      "name": "app_check_update",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 361
+    },
+    {
+      "domain": "window",
+      "name": "app_startup_update_check",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 382
+    },
+    {
+      "domain": "window",
+      "name": "app_install_update",
+      "source": "src-tauri/src/commands/window.rs",
+      "line": 452
+    },
+    {
+      "domain": "window_group",
+      "name": "window_group_current",
+      "source": "src-tauri/src/commands/window_group.rs",
+      "line": 7
+    },
+    {
+      "domain": "window_group",
+      "name": "window_group_merge",
+      "source": "src-tauri/src/commands/window_group.rs",
+      "line": 13
+    },
+    {
+      "domain": "window_group",
+      "name": "window_group_select",
+      "source": "src-tauri/src/commands/window_group.rs",
+      "line": 20
+    },
+    {
+      "domain": "window_group",
+      "name": "window_group_detach",
+      "source": "src-tauri/src/commands/window_group.rs",
+      "line": 27
+    },
+    {
+      "domain": "window_group",
+      "name": "window_group_close",
+      "source": "src-tauri/src/commands/window_group.rs",
+      "line": 34
+    },
+    {
+      "domain": "window_group",
+      "name": "window_group_close_tabs",
+      "source": "src-tauri/src/commands/window_group.rs",
+      "line": 47
+    },
+    {
+      "domain": "window_group",
+      "name": "window_group_cancel_close",
+      "source": "src-tauri/src/commands/window_group.rs",
+      "line": 54
+    },
+    {
+      "domain": "window_group",
+      "name": "window_group_reorder",
+      "source": "src-tauri/src/commands/window_group.rs",
+      "line": 60
+    },
+    {
+      "domain": "window_group",
+      "name": "window_group_restore",
+      "source": "src-tauri/src/commands/window_group.rs",
+      "line": 68
+    },
+    {
+      "domain": "workspace",
+      "name": "workspace_create",
+      "source": "src-tauri/src/commands/workspace.rs",
+      "line": 10
+    },
+    {
+      "domain": "workspace",
+      "name": "workspace_update",
+      "source": "src-tauri/src/commands/workspace.rs",
+      "line": 21
+    },
+    {
+      "domain": "workspace",
+      "name": "workspace_attach",
+      "source": "src-tauri/src/commands/workspace.rs",
+      "line": 36
+    }
+  ]
+}
