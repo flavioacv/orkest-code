@@ -147,7 +147,7 @@ class LspClientImpl implements LspClient {
   }
 
   /// `initialize` → `initialized`. Anuncia as capabilities mínimas que usamos
-  /// (publishDiagnostics, semanticTokens, formatting). `positionEncoding` fica no
+  /// (publishDiagnostics, semanticTokens, formatting, hover). `positionEncoding` fica no
   /// default (utf-16) — alinhado com as code units da `String` Dart.
   Future<void> _handshake() async {
     final rootUri = Uri.directory(rootPath).toString();
@@ -165,6 +165,10 @@ class LspClientImpl implements LspClient {
             'dynamicRegistration': false,
           },
           'formatting': <String, dynamic>{'dynamicRegistration': false},
+          'hover': <String, dynamic>{
+            'dynamicRegistration': false,
+            'contentFormat': <String>['plaintext'],
+          },
           // Spec exige `requests`/`tokenTypes`/`tokenModifiers`/`formats` —
           // sem eles o Dart analysis server rejeita o `initialize` inteiro
           // (params.capabilities.textDocument.semanticTokens.formats must

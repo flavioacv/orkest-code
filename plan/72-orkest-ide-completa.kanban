@@ -298,6 +298,14 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em revisão
 
+- [ ] L02a · Mostrar informações semânticas ao apontar para símbolos <!-- id: L02a labels: P1, linguagens blockedBy: L00 -->
+      Entrega: hover LSP com debounce, posição UTF-16 e tooltip integrado aos diagnósticos, em texto simples.
+      Aceite: descartar resposta após edição, troca/fechamento, movimento ou scroll; respeitar navegação e host standalone sem LSP.
+      Validação: 52 testes aprovados na rodada final, incluindo servidor Dart real; análise estática limpa; telemetria r_21 sem erros/avisos.
+      Limites: completion, signature help, Markdown rico e cancelamento remoto ainda pendentes em L02.
+      Detalhes: [hover semântico](72-hover-semantico.md).
+
+
 - [ ] L00 · Ampliar perfis LSP e reconhecimento de arquivos <!-- id: L00 labels: P1, linguagens blockedBy: F01 -->
       Entrega: HTML, CSS, SCSS, Less, JSON, JSONC, YAML e Shell Script; nomes específicos precedem extensão em caminhos POSIX/Windows.
       Origem: languages/*.toml da referência; implementação no catálogo Dart existente.

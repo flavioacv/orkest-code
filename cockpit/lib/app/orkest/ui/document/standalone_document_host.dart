@@ -92,6 +92,10 @@ class StandaloneDocumentHost implements DocumentHost {
   Future<void> goToDefinition(String path, int line, int character) =>
       Future.value();
 
+  @override
+  Future<String?> lspHover(String path, String text, int line, int character) =>
+      Future.value(null);
+
   // ---- filesystem ----------------------------------------------------------
 
   @override

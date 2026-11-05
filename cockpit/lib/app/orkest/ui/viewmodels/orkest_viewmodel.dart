@@ -2687,6 +2687,17 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
   Future<SemanticTokens> lspSemanticTokensFull(String path) =>
       _lsp.semanticTokensFull(path);
 
+  @override
+  Future<String?> lspHover(
+    String path,
+    String text,
+    int line,
+    int character,
+  ) async {
+    await _lsp.changeDocument(path: path, text: text);
+    return _lsp.hover(path, line, character);
+  }
+
   /// Go to definition: resolve location no servidor, abre arquivo + revela linha.
   /// No-op silencioso se sem servidor / sem definição / erro.
   @override

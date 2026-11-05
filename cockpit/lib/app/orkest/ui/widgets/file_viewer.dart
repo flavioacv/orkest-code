@@ -978,6 +978,12 @@ class _FileViewerState extends State<FileViewer> {
             onGoToDefinition: (pos) {
               _vm?.goToDefinition(widget.session.path, pos.line, pos.character);
             },
+            onSymbolHover: (pos) async => _vm?.lspHover(
+              widget.session.path,
+              ctrl.text,
+              pos.line,
+              pos.character,
+            ),
           ),
         ),
         if (_findOpen)

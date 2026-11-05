@@ -59,6 +59,7 @@ class CodeEditor extends StatefulWidget {
     this.revealMatchStart,
     this.revealMatchTick = 0,
     this.onGoToDefinition,
+    this.onSymbolHover,
     this.filePath,
   });
 
@@ -67,6 +68,9 @@ class CodeEditor extends StatefulWidget {
 
   /// Callback quando Cmd/Ctrl+clique (go-to-definition). Passa {line, character}.
   final void Function(({int line, int character}))? onGoToDefinition;
+
+  /// Informação semântica fornecida pelo servidor para a posição UTF-16.
+  final Future<String?> Function(({int line, int character}))? onSymbolHover;
 
   /// Caminho do arquivo (só a extensão é usada: fallback da largura de
   /// indentação quando o conteúdo não dá pista). `null` = 4 espaços.
@@ -126,12 +130,15 @@ class _CodeEditorState extends State<CodeEditor> {
   @override
   void initState() {
     super.initState();
+    _hoverBuffer = widget.controller.text;
     _rebuildLineStarts();
     // Recontar linhas (gutter) a cada digitação que muda o nº de '\n'.
     widget.controller.addListener(_onChanged);
     widget.controller.addListener(_keepHorizontalOnSelection);
     _horizontal.addListener(_onHorizontalScroll);
+    _horizontal.addListener(_invalidateSymbolHover);
     _vertical.addListener(_syncGutter);
+    _vertical.addListener(_invalidateSymbolHover);
     if (widget.revealLine != null) _scheduleReveal(widget.revealLine!);
   }
 
@@ -196,6 +203,20 @@ class _CodeEditorState extends State<CodeEditor> {
   @override
   void didUpdateWidget(CodeEditor old) {
     super.didUpdateWidget(old);
+    if (old.controller != widget.controller) {
+      old.controller.removeListener(_onChanged);
+      old.controller.removeListener(_keepHorizontalOnSelection);
+      widget.controller.addListener(_onChanged);
+      widget.controller.addListener(_keepHorizontalOnSelection);
+      _hoverBuffer = widget.controller.text;
+      _rebuildLineStarts();
+    }
+    if (old.filePath != widget.filePath ||
+        old.controller != widget.controller) {
+      _invalidateSymbolHover();
+      _hoverLine = null;
+      _hoverMsgs = const [];
+    }
     if (widget.revealLine != null && widget.revealTick != old.revealTick) {
       _scheduleReveal(widget.revealLine!);
     }
@@ -368,6 +389,11 @@ class _CodeEditorState extends State<CodeEditor> {
   static const double _padBottom = 14;
   int? _hoverLine;
   List<String> _hoverMsgs = const <String>[];
+  String? _hoverInfo;
+  String _hoverBuffer = '';
+  int? _hoverSymbolStart;
+  int _hoverRequest = 0;
+  Timer? _hoverTimer;
   double _hoverDx = 0;
 
   // Go-to-definition: detecta modificador (Cmd/Ctrl) + hover + tap.
@@ -384,6 +410,8 @@ class _CodeEditorState extends State<CodeEditor> {
     // mouse (independente do cache por linha do tooltip de diagnostic abaixo).
     _updateDefinitionMode();
     _updateDefinitionHoverRange(event);
+
+    _requestSymbolHover(event);
 
     final scroll = _vertical.hasClients ? _vertical.offset : 0.0;
     final contentY = event.localPosition.dy - _padTop + scroll;
@@ -409,12 +437,10 @@ class _CodeEditorState extends State<CodeEditor> {
 
   /// Converte a posição do mouse em offset de texto (via largura medida do
   /// gutter + scroll horizontal + `TextPainter.getPositionForOffset` na linha
-  /// hovered) e atualiza o range sublinhado no controller — só quando o
-  /// modificador está ativo. Fora dele, limpa (sem sublinhado/cursor de mão).
-  void _updateDefinitionHoverRange(PointerHoverEvent event) {
-    if (!_definitionModeActive) return _clearDefinitionHover();
+  /// hovered). Retorna offset UTF-16 para hover semântico e navegação.
+  int? _offsetForHover(PointerHoverEvent event) {
     final codeStyle = _codeStyle;
-    if (codeStyle == null) return _clearDefinitionHover();
+    if (codeStyle == null || _lineHeight <= 0) return null;
 
     final scrollV = _vertical.hasClients ? _vertical.offset : 0.0;
     final contentY = event.localPosition.dy - _padTop + scrollV;
@@ -423,12 +449,12 @@ class _CodeEditorState extends State<CodeEditor> {
         _lineHeight <= 0 ||
         line < 0 ||
         line >= _lineStarts.length) {
-      return _clearDefinitionHover();
+      return null;
     }
 
     final scrollH = _horizontal.hasClients ? _horizontal.offset : 0.0;
     final codeLocalX = event.localPosition.dx - _gutterWidth - 14 + scrollH;
-    if (codeLocalX < 0) return _clearDefinitionHover();
+    if (codeLocalX < 0) return null;
 
     final text = widget.controller.text;
     final lineStart = _lineStarts[line];
@@ -443,8 +469,19 @@ class _CodeEditorState extends State<CodeEditor> {
       text: TextSpan(text: lineText, style: codeStyle),
       textDirection: TextDirection.ltr,
     )..layout();
+    if (codeLocalX > painter.width) {
+      painter.dispose();
+      return null;
+    }
     final pos = painter.getPositionForOffset(Offset(codeLocalX, 0));
-    final offset = (lineStart + pos.offset).clamp(0, text.length);
+    painter.dispose();
+    return (lineStart + pos.offset).clamp(0, text.length);
+  }
+
+  void _updateDefinitionHoverRange(PointerHoverEvent event) {
+    if (!_definitionModeActive) return _clearDefinitionHover();
+    final offset = _offsetForHover(event);
+    if (offset == null) return _clearDefinitionHover();
     final range = widget.controller.wordRangeAt(offset);
 
     final hovered = range != null;
@@ -457,6 +494,48 @@ class _CodeEditorState extends State<CodeEditor> {
       });
     }
     widget.controller.definitionHoverRange = range;
+  }
+
+  void _invalidateSymbolHover() {
+    _hoverTimer?.cancel();
+    _hoverRequest++;
+    _hoverSymbolStart = null;
+    if (_hoverInfo != null && mounted) setState(() => _hoverInfo = null);
+  }
+
+  void _requestSymbolHover(PointerHoverEvent event) {
+    final callback = widget.onSymbolHover;
+    final offset = _offsetForHover(event);
+    final range = offset == null ? null : widget.controller.wordRangeAt(offset);
+    if (callback == null || range == null || _definitionModeActive) {
+      _invalidateSymbolHover();
+      return;
+    }
+    if (_hoverSymbolStart == range.start) return;
+    _invalidateSymbolHover();
+    _hoverSymbolStart = range.start;
+    final request = _hoverRequest;
+    final text = widget.controller.text;
+    final position = widget.controller.offsetToLineChar(offset!);
+    _hoverTimer = Timer(const Duration(milliseconds: 350), () async {
+      try {
+        final info = await callback(position);
+        if (!mounted ||
+            request != _hoverRequest ||
+            widget.controller.text != text) {
+          return;
+        }
+        setState(() => _hoverInfo = info);
+      } catch (error, stack) {
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stack,
+            library: 'Orkest symbol hover',
+          ),
+        );
+      }
+    });
   }
 
   void _clearDefinitionHover() {
@@ -477,6 +556,7 @@ class _CodeEditorState extends State<CodeEditor> {
   }
 
   void _clearHover() {
+    _invalidateSymbolHover();
     _clearDefinitionHover();
     if (_hoverLine == null && _hoverMsgs.isEmpty) return;
     setState(() {
@@ -604,6 +684,10 @@ class _CodeEditorState extends State<CodeEditor> {
   }
 
   void _onChanged() {
+    if (_hoverBuffer != widget.controller.text) {
+      _hoverBuffer = widget.controller.text;
+      _invalidateSymbolHover();
+    }
     _rebuildLineStarts();
     final n = '\n'.allMatches(widget.controller.text).length + 1;
     final diag = widget.controller.diagnostics;
@@ -625,11 +709,15 @@ class _CodeEditorState extends State<CodeEditor> {
 
   @override
   void dispose() {
+    _hoverTimer?.cancel();
+    _hoverRequest++;
     _chordTimer?.cancel();
     widget.controller.removeListener(_onChanged);
     widget.controller.removeListener(_keepHorizontalOnSelection);
     _horizontal.removeListener(_onHorizontalScroll);
+    _horizontal.removeListener(_invalidateSymbolHover);
     _vertical.removeListener(_syncGutter);
+    _vertical.removeListener(_invalidateSymbolHover);
     widget.controller.definitionHoverRange = null;
     _vertical.dispose();
     _horizontal.dispose();
@@ -774,7 +862,8 @@ class _CodeEditorState extends State<CodeEditor> {
             builder: (context, viewport) => Stack(
               children: [
                 _editorScroll(),
-                if (_hoverMsgs.isNotEmpty && _hoverLine != null)
+                if ((_hoverMsgs.isNotEmpty || _hoverInfo != null) &&
+                    _hoverLine != null)
                   _hoverOverlay(context, viewport.maxWidth),
               ],
             ),
@@ -808,7 +897,9 @@ class _CodeEditorState extends State<CodeEditor> {
             border: Border.all(color: colors.border),
           ),
           child: Text(
-            _hoverMsgs.join('\n'),
+            [..._hoverMsgs, ?_hoverInfo].join('\n\n'),
+            maxLines: 12,
+            overflow: TextOverflow.ellipsis,
             style: context.typo.label.copyWith(color: colors.text),
           ),
         ),

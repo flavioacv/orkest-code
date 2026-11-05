@@ -59,7 +59,14 @@ class _FakeClient implements LspClient {
   Future<Result<Object?, LspError>> request(
     String method,
     Map<String, dynamic> params,
-  ) async => const Success(null);
+  ) async {
+    if (method == 'textDocument/hover') {
+      _shared.hoverParams = params;
+      return _shared.hoverGate?.future ?? const Success(null);
+    }
+    return const Success(null);
+  }
+
   @override
   Future<Result<Object?, LspError>> semanticTokensFull(String path) async {
     semanticTokensCalls++;
@@ -92,6 +99,8 @@ class _Shared {
 
   /// Quando setado, `semanticTokensFull` do fake espera por ele.
   Completer<Result<Object?, LspError>>? semanticGate;
+  Completer<Result<Object?, LspError>>? hoverGate;
+  Map<String, dynamic>? hoverParams;
 }
 
 class _FakeFactory implements LspClientFactory {
@@ -116,6 +125,41 @@ void main() {
     dartFile = '${tmp.path}/main.dart';
   });
   tearDown(() => tmp.deleteSync(recursive: true));
+
+  test('hover routes UTF-16 position and parses the server response', () async {
+    final shared = _Shared()
+      ..hoverGate = Completer<Result<Object?, LspError>>();
+    final pool = LspServerPool(_FakeFactory(shared));
+    addTearDown(pool.dispose);
+    await pool.openDocument(path: dartFile, text: '🚀value');
+    final reply = pool.hover(dartFile, 0, 2);
+    expect(shared.hoverParams?['position'], {'line': 0, 'character': 2});
+    shared.hoverGate!.complete(
+      const Success({
+        'contents': {'kind': 'plaintext', 'value': 'int value'},
+      }),
+    );
+    expect(await reply, 'int value');
+  });
+
+  for (final mutation in ['edit', 'reopen']) {
+    test('hover discards a delayed reply after $mutation', () async {
+      final shared = _Shared()
+        ..hoverGate = Completer<Result<Object?, LspError>>();
+      final pool = LspServerPool(_FakeFactory(shared));
+      addTearDown(pool.dispose);
+      await pool.openDocument(path: dartFile, text: 'value');
+      final reply = pool.hover(dartFile, 0, 1);
+      if (mutation == 'edit') {
+        await pool.changeDocument(path: dartFile, text: 'different');
+      } else {
+        await pool.closeDocument(dartFile);
+        await pool.openDocument(path: dartFile, text: 'value');
+      }
+      shared.hoverGate!.complete(const Success({'contents': 'old info'}));
+      expect(await reply, isNull);
+    });
+  }
 
   for (final entry in {
     'html': 'index.html',

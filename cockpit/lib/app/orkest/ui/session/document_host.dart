@@ -31,6 +31,7 @@ abstract class DocumentHost {
   Stream<LspDiagnosticsBatch> get lspDiagnostics;
   Future<List<LspTextEdit>> lspFormat(String path, String text);
   Future<SemanticTokens> lspSemanticTokensFull(String path);
+  Future<String?> lspHover(String path, String text, int line, int character);
   Future<void> goToDefinition(String path, int line, int character);
 
   Future<List<FileNode>> listChildren(String path);
