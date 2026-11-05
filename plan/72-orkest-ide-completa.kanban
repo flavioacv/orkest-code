@@ -78,6 +78,7 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Destino: Cliente/pool LSP existente, code_editor e controllers.
       Aceite: Completion, resolve, hover semântico e signature help funcionam em Dart e TS; requests cancelados e respostas antigas não alteram documento/versão errados.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
+      Progresso: hover (L02a) e signature help (L02b) concluídos; completion permanece pendente.
 
 - [ ] L03 · Adicionar navegação semântica e busca unificada <!-- id: L03 labels: P1, linguagens blockedBy: L02, W02 -->
       Porte: M. Dependências: L02, W02.
@@ -298,39 +299,8 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em revisão
 
-- [ ] L02b · Exibir parâmetros das chamadas durante edição <!-- id: L02b labels: P1, linguagens blockedBy: L02a -->
-      Entrega: signatureHelp automático em parêntese/vírgula, atalho Ctrl+Shift+Espaço, sobrecarga/parâmetro ativos e documentação em texto simples.
-      Aceite: descarte por versão/seleção/geração; Escape, perda de foco, scroll e troca de documento encerram a ajuda; nenhuma mudança no texto pelo atalho.
-      Validação: 70 testes aprovados, incluindo servidor Dart real; análise estática limpa e telemetria r_24 sem erros/avisos.
-      Fluxo: commits locais somente em fix/harness-state-detection; sem push ou PR.
-      Detalhes: [ajuda de assinatura](72-ajuda-assinatura.md). Completion permanece pendente em L02.
-
-
-- [ ] L02a · Mostrar informações semânticas ao apontar para símbolos <!-- id: L02a labels: P1, linguagens blockedBy: L00 -->
-      Entrega: hover LSP com debounce, posição UTF-16 e tooltip integrado aos diagnósticos, em texto simples.
-      Aceite: descartar resposta após edição, troca/fechamento, movimento ou scroll; respeitar navegação e host standalone sem LSP.
-      Validação: 52 testes aprovados na rodada final, incluindo servidor Dart real; análise estática limpa; telemetria r_21 sem erros/avisos.
-      Limites: completion, signature help, Markdown rico e cancelamento remoto ainda pendentes em L02.
-      Detalhes: [hover semântico](72-hover-semantico.md).
-
-      <!-- comment: 2026-11-04T20:54 -->
-      Diretriz vigente: continuar todos os commits em fix/harness-state-detection. PRs #12/#13 fechadas sem merge. Sem novas branches, push ou PR até pedido explícito.
-
-- [ ] L00 · Ampliar perfis LSP e reconhecimento de arquivos <!-- id: L00 labels: P1, linguagens blockedBy: F01 -->
-      Entrega: HTML, CSS, SCSS, Less, JSON, JSONC, YAML e Shell Script; nomes específicos precedem extensão em caminhos POSIX/Windows.
-      Origem: languages/*.toml da referência; implementação no catálogo Dart existente.
-      Aceite: preservar perfis anteriores, overrides e compartilhamento de servidor por raiz; 46 testes passaram; 22 testes focados repetidos após ajustes finais; análise estática sem issues e telemetria r_1w sem erros/avisos.
-      Limite: não instala servidores nem comprova funcionamento real de cada servidor; L01/L05 permanecem abertas.
-      Plano: [auditoria e entrega](72-auditoria-paridade.md).
-
-      <!-- comment: 2026-11-04T20:54 -->
-      Diretriz vigente: continuar todos os commits em fix/harness-state-detection. PRs #12/#13 fechadas sem merge. Sem novas branches, push ou PR até pedido explícito.
-
-      <!-- comment: 2026-11-04T20:27 -->
-      PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
-
-- [ ] H00 · Revisar e integrar correção de espera já implementada <!-- id: H00 labels: P0, harness -->
-      Porte: S. Dependências: nenhuma.
+- [ ] H00 · Homologar em build a correção de espera já implementada <!-- id: H00 labels: P0, harness blockedBy: H00a -->
+      Porte: S. Dependências: H00a.
       Origem: Commit 8d01a751, fix/harness-state-detection.
       Destino: TerminalSession e terminal_status_test.
       Aceite: Revisar na branch única; build e validação real antes de marcar entregue; 102 testes anteriores não equivalem a validação de todas as CLIs.
@@ -364,3 +334,48 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Destino: Documentação de origem e avisos dos componentes escolhidos.
       Aceite: Manifesto por arquivo/crate/asset com commit, licença, alterações e dependências; nenhum material sem proveniência entra na distribuição.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
+
+- [x] L00 · Ampliar perfis LSP e reconhecimento de arquivos <!-- id: L00 labels: P1, linguagens blockedBy: F01 -->
+      Entrega: HTML, CSS, SCSS, Less, JSON, JSONC, YAML e Shell Script; nomes específicos precedem extensão em caminhos POSIX/Windows.
+      Origem: languages/*.toml da referência; implementação no catálogo Dart existente.
+      Aceite: preservar perfis anteriores, overrides e compartilhamento de servidor por raiz; 46 testes passaram; 22 testes focados repetidos após ajustes finais; análise estática sem issues e telemetria r_1w sem erros/avisos.
+      Limite: não instala servidores nem comprova funcionamento real de cada servidor; L01/L05 permanecem abertas.
+      Plano: [auditoria e entrega](72-auditoria-paridade.md).
+
+      <!-- comment: 2026-11-04T21:09 -->
+      Implementação, testes e commit local concluídos: b980a1fb; 46 testes e análise estática limpa. Homologação ampliada/release permanecem nas atividades específicas; aplicativo instalado ainda não atualizado.
+
+      <!-- comment: 2026-11-04T20:54 -->
+      Diretriz vigente: continuar todos os commits em fix/harness-state-detection. PRs #12/#13 fechadas sem merge. Sem novas branches, push ou PR até pedido explícito.
+
+      <!-- comment: 2026-11-04T20:27 -->
+      PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
+
+- [x] L02a · Mostrar informações semânticas ao apontar para símbolos <!-- id: L02a labels: P1, linguagens blockedBy: L00 -->
+      Entrega: hover LSP com debounce, posição UTF-16 e tooltip integrado aos diagnósticos, em texto simples.
+      Aceite: descartar resposta após edição, troca/fechamento, movimento ou scroll; respeitar navegação e host standalone sem LSP.
+      Validação: 52 testes aprovados na rodada final, incluindo servidor Dart real; análise estática limpa; telemetria r_21 sem erros/avisos.
+      Limites: completion, signature help, Markdown rico e cancelamento remoto ainda pendentes em L02.
+      Detalhes: [hover semântico](72-hover-semantico.md).
+
+      <!-- comment: 2026-11-04T21:09 -->
+      Implementação, testes e commit local concluídos: 3ba5174c; 52 testes, incluindo servidor Dart real. Homologação ampliada/release permanecem nas atividades específicas; aplicativo instalado ainda não atualizado.
+
+      <!-- comment: 2026-11-04T20:54 -->
+      Diretriz vigente: continuar todos os commits em fix/harness-state-detection. PRs #12/#13 fechadas sem merge. Sem novas branches, push ou PR até pedido explícito.
+
+- [x] L02b · Exibir parâmetros das chamadas durante edição <!-- id: L02b labels: P1, linguagens blockedBy: L02a -->
+      Entrega: signatureHelp automático em parêntese/vírgula, atalho Ctrl+Shift+Espaço, sobrecarga/parâmetro ativos e documentação em texto simples.
+      Aceite: descarte por versão/seleção/geração; Escape, perda de foco, scroll e troca de documento encerram a ajuda; nenhuma mudança no texto pelo atalho.
+      Validação: 70 testes aprovados, incluindo servidor Dart real; análise estática limpa e telemetria r_24 sem erros/avisos.
+      Fluxo: commits locais somente em fix/harness-state-detection; sem push ou PR.
+      Detalhes: [ajuda de assinatura](72-ajuda-assinatura.md). Completion permanece pendente em L02.
+
+      <!-- comment: 2026-11-04T21:09 -->
+      Implementação, testes e commit local concluídos: 15058443; 70 testes, incluindo servidor Dart real. Homologação ampliada/release permanecem nas atividades específicas; aplicativo instalado ainda não atualizado.
+
+- [x] H00a · Corrigir precisão de espera e retomada dos harnesses <!-- id: H00a labels: P0, harness -->
+      Entrega: espera estruturada preservada em redraw, supressão por prompt respondido, reconhecimento de nova aprovação e retomada legítima.
+      Concluído: commit 8d01a751, incluído na branch única fix/harness-state-detection; 102 testes aprovados e análise estática limpa.
+      Limites: a homologação de build e CLIs reais permanece aberta em H00; não equivale à instalação da versão.
+      Fluxo: commits locais na mesma branch; sem push ou PR.
