@@ -23,13 +23,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: Provar inlays, hierarquias, busca estrutural/duplicações e análise apenas onde servidor suporta; medir custo e escolher subset útil.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
-- [ ] H02 · Criar corpus e replay de leitura de harness <!-- id: H02 labels: P1, harness blockedBy: H01 -->
-      Porte: M. Dependências: H01.
-      Origem: ide-agent/replay.rs e fixtures JSONL.
-      Destino: test/session e fixtures sanitizadas.
-      Aceite: Capturas versionadas sem segredos para ANSI fragmentado, redraw, prompts repetidos, permissões simultâneas, subagentes, Stop/SessionEnd, WSL e reconnect; replay determinístico compara transições e duplicações.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] H03 · Ampliar reconhecimento de CLI por evidência <!-- id: H03 labels: P1, harness blockedBy: H02 -->
       Porte: M. Dependências: H02.
       Origem: provider.rs e registry como metadados de referência.
@@ -126,11 +119,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] H01 · Formalizar estado e precedência dos sinais de harness <!-- id: H01 labels: P0, harness blockedBy: F01 -->
-      Porte: M. Dependências: F01.
-      Origem: ide-agent/model, conversation, normalize; regras vigentes Orkest.
-      Destino: TerminalSession e contrato activity/hooks existente.
-      Aceite: Separar presença, execução, espera humana, conclusão e encerramento; origem/geração/sessão/turno/request quando disponíveis, deduplicação e eventos atrasados definidos; nomes de harness não selecionam comportamento.
+- [ ] H02 · Criar corpus e replay de leitura de harness <!-- id: H02 labels: P1, harness blockedBy: H01 -->
+      Porte: M. Dependências: H01.
+      Origem: ide-agent/replay.rs e fixtures JSONL.
+      Destino: test/session e fixtures sanitizadas.
+      Aceite: Capturas versionadas sem segredos para ANSI fragmentado, redraw, prompts repetidos, permissões simultâneas, subagentes, Stop/SessionEnd, WSL e reconnect; replay determinístico compara transições e duplicações.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -149,6 +142,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] H01 · Formalizar estado e precedência dos sinais de harness <!-- id: H01 labels: P0, harness blockedBy: F01 -->
+      Entrega: Formalização do modelo de estados ortogonais e precedência determinística dos sinais de harness: entidades de domínio HarnessPresence (none, attached, detached), HarnessExecutionPhase (idle, running, waitingInput, completed, closed), HarnessSignalSource com pesos de precedência (structuredHook [100] > ptyMarker [75] > userInput [50] > screenObservation [25]), HarnessSignal e HarnessStateSnapshot com mapeamento para TerminalStatus; coordenador determinístico HarnessStateCoordinator com regras de precedência por fonte (bloqueando cancelamentos e rebaixamentos espúrios por screen observation), isolamento de gerações de sessão, deduplicação de atividades concluídas em buffer circular FIFO cap de 256 itens e neutralidade absoluta de produtores/CLIs; e integração completa na TerminalSession.
+      Aceite: Separar presença, execução, espera humana, conclusão e encerramento; origem/geração/sessão/turno/request quando disponíveis, deduplicação e eventos atrasados definidos; nomes de harness não selecionam comportamento.
+      Validação: 6 testes unitários dedicados em test/domain/harness_signal_precedence_test.dart e 68 testes de terminal status em test/session/terminal_status_test.dart (total de 74 testes aprovados sem falhas); análise estática dart analyze --fatal-infos limpa (zero issues).
+      Plano: [detalhamento e arquitetura](72-formalizacao-estado-precedencia-harness.md).
 
 - [x] L05 · Homologar linguagens por níveis de capacidade <!-- id: L05 labels: P1, linguagens blockedBy: L02, L03, L04 -->
       Entrega: Matriz formal de linguagens por níveis de capacidade (LanguageTier: tier1Core, tier2Enterprise, tier3WebData); catálogo expandido para 20 linguagens com suporte sob demanda a SQL (sql-language-server), Vue 3 (vue-language-server) e Svelte (svelte-language-server); serviço declarativo de auditoria LanguageCapabilityMatrix discriminando deterministicamente status operacional (fullySupported, partiallySupported, missingServer, syntaxOnly) e registrando explicitamente capacidades não suportadas sem prometer paridade falsa; e suite com 11 fixtures sintéticas.

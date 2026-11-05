@@ -299,6 +299,9 @@ Destino: TerminalSession e contrato activity/hooks existente.
 
 Aceite: Separar presença, execução, espera humana, conclusão e encerramento; origem/geração/sessão/turno/request quando disponíveis, deduplicação e eventos atrasados definidos; nomes de harness não selecionam comportamento.
 
+Entrega: Formalização do modelo de estados ortogonais e precedência determinística dos sinais de harness: criação das entidades `HarnessPresence` (`none`, `attached`, `detached`), `HarnessExecutionPhase` (`idle`, `running`, `waitingInput`, `completed`, `closed`), `HarnessSignalSource` (com pesos: `structuredHook` [100] > `ptyMarker` [75] > `userInput` [50] > `screenObservation` [25]), `HarnessSignal` e `HarnessStateSnapshot` em `cockpit/lib/app/core/domain/entities/harness_signal.dart`; implementação do `HarnessStateCoordinator` (`cockpit/lib/app/core/domain/services/harness_state_coordinator.dart`) aplicando regras estritas de precedência de fontes (bloqueando rebaixamentos espúrios por observação de tela), isolamento de gerações de sessão (descarte de sinais atrasados), deduplicação de atividades concluídas em buffer circular FIFO cap de 256 itens e neutralidade absoluta de produtores/CLIs; e integração transparente na `TerminalSession` (`cockpit/lib/app/orkest/ui/session/terminal_session.dart`).
+Validação: 6 novos testes unitários dedicados em `cockpit/test/domain/harness_signal_precedence_test.dart` e 68 testes de status de terminal revalidados em `cockpit/test/session/terminal_status_test.dart` (total de 74 testes aprovados sem falhas); análise estática `dart analyze --fatal-infos` limpa (0 issues). Concluído em 05/11/2026. Detalhes em `plan/72-formalizacao-estado-precedencia-harness.md`.
+
 ### H02 — Criar corpus e replay de leitura de harness
 
 Prioridade P1 · Porte M · Dependências: H01.
