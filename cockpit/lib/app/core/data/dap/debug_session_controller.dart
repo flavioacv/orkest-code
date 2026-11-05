@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:flutter/foundation.dart';
 import 'package:orkest_code/app/core/data/dap/dap_client.dart';
 import 'package:orkest_code/app/core/data/dap/dap_models.dart';
+import 'package:orkest_code/app/core/data/dap/dart_debug_adapter.dart';
 
 /// Controlador central e reativo de uma sessão de depuração DAP no Orkest Code.
 ///
@@ -48,6 +49,81 @@ class DebugSessionController extends ChangeNotifier {
 
   final List<String> _consoleLogs = [];
   List<String> get consoleLogs => List.unmodifiable(_consoleLogs);
+
+  DartDebugTarget? _activeTarget;
+  DartDebugTarget? get activeTarget => _activeTarget;
+
+  /// Indica se a sessão atual é uma aplicação ou teste Flutter.
+  bool get isFlutter => _activeTarget?.isFlutter ?? false;
+
+  String _exceptionMode = 'Unhandled';
+  String get exceptionMode => _exceptionMode;
+
+  /// Atualiza o modo de captura de exceções ('None', 'Unhandled', 'All').
+  Future<void> setExceptionMode(String mode) async {
+    _exceptionMode = mode;
+    final client = _client;
+    if (client != null && isActive) {
+      await client.setExceptionBreakpoints([mode]);
+    }
+    notifyListeners();
+  }
+
+  /// Dispara Hot Reload na sessão Flutter ativa.
+  Future<bool> hotReload() async {
+    final client = _client;
+    if (client == null || !isActive) return false;
+
+    _logConsole('[DAP Flutter]: Disparando Hot Reload...');
+    final res = await client.hotReload();
+    if (res.success) {
+      _logConsole('[DAP Flutter]: Hot Reload concluído com sucesso.');
+      return true;
+    } else {
+      _logConsole('[DAP Flutter Erro]: Falha no Hot Reload: ${res.message ?? 'Desconhecida'}');
+      return false;
+    }
+  }
+
+  /// Dispara Hot Restart na sessão Flutter ativa.
+  Future<bool> hotRestart() async {
+    final client = _client;
+    if (client == null || !isActive) return false;
+
+    _logConsole('[DAP Flutter]: Disparando Hot Restart...');
+    final res = await client.hotRestart();
+    if (res.success) {
+      _logConsole('[DAP Flutter]: Hot Restart concluído com sucesso.');
+      return true;
+    } else {
+      _logConsole('[DAP Flutter Erro]: Falha no Hot Restart: ${res.message ?? 'Desconhecida'}');
+      return false;
+    }
+  }
+
+  /// Inicia uma nova sessão de depuração especializada para Dart ou Flutter.
+  Future<void> startDartSession({
+    required DartDebugTarget target,
+    String? sdkPath,
+    DapClient? clientOverride,
+  }) async {
+    final client = clientOverride ??
+        await DartDebugAdapter.spawnClient(
+          target: target,
+          sdkPath: sdkPath,
+        );
+
+    _activeTarget = target;
+    final launchArgs = target.toDapLaunchArgs();
+
+    await startSession(
+      client: client,
+      program: target.program,
+      args: (launchArgs['args'] as List?)?.cast<String>() ?? const [],
+      cwd: target.cwd,
+      noDebug: target.noDebug,
+    );
+  }
 
   /// Inicia uma nova sessão de depuração associada ao [client].
   Future<void> startSession({
@@ -232,6 +308,7 @@ class DebugSessionController extends ChangeNotifier {
 
     _activeThreadId = null;
     _lastStopReason = null;
+    _activeTarget = null;
     _threads = const [];
     _stackFrames = const [];
     _scopes = const [];

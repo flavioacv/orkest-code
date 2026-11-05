@@ -38,6 +38,12 @@ class DebugToolbar extends StatelessWidget {
               if (isStopped) controller.stepOut();
             },
             const SingleActivator(LogicalKeyboardKey.f5, shift: true): controller.stop,
+            const SingleActivator(LogicalKeyboardKey.f5, control: true): () {
+              if (controller.isFlutter) controller.hotReload();
+            },
+            const SingleActivator(LogicalKeyboardKey.f5, control: true, shift: true): () {
+              if (controller.isFlutter) controller.hotRestart();
+            },
           },
           child: Material(
             elevation: 6,
@@ -118,6 +124,26 @@ class DebugToolbar extends StatelessWidget {
                     enabled: isStopped,
                     onPressed: controller.stepOut,
                   ),
+
+                  // Flutter Hot Reload & Hot Restart
+                  if (controller.isFlutter) ...[
+                    const SizedBox(width: 6),
+                    Container(width: 1, height: 16, color: colors.border),
+                    const SizedBox(width: 6),
+                    _ToolbarButton(
+                      icon: sc.LucideIcons.zap,
+                      tooltip: 'Hot Reload (Ctrl+F5)',
+                      color: colors.warn,
+                      onPressed: controller.hotReload,
+                    ),
+                    const SizedBox(width: 4),
+                    _ToolbarButton(
+                      icon: sc.LucideIcons.rotateCcw,
+                      tooltip: 'Hot Restart (Ctrl+Shift+F5)',
+                      color: colors.accent,
+                      onPressed: controller.hotRestart,
+                    ),
+                  ],
 
                   const SizedBox(width: 6),
                   Container(width: 1, height: 16, color: colors.border),

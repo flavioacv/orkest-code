@@ -42,6 +42,19 @@ class DapClient {
     );
   }
 
+  /// Cria um cliente DapClient a partir de um [Process] já em execução.
+  factory DapClient.fromProcess({
+    required Process process,
+    String sessionId = 'default-session',
+  }) {
+    return DapClient(
+      stdout: process.stdout,
+      stdin: process.stdin,
+      process: process,
+      sessionId: sessionId,
+    );
+  }
+
   final StreamSink<List<int>> _stdin;
   final Process? _process;
   final String sessionId;
@@ -269,6 +282,21 @@ class DapClient {
       return DapEvaluateResult.fromJson(response.body!);
     }
     return null;
+  }
+
+  /// Configura filtros de interrupção em exceções (`None`, `All`, `Unhandled`).
+  Future<DapResponse> setExceptionBreakpoints(List<String> filters) {
+    return sendRequest('setExceptionBreakpoints', {'filters': filters});
+  }
+
+  /// Dispara Hot Reload no processo em depuração (requisição customizada Flutter DAP).
+  Future<DapResponse> hotReload({String reason = 'manual'}) {
+    return sendRequest('hotReload', {'reason': reason});
+  }
+
+  /// Dispara Hot Restart no processo em depuração (requisição customizada Flutter DAP).
+  Future<DapResponse> hotRestart({String reason = 'manual'}) {
+    return sendRequest('hotRestart', {'reason': reason});
   }
 
   /// Disconnect / Terminate
