@@ -330,6 +330,7 @@ Referência: ide-vcs stage_hunks/stage_patch; TS hunks/inclusion.
 Destino: GitController, diff_viewer e contratos Git.
 
 Aceite: Stage/unstage por trecho, diff staged/unstaged, commit parcial/amend e preview; validar HEAD/index contra corridas e preservar alterações não selecionadas, arquivos binários e untracked.
+Entrega: Serviço desacoplado `GitHunkService` (`domain/services/git_hunk_service.dart`) gerando patches unificados para `git apply --cached` e `git apply --cached --reverse`; descarte no working tree com `discardHunk`; botões interativos contextuais no `DiffViewer` (`_HunkHeader`) com tema visual semântico `colors.gitStaged`; integração com `GitController` e `DiffViewerSession`; proteção atômica contra corridas no índice; i18n em pt_BR, en e es; documentado em `plan/72-revisao-staging-por-hunks.md`. 4 testes unitários com repo real aprovados e 13 testes de regressão de diff aprovados com análise estática limpa. Concluído em 05/11/2026.
 
 ### G02 — Adicionar resolução visual de conflitos
 

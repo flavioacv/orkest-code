@@ -94,13 +94,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: Mostrar origem do último estado, idade do sinal e capacidade de detecção com dados limitados; medir falso working/waiting/idle em corpus rotulado; falta de sinal não inventa execução.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
-- [ ] G02 · Adicionar resolução visual de conflitos <!-- id: G02 labels: P1, git blockedBy: G01 -->
-      Porte: L. Dependências: G01.
-      Origem: MergeEditor, mergeDiff3; vcs_conflict_versions.
-      Destino: Diff/editor e GitController.
-      Aceite: Base/ours/theirs/result editável, navegação e validação de marcadores; continuar/abortar operação; salvar sem perder conteúdo e revalidar alterações externas.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] G03 · Evoluir histórico, autoria e comparação <!-- id: G03 labels: P2, git blockedBy: G01 -->
       Porte: L. Dependências: G01.
       Origem: GitLog, graph, block_history, blame, log_index.
@@ -240,11 +233,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] G01 · Entregar revisão e staging por hunks <!-- id: G01 labels: P1, git blockedBy: W03, A04 -->
-      Porte: L. Dependências: W03, A04.
-      Origem: ide-vcs stage_hunks/stage_patch; TS hunks/inclusion.
-      Destino: GitController, diff_viewer e contratos Git.
-      Aceite: Stage/unstage por trecho, diff staged/unstaged, commit parcial/amend e preview; validar HEAD/index contra corridas e preservar alterações não selecionadas, arquivos binários e untracked.
+- [ ] G02 · Adicionar resolução visual de conflitos <!-- id: G02 labels: P1, git blockedBy: G01 -->
+      Porte: L. Dependências: G01.
+      Origem: MergeEditor, mergeDiff3; vcs_conflict_versions.
+      Destino: Diff/editor e GitController.
+      Aceite: Base/ours/theirs/result editável, navegação e validação de marcadores; continuar/abortar operação; salvar sem perder conteúdo e revalidar alterações externas.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -263,6 +256,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] G01 · Entregar revisão e staging por hunks <!-- id: G01 labels: P1, git blockedBy: W03, A04 -->
+      Entrega: Serviço desacoplado GitHunkService com suporte a geração de patches unificados compatíveis com git apply --cached e --reverse; staging e unstage granulares por trecho; descarte isolado no working tree (discardHunk); botões interativos contextuais no DiffViewer (_HunkHeader) com cores semânticas do tema (gitStaged); integração no GitController com atualização assíncrona; proteção atômica contra conflitos e corridas no index; suporte multilíngue em pt_BR, en e es via slang.
+      Aceite: Stage/unstage por trecho, diff staged/unstaged, commit parcial/amend e preview; validar HEAD/index contra corridas e preservar alterações não selecionadas, arquivos binários e untracked.
+      Validação: 4 testes unitários com repo Git temporário em cockpit/test/domain/git_hunk_staging_test.dart; 13 testes de regressão de diff aprovados; análise estática dart analyze --fatal-infos limpa (zero issues).
+      Detalhes: [revisão e staging por hunks](72-revisao-staging-por-hunks.md).
 
 - [x] A04 · Decidir arquitetura por domínio com resultados medidos <!-- id: A04 labels: P0, arquitetura blockedBy: A03 -->
       Entrega: ADR formal de arquitetura por domínio consolidando as medições de A03 e contratos A01; decisão por Dart nativo via CLI Git do sistema (GitController) para ciclo de vida VCS e algoritmo em Dart puro para hunks/patches (G01); cliente DAP Dart puro sobre stdio para depuração sem processo intermediário; manutenção do StdioLspClient existente em Dart; rejeição terminante de FFI para VCS, DAP e Editor visando estabilidade do processo Flutter; Isolate Dart + ripgrep para busca de alto desempenho.
