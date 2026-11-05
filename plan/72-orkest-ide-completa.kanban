@@ -108,13 +108,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: Árvore de testes/reexecutar falhas e cobertura por formato validado; profiler somente por demanda; relatório aponta ferramenta/linguagem e não apresenta dado ausente como zero.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
-- [ ] B01 · Ampliar introspecção e navegação de bancos <!-- id: B01 labels: P2, bancos blockedBy: F01 -->
-      Porte: M. Dependências: F01.
-      Origem: ide-db source/conn/sql; db commands.
-      Destino: DbDriver.schema, db_panel e conectores anaki existentes.
-      Aceite: Matriz de schemas/tabelas/views/índices/FKs/routines por engine; DDL e navegação contextual com paginação/cache invalidável; manter Redis/Mongo e política de acesso atual.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] B02 · Provar transações e edição persistente de dados <!-- id: B02 labels: P2, bancos blockedBy: B01, A04 -->
       Porte: L. Dependências: B01, A04.
       Origem: ide-db transactions e db_apply_edits.
@@ -191,11 +184,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] G05 · Integrar revisão de PR no contexto do código <!-- id: G05 labels: P2, git blockedBy: G01 -->
-      Porte: M. Dependências: G01.
-      Origem: ide-github e src/features/github.
-      Destino: Painel Git e ações de revisão.
-      Aceite: Listar/detalhar/criar PR, comentários/review/diff e checkout conforme ferramenta disponível; falhas de autenticação explícitas; nenhuma operação de publicação/merge fora de autorização.
+- [ ] B01 · Ampliar introspecção e navegação de bancos <!-- id: B01 labels: P2, bancos blockedBy: W02 -->
+      Porte: L. Dependências: W02.
+      Origem: ide-db; schema/tree/query.
+      Destino: DbDriver efêmero atual, db_browser_panel e conexões.
+      Aceite: Matriz de schemas/tabelas/views/índices/FKs/routines por engine; DDL e navegação contextual com paginação/cache invalidável; manter Redis/Mongo e política de acesso atual.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -214,6 +207,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] G05 · Integrar revisão de PR no contexto do código <!-- id: G05 labels: P2, git blockedBy: G01 -->
+      Entrega: Modelos GitPullRequest, GitPrComment e GitPrDetail; serviço GitPullRequestService cobrindo parseOwnerRepo (SSH e HTTPS), listPullRequests (com tratamento explícito 401/403 para autenticação), getPullRequestDetail (agregação paralela de metadados, comentários, arquivos e diff unificado), createPullRequest, checkoutPullRequest (fetch remoto e checkout local para branch pr-<number>) e addComment (suporte a comentários de issue/PR e inline vinculados a commit, caminho e linha); componente de UI GitPrReviewPanel com painel bifurcado, abas de descrição, arquivos alterados (com badges A/M/D/R) e comentários, além de checkout com um clique e submissão de revisão; isolamento hermético via HttpRequester e originUrlOverride para testes.
+      Aceite: Listar/detalhar/criar PR, comentários/review/diff e checkout conforme ferramenta disponível; falhas de autenticação explícitas; nenhuma operação de publicação/merge fora de autorização.
+      Plano: [detalhamento e arquitetura](72-integracao-revisao-pr.md).
 
 - [x] G04 · Adicionar gestão avançada de trabalho Git <!-- id: G04 labels: P2, git blockedBy: G02 -->
       Entrega: Modelos de trabalho GitStashEntry e GitTagEntry; serviço GitWorkService implementando operações completas de Stash (listStashes, stashPush com includeUntracked/keepIndex, stashApply, stashPop, stashDrop, stashDiff), Tags (listTags com delimitadores estruturados, createTag leve/anotada e deleteTag) e Patches (createPatch e applyPatch com verificação prévia checkOnly e reversão reverse); operações avançadas protegidas com cherryPick, revertCommit e rebase com exigência mandatória de working tree limpo e guardrail restritivo bloqueando qualquer alteração ou rebase direto na branch main; métodos expostos em GitController com invalidação automática de cache e refresh assíncrono.

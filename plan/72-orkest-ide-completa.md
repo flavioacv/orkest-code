@@ -374,6 +374,9 @@ Destino: Painel Git e ações de revisão.
 
 Aceite: Listar/detalhar/criar PR, comentários/review/diff e checkout conforme ferramenta disponível; falhas de autenticação explícitas; nenhuma operação de publicação/merge fora de autorização.
 
+Entrega: Modelos estruturados `GitPullRequest`, `GitPrComment` e `GitPrDetail` (`cockpit/lib/app/orkest/domain/entities/git_pull_request.dart`); serviço desacoplado `GitPullRequestService` (`cockpit/lib/app/orkest/domain/services/git_pull_request_service.dart`) implementando `parseOwnerRepo` (suporte a SSH e HTTPS), `listPullRequests` (com tratamento amigável de autorização HTTP 401/403 e paginação), `getPullRequestDetail` (agregação concorrente de metadados, arquivos, comentários e diff unificado), `createPullRequest`, `checkoutPullRequest` (fetch de `pull/<number>/head` para branch local `pr-<number>` e checkout direto no workspace para revisão no editor) e `addComment` (comentários gerais de issue e comentários inline atrelados a caminho, linha e commit); painel visual `GitPrReviewPanel` (`cockpit/lib/app/orkest/ui/widgets/git_pr_review_panel.dart`) com lista bifurcada de PRs, abas de Descrição, Arquivos Alterados (badges A/M/D/R) e Comentários, checkout local com um clique e formulário reativo de submissão de revisão; injeção hermética de `HttpRequester` e `originUrlOverride` para testes determinísticos.
+Validação: 10 testes automatizados cobrindo domínio e widgets em `cockpit/test/domain/git_pull_request_service_test.dart` e `cockpit/test/ui/git_pr_review_panel_test.dart`; 27 testes de regressão de toda a suíte de Git e PR aprovados sem falhas; análise estática `dart analyze --fatal-infos` limpa (0 issues). Concluído em 05/11/2026. Detalhes em `plan/72-integracao-revisao-pr.md`.
+
 ### R01 — Integrar configurações de execução e testes
 
 Prioridade P1 · Porte M · Dependências: W01, L01.
