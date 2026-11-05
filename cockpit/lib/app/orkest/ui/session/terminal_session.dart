@@ -11,6 +11,8 @@ import 'package:orkest_code/app/orkest/domain/contracts/terminal_scrollback_stor
 import 'package:orkest_code/app/orkest/domain/contracts/terminal_status_server.dart';
 import 'package:orkest_code/app/core/data/diagnostics/performance_diagnostics.dart';
 import 'package:orkest_code/app/core/domain/entities/harness.dart';
+import 'package:orkest_code/app/core/domain/entities/harness_signal.dart';
+import 'package:orkest_code/app/core/domain/services/harness_state_coordinator.dart';
 import 'package:orkest_code/app/core/terminal/secret_redactor.dart';
 import 'package:orkest_code/app/core/terminal/pty_command_markers.dart';
 import 'package:orkest_code/app/orkest/domain/services/terminal_harness_monitor.dart';
@@ -248,6 +250,7 @@ class TerminalSession extends PaneItem {
             // que matamos — aí não é notícia pra ninguém.
             if (!_disposed) {
               _processExited = true;
+              harnessCoordinator.detach();
               _officeCommands.clear();
               _officeShell = null;
               _setStatus(TerminalStatus.idle);
@@ -506,6 +509,12 @@ class TerminalSession extends PaneItem {
 
   TerminalStatus _status = TerminalStatus.idle;
   TerminalStatus get status => _status;
+
+  /// Coordenador formal de estado, precedência e deduplicação de sinais (H01).
+  final HarnessStateCoordinator harnessCoordinator = HarnessStateCoordinator();
+
+  /// Snapshot formal dos eixos ortogonais de estado do harness (H01).
+  HarnessStateSnapshot get harnessSnapshot => harnessCoordinator.snapshot;
   final List<TerminalStatusEvent> _officeStatusHistory = [];
   int _officeEventSequence = 0;
 
@@ -884,6 +893,27 @@ class TerminalSession extends PaneItem {
         !RegExp(r'^[A-Za-z0-9_.:/-]{1,160}$').hasMatch(activityId)) {
       return;
     }
+
+    final execPhase = switch (safeKind) {
+      'done' => HarnessExecutionPhase.completed,
+      'needs_input' => HarnessExecutionPhase.waitingInput,
+      _ => safePhase == 'completed'
+          ? HarnessExecutionPhase.idle
+          : HarnessExecutionPhase.running,
+    };
+    harnessCoordinator.processSignal(
+      HarnessSignal(
+        source: safePhase == 'observed'
+            ? HarnessSignalSource.screenObservation
+            : HarnessSignalSource.structuredHook,
+        phase: execPhase,
+        timestamp: DateTime.now(),
+        activityId: activityId,
+        activityKind: safeKind,
+        activityPhase: safePhase,
+        summary: safeSummary,
+      ),
+    );
     if (safeKind == 'needs_input') {
       if (safePhase != 'observed' || activityId != null) {
         _structuredPermissionPending = true;
@@ -1582,6 +1612,27 @@ class TerminalSession extends PaneItem {
     final safeToolName = toolName
         ?.replaceAll(RegExp(r'[\x00-\x1F\x7F]'), '')
         .trim();
+
+    final harnessPhase = switch (next) {
+      TerminalStatus.working => HarnessExecutionPhase.running,
+      TerminalStatus.waiting => HarnessExecutionPhase.waitingInput,
+      TerminalStatus.idle =>
+        event == 'SessionEnd'
+            ? HarnessExecutionPhase.closed
+            : (event == 'SessionStart'
+                ? HarnessExecutionPhase.idle
+                : (_officeTurnCompleted
+                    ? HarnessExecutionPhase.completed
+                    : HarnessExecutionPhase.idle)),
+    };
+    harnessCoordinator.processSignal(
+      HarnessSignal(
+        source: HarnessSignalSource.structuredHook,
+        phase: harnessPhase,
+        timestamp: DateTime.now(),
+        summary: safeToolName ?? event,
+      ),
+    );
     if (!lifecycleOnly && recordHistory) {
       _officeStatusHistory.add(
         TerminalStatusEvent(

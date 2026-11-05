@@ -1,0 +1,157 @@
+import 'dart:collection';
+import 'package:orkest_code/app/core/domain/entities/harness_signal.dart';
+
+/// Coordenador de estado e precedência formal dos sinais de harness (H01).
+///
+/// Aplica regras estritas de precedência de fontes, proteção contra sinais atrasados
+/// de gerações anteriores, deduplicação de atividades finalizadas e separação
+/// independente entre presença, fase de execução e espera de input humano.
+class HarnessStateCoordinator {
+  HarnessStateCoordinator({
+    HarnessPresence initialPresence = HarnessPresence.none,
+    HarnessExecutionPhase initialPhase = HarnessExecutionPhase.idle,
+    int initialGeneration = 0,
+    String? initialSessionId,
+  })  : _presence = initialPresence,
+        _phase = initialPhase,
+        _currentGeneration = initialGeneration,
+        _currentSessionId = initialSessionId,
+        _lastUpdatedAt = DateTime.now();
+
+  static const int kMaxSettledActivities = 256;
+
+  HarnessPresence _presence;
+  HarnessExecutionPhase _phase;
+  int _currentGeneration;
+  String? _currentSessionId;
+  String? _currentTurnId;
+  String? _activeActivityId;
+  String? _lastSummary;
+  HarnessSignalSource _lastSource = HarnessSignalSource.userInput;
+  DateTime _lastUpdatedAt;
+
+  final LinkedHashSet<String> _settledActivityIds = LinkedHashSet<String>();
+  final LinkedHashSet<String> _activeActivityIds = LinkedHashSet<String>();
+
+  /// Snapshot imutável do estado atual.
+  HarnessStateSnapshot get snapshot => HarnessStateSnapshot(
+    presence: _presence,
+    phase: _phase,
+    generation: _currentGeneration,
+    sessionId: _currentSessionId,
+    turnId: _currentTurnId,
+    activeActivityId: _activeActivityId,
+    lastSummary: _lastSummary,
+    lastSource: _lastSource,
+    lastUpdatedAt: _lastUpdatedAt,
+  );
+
+  HarnessPresence get presence => _presence;
+  HarnessExecutionPhase get phase => _phase;
+  int get generation => _currentGeneration;
+  String? get currentSessionId => _currentSessionId;
+  String? get currentTurnId => _currentTurnId;
+  bool get hasActiveActivities => _activeActivityIds.isNotEmpty;
+
+  /// Processa um sinal de entrada e resolve a precedência determinística.
+  ///
+  /// Retorna `true` se o estado foi atualizado; `false` se o sinal foi descartado
+  /// por precedência inferior, duplicata ou atraso de geração.
+  bool processSignal(HarnessSignal signal) {
+    // 1. Descarte de sinais atrasados de gerações anteriores
+    if (signal.generation < _currentGeneration &&
+        signal.source != HarnessSignalSource.structuredHook) {
+      return false;
+    }
+
+    // 2. Deduplicação de atividades já assentadas/finalizadas
+    if (signal.activityId != null &&
+        _settledActivityIds.contains(signal.activityId)) {
+      if (signal.phase == HarnessExecutionPhase.running ||
+          signal.phase == HarnessExecutionPhase.waitingInput) {
+        return false;
+      }
+    }
+
+    // 3. Resolução de conflitos e precedência de fontes:
+    // Observações de tela não podem rebaixar execução ou espera ativa originada
+    // de fontes mais fortes (structuredHook / ptyMarker) recebidas recentemente (< 3s).
+    if (signal.source == HarnessSignalSource.screenObservation) {
+      final isHighPriorityActive =
+          (_phase == HarnessExecutionPhase.running ||
+              _phase == HarnessExecutionPhase.waitingInput) &&
+          (_lastSource == HarnessSignalSource.structuredHook ||
+              _lastSource == HarnessSignalSource.ptyMarker);
+
+      if (isHighPriorityActive &&
+          signal.phase == HarnessExecutionPhase.idle &&
+          DateTime.now().difference(_lastUpdatedAt).inMilliseconds < 3000) {
+        return false;
+      }
+    }
+
+    // 4. Manutenção da presença do harness
+    if (signal.phase == HarnessExecutionPhase.closed) {
+      _presence = HarnessPresence.detached;
+    } else if (_presence == HarnessPresence.none ||
+        _presence == HarnessPresence.detached) {
+      _presence = HarnessPresence.attached;
+    }
+
+    // 5. Rastreamento e transição de atividades
+    if (signal.activityId != null) {
+      if (signal.phase == HarnessExecutionPhase.completed) {
+        _activeActivityIds.remove(signal.activityId);
+        _settledActivityIds.add(signal.activityId!);
+        if (_settledActivityIds.length > kMaxSettledActivities) {
+          _settledActivityIds.remove(_settledActivityIds.first);
+        }
+        if (_activeActivityId == signal.activityId) {
+          _activeActivityId = _activeActivityIds.lastOrNull;
+        }
+      } else if (signal.phase == HarnessExecutionPhase.running ||
+          signal.phase == HarnessExecutionPhase.waitingInput) {
+        _activeActivityIds.add(signal.activityId!);
+        _activeActivityId = signal.activityId;
+      }
+    }
+
+    // 6. Atualização de estado consolidado
+    _phase = signal.phase;
+    _lastSource = signal.source;
+    _lastUpdatedAt = signal.timestamp;
+    if (signal.summary != null && signal.summary!.isNotEmpty) {
+      _lastSummary = signal.summary;
+    }
+    if (signal.sessionId != null) {
+      _currentSessionId = signal.sessionId;
+    }
+    if (signal.turnId != null) {
+      _currentTurnId = signal.turnId;
+    }
+
+    return true;
+  }
+
+  /// Reinicia ou incrementa o ciclo para uma nova sessão / nova geração do PTY.
+  void advanceGeneration({int? nextGeneration, String? newSessionId}) {
+    _currentGeneration = nextGeneration ?? (_currentGeneration + 1);
+    _currentSessionId = newSessionId ?? _currentSessionId;
+    _currentTurnId = null;
+    _activeActivityId = null;
+    _activeActivityIds.clear();
+    _settledActivityIds.clear();
+    _phase = HarnessExecutionPhase.idle;
+    _presence = HarnessPresence.attached;
+    _lastUpdatedAt = DateTime.now();
+  }
+
+  /// Desconecta o harness explicitamente (ex.: PTY destruído ou processo morto).
+  void detach() {
+    _presence = HarnessPresence.detached;
+    _phase = HarnessExecutionPhase.closed;
+    _activeActivityIds.clear();
+    _activeActivityId = null;
+    _lastUpdatedAt = DateTime.now();
+  }
+}
