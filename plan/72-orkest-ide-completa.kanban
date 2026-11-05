@@ -16,13 +16,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
       Diretriz 04/11: avaliar quando houver necessidade de desempenho identificada; não bloqueia entregas funcionais em Dart.
 
-- [ ] X02 · Aprimorar HTTP, GraphQL e navegação web <!-- id: X02 labels: P2, ferramentas blockedBy: F01 -->
-      Porte: M. Dependências: F01.
-      Origem: ide-http; http-client/graphql/web; Spring route sources.
-      Destino: http_document, http_request_runner e browser atuais.
-      Aceite: Comparar ambientes, histórico, auth, cancelamento e resultados com .http existente; GraphQL/rotas/frameworks somente com validação específica; proteger segredos e não duplicar browser.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] X03 · Avaliar Docker, build e deployment <!-- id: X03 labels: P3, ferramentas blockedBy: R01, A04 -->
       Porte: L. Dependências: R01, A04.
       Origem: ide-docker, ide-build, ide-remote; build-tools.
@@ -70,11 +63,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] X01 · Priorizar produtividade de edição e visualização <!-- id: X01 labels: P2, ferramentas blockedBy: W03, L02 -->
-      Porte: M. Dependências: W03, L02.
-      Origem: templates, macros, vim, todo, scratch, color-preview, viewers.
-      Destino: Editor e viewers já existentes.
-      Aceite: Inventário de snippets/templates/Emmet/folding/bookmarks/TODO/Vim/macros; selecionar e dividir entregas por uso; atalhos e preview seguem tema, i18n e acessibilidade.
+- [ ] X02 · Aprimorar HTTP, GraphQL e navegação web <!-- id: X02 labels: P2, ferramentas blockedBy: F01 -->
+      Porte: M. Dependências: F01.
+      Origem: ide-http; http-client/graphql/web; Spring route sources.
+      Destino: http_document, http_request_runner e browser atuais.
+      Aceite: Comparar ambientes, histórico, auth, cancelamento e resultados com .http existente; GraphQL/rotas/frameworks somente com validação específica; proteger segredos e não duplicar browser.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -93,6 +86,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] X01 · Priorizar produtividade de edição e visualização <!-- id: X01 labels: P2, ferramentas blockedBy: W03, L02 -->
+      Entrega: Implementação da infraestrutura formal e inventário completo de produtividade de edição e visualização: modelos de domínio ProductivityCategory, CapabilityStatus, ProductivityCapability, catálogo declarativo ProductivityInventoryRegistry cobrindo 10 categorias funcionais com divisão em tiers de uso (1 a 3) e rótulos acessíveis (a11y), modelos imutáveis BookmarkItem, TodoItem, FoldingRange, ColorPreviewMatch, VimMode, MacroAction, EditorMacro e ScratchBuffer em cockpit/lib/app/core/domain/entities/editor_productivity.dart; conjunto de serviços determinísticos em cockpit/lib/app/core/domain/services/editor_productivity_service.dart: EmmetAbbreviationService provendo expansão de sintaxe abreviada HTML/XML/CSS (aninhamento >, irmãos +, multiplicação *N, classes ., IDs #, atributos [] e texto {} com suporte a tags auto-fecháveis), CodeFoldingService computando regiões dobráveis de blocos { ... }, comentários multilinhas e diretivas de região (// #region), TodoScanningService extraindo anotações em comentários (TODO, FIXME, BUG, NOTE, HACK, XXX) com classificação de severidade, ColorPreviewService identificando declarações literais de cor (Hex #RGB/#RRGGBBAA, CSS rgb/rgba e Flutter Color()) com cálculo de luminância e contraste WCAG sobre o limiar calibrado do Orkest (0.24), EditorBookmarkService com alternância e navegação rápida por mnemônico, EditorMacroService gravando e reproduzindo sequências atômicas de teclado, e VimStateController implementando máquina de estados modal com modos normal, insert, visual e buffer de comandos (:w, :q, :wq).
+      Aceite: Inventário de snippets/templates/Emmet/folding/bookmarks/TODO/Vim/macros; selecionar e dividir entregas por uso; atalhos e preview seguem tema, i18n e acessibilidade.
+      Validação: 14 testes unitários dedicados em cockpit/test/domain/editor_productivity_test.dart; 27 testes da suíte combinada aprovados sem falhas; análise estática dart analyze --fatal-infos 100% limpa (0 issues).
+      Plano: [detalhamento e arquitetura](72-produtividade-edicao-visualizacao.md).
 
 - [x] R05 · Integrar resultados de testes, coverage e profiler <!-- id: R05 labels: P2, debug blockedBy: R01, L05 -->
       Entrega: Implementação da suíte de teste, cobertura e profiling sob demanda: entidades imutáveis TestStatus, TestCaseNode, TestSuiteNode, TestTreeReport, LineCoverageStatus, FileCoverageReport, GlobalCoverageReport, ProfilerHotSpot e ProfilerReport em cockpit/lib/app/core/domain/entities/test_coverage_profiler.dart; orquestrador e parser determinístico TestCoverageProfilerService em cockpit/lib/app/core/domain/services/test_coverage_profiler_service.dart decodificando eventos JSON de executores de teste (parseDartTestJson), montando comandos de reexecução seletiva de falhas (buildRerunFailedCommand), processando relatórios canônicos LCOV (parseLcov) com garantia estrita de retornar coveragePercent == null (e nunca 0.0%) quando dados estiverem ausentes, e extração tabular de hotspots de profiler (parseProfilerOutput) operando unicamente sob demanda pontual (isRealtime: false).
