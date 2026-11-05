@@ -65,6 +65,7 @@ class CodeEditor extends StatefulWidget {
     this.onSignatureHelp,
     this.onCompletions,
     this.onResolveCompletion,
+    this.onCancelLspRequest,
     this.filePath,
   });
 
@@ -83,6 +84,7 @@ class CodeEditor extends StatefulWidget {
   onCompletions;
   final Future<LspCompletionItem?> Function(LspCompletionItem)?
   onResolveCompletion;
+  final ValueChanged<String>? onCancelLspRequest;
 
   /// Caminho do arquivo (só a extensão é usada: fallback da largura de
   /// indentação quando o conteúdo não dá pista). `null` = 4 espaços.
@@ -221,6 +223,10 @@ class _CodeEditorState extends State<CodeEditor> {
   @override
   void didUpdateWidget(CodeEditor old) {
     super.didUpdateWidget(old);
+    if (old.filePath != widget.filePath ||
+        old.controller != widget.controller) {
+      _cancelAssistance(old.onCancelLspRequest);
+    }
     if (old.focusNode != widget.focusNode) {
       old.focusNode.removeListener(_onSignatureFocusChanged);
       widget.focusNode.addListener(_onSignatureFocusChanged);
@@ -539,6 +545,7 @@ class _CodeEditorState extends State<CodeEditor> {
   }
 
   void _invalidateSymbolHover() {
+    widget.onCancelLspRequest?.call('textDocument/hover');
     _hoverTimer?.cancel();
     _hoverRequest++;
     _hoverSymbolStart = null;
@@ -547,6 +554,7 @@ class _CodeEditorState extends State<CodeEditor> {
 
   void _onSignatureFocusChanged() {
     if (!widget.focusNode.hasFocus) {
+      _invalidateSymbolHover();
       _dismissSignature();
       _dismissCompletions();
     }
@@ -571,6 +579,8 @@ class _CodeEditorState extends State<CodeEditor> {
   };
 
   void _dismissCompletions() {
+    widget.onCancelLspRequest?.call('textDocument/completion');
+    widget.onCancelLspRequest?.call('completionItem/resolve');
     _completionTimer?.cancel();
     _completionRequest++;
     _completionActive = false;
@@ -693,6 +703,7 @@ class _CodeEditorState extends State<CodeEditor> {
   }
 
   void _dismissSignature() {
+    widget.onCancelLspRequest?.call('textDocument/signatureHelp');
     _signatureTimer?.cancel();
     _signatureRequest++;
     _signatureActive = false;
@@ -871,6 +882,10 @@ class _CodeEditorState extends State<CodeEditor> {
       _dismissSignature();
       return KeyEventResult.handled;
     }
+    if (key == LogicalKeyboardKey.escape && _hoverSymbolStart != null) {
+      _invalidateSymbolHover();
+      return KeyEventResult.handled;
+    }
     if (key == LogicalKeyboardKey.space &&
         keys.isControlPressed &&
         keys.isShiftPressed &&
@@ -1015,6 +1030,7 @@ class _CodeEditorState extends State<CodeEditor> {
 
   @override
   void dispose() {
+    _cancelAssistance(widget.onCancelLspRequest);
     _completionTimer?.cancel();
     _completionRequest++;
     _completionScroll.dispose();
@@ -1039,6 +1055,17 @@ class _CodeEditorState extends State<CodeEditor> {
     _horizontal.dispose();
     _gutter.dispose();
     super.dispose();
+  }
+
+  void _cancelAssistance(ValueChanged<String>? callback) {
+    for (final method in const [
+      'textDocument/hover',
+      'textDocument/completion',
+      'textDocument/signatureHelp',
+      'completionItem/resolve',
+    ]) {
+      callback?.call(method);
+    }
   }
 
   /// Largura fixa reservada pro slot do ícone de severity — **sempre** presente

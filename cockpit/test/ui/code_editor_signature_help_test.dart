@@ -10,8 +10,9 @@ void main() {
   Future<void> mount(
     WidgetTester tester,
     CodeEditingController controller,
-    Future<String?> Function(({int line, int character})) request,
-  ) async {
+    Future<String?> Function(({int line, int character})) request, {
+    ValueChanged<String>? cancel,
+  }) async {
     final focus = FocusNode();
     addTearDown(focus.dispose);
     await tester.pumpWidget(
@@ -25,6 +26,7 @@ void main() {
               controller: controller,
               focusNode: focus,
               onSignatureHelp: request,
+              onCancelLspRequest: cancel,
             ),
           ),
         ),
@@ -95,9 +97,11 @@ void main() {
     testWidgets('ignores delayed signature after $action', (tester) async {
       final ctrl = CodeEditingController(text: 'call', language: 'dart');
       final response = Completer<String?>();
-      await mount(tester, ctrl, (_) => response.future);
+      final cancelled = <String>[];
+      await mount(tester, ctrl, (_) => response.future, cancel: cancelled.add);
       edit(ctrl, 'call(');
       await tester.pump(const Duration(milliseconds: 200));
+      cancelled.clear();
       if (action == 'escape') {
         await tester.sendKeyEvent(LogicalKeyboardKey.escape);
       }
@@ -108,6 +112,7 @@ void main() {
       if (action == 'focus') FocusManager.instance.primaryFocus?.unfocus();
       response.complete('Old signature');
       await tester.pump();
+      expect(cancelled, contains('textDocument/signatureHelp'));
       expect(find.text('Old signature'), findsNothing);
       expect(tester.takeException(), isNull);
       await tester.pumpWidget(const SizedBox());

@@ -58,8 +58,10 @@ class _FakeClient implements LspClient {
   @override
   Future<Result<Object?, LspError>> request(
     String method,
-    Map<String, dynamic> params,
-  ) async {
+    Map<String, dynamic> params, {
+    String? documentPath,
+  }) async {
+    _shared.documentPath = documentPath;
     if (method == 'textDocument/hover') {
       _shared.hoverParams = params;
       return _shared.hoverGate?.future ?? const Success(null);
@@ -74,6 +76,11 @@ class _FakeClient implements LspClient {
       return _shared.signatureGate?.future ?? const Success(null);
     }
     return const Success(null);
+  }
+
+  @override
+  void cancelRequests(String path, {String? method}) {
+    _shared.cancelled.add((path: path, method: method));
   }
 
   @override
@@ -101,6 +108,8 @@ class _FakeClient implements LspClient {
 }
 
 class _Shared {
+  String? documentPath;
+  final cancelled = <({String path, String? method})>[];
   Completer<Result<Object?, LspError>>? completionGate;
   Map<String, dynamic>? completionParams;
   bool startSucceeds = true;
@@ -138,6 +147,26 @@ void main() {
     dartFile = '${tmp.path}/main.dart';
   });
   tearDown(() => tmp.deleteSync(recursive: true));
+
+  test(
+    'pool preserves document context and forwards targeted cancellation',
+    () async {
+      final shared = _Shared();
+      final pool = LspServerPool(_FakeFactory(shared));
+      addTearDown(pool.dispose);
+      pool.cancelRequests(dartFile, method: 'textDocument/hover');
+      expect(shared.cancelled, isEmpty);
+      await pool.openDocument(path: dartFile, text: 'ans');
+      await pool.requestForPath(dartFile, 'completionItem/resolve', {
+        'label': 'answer',
+      });
+      expect(shared.documentPath, dartFile);
+      pool.cancelRequests(dartFile, method: 'completionItem/resolve');
+      expect(shared.cancelled, [
+        (path: dartFile, method: 'completionItem/resolve'),
+      ]);
+    },
+  );
 
   test('completion routes position and resolves additional data', () async {
     final shared = _Shared()

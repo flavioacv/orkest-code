@@ -119,6 +119,9 @@ class StandaloneDocumentHost implements DocumentHost {
     LspCompletionItem item,
   ) async => null;
 
+  @override
+  void lspCancelRequest(String path, String method) {}
+
   // ---- filesystem ----------------------------------------------------------
 
   @override

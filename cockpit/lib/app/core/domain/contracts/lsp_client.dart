@@ -61,8 +61,12 @@ abstract class LspClient {
   /// Lança/retorna falha em timeout ou erro do servidor.
   Future<Result<Object?, LspError>> request(
     String method,
-    Map<String, dynamic> params,
-  );
+    Map<String, dynamic> params, {
+    String? documentPath,
+  });
+
+  /// Cancela leituras pendentes de [path], opcionalmente limitadas a [method].
+  void cancelRequests(String path, {String? method});
 
   /// `textDocument/semanticTokens/full` — tokens semânticos do documento.
   /// `null` se o server não suporta ou o documento não tem tokens.

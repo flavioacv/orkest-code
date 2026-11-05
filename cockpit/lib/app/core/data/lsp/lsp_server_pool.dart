@@ -278,7 +278,14 @@ class LspServerPool {
     if (entry == null) {
       return const Failure(LspError('No language server for this document.'));
     }
-    return entry.client.request(method, params);
+    return entry.client.request(method, params, documentPath: path);
+  }
+
+  /// Encaminha invalidação da UI sem cancelar outros documentos ou métodos.
+  void cancelRequests(String path, {String? method}) {
+    final doc = _docs[path];
+    if (doc == null) return;
+    _servers[doc.serverKey]?.client.cancelRequests(path, method: method);
   }
 
   /// `textDocument/formatting` — pede a formatação do documento ao servidor e

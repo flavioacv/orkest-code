@@ -959,6 +959,8 @@ class _FileViewerState extends State<FileViewer> {
   Widget _editor() {
     final ctrl = _ctrl;
     if (ctrl == null) return const SizedBox.shrink();
+    final documentPath = widget.session.path;
+    final host = _vm;
     return Stack(
       children: [
         Positioned.fill(
@@ -1000,6 +1002,8 @@ class _FileViewerState extends State<FileViewer> {
                 const [],
             onResolveCompletion: (item) async =>
                 _vm?.lspResolveCompletion(widget.session.path, item),
+            onCancelLspRequest: (method) =>
+                host?.lspCancelRequest(documentPath, method),
           ),
         ),
         if (_findOpen)

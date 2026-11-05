@@ -125,6 +125,54 @@ void main() {
         expect((await current).isSuccess, isTrue);
       });
 
+      test(
+        'explicit cancellation includes resolve without changing wire payload',
+        () async {
+          final otherPath = p.join(root.path, 'other.dart');
+          const item = {'label': 'answer', 'data': 42};
+          final resolve = client.request(
+            'completionItem/resolve',
+            item,
+            documentPath: path,
+          );
+          final other = client.request(
+            'completionItem/resolve',
+            item,
+            documentPath: otherPath,
+          );
+          final hover = client.request('textDocument/hover', params(path));
+          client.cancelRequests(path, method: 'completionItem/resolve');
+          expect((await resolve).isFailure, isTrue);
+          final wire = await observed();
+          final requests = wire
+              .where((m) => m['method'] == 'completionItem/resolve')
+              .toList();
+          expect(requests.first['params'], item);
+          final cancellations = wire
+              .where((m) => m['method'] == r'$/cancelRequest')
+              .toList();
+          expect(cancellations, hasLength(1));
+          expect(cancellations.single['params']['id'], requests.first['id']);
+          await client.request('test/release', {});
+          expect((await other).isSuccess, isTrue);
+          expect((await hover).isSuccess, isTrue);
+        },
+      );
+
+      test('editing cancels resolve with explicit document context', () async {
+        final resolve = client.request('completionItem/resolve', {
+          'label': 'answer',
+          'data': 42,
+        }, documentPath: path);
+        await client.didChange(path: path, text: 'new', version: 2);
+        expect((await resolve).isFailure, isTrue);
+        final wire = await observed();
+        expect(
+          wire.where((m) => m['method'] == r'$/cancelRequest'),
+          hasLength(1),
+        );
+      });
+
       test('timeout notifies the server and discards its late reply', () async {
         final read = await client.request('textDocument/hover', params(path));
         expect(

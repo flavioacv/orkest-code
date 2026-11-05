@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:ui' show PointerDeviceKind;
+import 'package:flutter/services.dart';
 
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
@@ -11,8 +12,9 @@ void main() {
   Future<Offset> mount(
     WidgetTester tester,
     CodeEditingController controller,
-    Future<String?> Function(({int line, int character})) hover,
-  ) async {
+    Future<String?> Function(({int line, int character})) hover, {
+    ValueChanged<String>? cancel,
+  }) async {
     final focus = FocusNode();
     addTearDown(focus.dispose);
     await tester.pumpWidget(
@@ -26,6 +28,7 @@ void main() {
               controller: controller,
               focusNode: focus,
               onSymbolHover: hover,
+              onCancelLspRequest: cancel,
             ),
           ),
         ),
@@ -63,7 +66,14 @@ void main() {
     controller.dispose();
   });
 
-  for (final invalidate in ['edit', 'exit', 'dispose', 'document']) {
+  for (final invalidate in [
+    'edit',
+    'exit',
+    'dispose',
+    'document',
+    'escape',
+    'focus',
+  ]) {
     testWidgets('ignores delayed reply after $invalidate', (tester) async {
       final controller = CodeEditingController(
         text: 'alpha beta',
@@ -71,18 +81,29 @@ void main() {
       );
       final reply = Completer<String?>();
       var calls = 0;
+      final cancelled = <String>[];
       final point = await mount(tester, controller, (_) {
         calls++;
         return reply.future;
-      });
+      }, cancel: cancelled.add);
+      tester
+          .widget<EditableText>(find.byType(EditableText))
+          .focusNode
+          .requestFocus();
+      await tester.pump();
       final mouse = await tester.createGesture(kind: PointerDeviceKind.mouse);
       await mouse.addPointer(location: Offset.zero);
       await mouse.moveTo(point);
       await tester.pump(const Duration(milliseconds: 400));
       expect(calls, 1);
+      cancelled.clear();
       if (invalidate == 'edit') controller.text = 'changed';
       if (invalidate == 'exit') await mouse.moveTo(const Offset(799, 599));
       if (invalidate == 'dispose') await tester.pumpWidget(const SizedBox());
+      if (invalidate == 'escape') {
+        await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+      }
+      if (invalidate == 'focus') FocusManager.instance.primaryFocus?.unfocus();
       CodeEditingController? replacement;
       if (invalidate == 'document') {
         replacement = CodeEditingController(text: 'other', language: 'dart');
@@ -90,6 +111,7 @@ void main() {
       }
       reply.complete('Stale symbol info');
       await tester.pump();
+      expect(cancelled, contains('textDocument/hover'));
       expect(find.text('Stale symbol info'), findsNothing);
       expect(tester.takeException(), isNull);
       await mouse.removePointer();

@@ -12,4 +12,6 @@ Nenhuma dependência adicionada ou contrato público substituído. A homologaç�
 
 Validação final: 101 testes aprovados, incluindo servidor Dart real, protocolo de cancelamento e regressão do editor. `dart analyze --fatal-infos` sem problemas. Telemetria `r_29`: zero erros e avisos.
 
+Evolução posterior: [L02e](72-cancelamento-ui-lsp.md) cobre o cancelamento por Escape/foco/scroll, descarte/troca de documento e o contexto local de completionItem/resolve. Os limites de UI/resolve acima descrevem o recorte original de L02d e foram atendidos nesse incremento posterior.
+
 Fluxo: commits locais em `fix/harness-state-detection`, sem nova branch, push ou PR.

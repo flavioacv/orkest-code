@@ -14,6 +14,7 @@ void main() {
     Future<List<LspCompletionItem>> Function(({int line, int character}))
     request, {
     Future<LspCompletionItem?> Function(LspCompletionItem)? resolve,
+    ValueChanged<String>? cancel,
   }) async {
     final focus = FocusNode();
     addTearDown(focus.dispose);
@@ -29,6 +30,7 @@ void main() {
               focusNode: focus,
               onCompletions: request,
               onResolveCompletion: resolve,
+              onCancelLspRequest: cancel,
             ),
           ),
         ),
@@ -55,6 +57,68 @@ void main() {
     LspCompletionItem(label: 'answer', insertText: 'answer'),
     LspCompletionItem(label: 'another', insertText: 'another'),
   ];
+
+  for (final resolving in [false, true]) {
+    for (final action in ['escape', 'focus', 'scroll', 'dispose']) {
+      testWidgets(
+        'cancel $action reaches ${resolving ? 'resolve' : 'completion'}',
+        (tester) async {
+          final ctrl = CodeEditingController(text: 'a', language: 'dart');
+          final suggestions = Completer<List<LspCompletionItem>>();
+          final resolution = Completer<LspCompletionItem?>();
+          final cancelled = <String>[];
+          await mount(
+            tester,
+            ctrl,
+            (_) => suggestions.future,
+            resolve: (_) => resolution.future,
+            cancel: cancelled.add,
+          );
+          edit(ctrl, 'an\n${List.filled(80, 'line').join('\n')}');
+          ctrl.selection = const TextSelection.collapsed(offset: 2);
+          // A seleção mudou após a edição; o atalho consulta esta posição.
+          await tester.sendKeyDownEvent(LogicalKeyboardKey.controlLeft);
+          await tester.sendKeyEvent(LogicalKeyboardKey.space);
+          await tester.sendKeyUpEvent(LogicalKeyboardKey.controlLeft);
+          await wait(tester);
+          if (resolving) {
+            suggestions.complete(items);
+            await tester.pump();
+            await tester.sendKeyEvent(LogicalKeyboardKey.enter);
+            await tester.pump();
+          }
+          cancelled.clear();
+          switch (action) {
+            case 'escape':
+              await tester.sendKeyEvent(LogicalKeyboardKey.escape);
+            case 'focus':
+              FocusManager.instance.primaryFocus?.unfocus();
+            case 'scroll':
+              tester
+                  .widget<EditableText>(find.byType(EditableText))
+                  .scrollController!
+                  .jumpTo(40);
+            case 'dispose':
+              await tester.pumpWidget(const SizedBox());
+          }
+          await tester.pump();
+          expect(
+            cancelled,
+            contains(
+              resolving ? 'completionItem/resolve' : 'textDocument/completion',
+            ),
+          );
+          if (!suggestions.isCompleted) suggestions.complete(items);
+          if (!resolution.isCompleted) resolution.complete(items.first);
+          await tester.pump();
+          expect(ctrl.text, startsWith('an\n'));
+          expect(find.text('answer'), findsNothing);
+          await tester.pumpWidget(const SizedBox());
+          ctrl.dispose();
+        },
+      );
+    }
+  }
 
   for (final key in [LogicalKeyboardKey.enter, LogicalKeyboardKey.tab]) {
     testWidgets(

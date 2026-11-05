@@ -2729,6 +2729,10 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
     LspCompletionItem item,
   ) => _lsp.resolveCompletion(path, item);
 
+  @override
+  void lspCancelRequest(String path, String method) =>
+      _lsp.cancelRequests(path, method: method);
+
   /// Go to definition: resolve location no servidor, abre arquivo + revela linha.
   /// No-op silencioso se sem servidor / sem definição / erro.
   @override

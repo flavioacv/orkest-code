@@ -217,7 +217,7 @@ Destino: Cliente/pool LSP existente, code_editor e controllers.
 
 Aceite: Completion, resolve, hover semântico e signature help funcionam em Dart e TS; requests cancelados e respostas antigas não alteram documento/versão errados.
 
-Incrementos implementados: hover L02a, signature help L02b, [autocomplete simples com resolve L02c](72-autocomplete.md) e [cancelamento de consultas obsoletas L02d](72-cancelamento-lsp.md). A validação real cobre Dart; homologação TypeScript, snippets e cancelamento imediato por Escape/foco/scroll e de resolve permanecem pendentes. O descarte local de respostas antigas protege o buffer; o cliente envia cancelamento por substituição, edição, fechamento e timeout no recorte documentado.
+Incrementos implementados: hover L02a, signature help L02b, [autocomplete simples com resolve L02c](72-autocomplete.md), [cancelamento de consultas obsoletas L02d](72-cancelamento-lsp.md) e [cancelamento pela UI e de resolve L02e](72-cancelamento-ui-lsp.md). A validação real cobre Dart; homologação TypeScript, snippets e demais capacidades avançadas permanecem pendentes. O descarte local de respostas antigas continua protegendo o buffer mesmo após enviar cancelamento ao servidor.
 
 ### L03 — Adicionar navegação semântica e busca unificada
 

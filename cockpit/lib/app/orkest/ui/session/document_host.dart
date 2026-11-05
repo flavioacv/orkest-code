@@ -29,6 +29,7 @@ abstract class DocumentHost {
   Future<void> lspOpenDocument(String path, String text, String projectId);
   Future<void> lspChangeDocument(String path, String text);
   Future<void> lspCloseDocument(String path);
+  void lspCancelRequest(String path, String method);
   Stream<LspDiagnosticsBatch> get lspDiagnostics;
   Future<List<LspTextEdit>> lspFormat(String path, String text);
   Future<SemanticTokens> lspSemanticTokensFull(String path);

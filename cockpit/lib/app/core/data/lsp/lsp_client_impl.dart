@@ -266,16 +266,27 @@ class LspClientImpl implements LspClient {
   @override
   Future<Result<Object?, LspError>> request(
     String method,
-    Map<String, dynamic> params,
-  ) async {
+    Map<String, dynamic> params, {
+    String? documentPath,
+  }) async {
     try {
-      return Success(await _request(method, params));
+      return Success(
+        await _request(
+          method,
+          params,
+          documentUri: documentPath == null ? null : _uri(documentPath),
+        ),
+      );
     } on LspError catch (error) {
       return Failure(error);
     } catch (error, stackTrace) {
       return Failure(LspError('$error', cause: error, stackTrace: stackTrace));
     }
   }
+
+  @override
+  void cancelRequests(String path, {String? method}) =>
+      _cancelDocumentRequests(_uri(path), method: method);
 
   @override
   Future<Result<Object?, LspError>> semanticTokensFull(String path) async {
@@ -427,16 +438,21 @@ class LspClientImpl implements LspClient {
     // Demais notificações (logMessage, progress, …) são ignoradas por ora.
   }
 
-  Future<Object?> _request(String method, Map<String, dynamic> params) async {
+  Future<Object?> _request(
+    String method,
+    Map<String, dynamic> params, {
+    String? documentUri,
+  }) async {
     if (_process == null) throw const LspError('Language server not running.');
     final document = params['textDocument'];
-    final uri = document is Map ? document['uri'] : null;
+    final uri = documentUri ?? (document is Map ? document['uri'] : null);
     const cancellableMethods = {
       'textDocument/hover',
       'textDocument/completion',
       'textDocument/signatureHelp',
       'textDocument/semanticTokens/full',
       'textDocument/definition',
+      'completionItem/resolve',
     };
     final trackDocument = uri is String && cancellableMethods.contains(method);
     if (trackDocument) _cancelDocumentRequests(uri, method: method);
