@@ -23,13 +23,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: Provar inlays, hierarquias, busca estrutural/duplicações e análise apenas onde servidor suporta; medir custo e escolher subset útil.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
-- [ ] H01 · Formalizar estado e precedência dos sinais de harness <!-- id: H01 labels: P0, harness blockedBy: F01 -->
-      Porte: M. Dependências: F01.
-      Origem: ide-agent/model, conversation, normalize; regras vigentes Orkest.
-      Destino: TerminalSession e contrato activity/hooks existente.
-      Aceite: Separar presença, execução, espera humana, conclusão e encerramento; origem/geração/sessão/turno/request quando disponíveis, deduplicação e eventos atrasados definidos; nomes de harness não selecionam comportamento.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] H02 · Criar corpus e replay de leitura de harness <!-- id: H02 labels: P1, harness blockedBy: H01 -->
       Porte: M. Dependências: H01.
       Origem: ide-agent/replay.rs e fixtures JSONL.
@@ -133,11 +126,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] L05 · Homologar linguagens por níveis de capacidade <!-- id: L05 labels: P1, linguagens blockedBy: L02, L03, L04 -->
-      Porte: L. Dependências: L02, L03, L04.
-      Origem: 77 definições e fixtures OpenIDEA.
-      Destino: Catálogo e fixtures de teste do Orkest.
-      Aceite: Matriz executada para Dart/Flutter, TS/JS, Python, Rust e Go; fase seguinte Java/C#/PHP; Vue/Svelte/HTML/CSS/JSON/YAML/SQL por demanda; registrar SDK/server/adapter e recurso não suportado sem prometer paridade.
+- [ ] H01 · Formalizar estado e precedência dos sinais de harness <!-- id: H01 labels: P0, harness blockedBy: F01 -->
+      Porte: M. Dependências: F01.
+      Origem: ide-agent/model, conversation, normalize; regras vigentes Orkest.
+      Destino: TerminalSession e contrato activity/hooks existente.
+      Aceite: Separar presença, execução, espera humana, conclusão e encerramento; origem/geração/sessão/turno/request quando disponíveis, deduplicação e eventos atrasados definidos; nomes de harness não selecionam comportamento.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -156,6 +149,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] L05 · Homologar linguagens por níveis de capacidade <!-- id: L05 labels: P1, linguagens blockedBy: L02, L03, L04 -->
+      Entrega: Matriz formal de linguagens por níveis de capacidade (LanguageTier: tier1Core, tier2Enterprise, tier3WebData); catálogo expandido para 20 linguagens com suporte sob demanda a SQL (sql-language-server), Vue 3 (vue-language-server) e Svelte (svelte-language-server); serviço declarativo de auditoria LanguageCapabilityMatrix discriminando deterministicamente status operacional (fullySupported, partiallySupported, missingServer, syntaxOnly) e registrando explicitamente capacidades não suportadas sem prometer paridade falsa; e suite com 11 fixtures sintéticas.
+      Aceite: Matriz executada para Dart/Flutter, TS/JS, Python, Rust e Go; fase seguinte Java/C#/PHP; Vue/Svelte/HTML/CSS/JSON/YAML/SQL por demanda; registrar SDK/server/adapter e recurso não suportado sem prometer paridade.
+      Validação: 13 testes unitários e de integração dedicados aprovados em test/integration/language_capability_homologation_test.dart e test/data/lsp_launchers_test.dart; análise estática dart analyze --fatal-infos limpa (zero issues).
+      Plano: [detalhamento e arquitetura](72-homologacao-linguagens-niveis-capacidade.md).
 
 - [x] L04 · Entregar refatoração e workspace edits seguros <!-- id: L04 labels: P1, linguagens blockedBy: L02, W03 -->
       Entrega: Infraestrutura completa de refatoração semântica, renomeação e workspace edits seguros: decodificadores e modelos LspWorkspaceEdit, LspTextDocumentEdit, LspPrepareRenameResult e operações estruturadas de recursos (create, rename, delete); catálogo de ações de código LspCodeAction e LspCodeActionKind (quickfix, refactor, source.organizeImports); serviço transacional SafeWorkspaceEditService com geração de preview em memória com diffs por arquivo, verificação de compatibilidade de versões de documentos abertos (prevenindo version mismatch), execução atômica com rollback automático em caso de falhas parciais de gravação/I/O, e geração de token de reversão global (undo atômico); e integração de métodos no LspServerPool (prepareRename, rename, codeActions, resolveCodeAction, organizeImports e formatDocument).

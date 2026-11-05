@@ -269,6 +269,9 @@ Destino: Catálogo e fixtures de teste do Orkest.
 
 Aceite: Matriz executada para Dart/Flutter, TS/JS, Python, Rust e Go; fase seguinte Java/C#/PHP; Vue/Svelte/HTML/CSS/JSON/YAML/SQL por demanda; registrar SDK/server/adapter e recurso não suportado sem prometer paridade.
 
+Entrega: Estruturação e homologação da matriz de linguagens por níveis de capacidade (*tiers*): inclusão do enum `LanguageTier` (`tier1Core`, `tier2Enterprise`, `tier3WebData`) em `LanguageDef` (`cockpit/lib/app/core/data/lsp/lsp_launchers.dart`); expansão do catálogo declarativo para 20 linguagens com inclusão das linguagens sob demanda requeridas no plano (`sql` com `sql-language-server`, `vue` com `@vue/language-server` e `svelte` com `svelte-language-server`); implementação do serviço de auditoria e conformidade `LanguageCapabilityMatrix` (`cockpit/lib/app/core/domain/entities/language_capability_matrix.dart`) fornecendo relatórios determinísticos (`LanguageAuditReport`, `LanguageSupportStatus`) e discriminando explicitamente recursos não suportados para eliminar falsas promessas de paridade; e conjunto de fixtures sintéticas em `cockpit/test/fixtures/languages/`.
+Validação: 13 testes dedicados aprovados em `cockpit/test/integration/language_capability_homologation_test.dart` (5) e `cockpit/test/data/lsp_launchers_test.dart` (8); análise estática `dart analyze --fatal-infos` com 0 erros e 0 alertas. Concluído em 05/11/2026. Detalhes em `plan/72-homologacao-linguagens-niveis-capacidade.md`.
+
 ### L06 — Avaliar inteligência avançada e análise estrutural
 
 Prioridade P2 · Porte L · Dependências: L05.
