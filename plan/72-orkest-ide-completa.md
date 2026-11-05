@@ -208,6 +208,9 @@ Destino: core/data/lsp/lsp_launchers e configuração Language.
 
 Aceite: Detecção/markers/servidores/args/adaptadores/SDK e capacidades separados; comandos com paths contendo espaços; configurações do usuário preservadas; não confundir highlight, LSP e debug.
 
+Incremento concluído: separação declarativa de LanguageServerConfig, DebugAdapterConfig, SdkConfig e LanguageCapabilities em [catálogo declarativo](72-catalogo-declarativo.md); suporte a caminhos com espaços em toSpec via splitLspCommand; 121 testes aprovados e análise estática limpa.
+
+
 ### L02 — Completar assistência LSP no editor
 
 Prioridade P1 · Porte L · Dependências: W03, L01.

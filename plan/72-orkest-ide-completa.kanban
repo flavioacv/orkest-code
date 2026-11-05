@@ -65,13 +65,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: Undo/redo, dirty buffers, mudanças externas, fechamento, arquivos grandes, Unicode/CRLF e multi-janela verificados; nenhuma perda silenciosa de edições.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
-- [ ] L01 · Evoluir catálogo declarativo de linguagens <!-- id: L01 labels: P1, linguagens blockedBy: F01 -->
-      Porte: M. Dependências: F01.
-      Origem: languages/*.toml; ide-language.
-      Destino: core/data/lsp/lsp_launchers e configuração Language.
-      Aceite: Detecção/markers/servidores/args/adaptadores/SDK e capacidades separados; comandos com paths contendo espaços; configurações do usuário preservadas; não confundir highlight, LSP e debug.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] L02 · Completar assistência LSP no editor <!-- id: L02 labels: P1, linguagens blockedBy: W03, L01 -->
       Porte: L. Dependências: W03, L01.
       Origem: src/editor/lsp; commands/lsp.rs.
@@ -315,6 +308,14 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] L01 · Evoluir catálogo declarativo de linguagens <!-- id: L01 labels: P1, linguagens blockedBy: F01 -->
+      Entrega: separação declarativa de detecção, marcadores de raiz, servidores LSP (LanguageServerConfig), adaptadores de debug (DebugAdapterConfig), SDKs (SdkConfig) e matriz de capacidades (LanguageCapabilities); suporte a comandos e caminhos com espaços via splitLspCommand; busca por ID (languageById) e 100% de compatibilidade com o pool e configurações do usuário.
+      Aceite: detecção/markers/servidores/args/adaptadores/SDK e capacidades separados; comandos com caminhos contendo espaços suportados com segurança; configurações do usuário preservadas; highlight, LSP e debug desacoplados.
+      Validação: 121 testes aprovados cobrindo suíte de LSP, pool, UI, servidor Dart real e testes do catálogo; análise estática dart analyze --fatal-infos limpa (zero issues).
+      Limites: adaptadores DAP declarados preparam a base para R01-R04 sem implementar execução de debug; servidores não instalados continuam exigindo detecção de ambiente.
+      Detalhes: [catálogo declarativo](72-catalogo-declarativo.md).
+
 
 - [x] DOC · Publicar análise e Kanban rastreável <!-- id: DOC labels: P0, qualidade -->
       Porte: S. Dependências: nenhuma.
