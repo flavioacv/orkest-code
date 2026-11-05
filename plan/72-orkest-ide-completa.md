@@ -203,6 +203,8 @@ Destino: code_editor, file_viewer_session, document host.
 
 Aceite: Undo/redo, dirty buffers, mudanças externas, fechamento, arquivos grandes, Unicode/CRLF e multi-janela verificados; nenhuma perda silenciosa de edições.
 
+Incremento concluído: modelo de sincronização e dirty buffers fortalecido com Single Writer Rule; detecção e preservação de CRLF original no salvamento; detecção de conflitos de concorrência com arquivo alterado no disco (`hasDiskConflict`), banner de aviso no editor com opções de manter edições locais ou recarregar do disco; suporte a descarte limpo de buffer; proteção contra perda de dados no fechamento atômico de abas; proteção contra arquivos grandes (> 2MB) retornando FileViewUnsupported com integridade garantida em [edição, documentos e sincronização](72-edicao-documentos-sincronizacao.md); 5 testes aprovados e análise estática limpa.
+
 ### L01 — Evoluir catálogo declarativo de linguagens
 
 Prioridade P1 · Porte M · Dependências: F01.

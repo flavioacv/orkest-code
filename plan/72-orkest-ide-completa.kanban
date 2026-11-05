@@ -268,13 +268,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] W03 · Fortalecer edição, documentos e sincronização <!-- id: W03 labels: P0, workspace blockedBy: W01 -->
-      Porte: L. Dependências: W01.
-      Origem: src/editor/core/sync e model.
-      Destino: code_editor, file_viewer_session, document host.
-      Aceite: Undo/redo, dirty buffers, mudanças externas, fechamento, arquivos grandes, Unicode/CRLF e multi-janela verificados; nenhuma perda silenciosa de edições.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 ## Em revisão
 
 - [ ] H00 · Homologar em build a correção de espera já implementada <!-- id: H00 labels: P0, harness blockedBy: H00a -->
@@ -291,6 +284,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] W03 · Fortalecer edição, documentos e sincronização <!-- id: W03 labels: P0, workspace blockedBy: W01 -->
+      Entrega: modelo de sincronização e dirty buffers fortalecido com Single Writer Rule; detecção e preservação de CRLF original no salvamento; detecção de conflitos de concorrência com arquivo alterado no disco (hasDiskConflict), banner de aviso no editor com opções de manter edições locais ou recarregar do disco; suporte a descarte limpo de buffer; proteção contra perda de dados no fechamento atômico de abas; proteção contra arquivos grandes (> 2MB) retornando FileViewUnsupported com integridade garantida.
+      Aceite: Undo/redo, dirty buffers, mudanças externas, fechamento, arquivos grandes, Unicode/CRLF e multi-janela verificados; nenhuma perda silenciosa de edições.
+      Validação: 5 testes aprovados em cockpit/test/session/file_viewer_sync_conflict_test.dart; análise estática dart analyze --fatal-infos limpa (zero issues).
+      Detalhes: [edição, documentos e sincronização](72-edicao-documentos-sincronizacao.md).
 
 - [x] W01 · Garantir workspace por projetos com ferramentas IDE <!-- id: W01 labels: P0, workspace blockedBy: F01 -->
       Entrega: garantia formal e validação do modelo project-first no Orkest Code; isolamento de abas, terminais e buffers por projectId; roteamento canônico de raiz via Project.effectiveRoot (suportando workspaces locais no POSIX/Windows e remotos via SSH/sidecar); contextualização de DocumentHost e FileViewerSession; preservação do ciclo de workspaces e suite de testes unitários de isolamento.
