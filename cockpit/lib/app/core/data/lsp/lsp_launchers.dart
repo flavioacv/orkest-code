@@ -1,4 +1,5 @@
 import 'package:orkest_code/app/core/domain/contracts/lsp_client.dart';
+import 'package:path/path.dart' as p;
 
 /// Definição de uma linguagem para o LSP: como detectá-la (extensões), onde
 /// está a raiz do projeto (markers, ver [ProjectRootFinder]) e o comando padrão
@@ -15,6 +16,7 @@ class LanguageDef {
     required this.markers,
     required this.defaultExecutable,
     this.defaultArgs = const <String>[],
+    this.filenames = const <String>[],
   });
 
   /// `languageId` do LSP (vai no `didOpen`) e chave de config/pool.
@@ -25,6 +27,9 @@ class LanguageDef {
 
   /// Extensões (sem ponto, minúsculas) que mapeiam pra esta linguagem.
   final List<String> extensions;
+
+  /// Nomes exatos com precedência sobre a extensão, como `tsconfig.json`.
+  final List<String> filenames;
 
   /// Arquivos marcadores de raiz de projeto (nome exato ou `*.sufixo`).
   final List<String> markers;
@@ -122,14 +127,108 @@ const List<LanguageDef> kLanguageDefs = <LanguageDef>[
     ],
     defaultExecutable: 'jdtls',
   ),
+  LanguageDef(
+    id: 'html',
+    label: 'HTML',
+    extensions: <String>['html', 'htm', 'xhtml', 'shtml'],
+    markers: <String>['package.json'],
+    defaultExecutable: 'vscode-html-language-server',
+    defaultArgs: <String>['--stdio'],
+  ),
+  LanguageDef(
+    id: 'css',
+    label: 'CSS',
+    extensions: <String>['css'],
+    markers: <String>['package.json'],
+    defaultExecutable: 'vscode-css-language-server',
+    defaultArgs: <String>['--stdio'],
+  ),
+  LanguageDef(
+    id: 'scss',
+    label: 'SCSS',
+    extensions: <String>['scss'],
+    markers: <String>['package.json'],
+    defaultExecutable: 'vscode-css-language-server',
+    defaultArgs: <String>['--stdio'],
+  ),
+  LanguageDef(
+    id: 'less',
+    label: 'Less',
+    extensions: <String>['less'],
+    markers: <String>['package.json'],
+    defaultExecutable: 'vscode-css-language-server',
+    defaultArgs: <String>['--stdio'],
+  ),
+  LanguageDef(
+    id: 'json',
+    label: 'JSON',
+    extensions: <String>['json', 'geojson', 'webmanifest', 'avsc'],
+    filenames: <String>['.prettierrc', '.watchmanconfig', 'composer.lock'],
+    markers: <String>['package.json', 'composer.json', 'pubspec.yaml'],
+    defaultExecutable: 'vscode-json-language-server',
+    defaultArgs: <String>['--stdio'],
+  ),
+  LanguageDef(
+    id: 'jsonc',
+    label: 'JSONC',
+    extensions: <String>['jsonc', 'code-workspace', 'code-snippets'],
+    filenames: <String>[
+      'tsconfig.json',
+      'jsconfig.json',
+      '.eslintrc',
+      '.eslintrc.json',
+      '.babelrc',
+      '.swcrc',
+      'devcontainer.json',
+      'launch.json',
+      'tasks.json',
+      'settings.json',
+      'extensions.json',
+      'keybindings.json',
+      'deno.json',
+      'biome.json',
+    ],
+    markers: <String>['package.json', 'deno.json'],
+    defaultExecutable: 'vscode-json-language-server',
+    defaultArgs: <String>['--stdio'],
+  ),
+  LanguageDef(
+    id: 'yaml',
+    label: 'YAML',
+    extensions: <String>['yaml', 'yml'],
+    filenames: <String>['.clang-format', '.clang-tidy', '.clangd'],
+    markers: <String>['package.json', 'pubspec.yaml'],
+    defaultExecutable: 'yaml-language-server',
+    defaultArgs: <String>['--stdio'],
+  ),
+  LanguageDef(
+    id: 'shellscript',
+    label: 'Shell Script',
+    extensions: <String>['sh', 'bash', 'bats'],
+    filenames: <String>[
+      '.bashrc',
+      '.bash_profile',
+      '.bash_aliases',
+      '.profile',
+      '.envrc',
+    ],
+    markers: <String>['package.json', 'Makefile'],
+    defaultExecutable: 'bash-language-server',
+    defaultArgs: <String>['start'],
+  ),
 ];
 
 /// Resolve a [LanguageDef] de um caminho pela extensão, ou `null` se nenhuma
 /// linguagem suportada bate.
 LanguageDef? languageForPath(String path) {
-  final dot = path.lastIndexOf('.');
-  if (dot < 0) return null;
-  final ext = path.substring(dot + 1).toLowerCase();
+  // Remote paths can use a different host style than the local OS.
+  final name = p.posix.basename(p.windows.basename(path));
+  for (final def in kLanguageDefs) {
+    if (def.filenames.contains(name)) return def;
+  }
+  final suffix = p.posix.extension(name);
+  if (suffix.isEmpty) return null;
+  final ext = suffix.substring(1).toLowerCase();
   for (final def in kLanguageDefs) {
     if (def.extensions.contains(ext)) return def;
   }

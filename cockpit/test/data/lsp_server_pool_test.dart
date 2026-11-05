@@ -8,6 +8,7 @@ import 'package:orkest_code/app/core/domain/entities/lsp_semantic_tokens.dart';
 import 'package:orkest_code/app/core/domain/exceptions/lsp_error.dart';
 import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:path/path.dart' as p;
 
 /// Cliente fake controlável: `startSucceeds` é compartilhado pela factory pra
 /// simular "falhou ao subir → corrigi o comando → restart sobe".
@@ -87,6 +88,7 @@ class _Shared {
   bool startSucceeds = true;
   int startCalls = 0;
   final List<_FakeClient> created = [];
+  final List<LspServerSpec> specs = [];
 
   /// Quando setado, `semanticTokensFull` do fake espera por ele.
   Completer<Result<Object?, LspError>>? semanticGate;
@@ -97,6 +99,7 @@ class _FakeFactory implements LspClientFactory {
   final _Shared shared;
   @override
   LspClient create({required LspServerSpec spec, required String rootPath}) {
+    shared.specs.add(spec);
     final c = _FakeClient(rootPath, shared);
     shared.created.add(c);
     return c;
@@ -113,6 +116,38 @@ void main() {
     dartFile = '${tmp.path}/main.dart';
   });
   tearDown(() => tmp.deleteSync(recursive: true));
+
+  for (final entry in {
+    'html': 'index.html',
+    'css': 'style.css',
+    'scss': 'style.scss',
+    'less': 'style.less',
+    'json': 'package.json',
+    'jsonc': 'tsconfig.json',
+    'yaml': 'config.yml',
+    'shellscript': '.bashrc',
+  }.entries) {
+    test(
+      '${entry.key} uses user overrides and reuses its workspace server',
+      () async {
+        final shared = _Shared();
+        final pool = LspServerPool(_FakeFactory(shared));
+        addTearDown(pool.dispose);
+        pool.commandOverrides = {
+          entry.key: '"${Platform.resolvedExecutable}" --custom-server',
+        };
+        final first = p.join(tmp.path, entry.value);
+        final second = p.join(tmp.path, 'nested', entry.value);
+        await pool.openDocument(path: first, text: '', fallbackRoot: tmp.path);
+        await pool.openDocument(path: second, text: '', fallbackRoot: tmp.path);
+        expect(shared.startCalls, 1);
+        expect(shared.specs.single.languageId, entry.key);
+        expect(shared.specs.single.args, ['--custom-server']);
+        expect(shared.created.single.opened, [first, second]);
+        expect(pool.statusForPath(first)?.running, isTrue);
+      },
+    );
+  }
 
   test('open com start falho → stopped; restart sobe e reabre o doc', () async {
     final shared = _Shared()..startSucceeds = false;
