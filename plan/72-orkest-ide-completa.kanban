@@ -16,13 +16,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
       Diretriz 04/11: avaliar quando houver necessidade de desempenho identificada; não bloqueia entregas funcionais em Dart.
 
-- [ ] A05 · Empacotar e supervisionar serviços nativos selecionados <!-- id: A05 labels: P1, arquitetura blockedBy: A04 -->
-      Porte: L. Dependências: A04.
-      Origem: ide-core/process; host; crates selecionadas.
-      Destino: Build/release desktop e transporte remoto existentes.
-      Aceite: Bins/bibliotecas por OS/arch, encerramento de filhos, handshake incompatível, reinício, logs sem segredos, atualização/rollback e ausência de ferramentas externas testados.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] L02 · Completar assistência LSP no editor <!-- id: L02 labels: P1, linguagens blockedBy: W03, L01 -->
       Porte: L. Dependências: W03, L01.
       Origem: src/editor/lsp; commands/lsp.rs.
@@ -167,14 +160,13 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: Jornada buscar projeto -> editar/refatorar -> testar/debug -> revisar hunks/conflitos -> continuar harness validada; regressões de memória/latência avaliadas, flags/rollback e avisos de terceiros conferidos; merge somente com aprovação.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
-
 ## Em andamento
 
-- [ ] B03 · Evoluir console SQL e avaliar ClickHouse <!-- id: B03 labels: P2, bancos blockedBy: B01 -->
-      Porte: M. Dependências: B01.
-      Origem: db_completion, explain/history/export; clickhouse.rs.
-      Destino: db_query_view e serviços SQL.
-      Aceite: Completion por schema, explain/histórico/export e limites de resultado; ClickHouse é decisão separada conforme demanda, sem remover suporte atual nem expor credenciais.
+- [ ] A05 · Empacotar e supervisionar serviços nativos selecionados <!-- id: A05 labels: P1, arquitetura blockedBy: A04 -->
+      Porte: L. Dependências: A04.
+      Origem: ide-core/process; host; crates selecionadas.
+      Destino: Build/release desktop e transporte remoto existentes.
+      Aceite: Bins/bibliotecas por OS/arch, encerramento de filhos, handshake incompatível, reinício, logs sem segredos, atualização/rollback e ausência de ferramentas externas testados.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -193,6 +185,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] B03 · Evoluir console SQL e avaliar ClickHouse <!-- id: B03 labels: P2, bancos blockedBy: B01 -->
+      Entrega: Serviço de exportação estruturada DbExportService com suporte completo a CSV (delimitador customizável, cabeçalhos, escape de aspas dobradas, quebras de linha embutidas e formatação de DateTime/blobs) e JSON formatado (pretty e compacto); consultas EXPLAIN e EXPLAIN ANALYZE contextuais multi-engine via dbExplainSql em db_schema_sql.dart para SQLite, PostgreSQL, MySQL e MSSQL; serviço de histórico de consultas DbQueryHistoryService e entidade DbQueryHistoryEntry com tracking de status, contagem de linhas e retenção máxima configurável (FIFO); serviço de autocompletion de SQL por schema DbSqlCompletionService com sugestão inteligente de keywords, funções, tabelas e colunas qualificadas; avaliação técnica formal de ClickHouse (ADR) documentada em plan/72-avaliacao-clickhouse.md decidindo pela não inclusão desnecessária no bundle básico e adoção da interface HTTP sob demanda (KISS/YAGNI).
+      Aceite: Completion por schema, explain/histórico/export e limites de resultado; ClickHouse é decisão separada conforme demanda, sem remover suporte atual nem expor credenciais.
+      Validação: 20 testes unitários aprovados em test/domain/db_export_service_test.dart, test/domain/db_explain_sql_test.dart, test/domain/db_query_history_service_test.dart e test/domain/db_sql_completion_service_test.dart; 122 testes da suíte completa de bancos de dados aprovados com 100% de sucesso; análise estática dart analyze --fatal-infos limpa (zero issues).
+      Plano: [detalhamento e arquitetura](72-avaliacao-clickhouse.md).
 
 - [x] B02 · Provar transações e edição persistente de dados <!-- id: B02 labels: P2, bancos blockedBy: B01, A04 -->
       Entrega: ADR e implementação formal de transações manuais com sessões dedicadas DbTransactionSession e DbTransactionManager, mantendo o canal físico exclusivo e impondo rollback preventivo em caso de timeout de inatividade (padrão: 60s) ou no descarte da sessão (dispose); serviço de edição persistente de dados DbRowEditService implementando generateOptimisticUpdateSql (com verificação de chave primária e concorrência otimista via WHERE pk = val AND col = old_val), generateRowDeleteSql e generateRowInsertSql; guardrail rigoroso rejeitando edições e exclusões em tabelas sem chave primária definida (DbEditException).
