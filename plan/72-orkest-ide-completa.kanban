@@ -44,13 +44,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: Paleta busca ações e símbolos sem substituir busca de projetos; foco/contexto/atalhos, acessibilidade e i18n coerentes; ação indisponível explica capacidade faltante.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
-- [ ] W03 · Fortalecer edição, documentos e sincronização <!-- id: W03 labels: P0, workspace blockedBy: W01 -->
-      Porte: L. Dependências: W01.
-      Origem: src/editor/core/sync e model.
-      Destino: code_editor, file_viewer_session, document host.
-      Aceite: Undo/redo, dirty buffers, mudanças externas, fechamento, arquivos grandes, Unicode/CRLF e multi-janela verificados; nenhuma perda silenciosa de edições.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] L02 · Completar assistência LSP no editor <!-- id: L02 labels: P1, linguagens blockedBy: W03, L01 -->
       Porte: L. Dependências: W03, L01.
       Origem: src/editor/lsp; commands/lsp.rs.
@@ -274,6 +267,13 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 
 ## Em andamento
+
+- [ ] W03 · Fortalecer edição, documentos e sincronização <!-- id: W03 labels: P0, workspace blockedBy: W01 -->
+      Porte: L. Dependências: W01.
+      Origem: src/editor/core/sync e model.
+      Destino: code_editor, file_viewer_session, document host.
+      Aceite: Undo/redo, dirty buffers, mudanças externas, fechamento, arquivos grandes, Unicode/CRLF e multi-janela verificados; nenhuma perda silenciosa de edições.
+      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
 
