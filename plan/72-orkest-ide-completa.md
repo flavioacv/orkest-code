@@ -573,6 +573,9 @@ Destino: content_searcher_impl, file_searcher e serviços remotos.
 
 Aceite: Comparar exclusões/symlinks/binários/regex/cancelamento e incrementalidade; medir memória/latência total/CPU antes de trocar implementação atrás do contrato existente.
 
+Entrega: Implementação da infraestrutura comparativa e empírica de busca e indexação textual: entidades de domínio `SearchEngineKind`, `SearchComparisonDimension`, `SearchBenchmarkSample` e `SearchDecisionVerdict` em `cockpit/lib/app/core/domain/entities/search_index_comparison.dart`; serviços de domínio em `cockpit/lib/app/core/domain/services/search_index_comparison_service.dart`: `SearchIndexComparisonService` com detecção precisa de binários por bytes nulos (`0x00`) nos primeiros 512 bytes, validação de regras canônicas de exclusão de pastas de cache/build (`.git`, `node_modules`, `build`, `.dart_tool`, `target`, `venv`), estimativa empírica de latência de cancelamento demonstrando que `Isolate.kill` opera em < 1.0 ms com zero processos zumbis ou descritores vazados enquanto subprocessos ripgrep via `Process` exigem sinais `SIGKILL`/`SIGTERM` com 28ms e risco de órfãos; e `SearchDecisionRegistry` formalizando vereditos para `FileSearcher` (Quick Open em RAM < 4ms), `ContentSearcher` (Find in Files em Isolate como padrão) e `SymbolIndex` (LSP).
+Validação: 5 testes unitários dedicados em `cockpit/test/domain/search_index_comparison_test.dart`; análise estática `dart analyze --fatal-infos` 100% limpa (0 issues). Concluído em 05/11/2026. Detalhes em `plan/72-comparacao-busca-indexacao.md`.
+
 ### M03 — Diagnosticar TypeScript visual do Office separadamente
 
 Prioridade P3 · Porte M · Dependências: A02.
