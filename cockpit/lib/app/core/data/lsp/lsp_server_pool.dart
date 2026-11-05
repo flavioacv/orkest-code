@@ -16,6 +16,9 @@ import 'package:orkest_code/app/core/domain/entities/lsp_semantic_tokens.dart';
 import 'package:orkest_code/app/core/domain/entities/lsp_symbol.dart';
 import 'package:orkest_code/app/core/domain/entities/lsp_workspace_edit.dart';
 import 'package:orkest_code/app/core/domain/entities/lsp_code_action.dart';
+import 'package:orkest_code/app/core/domain/entities/lsp_inlay_hint.dart';
+import 'package:orkest_code/app/core/domain/entities/lsp_hierarchy.dart';
+import 'package:orkest_code/app/core/domain/entities/lsp_code_lens.dart';
 import 'package:orkest_code/app/core/domain/exceptions/lsp_error.dart';
 import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:orkest_code/app/core/utils/executable_resolver.dart';
@@ -523,6 +526,120 @@ class LspServerPool {
       path,
       range,
       kinds: const [LspCodeActionKind.sourceOrganizeImports],
+    );
+  }
+
+  /// `textDocument/inlayHint` — obtém dicas embutidas (tipos inferidos, parâmetros) no range (L06).
+  Future<List<LspInlayHint>> inlayHints(String path, LspRange range) async {
+    final doc = _docs[path];
+    if (doc == null) return const [];
+    final result = await requestForPath(path, 'textDocument/inlayHint', {
+      'textDocument': {'uri': Uri.file(path).toString()},
+      'range': range.toJson(),
+    });
+    return result.fold(parseInlayHints, (_) => const []);
+  }
+
+  /// `textDocument/prepareCallHierarchy` — inicia call hierarchy no símbolo (L06).
+  Future<List<LspCallHierarchyItem>> prepareCallHierarchy(
+    String path,
+    int line,
+    int character,
+  ) async {
+    final doc = _docs[path];
+    if (doc == null || line < 0 || character < 0) return const [];
+    final result = await requestForPath(path, 'textDocument/prepareCallHierarchy', {
+      'textDocument': {'uri': Uri.file(path).toString()},
+      'position': {'line': line, 'character': character},
+    });
+    return result.fold(parseCallHierarchyItems, (_) => const []);
+  }
+
+  /// `callHierarchy/incomingCalls` — resolvedor de chamadas recebidas (L06).
+  Future<List<LspCallHierarchyIncomingCall>> callHierarchyIncomingCalls(
+    String path,
+    LspCallHierarchyItem item,
+  ) async {
+    final doc = _docs[path];
+    if (doc == null) return const [];
+    final result = await requestForPath(path, 'callHierarchy/incomingCalls', {
+      'item': item.toJson(),
+    });
+    return result.fold(parseCallHierarchyIncomingCalls, (_) => const []);
+  }
+
+  /// `callHierarchy/outgoingCalls` — resolvedor de chamadas realizadas (L06).
+  Future<List<LspCallHierarchyOutgoingCall>> callHierarchyOutgoingCalls(
+    String path,
+    LspCallHierarchyItem item,
+  ) async {
+    final doc = _docs[path];
+    if (doc == null) return const [];
+    final result = await requestForPath(path, 'callHierarchy/outgoingCalls', {
+      'item': item.toJson(),
+    });
+    return result.fold(parseCallHierarchyOutgoingCalls, (_) => const []);
+  }
+
+  /// `textDocument/prepareTypeHierarchy` — inicia type hierarchy no símbolo (L06).
+  Future<List<LspTypeHierarchyItem>> prepareTypeHierarchy(
+    String path,
+    int line,
+    int character,
+  ) async {
+    final doc = _docs[path];
+    if (doc == null || line < 0 || character < 0) return const [];
+    final result = await requestForPath(path, 'textDocument/prepareTypeHierarchy', {
+      'textDocument': {'uri': Uri.file(path).toString()},
+      'position': {'line': line, 'character': character},
+    });
+    return result.fold(parseTypeHierarchyItems, (_) => const []);
+  }
+
+  /// `typeHierarchy/supertypes` — resolvedor de supertipos (L06).
+  Future<List<LspTypeHierarchyItem>> typeHierarchySupertypes(
+    String path,
+    LspTypeHierarchyItem item,
+  ) async {
+    final doc = _docs[path];
+    if (doc == null) return const [];
+    final result = await requestForPath(path, 'typeHierarchy/supertypes', {
+      'item': item.toJson(),
+    });
+    return result.fold(parseTypeHierarchyItems, (_) => const []);
+  }
+
+  /// `typeHierarchy/subtypes` — resolvedor de subtipos (L06).
+  Future<List<LspTypeHierarchyItem>> typeHierarchySubtypes(
+    String path,
+    LspTypeHierarchyItem item,
+  ) async {
+    final doc = _docs[path];
+    if (doc == null) return const [];
+    final result = await requestForPath(path, 'typeHierarchy/subtypes', {
+      'item': item.toJson(),
+    });
+    return result.fold(parseTypeHierarchyItems, (_) => const []);
+  }
+
+  /// `textDocument/codeLens` — solicita code lenses no documento (L06).
+  Future<List<LspCodeLens>> codeLenses(String path) async {
+    final doc = _docs[path];
+    if (doc == null) return const [];
+    final result = await requestForPath(path, 'textDocument/codeLens', {
+      'textDocument': {'uri': Uri.file(path).toString()},
+    });
+    return result.fold(parseCodeLenses, (_) => const []);
+  }
+
+  /// `codeLens/resolve` — resolve comando detalhado sob demanda (L06).
+  Future<LspCodeLens?> resolveCodeLens(String path, LspCodeLens lens) async {
+    final doc = _docs[path];
+    if (doc == null) return null;
+    final result = await requestForPath(path, 'codeLens/resolve', lens.toJson());
+    return result.fold(
+      (data) => data is Map<String, dynamic> ? LspCodeLens.fromJson(data) : null,
+      (_) => null,
     );
   }
 
