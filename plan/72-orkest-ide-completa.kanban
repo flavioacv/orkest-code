@@ -16,13 +16,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
       Diretriz 04/11: avaliar quando houver necessidade de desempenho identificada; não bloqueia entregas funcionais em Dart.
 
-- [ ] R05 · Integrar resultados de testes, coverage e profiler <!-- id: R05 labels: P2, debug blockedBy: R01, L05 -->
-      Porte: L. Dependências: R01, L05.
-      Origem: ide-coverage, ide-profiler, run TestTreeView.
-      Destino: Tasks, telemetria e gutter de editor.
-      Aceite: Árvore de testes/reexecutar falhas e cobertura por formato validado; profiler somente por demanda; relatório aponta ferramenta/linguagem e não apresenta dado ausente como zero.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] X01 · Priorizar produtividade de edição e visualização <!-- id: X01 labels: P2, ferramentas blockedBy: W03, L02 -->
       Porte: M. Dependências: W03, L02.
       Origem: templates, macros, vim, todo, scratch, color-preview, viewers.
@@ -84,11 +77,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] R04 · Expandir debug multilinguagem progressivamente <!-- id: R04 labels: P2, debug blockedBy: R02, L05 -->
-      Porte: L. Dependências: R02, L05.
-      Origem: debugpy, js-debug, codelldb e configs de linguagens.
-      Destino: Registro de adaptadores e painéis DAP.
-      Aceite: Validar TS/JS, Python, Rust/Go conforme adapter; depois JVM/.NET; documentar instalação/licença e limites de watchpoints, restart frame, smart step e HotSwap por adaptador.
+- [ ] R05 · Integrar resultados de testes, coverage e profiler <!-- id: R05 labels: P2, debug blockedBy: R01, L05 -->
+      Porte: L. Dependências: R01, L05.
+      Origem: ide-coverage, ide-profiler, run TestTreeView.
+      Destino: Tasks, telemetria e gutter de editor.
+      Aceite: Árvore de testes/reexecutar falhas e cobertura por formato validado; profiler somente por demanda; relatório aponta ferramenta/linguagem e não apresenta dado ausente como zero.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -107,6 +100,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] R04 · Expandir debug multilinguagem progressivamente <!-- id: R04 labels: P2, debug blockedBy: R02, L05 -->
+      Entrega: Implementação da infraestrutura formal de depuração multilinguagem via Debug Adapter Protocol (DAP): entidades de domínio DebugAdapterCapabilities, DebugAdapterDefinition e catálogo declarativo MultiLanguageDebugRegistry em cockpit/lib/app/core/domain/entities/multi_language_debug_adapter.dart cobrindo TypeScript/JavaScript (pwa-node), Python (debugpy), Rust/C/C++ (lldb/codelldb), Go (dlv), Java/Kotlin (java), C#/.NET (coreclr) e Dart/Flutter (dart); matriz estrita de capacidades documentando limitações e recursos de cada ecossistema (hardware watchpoints em LLDB/Delve/Java; HotSwap em Dart, Java, Node e .NET; Restart Frame em Dart, TS e Java); orquestrador unificado MultiLanguageDebugAdapter em cockpit/lib/app/core/data/dap/multi_language_debug_adapter.dart provendo resolução de comandos com suporte a overrides customizados de executáveis e argumentos (ex: virtualenv de Python), formatação de argumentos de launch mesclando templates e flags, e serviço de auditoria auditAdapter gerando relatórios de conformidade e instrução de instalação com licenças transparentes (MIT, GPL-2.0, EPL-1.0, BSD-3-Clause).
+      Aceite: Validar TS/JS, Python, Rust/Go conforme adapter; depois JVM/.NET; documentar instalação/licença e limites de watchpoints, restart frame, smart step e HotSwap por adaptador.
+      Validação: 8 testes unitários dedicados em cockpit/test/domain/multi_language_debug_adapter_test.dart; 26 testes da suíte combinada de depuração DAP aprovados sem falhas; análise estática dart analyze --fatal-infos 100% limpa (0 issues).
+      Plano: [detalhamento e arquitetura](72-expansao-debug-multilinguagem.md).
 
 - [x] L06 · Avaliar inteligência avançada e análise estrutural <!-- id: L06 labels: P2, linguagens blockedBy: L05 -->
       Entrega: Implementação da infraestrutura de inteligência avançada, análise estrutural e escolha seletiva de subconjunto útil de capacidades LSP: entidades de domínio LspInlayHint e LspInlayHintKind (type, parameter) em cockpit/lib/app/core/domain/entities/lsp_inlay_hint.dart; modelos de hierarquia LspCallHierarchyItem, LspCallHierarchyIncomingCall, LspCallHierarchyOutgoingCall e LspTypeHierarchyItem em cockpit/lib/app/core/domain/entities/lsp_hierarchy.dart; modelos de LspCodeLens e LspCommand em cockpit/lib/app/core/domain/entities/lsp_code_lens.dart; serviço de análise estrutural StructuralAnalysisService (cockpit/lib/app/core/domain/services/structural_analysis_service.dart) provendo findDuplications (detecção de blocos de código duplicados com coeficiente de Jaccard e normalização sintática), searchPattern (busca estrutural com curingas $ID e captura de sintaxe) e auditLanguageSubset (matriz de viabilidade recomendando subsets úteis com fallback gracioso para coleções vazias quando o servidor LSP não suporta ou está indisponível); e integração dos métodos públicos no LspServerPool (inlayHints, prepareCallHierarchy, callHierarchyIncomingCalls, callHierarchyOutgoingCalls, prepareTypeHierarchy, typeHierarchySupertypes, typeHierarchySubtypes, codeLenses e resolveCodeLens).

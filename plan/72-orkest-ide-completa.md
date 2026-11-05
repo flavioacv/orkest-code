@@ -450,6 +450,9 @@ Destino: Registro de adaptadores e painéis DAP.
 
 Aceite: Validar TS/JS, Python, Rust/Go conforme adapter; depois JVM/.NET; documentar instalação/licença e limites de watchpoints, restart frame, smart step e HotSwap por adaptador.
 
+Entrega: Implementação da infraestrutura formal de depuração multilinguagem via Debug Adapter Protocol (DAP): entidades de domínio `DebugAdapterCapabilities`, `DebugAdapterDefinition` e catálogo declarativo `MultiLanguageDebugRegistry` em `cockpit/lib/app/core/domain/entities/multi_language_debug_adapter.dart` cobrindo TypeScript/JavaScript (`pwa-node`), Python (`debugpy`), Rust/C/C++ (`lldb`/`codelldb`), Go (`dlv`), Java/Kotlin (`java`), C#/.NET (`coreclr`) e Dart/Flutter (`dart`); matriz estrita de capacidades documentando limitações e recursos de cada ecossistema (hardware watchpoints em LLDB/Delve/Java; HotSwap em Dart, Java, Node e .NET; Restart Frame em Dart, TS e Java); orquestrador unificado `MultiLanguageDebugAdapter` em `cockpit/lib/app/core/data/dap/multi_language_debug_adapter.dart` provendo resolução de comandos com suporte a overrides customizados de executáveis e argumentos (ex: virtualenv de Python), formatação de argumentos de launch mesclando templates e flags, e serviço de auditoria `auditAdapter` gerando relatórios de conformidade e instrução de instalação com licenças transparentes (MIT, GPL-2.0, EPL-1.0, BSD-3-Clause).
+Validação: 8 testes unitários dedicados em `cockpit/test/domain/multi_language_debug_adapter_test.dart`; 26 testes da suíte combinada de depuração DAP aprovados sem falhas; análise estática `dart analyze --fatal-infos` 100% limpa (0 issues). Concluído em 05/11/2026. Detalhes em `plan/72-expansao-debug-multilinguagem.md`.
+
 ### R05 — Integrar resultados de testes, coverage e profiler
 
 Prioridade P2 · Porte L · Dependências: R01, L05.
