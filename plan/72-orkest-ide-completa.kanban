@@ -23,13 +23,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: Provar inlays, hierarquias, busca estrutural/duplicações e análise apenas onde servidor suporta; medir custo e escolher subset útil.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
-- [ ] H03 · Ampliar reconhecimento de CLI por evidência <!-- id: H03 labels: P1, harness blockedBy: H02 -->
-      Porte: M. Dependências: H02.
-      Origem: provider.rs e registry como metadados de referência.
-      Destino: HarnessCatalog, normalizer, classifier, monitor.
-      Aceite: Para cada CLI selecionada, validar executável/wrappers/flags e modos não interativos no host; hooks opcionais; fornecedores não reconhecidos continuam via contrato genérico, sem parser inventado.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] H04 · Verificar paridade local, SSH e WSL de harness <!-- id: H04 labels: P1, harness blockedBy: H02, H03 -->
       Porte: M. Dependências: H02, H03.
       Origem: Correlação ACP como referência; protocolo atual Orkest.
@@ -119,11 +112,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] H02 · Criar corpus e replay de leitura de harness <!-- id: H02 labels: P1, harness blockedBy: H01 -->
-      Porte: M. Dependências: H01.
-      Origem: ide-agent/replay.rs e fixtures JSONL.
-      Destino: test/session e fixtures sanitizadas.
-      Aceite: Capturas versionadas sem segredos para ANSI fragmentado, redraw, prompts repetidos, permissões simultâneas, subagentes, Stop/SessionEnd, WSL e reconnect; replay determinístico compara transições e duplicações.
+- [ ] H03 · Ampliar reconhecimento de CLI por evidência <!-- id: H03 labels: P1, harness blockedBy: H02 -->
+      Porte: M. Dependências: H02.
+      Origem: provider.rs e registry como metadados de referência.
+      Destino: HarnessCatalog, normalizer, classifier, monitor.
+      Aceite: Para cada CLI selecionada, validar executável/wrappers/flags e modos não interativos no host; hooks opcionais; fornecedores não reconhecidos continuam via contrato genérico, sem parser inventado.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -142,6 +135,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] H02 · Criar corpus e replay de leitura de harness <!-- id: H02 labels: P1, harness blockedBy: H01 -->
+      Entrega: Criação da infraestrutura de corpus e replay determinístico de leitura de harness: modelos serializáveis HarnessReplayEvent, HarnessReplayTransition e HarnessReplayScenario; motor de execução determinístico HarnessReplayRunner com recomposição de sequências ANSI fragmentadas, detecção de marcadores PTY (OSC 133/activity), avaliação de precedência temporal baseada no timestamp dos eventos (abs() < 5000ms), métricas de integridade e isolamento de gerações de sessão no cômputo de flicker; suporte formal a ciclos de vida hierárquicos de subagentes no HarnessStateCoordinator mantendo working até a conclusão de todas as subtarefas; catálogo com 8 cenários versionados e sanitizados em JSON (test/fixtures/harness/: 01_ansi_fragmented, 02_screen_redraw, 03_repeated_prompts, 04_concurrent_permissions, 05_subagents, 06_stop_session_end, 07_wsl_environment, 08_session_reconnect).
+      Aceite: Capturas versionadas sem segredos para ANSI fragmentado, redraw, prompts repetidos, permissões simultâneas, subagentes, Stop/SessionEnd, WSL e reconnect; replay determinístico compara transições e duplicações.
+      Validação: 10 testes dedicados em test/session/harness_corpus_replay_test.dart (auditoria estrita de segredos e zero vazamentos com regex, determinismo comprovado e 100% de match de transições com 0 flickers em sucessivas execuções); 74 testes de regressão aprovados em harness_signal_precedence_test.dart e terminal_status_test.dart; análise estática dart analyze --fatal-infos limpa (zero issues).
+      Plano: [detalhamento e arquitetura](72-corpus-replay-leitura-harness.md).
 
 - [x] H01 · Formalizar estado e precedência dos sinais de harness <!-- id: H01 labels: P0, harness blockedBy: F01 -->
       Entrega: Formalização do modelo de estados ortogonais e precedência determinística dos sinais de harness: entidades de domínio HarnessPresence (none, attached, detached), HarnessExecutionPhase (idle, running, waitingInput, completed, closed), HarnessSignalSource com pesos de precedência (structuredHook [100] > ptyMarker [75] > userInput [50] > screenObservation [25]), HarnessSignal e HarnessStateSnapshot com mapeamento para TerminalStatus; coordenador determinístico HarnessStateCoordinator com regras de precedência por fonte (bloqueando cancelamentos e rebaixamentos espúrios por screen observation), isolamento de gerações de sessão, deduplicação de atividades concluídas em buffer circular FIFO cap de 256 itens e neutralidade absoluta de produtores/CLIs; e integração completa na TerminalSession.

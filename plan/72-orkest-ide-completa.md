@@ -311,6 +311,9 @@ Destino: test/session e fixtures sanitizadas.
 
 Aceite: Capturas versionadas sem segredos para ANSI fragmentado, redraw, prompts repetidos, permissões simultâneas, subagentes, Stop/SessionEnd, WSL e reconnect; replay determinístico compara transições e duplicações.
 
+Entrega: Criação da infraestrutura de corpus e replay determinístico de leitura de harness: entidades de dados serializáveis `HarnessReplayEvent`, `HarnessReplayTransition` e `HarnessReplayScenario` em `cockpit/lib/app/core/domain/entities/harness_replay_event.dart`; motor de execução determinístico `HarnessReplayRunner` em `cockpit/lib/app/core/domain/services/harness_replay_runner.dart` com recomposição de sequências ANSI fragmentadas, detecção de marcadores PTY (OSC 133/activity), avaliação de precedência temporal baseada no timestamp dos eventos (`abs() < 5000ms`), métricas de integridade e isolamento de gerações de sessão no cômputo de flicker; suporte formal a ciclos de vida hierárquicos de subagentes no `HarnessStateCoordinator` mantendo `working` até a conclusão de todas as subtarefas; catálogo com 8 cenários versionados e sanitizados em JSON (`cockpit/test/fixtures/harness/`: `01_ansi_fragmented`, `02_screen_redraw`, `03_repeated_prompts`, `04_concurrent_permissions`, `05_subagents`, `06_stop_session_end`, `07_wsl_environment`, `08_session_reconnect`).
+Validação: 10 testes dedicados em `cockpit/test/session/harness_corpus_replay_test.dart` (auditoria estrita de segredos e zero vazamentos com regex, determinismo comprovado e 100% de match de transições com 0 flickers em sucessivas execuções); 74 testes de regressão aprovados em `harness_signal_precedence_test.dart` e `terminal_status_test.dart`; análise estática `dart analyze --fatal-infos` 100% limpa (0 issues). Concluído em 05/11/2026. Detalhes em `plan/72-corpus-replay-leitura-harness.md`.
+
 ### H03 — Ampliar reconhecimento de CLI por evidência
 
 Prioridade P1 · Porte M · Dependências: H02.
