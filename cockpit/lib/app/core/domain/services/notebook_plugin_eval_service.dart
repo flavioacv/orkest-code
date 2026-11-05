@@ -182,8 +182,12 @@ class PluginManifestValidator {
     final currParts = current.split('.').map((p) => int.tryParse(p) ?? 0).toList();
     final reqParts = required.split('.').map((p) => int.tryParse(p) ?? 0).toList();
 
-    while (currParts.length < 3) currParts.add(0);
-    while (reqParts.length < 3) reqParts.add(0);
+    while (currParts.length < 3) {
+      currParts.add(0);
+    }
+    while (reqParts.length < 3) {
+      reqParts.add(0);
+    }
 
     for (var i = 0; i < 3; i++) {
       if (currParts[i] > reqParts[i]) return true;
