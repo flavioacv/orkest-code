@@ -155,6 +155,7 @@ Referência: ide-host/bin/server.rs, rpc.rs; ide-vcs; ide-dap.
 Destino: Protótipo isolado de cliente Dart, sem substituir serviços de produção.
 
 Aceite: Handshake, abertura de projeto, status/diff, cancelamento e sessão DAP funcionam; inventário de comandos realmente expostos e dependências do host registrado; avaliar host reduzido e isolamento de falhas.
+Entrega: Protótipo de cliente Dart implementado em `cockpit/test/spike/` (`rust_ide_host_client.dart`, `rust_ide_host_protocol.dart`, `mock_rust_ide_host_server.dart`); 7 testes aprovados em `cockpit/test/spike/rust_ide_host_spike_test.dart` cobrindo handshake com protocol 2, open/close project, vcs_status/roots/cancel_request, ciclo de vida DAP completo (launch, breakpoints, threads, stack trace, variables, evaluate, step, stop), streaming de progresso via canais, eventos assíncronos, isolamento total de crashes com `RustRpcException` e benchmark de latência IPC (p50 ~0.25ms, p95 ~0.89ms); documentado em `plan/72-prova-reaproveitamento-rust-vcs-dap.md`. Concluído em 05/11/2026.
 
 ### A04 — Decidir arquitetura por domínio com resultados medidos
 
