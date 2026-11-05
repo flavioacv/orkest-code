@@ -254,6 +254,37 @@ String dbViewDefinitionSql(DbEngine engine, {required String view, String? schem
   }
 }
 
+/// Gera a query de plano de execução (EXPLAIN) contextual para [query] (B03).
+///
+/// Se [analyze] for true, requisita execução real com métricas detalhadas
+/// onde suportado nativamente (PostgreSQL, MySQL).
+String dbExplainSql(DbEngine engine, String query, {bool analyze = false}) {
+  final clean = query.trim().replaceAll(RegExp(r';\s*$'), '');
+  if (clean.isEmpty) {
+    throw const DbQueryException('invalid_query', 'Query cannot be empty for explain.');
+  }
+  switch (engine) {
+    case DbEngine.sqlite:
+      return 'EXPLAIN QUERY PLAN $clean;';
+    case DbEngine.postgres:
+      return analyze
+          ? 'EXPLAIN (ANALYZE, COSTS, VERBOSE, BUFFERS) $clean;'
+          : 'EXPLAIN $clean;';
+    case DbEngine.mysql:
+      return analyze ? 'EXPLAIN ANALYZE $clean;' : 'EXPLAIN $clean;';
+    case DbEngine.mssql:
+      return analyze
+          ? 'SET STATISTICS PROFILE ON;\n$clean;\nSET STATISTICS PROFILE OFF;'
+          : 'SET SHOWPLAN_TEXT ON;\n$clean;\nSET SHOWPLAN_TEXT OFF;';
+    case DbEngine.redis:
+    case DbEngine.mongo:
+      throw const DbQueryException(
+        'unsupported_engine',
+        'Explain plan is SQL-only.',
+      );
+  }
+}
+
 /// Identificador seguro pra interpolar (tabela/schema): só
 /// palavra/dígito/underscore/ponto/cifrão.
 String _safeIdent(String name) {
