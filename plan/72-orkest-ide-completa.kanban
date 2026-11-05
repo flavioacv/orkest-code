@@ -94,13 +94,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: Mostrar origem do último estado, idade do sinal e capacidade de detecção com dados limitados; medir falso working/waiting/idle em corpus rotulado; falta de sinal não inventa execução.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
-- [ ] G01 · Entregar revisão e staging por hunks <!-- id: G01 labels: P1, git blockedBy: W03, A04 -->
-      Porte: L. Dependências: W03, A04.
-      Origem: ide-vcs stage_hunks/stage_patch; TS hunks/inclusion.
-      Destino: GitController, diff_viewer e contratos Git.
-      Aceite: Stage/unstage por trecho, diff staged/unstaged, commit parcial/amend e preview; validar HEAD/index contra corridas e preservar alterações não selecionadas, arquivos binários e untracked.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] G02 · Adicionar resolução visual de conflitos <!-- id: G02 labels: P1, git blockedBy: G01 -->
       Porte: L. Dependências: G01.
       Origem: MergeEditor, mergeDiff3; vcs_conflict_versions.
@@ -247,11 +240,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] A04 · Decidir arquitetura por domínio com resultados medidos <!-- id: A04 labels: P0, arquitetura blockedBy: A03 -->
-      Porte: S. Dependências: A03.
-      Origem: Medições A02/A03 e contratos A01.
-      Destino: ADR Dart, processo Rust ou FFI por domínio.
-      Aceite: ADR compara custo total, paridade, distribuição e manutenção; decide por componente e mantém fallback; FFI somente se justificada; preserva Flutter e suporte a projetos Dart.
+- [ ] G01 · Entregar revisão e staging por hunks <!-- id: G01 labels: P1, git blockedBy: W03, A04 -->
+      Porte: L. Dependências: W03, A04.
+      Origem: ide-vcs stage_hunks/stage_patch; TS hunks/inclusion.
+      Destino: GitController, diff_viewer e contratos Git.
+      Aceite: Stage/unstage por trecho, diff staged/unstaged, commit parcial/amend e preview; validar HEAD/index contra corridas e preservar alterações não selecionadas, arquivos binários e untracked.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -270,6 +263,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] A04 · Decidir arquitetura por domínio com resultados medidos <!-- id: A04 labels: P0, arquitetura blockedBy: A03 -->
+      Entrega: ADR formal de arquitetura por domínio consolidando as medições de A03 e contratos A01; decisão por Dart nativo via CLI Git do sistema (GitController) para ciclo de vida VCS e algoritmo em Dart puro para hunks/patches (G01); cliente DAP Dart puro sobre stdio para depuração sem processo intermediário; manutenção do StdioLspClient existente em Dart; rejeição terminante de FFI para VCS, DAP e Editor visando estabilidade do processo Flutter; Isolate Dart + ripgrep para busca de alto desempenho.
+      Aceite: ADR compara custo total, paridade, distribuição e manutenção; decide por componente e mantém fallback; FFI somente se justificada; preserva Flutter e suporte a projetos Dart.
+      Validação: ADR aprovado e documentado em plan/72-decisao-arquitetura-por-dominio.md; desbloqueia formalmente G01, R02 e A05.
+      Detalhes: [decisão de arquitetura por domínio](72-decisao-arquitetura-por-dominio.md).
 
 - [x] A03 · Provar reaproveitamento Rust para VCS e DAP <!-- id: A03 labels: P0, arquitetura blockedBy: A01, F02 -->
       Entrega: Prova de conceito e cliente Dart isolado para integração com o processo Rust (openidea-server / JSON-RPC 2.0 com framing Content-Length); handshake e negociação de capacidades com protocol: 2; abertura e isolamento de projetos por janela; suporte a vcs_status, vcs_roots e cancel_request; ciclo de vida completo de depuração DAP (debug_start, debug_set_breakpoints, debug_threads, debug_stack_trace, debug_variables, debug_evaluate, debug_step, debug_stop); roteamento de eventos assíncronos e streaming de progresso via canais; resiliência comprovada com isolamento total de crashes do servidor Rust; latência medida p50 ~0.25ms e p95 ~0.89ms.
