@@ -261,13 +261,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] W02 · Unificar ações, atalhos e navegação do desenvolvedor <!-- id: W02 labels: P1, workspace blockedBy: W01 -->
-      Porte: M. Dependências: W01.
-      Origem: src/platform actions/keymaps; contributions.
-      Destino: Sistema de ações e menu existente do Orkest.
-      Aceite: Paleta busca ações e símbolos sem substituir busca de projetos; foco/contexto/atalhos, acessibilidade e i18n coerentes; ação indisponível explica capacidade faltante.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 ## Em revisão
 
 - [ ] H00 · Homologar em build a correção de espera já implementada <!-- id: H00 labels: P0, harness blockedBy: H00a -->
@@ -284,6 +277,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] W02 · Unificar ações, atalhos e navegação do desenvolvedor <!-- id: W02 labels: P1, workspace blockedBy: W01 -->
+      Entrega: Command Palette unificada (showCommandPalette) via atalhos globais ⇧⌘P / Shift+Ctrl+P / F1 e menu nativo; integração fluida com quick-open de arquivos (Cmd+P) via prefixo '>'; modelo desacoplado AppCommandItem e AppCommandRegistry com categorização (File, Edit, View, Terminal, Preferences), suporte a busca multi-palavras, atalhos visuais e exibição de justificativa contextual (disabledReason) para ações desabilitadas sem quebrar o modelo project-first.
+      Aceite: Paleta busca ações e símbolos sem substituir busca de projetos; foco/contexto/atalhos, acessibilidade e i18n coerentes; ação indisponível explica capacidade faltante.
+      Validação: 3 testes unitários aprovados em cockpit/test/ui/command_palette_test.dart; análise estática dart analyze --fatal-infos limpa (zero issues).
+      Detalhes: [paleta de ações e navegação](72-paleta-acoes-navegacao.md).
 
 - [x] W03 · Fortalecer edição, documentos e sincronização <!-- id: W03 labels: P0, workspace blockedBy: W01 -->
       Entrega: modelo de sincronização e dirty buffers fortalecido com Single Writer Rule; detecção e preservação de CRLF original no salvamento; detecção de conflitos de concorrência com arquivo alterado no disco (hasDiskConflict), banner de aviso no editor com opções de manter edições locais ou recarregar do disco; suporte a descarte limpo de buffer; proteção contra perda de dados no fechamento atômico de abas; proteção contra arquivos grandes (> 2MB) retornando FileViewUnsupported com integridade garantida.

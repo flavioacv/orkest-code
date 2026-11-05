@@ -194,6 +194,8 @@ Destino: Sistema de ações e menu existente do Orkest.
 
 Aceite: Paleta busca ações e símbolos sem substituir busca de projetos; foco/contexto/atalhos, acessibilidade e i18n coerentes; ação indisponível explica capacidade faltante.
 
+Incremento concluído: Command Palette unificada (showCommandPalette) via atalhos globais ⇧⌘P / Shift+Ctrl+P / F1 e menu nativo; integração fluida com quick-open de arquivos (Cmd+P) via prefixo '>'; modelo desacoplado AppCommandItem e AppCommandRegistry com categorização (File, Edit, View, Terminal, Preferences), suporte a busca multi-palavras, atalhos visuais e exibição de justificativa contextual (disabledReason) para ações desabilitadas sem quebrar o modelo project-first em [paleta de ações e navegação](72-paleta-acoes-navegacao.md); 3 testes aprovados e análise estática limpa.
+
 ### W03 — Fortalecer edição, documentos e sincronização
 
 Prioridade P0 · Porte L · Dependências: W01.
