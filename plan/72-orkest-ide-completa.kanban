@@ -94,13 +94,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: Mostrar origem do último estado, idade do sinal e capacidade de detecção com dados limitados; medir falso working/waiting/idle em corpus rotulado; falta de sinal não inventa execução.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
-- [ ] G03 · Evoluir histórico, autoria e comparação <!-- id: G03 labels: P2, git blockedBy: G01 -->
-      Porte: L. Dependências: G01.
-      Origem: GitLog, graph, block_history, blame, log_index.
-      Destino: git_history_panel e leitores de histórico.
-      Aceite: Grafo/filtros/paginação, blame e histórico de arquivo/seleção; comparar revisões/branches e navegar para código; desempenho medido em repositório grande.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] G04 · Adicionar gestão avançada de trabalho Git <!-- id: G04 labels: P2, git blockedBy: G02 -->
       Porte: L. Dependências: G02.
       Origem: ide-vcs/manage, shelf, patch, rebasePlan.
@@ -212,11 +205,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] R03 · Homologar debug Dart e Flutter <!-- id: R03 labels: P1, debug blockedBy: R02 -->
-      Porte: L. Dependências: R02.
-      Origem: languages/dart.toml; adapter.rs.
-      Destino: Configuração SDK e tasks Flutter existentes.
-      Aceite: Dart CLI e Flutter launch/attach em targets selecionados; breakpoints, exceptions, source mapping, hot reload/restart reais e lifecycle testados; distinguir chaves PTY atuais das funções via DAP.
+- [ ] G03 · Evoluir histórico, autoria e comparação <!-- id: G03 labels: P2, git blockedBy: G01 -->
+      Porte: L. Dependências: G01.
+      Origem: GitLog, graph, block_history, blame, log_index.
+      Destino: git_history_panel e leitores de histórico.
+      Aceite: Grafo/filtros/paginação, blame e histórico de arquivo/seleção; comparar revisões/branches e navegar para código; desempenho medido em repositório grande.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -235,6 +228,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] R03 · Homologar debug Dart e Flutter <!-- id: R03 labels: P1, debug blockedBy: R02 -->
+      Entrega: Orquestrador DartDebugAdapter com resolução automatizada de comandos oficiais dart debug_adapter e flutter debug_adapter com suporte a sdkPath; modelo configurável DartDebugTarget cobrindo Dart CLI, Dart Test, Flutter App e Flutter Test com formatação determinística de argumentos para launch e attach (vmServiceUri); protocolo DAP estendido com a factory DapClient.fromProcess, configuração de filtros de exceções setExceptionBreakpoints (None, All, Unhandled) e requisições customizadas Flutter DAP de Hot Reload e Hot Restart; controle reativo em DebugSessionController via startDartSession e detecção isFlutter; botões dedicados de Hot Reload (ícone de raio/zap) e Hot Restart (ícone de rotação) na barra flutuante DebugToolbar com suporte a atalhos de teclado Ctrl+F5 e Ctrl+Shift+F5; desativação limpa de processos e recursos sem interferir na sessão PTY de terminal.
+      Aceite: Dart CLI e Flutter launch/attach em targets selecionados; breakpoints, exceptions, source mapping, hot reload/restart reais e lifecycle testados; distinguir chaves PTY atuais das funções via DAP.
+      Validação: 10 testes unitários específicos aprovados em test/data/dart_debug_adapter_test.dart cobrindo resolução de executáveis, argumentos launch/attach, lifecycle Dart/Flutter, Hot Reload, Hot Restart e filtros de exceção; 20 testes da suíte completa de DAP aprovados sem falhas; análise estática dart analyze --fatal-infos limpa (zero issues).
+      Detalhes: [homologação debug Dart e Flutter](72-homologacao-debug-dart-flutter.md).
 
 - [x] R02 · Entregar núcleo DAP e UI de depuração <!-- id: R02 labels: P1, debug blockedBy: A04, R01, W03 -->
       Entrega: Protocolo completo DAP em Dart puro com modelos fortemente tipados (DapRequest, DapResponse, DapEvent, DapCapabilities, SourceBreakpoint, DapBreakpoint, DapThread, DapStackFrame, DapScope, DapVariable, DapStoppedEvent, DapOutputEvent, DapEvaluateResult); codec com enquadramento Content-Length e buffer persistente resiliente a fragmentação; cliente assíncrono DapClient para controle de subprocesso stdio e troca sequencial de mensagens com casamento por request_seq; DebugSessionController reativo para sincronização dinâmica de breakpoints, controle de estados do ciclo de vida e auto-inspeção de pilhas de execução e variáveis; componentes de UI especializados com a barra flutuante DebugToolbar (status RODANDO/PAUSADO e atalhos F5/F10/F11/Shift+F11/Shift+F5) e o painel colapsável DebugPanel para Call Stack, Variáveis e Breakpoints clicáveis com navegação direta para o arquivo e linha no editor.

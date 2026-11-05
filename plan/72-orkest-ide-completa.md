@@ -398,6 +398,9 @@ Destino: Configuração SDK e tasks Flutter existentes.
 
 Aceite: Dart CLI e Flutter launch/attach em targets selecionados; breakpoints, exceptions, source mapping, hot reload/restart reais e lifecycle testados; distinguir chaves PTY atuais das funções via DAP.
 
+Entrega: Orquestrador `DartDebugAdapter` com resolução de executáveis oficiais do Dart e Flutter SDK (`dart debug_adapter` e `flutter debug_adapter`) com suporte a `sdkPath` configurável; modelo `DartDebugTarget` cobrindo alvos CLI, testes e apps móveis/desktop com formatação determinística de argumentos para `launch` e `attach` (`vmServiceUri`); protocolo DAP estendido com a factory `DapClient.fromProcess`, configuração de filtros de exceção `setExceptionBreakpoints` (`None`, `All`, `Unhandled`) e requisições customizadas DAP de Hot Reload e Hot Restart do Flutter; controle reativo em `DebugSessionController` com método `startDartSession` e flag `isFlutter`; ações visuais dedicadas de Hot Reload (ícone de zap) e Hot Restart (ícone de rotação) na `DebugToolbar` com atalhos de teclado `Ctrl+F5` e `Ctrl+Shift+F5`; encerramento limpo sem retenção de processos nem colisão com chaves interativas do runner PTY.
+Validação: 10 testes unitários específicos aprovados em `cockpit/test/data/dart_debug_adapter_test.dart`; 20 testes da suíte completa de DAP aprovados; análise estática `dart analyze --fatal-infos` limpa (0 issues). Concluído em 05/11/2026. Detalhes em `plan/72-homologacao-debug-dart-flutter.md`.
+
 ### R04 — Expandir debug multilinguagem progressivamente
 
 Prioridade P2 · Porte L · Dependências: R02, L05.
