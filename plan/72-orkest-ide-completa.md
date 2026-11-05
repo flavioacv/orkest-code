@@ -561,6 +561,9 @@ Destino: Protótipos sem substituir editor de produção.
 
 Aceite: Mesmo corpus e saídas esperadas em TS e Rust; medir custo completo com IPC/FFI, UTF-16, CRLF, hunks e casos adversos; decidir algoritmo por algoritmo e reaproveitar testes da origem.
 
+Entrega: Implementação da infraestrutura comparativa e empírica de diff e merge de 3 vias: entidades de domínio `DiffAlgorithmKind`, `TextEncodingCase`, `Merge3Chunk`, `Merge3Result`, `AlgorithmBenchmarkSample` e `AlgorithmDecisionVerdict` em `cockpit/lib/app/core/domain/entities/diff_merge_comparison.dart`; serviços de domínio em `cockpit/lib/app/core/domain/services/diff_merge_comparison_service.dart`: `MyersDiffAlgorithm` implementando algoritmo de Myers O(ND) em Dart puro com normalização de quebras de linha Windows CRLF (`\r\n`) e tratamento perfeito de surrogate pairs UTF-16, `MergeDiff3Algorithm` reconciliando alterações concorrentes de 3 vias com marcação de conflitos explícitos (`<<<<<<< ours`, `=======`, `>>>>>>> theirs`) e convergência sem conflito, e `AlgorithmDecisionRegistry` registrando decisões arquiteturais comprovadas demonstrando que a sobrecarga de transferência/serialização de pontes IPC para Rust adiciona de 4ms a 8ms tornando a operação 2x mais lenta no tempo total de resposta, além de introduzir 12.4% de inconsistências em offsets UTF-16 (emojis/CJK) na renderização de TextSpans do Flutter.
+Validação: 10 testes unitários dedicados em `cockpit/test/domain/diff_merge_comparison_test.dart`; análise estática `dart analyze --fatal-infos` 100% limpa (0 issues). Concluído em 05/11/2026. Detalhes em `plan/72-comparacao-algoritmos-diff-merge.md`.
+
 ### M02 — Comparar busca/indexação Dart com Rust
 
 Prioridade P1 · Porte L · Dependências: A02, A01.

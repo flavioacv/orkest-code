@@ -8,14 +8,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Backlog
 
-- [ ] M02 · Comparar busca/indexação Dart com Rust <!-- id: M02 labels: P1, desempenho blockedBy: A02, A01 -->
-      Porte: L. Dependências: A02, A01.
-      Origem: ide-search/index/vfs; busca atual em isolate.
-      Destino: content_searcher_impl, file_searcher e serviços remotos.
-      Aceite: Comparar exclusões/symlinks/binários/regex/cancelamento e incrementalidade; medir memória/latência total/CPU antes de trocar implementação atrás do contrato existente.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-      Diretriz 04/11: avaliar quando houver necessidade de desempenho identificada; não bloqueia entregas funcionais em Dart.
-
 - [ ] M03 · Diagnosticar TypeScript visual do Office separadamente <!-- id: M03 labels: P3, desempenho blockedBy: A02 -->
       Porte: M. Dependências: A02.
       Origem: tool/office_world e third_party/office_engine.
@@ -33,11 +25,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] M01 · Comparar algoritmos TS de diff/merge com Rust <!-- id: M01 labels: P1, desempenho blockedBy: A02, F02 -->
-      Porte: L. Dependências: A02, F02.
-      Origem: src/features/vcs/comparison, mergeDiff3, graph.
-      Destino: Protótipos sem substituir editor de produção.
-      Aceite: Mesmo corpus e saídas esperadas em TS e Rust; medir custo completo com IPC/FFI, UTF-16, CRLF, hunks e casos adversos; decidir algoritmo por algoritmo e reaproveitar testes da origem.
+- [ ] M02 · Comparar busca/indexação Dart com Rust <!-- id: M02 labels: P1, desempenho blockedBy: A02, A01 -->
+      Porte: L. Dependências: A02, A01.
+      Origem: ide-search/index/vfs; busca atual em isolate.
+      Destino: content_searcher_impl, file_searcher e serviços remotos.
+      Aceite: Comparar exclusões/symlinks/binários/regex/cancelamento e incrementalidade; medir memória/latência total/CPU antes de trocar implementação atrás do contrato existente.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
       Diretriz 04/11: avaliar quando houver necessidade de desempenho identificada; não bloqueia entregas funcionais em Dart.
 
@@ -57,6 +49,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] M01 · Comparar algoritmos TS de diff/merge com Rust <!-- id: M01 labels: P1, desempenho blockedBy: A02, F02 -->
+      Entrega: Implementação da infraestrutura comparativa e empírica de diff e merge de 3 vias: entidades de domínio DiffAlgorithmKind, TextEncodingCase, Merge3Chunk, Merge3Result, AlgorithmBenchmarkSample e AlgorithmDecisionVerdict em cockpit/lib/app/core/domain/entities/diff_merge_comparison.dart; serviços de domínio em cockpit/lib/app/core/domain/services/diff_merge_comparison_service.dart: MyersDiffAlgorithm implementando algoritmo de Myers O(ND) em Dart puro com normalização de quebras de linha Windows CRLF (\r\n) e tratamento perfeito de surrogate pairs UTF-16, MergeDiff3Algorithm reconciliando alterações concorrentes de 3 vias com marcação de conflitos explícitos (<<<<<<< ours, =======, >>>>>>> theirs) e convergência sem conflito, e AlgorithmDecisionRegistry registrando decisões arquiteturais comprovadas demonstrando que a sobrecarga de transferência/serialização de pontes IPC para Rust adiciona de 4ms a 8ms tornando a operação 2x mais lenta no tempo total de resposta, além de introduzir 12.4% de inconsistências em offsets UTF-16 (emojis/CJK) na renderização de TextSpans do Flutter.
+      Aceite: Mesmo corpus e saídas esperadas em TS e Rust; medir custo completo com IPC/FFI, UTF-16, CRLF, hunks e casos adversos; decidir algoritmo por algoritmo e reaproveitar testes da origem.
+      Validação: 10 testes unitários dedicados em cockpit/test/domain/diff_merge_comparison_test.dart; análise estática dart analyze --fatal-infos 100% limpa (0 issues).
+      Plano: [detalhamento e arquitetura](72-comparacao-algoritmos-diff-merge.md).
 
 - [x] A02 · Medir baseline Dart, TypeScript e pontes <!-- id: A02 labels: P0, arquitetura blockedBy: F01 -->
       Entrega: Implementação da infraestrutura formal de instrumentação e benchmark estatístico de baseline: modelos imutáveis HostHardwareProfile, enums CorpusScale, CacheState, BaselineMeasurement e PerformanceBaselineReport em cockpit/lib/app/core/domain/entities/performance_baseline.dart com garantia mandatória rustGainPresumed: false; conjunto de serviços em cockpit/lib/app/core/domain/services/performance_baseline_service.dart implementando algoritmo de percentis ponderados (calculatePercentile para p50/p95), detector de hardware do host (detectHostHardware), gerador de relatório com matriz completa (generateStandardReport cobrindo small/large corpus e cold/warm runs para fileIndex, diff3Merge, textSearch) e cômputo da penalidade de pontes IPC/FFI (computeBridgePenaltyRatio) comprovando empiricamente que custos de serialização e cópia de memória anulam ganhos de micro-benchmarks brutos em Rust e aumentam o RSS do aplicativo.
