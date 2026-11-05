@@ -16,13 +16,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
       Diretriz 04/11: avaliar quando houver necessidade de desempenho identificada; não bloqueia entregas funcionais em Dart.
 
-- [ ] A03 · Provar reaproveitamento Rust para VCS e DAP <!-- id: A03 labels: P0, arquitetura blockedBy: A01, F02 -->
-      Porte: L. Dependências: A01, F02.
-      Origem: ide-host/bin/server.rs, rpc.rs; ide-vcs; ide-dap.
-      Destino: Protótipo isolado de cliente Dart, sem substituir serviços de produção.
-      Aceite: Handshake, abertura de projeto, status/diff, cancelamento e sessão DAP funcionam; inventário de comandos realmente expostos e dependências do host registrado; avaliar host reduzido e isolamento de falhas.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] A04 · Decidir arquitetura por domínio com resultados medidos <!-- id: A04 labels: P0, arquitetura blockedBy: A03 -->
       Porte: S. Dependências: A03.
       Origem: Medições A02/A03 e contratos A01.
@@ -260,6 +253,13 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 
 ## Em andamento
+
+- [ ] A03 · Provar reaproveitamento Rust para VCS e DAP <!-- id: A03 labels: P0, arquitetura blockedBy: A01, F02 -->
+      Porte: L. Dependências: A01, F02.
+      Origem: ide-host/bin/server.rs, rpc.rs; ide-vcs; ide-dap.
+      Destino: Protótipo isolado de cliente Dart, sem substituir serviços de produção.
+      Aceite: Handshake, abertura de projeto, status/diff, cancelamento e sessão DAP funcionam; inventário de comandos realmente expostos e dependências do host registrado; avaliar host reduzido e isolamento de falhas.
+      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
 
