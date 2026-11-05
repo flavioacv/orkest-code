@@ -1,0 +1,105 @@
+{
+  "id": "concurrent_permissions",
+  "name": "Permissões Simultâneas e Prompts Concorrentes",
+  "description": "Valida o tratamento de solicitações consecutivas e simultâneas de permissão humana, mantendo o status em waiting de forma coesa.",
+  "events": [
+    {
+      "offsetMs": 50,
+      "type": "signal",
+      "signal": {
+        "source": "structuredHook",
+        "phase": "running",
+        "timestampMs": 50,
+        "activityId": "batch-op",
+        "summary": "Running multi-step deployment",
+        "generation": 0
+      }
+    },
+    {
+      "offsetMs": 200,
+      "type": "signal",
+      "signal": {
+        "source": "structuredHook",
+        "phase": "waitingInput",
+        "timestampMs": 200,
+        "activityId": "perm-fs-write",
+        "summary": "Confirm write to config.json? [Y/n]",
+        "generation": 0
+      }
+    },
+    {
+      "offsetMs": 350,
+      "type": "ptyChunk",
+      "ptyData": "\r\nAllow tool execution? [Y/n] "
+    },
+    {
+      "offsetMs": 500,
+      "type": "userInput"
+    },
+    {
+      "offsetMs": 550,
+      "type": "signal",
+      "signal": {
+        "source": "structuredHook",
+        "phase": "completed",
+        "timestampMs": 550,
+        "activityId": "perm-fs-write",
+        "summary": "Permission granted",
+        "generation": 0
+      }
+    },
+    {
+      "offsetMs": 700,
+      "type": "signal",
+      "signal": {
+        "source": "structuredHook",
+        "phase": "completed",
+        "timestampMs": 700,
+        "activityId": "batch-op",
+        "summary": "Deployment finished",
+        "generation": 0
+      }
+    }
+  ],
+  "expectedTransitions": [
+    {
+      "presence": "none",
+      "phase": "idle",
+      "terminalStatus": "idle"
+    },
+    {
+      "presence": "attached",
+      "phase": "running",
+      "terminalStatus": "working",
+      "activityId": "batch-op",
+      "summary": "Running multi-step deployment"
+    },
+    {
+      "presence": "attached",
+      "phase": "waitingInput",
+      "terminalStatus": "waiting",
+      "activityId": "perm-fs-write",
+      "summary": "Confirm write to config.json? [Y/n]"
+    },
+    {
+      "presence": "attached",
+      "phase": "running",
+      "terminalStatus": "working",
+      "activityId": "perm-fs-write",
+      "summary": "User keyboard interaction"
+    },
+    {
+      "presence": "attached",
+      "phase": "running",
+      "terminalStatus": "working",
+      "activityId": "batch-op",
+      "summary": "Permission granted"
+    },
+    {
+      "presence": "attached",
+      "phase": "completed",
+      "terminalStatus": "idle",
+      "summary": "Deployment finished"
+    }
+  ]
+}

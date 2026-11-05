@@ -1,0 +1,87 @@
+{
+  "id": "stop_session_end",
+  "name": "Interrupção por Stop e Encerramento SessionEnd",
+  "description": "Valida interrupção limpa por sinal de stop/cancellation e desanexação no fechamento da sessão de terminal.",
+  "events": [
+    {
+      "offsetMs": 50,
+      "type": "signal",
+      "signal": {
+        "source": "structuredHook",
+        "phase": "running",
+        "timestampMs": 50,
+        "activityId": "infinite-loop-task",
+        "summary": "Processing infinite stream",
+        "generation": 0
+      }
+    },
+    {
+      "offsetMs": 200,
+      "type": "signal",
+      "signal": {
+        "source": "structuredHook",
+        "phase": "waitingInput",
+        "timestampMs": 200,
+        "activityId": "infinite-loop-task",
+        "summary": "Waiting user input",
+        "generation": 0
+      }
+    },
+    {
+      "offsetMs": 400,
+      "type": "signal",
+      "signal": {
+        "source": "structuredHook",
+        "phase": "completed",
+        "timestampMs": 400,
+        "activityId": "infinite-loop-task",
+        "summary": "Operation stopped by operator",
+        "generation": 0
+      }
+    },
+    {
+      "offsetMs": 600,
+      "type": "signal",
+      "signal": {
+        "source": "structuredHook",
+        "phase": "closed",
+        "timestampMs": 600,
+        "summary": "Session ended cleanly",
+        "generation": 0
+      }
+    }
+  ],
+  "expectedTransitions": [
+    {
+      "presence": "none",
+      "phase": "idle",
+      "terminalStatus": "idle"
+    },
+    {
+      "presence": "attached",
+      "phase": "running",
+      "terminalStatus": "working",
+      "activityId": "infinite-loop-task",
+      "summary": "Processing infinite stream"
+    },
+    {
+      "presence": "attached",
+      "phase": "waitingInput",
+      "terminalStatus": "waiting",
+      "activityId": "infinite-loop-task",
+      "summary": "Waiting user input"
+    },
+    {
+      "presence": "attached",
+      "phase": "completed",
+      "terminalStatus": "idle",
+      "summary": "Operation stopped by operator"
+    },
+    {
+      "presence": "detached",
+      "phase": "closed",
+      "terminalStatus": "idle",
+      "summary": "Session ended cleanly"
+    }
+  ]
+}

@@ -74,8 +74,8 @@ class HarnessStateCoordinator {
     }
 
     // 3. Resolução de conflitos e precedência de fontes:
-    // Observações de tela não podem rebaixar execução ou espera ativa originada
-    // de fontes mais fortes (structuredHook / ptyMarker) recebidas recentemente (< 3s).
+    // Observações de tela não podem alterar nem sobrescrever execução ou espera ativa
+    // originada de fontes mais fortes (structuredHook / ptyMarker) recebidas recentemente (< 5s).
     if (signal.source == HarnessSignalSource.screenObservation) {
       final isHighPriorityActive =
           (_phase == HarnessExecutionPhase.running ||
@@ -84,8 +84,7 @@ class HarnessStateCoordinator {
               _lastSource == HarnessSignalSource.ptyMarker);
 
       if (isHighPriorityActive &&
-          signal.phase == HarnessExecutionPhase.idle &&
-          DateTime.now().difference(_lastUpdatedAt).inMilliseconds < 3000) {
+          signal.timestamp.difference(_lastUpdatedAt).inMilliseconds.abs() < 5000) {
         return false;
       }
     }
@@ -117,7 +116,12 @@ class HarnessStateCoordinator {
     }
 
     // 6. Atualização de estado consolidado
-    _phase = signal.phase;
+    if (signal.phase == HarnessExecutionPhase.completed &&
+        _activeActivityIds.isNotEmpty) {
+      _phase = HarnessExecutionPhase.running;
+    } else {
+      _phase = signal.phase;
+    }
     _lastSource = signal.source;
     _lastUpdatedAt = signal.timestamp;
     if (signal.summary != null && signal.summary!.isNotEmpty) {

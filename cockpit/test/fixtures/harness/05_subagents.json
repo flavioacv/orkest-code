@@ -1,0 +1,89 @@
+{
+  "id": "subagents",
+  "name": "Hierarquia e Ciclo de Vida de Subagentes",
+  "description": "Valida que tarefas delegadas a subagentes mantêm o terminal em working até que todas as subtarefas e o coordenador finalizem.",
+  "events": [
+    {
+      "offsetMs": 50,
+      "type": "signal",
+      "signal": {
+        "source": "structuredHook",
+        "phase": "running",
+        "timestampMs": 50,
+        "activityId": "root-orchestrator",
+        "summary": "Root agent planning",
+        "generation": 0
+      }
+    },
+    {
+      "offsetMs": 200,
+      "type": "signal",
+      "signal": {
+        "source": "structuredHook",
+        "phase": "running",
+        "timestampMs": 200,
+        "activityId": "subagent-worker-1",
+        "summary": "Subagent inspecting repository",
+        "generation": 0
+      }
+    },
+    {
+      "offsetMs": 500,
+      "type": "signal",
+      "signal": {
+        "source": "structuredHook",
+        "phase": "completed",
+        "timestampMs": 500,
+        "activityId": "subagent-worker-1",
+        "summary": "Subagent finished inspection",
+        "generation": 0
+      }
+    },
+    {
+      "offsetMs": 800,
+      "type": "signal",
+      "signal": {
+        "source": "structuredHook",
+        "phase": "completed",
+        "timestampMs": 800,
+        "activityId": "root-orchestrator",
+        "summary": "Root orchestrator complete",
+        "generation": 0
+      }
+    }
+  ],
+  "expectedTransitions": [
+    {
+      "presence": "none",
+      "phase": "idle",
+      "terminalStatus": "idle"
+    },
+    {
+      "presence": "attached",
+      "phase": "running",
+      "terminalStatus": "working",
+      "activityId": "root-orchestrator",
+      "summary": "Root agent planning"
+    },
+    {
+      "presence": "attached",
+      "phase": "running",
+      "terminalStatus": "working",
+      "activityId": "subagent-worker-1",
+      "summary": "Subagent inspecting repository"
+    },
+    {
+      "presence": "attached",
+      "phase": "running",
+      "terminalStatus": "working",
+      "activityId": "root-orchestrator",
+      "summary": "Subagent finished inspection"
+    },
+    {
+      "presence": "attached",
+      "phase": "completed",
+      "terminalStatus": "idle",
+      "summary": "Root orchestrator complete"
+    }
+  ]
+}

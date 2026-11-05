@@ -1,0 +1,76 @@
+{
+  "id": "repeated_prompts",
+  "name": "Prompts e Spinners Repetidos",
+  "description": "Garante que repetições sucessivas de linhas de prompt ou spinners em repouso não geram oscilações ou transições espúrias de estado.",
+  "events": [
+    {
+      "offsetMs": 50,
+      "type": "ptyChunk",
+      "ptyData": "assistant> How can I help you today?\r\n> "
+    },
+    {
+      "offsetMs": 100,
+      "type": "ptyChunk",
+      "ptyData": "\r> \u001b[K"
+    },
+    {
+      "offsetMs": 150,
+      "type": "ptyChunk",
+      "ptyData": "\r> \u001b[K"
+    },
+    {
+      "offsetMs": 300,
+      "type": "userInput"
+    },
+    {
+      "offsetMs": 400,
+      "type": "signal",
+      "signal": {
+        "source": "structuredHook",
+        "phase": "running",
+        "timestampMs": 400,
+        "activityId": "query-1",
+        "summary": "Generating response",
+        "generation": 0
+      }
+    },
+    {
+      "offsetMs": 800,
+      "type": "signal",
+      "signal": {
+        "source": "structuredHook",
+        "phase": "completed",
+        "timestampMs": 800,
+        "activityId": "query-1",
+        "summary": "Response delivered",
+        "generation": 0
+      }
+    }
+  ],
+  "expectedTransitions": [
+    {
+      "presence": "none",
+      "phase": "idle",
+      "terminalStatus": "idle"
+    },
+    {
+      "presence": "attached",
+      "phase": "running",
+      "terminalStatus": "working",
+      "summary": "User keyboard interaction"
+    },
+    {
+      "presence": "attached",
+      "phase": "running",
+      "terminalStatus": "working",
+      "activityId": "query-1",
+      "summary": "Generating response"
+    },
+    {
+      "presence": "attached",
+      "phase": "completed",
+      "terminalStatus": "idle",
+      "summary": "Response delivered"
+    }
+  ]
+}

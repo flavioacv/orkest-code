@@ -1,0 +1,68 @@
+{
+  "id": "screen_redraw",
+  "name": "Redraw de Tela e Repintura PTY",
+  "description": "Valida que uma repintura total de tela (clear screen e reenvio de comandos anteriores) não ressuscita atividades já concluídas nem provoca falsa execução.",
+  "events": [
+    {
+      "offsetMs": 50,
+      "type": "signal",
+      "signal": {
+        "source": "structuredHook",
+        "phase": "running",
+        "timestampMs": 50,
+        "activityId": "act-task-100",
+        "summary": "Analysing codebase",
+        "generation": 0
+      }
+    },
+    {
+      "offsetMs": 300,
+      "type": "signal",
+      "signal": {
+        "source": "structuredHook",
+        "phase": "completed",
+        "timestampMs": 300,
+        "activityId": "act-task-100",
+        "summary": "Analysis complete",
+        "generation": 0
+      }
+    },
+    {
+      "offsetMs": 600,
+      "type": "ptyChunk",
+      "ptyData": "\u001b[2J\u001b[H\u001b[32muser@dev:~/repo$ \u001b[0morkest:activity:start act-task-100"
+    },
+    {
+      "offsetMs": 700,
+      "type": "signal",
+      "signal": {
+        "source": "screenObservation",
+        "phase": "running",
+        "timestampMs": 700,
+        "activityId": "act-task-100",
+        "summary": "Analysing codebase (redraw echo)",
+        "generation": 0
+      }
+    }
+  ],
+  "expectedTransitions": [
+    {
+      "presence": "none",
+      "phase": "idle",
+      "terminalStatus": "idle"
+    },
+    {
+      "presence": "attached",
+      "phase": "running",
+      "terminalStatus": "working",
+      "activityId": "act-task-100",
+      "summary": "Analysing codebase"
+    },
+    {
+      "presence": "attached",
+      "phase": "completed",
+      "terminalStatus": "idle",
+      "summary": "Analysis complete"
+    }
+  ]
+}

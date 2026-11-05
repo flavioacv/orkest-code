@@ -1,0 +1,46 @@
+{
+  "id": "ansi_fragmented",
+  "name": "ANSI Sequências Fragmentadas em Chunks PTY",
+  "description": "Valida que sequências de escape ANSI cortadas no meio de múltiplos pacotes PTY não travam o leitor nem disparam marcadores espúrios antes da conclusão.",
+  "events": [
+    {
+      "offsetMs": 100,
+      "type": "ptyChunk",
+      "ptyData": "Compiling project [1/10] \u001b[38;5;"
+    },
+    {
+      "offsetMs": 150,
+      "type": "ptyChunk",
+      "ptyData": "240mwaiting dependencies\u001b[0m\r\n\u001b]133;"
+    },
+    {
+      "offsetMs": 200,
+      "type": "ptyChunk",
+      "ptyData": "C\u0007"
+    },
+    {
+      "offsetMs": 500,
+      "type": "ptyChunk",
+      "ptyData": "Build finished successfully.\r\n\u001b]133;D\u0007"
+    }
+  ],
+  "expectedTransitions": [
+    {
+      "presence": "none",
+      "phase": "idle",
+      "terminalStatus": "idle"
+    },
+    {
+      "presence": "attached",
+      "phase": "running",
+      "terminalStatus": "working",
+      "summary": "PTY command start marker"
+    },
+    {
+      "presence": "attached",
+      "phase": "completed",
+      "terminalStatus": "idle",
+      "summary": "PTY command end marker"
+    }
+  ]
+}

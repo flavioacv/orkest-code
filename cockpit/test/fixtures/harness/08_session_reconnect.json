@@ -1,0 +1,100 @@
+{
+  "id": "session_reconnect",
+  "name": "Reconexão de Sessão e Rejeição de Buffer Residual",
+  "description": "Valida que reconexões de terminal com nova geração descartam sinais de replay do buffer antigo e reestabelecem o estado determinístico.",
+  "events": [
+    {
+      "offsetMs": 50,
+      "type": "signal",
+      "signal": {
+        "source": "structuredHook",
+        "phase": "running",
+        "timestampMs": 50,
+        "activityId": "old-session-task",
+        "summary": "Task running before network drop",
+        "generation": 0
+      }
+    },
+    {
+      "offsetMs": 200,
+      "type": "reconnect",
+      "generation": 1,
+      "signal": {
+        "source": "ptyMarker",
+        "phase": "idle",
+        "timestampMs": 200,
+        "summary": "PTY attached on generation 1",
+        "generation": 1
+      }
+    },
+    {
+      "offsetMs": 300,
+      "type": "signal",
+      "signal": {
+        "source": "screenObservation",
+        "phase": "running",
+        "timestampMs": 300,
+        "activityId": "old-session-task",
+        "summary": "Ghost screen buffer from gen 0",
+        "generation": 0
+      }
+    },
+    {
+      "offsetMs": 500,
+      "type": "signal",
+      "signal": {
+        "source": "structuredHook",
+        "phase": "running",
+        "timestampMs": 500,
+        "activityId": "new-session-task",
+        "summary": "New task after reconnect",
+        "generation": 1
+      }
+    },
+    {
+      "offsetMs": 800,
+      "type": "signal",
+      "signal": {
+        "source": "structuredHook",
+        "phase": "completed",
+        "timestampMs": 800,
+        "activityId": "new-session-task",
+        "summary": "New task finished",
+        "generation": 1
+      }
+    }
+  ],
+  "expectedTransitions": [
+    {
+      "presence": "none",
+      "phase": "idle",
+      "terminalStatus": "idle"
+    },
+    {
+      "presence": "attached",
+      "phase": "running",
+      "terminalStatus": "working",
+      "activityId": "old-session-task",
+      "summary": "Task running before network drop"
+    },
+    {
+      "presence": "attached",
+      "phase": "idle",
+      "terminalStatus": "idle",
+      "summary": "PTY attached on generation 1"
+    },
+    {
+      "presence": "attached",
+      "phase": "running",
+      "terminalStatus": "working",
+      "activityId": "new-session-task",
+      "summary": "New task after reconnect"
+    },
+    {
+      "presence": "attached",
+      "phase": "completed",
+      "terminalStatus": "idle",
+      "summary": "New task finished"
+    }
+  ]
+}

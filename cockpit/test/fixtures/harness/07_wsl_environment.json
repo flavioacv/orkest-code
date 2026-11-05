@@ -1,0 +1,66 @@
+{
+  "id": "wsl_environment",
+  "name": "Execução e Monitoramento em Ambiente WSL",
+  "description": "Valida monitoramento de processos e sinais sob subsistema Linux WSL sem vazamento de caminhos do host ou identificadores de usuário.",
+  "events": [
+    {
+      "offsetMs": 50,
+      "type": "processSnapshot",
+      "signal": {
+        "source": "ptyMarker",
+        "phase": "running",
+        "timestampMs": 50,
+        "activityId": "wsl-proc-101",
+        "summary": "python3 /workspace/app/main.py",
+        "harnessName": "claude-code",
+        "generation": 0
+      },
+      "metadata": {
+        "distro": "Ubuntu-22.04",
+        "rootPid": 4512
+      }
+    },
+    {
+      "offsetMs": 300,
+      "type": "ptyChunk",
+      "ptyData": "Running test suite on Linux x86_64\r\n"
+    },
+    {
+      "offsetMs": 500,
+      "type": "processSnapshot",
+      "signal": {
+        "source": "ptyMarker",
+        "phase": "completed",
+        "timestampMs": 500,
+        "activityId": "wsl-proc-101",
+        "summary": "Process exited with code 0",
+        "harnessName": "claude-code",
+        "generation": 0
+      },
+      "metadata": {
+        "distro": "Ubuntu-22.04",
+        "exitCode": 0
+      }
+    }
+  ],
+  "expectedTransitions": [
+    {
+      "presence": "none",
+      "phase": "idle",
+      "terminalStatus": "idle"
+    },
+    {
+      "presence": "attached",
+      "phase": "running",
+      "terminalStatus": "working",
+      "activityId": "wsl-proc-101",
+      "summary": "python3 /workspace/app/main.py"
+    },
+    {
+      "presence": "attached",
+      "phase": "completed",
+      "terminalStatus": "idle",
+      "summary": "Process exited with code 0"
+    }
+  ]
+}
