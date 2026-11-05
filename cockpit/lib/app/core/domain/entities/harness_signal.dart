@@ -119,4 +119,37 @@ class HarnessStateSnapshot {
   bool get isTurnActive =>
       phase == HarnessExecutionPhase.running ||
       phase == HarnessExecutionPhase.waitingInput;
+
+  @override
+  bool operator ==(Object other) {
+    if (identical(this, other)) return true;
+    return other is HarnessStateSnapshot &&
+        other.presence == presence &&
+        other.phase == phase &&
+        other.generation == generation &&
+        other.sessionId == sessionId &&
+        other.turnId == turnId &&
+        other.activeActivityId == activeActivityId &&
+        other.lastSummary == lastSummary &&
+        other.lastSource == lastSource &&
+        other.lastUpdatedAt == lastUpdatedAt;
+  }
+
+  @override
+  int get hashCode => Object.hash(
+        presence,
+        phase,
+        generation,
+        sessionId,
+        turnId,
+        activeActivityId,
+        lastSummary,
+        lastSource,
+        lastUpdatedAt,
+      );
+
+  @override
+  String toString() =>
+      'HarnessStateSnapshot(presence: ${presence.name}, phase: ${phase.name}, '
+      'status: ${terminalStatus.name}, activity: $activeActivityId, gen: $generation)';
 }

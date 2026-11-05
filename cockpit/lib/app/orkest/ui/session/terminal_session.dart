@@ -515,6 +515,39 @@ class TerminalSession extends PaneItem {
 
   /// Snapshot formal dos eixos ortogonais de estado do harness (H01).
   HarnessStateSnapshot get harnessSnapshot => harnessCoordinator.snapshot;
+
+  /// Trata a queda ou perda de transporte remoto/SSH/WSL sem conceder aprovação falsa (H04).
+  void handleTransportDisconnection({String? reason}) {
+    _officePermissionPromptVisible = false;
+    _structuredPermissionPending = false;
+    _awaitingGitPushResult = false;
+    _notifyDebounce?.cancel();
+    harnessCoordinator.detach();
+    harnessCoordinator.processSignal(
+      HarnessSignal(
+        source: HarnessSignalSource.structuredHook,
+        phase: HarnessExecutionPhase.closed,
+        timestamp: DateTime.now(),
+        generation: harnessCoordinator.generation,
+        summary: reason ?? 'Transport disconnected',
+      ),
+    );
+    _officeCommands.clear();
+    _officeShell = null;
+    _setStatus(TerminalStatus.idle, event: 'TransportDisconnect');
+    notifyListeners();
+  }
+
+  /// Trata a reconexão do canal de transporte (SSH ou WSL), avançando a geração (H04).
+  void handleTransportReconnection({int? newGeneration}) {
+    harnessCoordinator.advanceGeneration(nextGeneration: newGeneration);
+    _officePermissionPromptVisible = false;
+    _structuredPermissionPending = false;
+    _observedOfficeActivityFingerprints.clear();
+    _observedOfficeActivityOrder.clear();
+    _setStatus(TerminalStatus.idle, event: 'TransportReconnect');
+    notifyListeners();
+  }
   final List<TerminalStatusEvent> _officeStatusHistory = [];
   int _officeEventSequence = 0;
 
