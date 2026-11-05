@@ -37,13 +37,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: Bins/bibliotecas por OS/arch, encerramento de filhos, handshake incompatível, reinício, logs sem segredos, atualização/rollback e ausência de ferramentas externas testados.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
-- [ ] W02 · Unificar ações, atalhos e navegação do desenvolvedor <!-- id: W02 labels: P1, workspace blockedBy: W01 -->
-      Porte: M. Dependências: W01.
-      Origem: src/platform actions/keymaps; contributions.
-      Destino: Sistema de ações e menu existente do Orkest.
-      Aceite: Paleta busca ações e símbolos sem substituir busca de projetos; foco/contexto/atalhos, acessibilidade e i18n coerentes; ação indisponível explica capacidade faltante.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] L02 · Completar assistência LSP no editor <!-- id: L02 labels: P1, linguagens blockedBy: W03, L01 -->
       Porte: L. Dependências: W03, L01.
       Origem: src/editor/lsp; commands/lsp.rs.
@@ -267,6 +260,13 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 
 ## Em andamento
+
+- [ ] W02 · Unificar ações, atalhos e navegação do desenvolvedor <!-- id: W02 labels: P1, workspace blockedBy: W01 -->
+      Porte: M. Dependências: W01.
+      Origem: src/platform actions/keymaps; contributions.
+      Destino: Sistema de ações e menu existente do Orkest.
+      Aceite: Paleta busca ações e símbolos sem substituir busca de projetos; foco/contexto/atalhos, acessibilidade e i18n coerentes; ação indisponível explica capacidade faltante.
+      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
 
