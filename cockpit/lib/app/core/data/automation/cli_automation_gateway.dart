@@ -91,7 +91,11 @@ class CliAutomationGateway implements AutomationGateway {
           await _runForDiscovery(executable, const ['models']),
         ),
         HarnessKind.claudeCode ||
-        HarnessKind.gitHubCopilot => const <AutomationModel>[],
+        HarnessKind.gitHubCopilot ||
+        HarnessKind.gemini ||
+        HarnessKind.kimi ||
+        HarnessKind.aider ||
+        HarnessKind.ollama => const <AutomationModel>[],
       };
       return AutomationModelCatalog.curate(discovered);
     } catch (_) {
@@ -426,6 +430,40 @@ class CliAutomationGateway implements AutomationGateway {
         ],
         stdin: null,
       ),
+      HarnessKind.gemini => (
+        args: <String>[
+          '-p',
+          promptWithInstructions,
+          ...modelArgs,
+        ],
+        stdin: null,
+      ),
+      HarnessKind.kimi => (
+        args: <String>[
+          '-p',
+          promptWithInstructions,
+          ...modelArgs,
+        ],
+        stdin: null,
+      ),
+      HarnessKind.aider => (
+        args: <String>[
+          '-m',
+          promptWithInstructions,
+          '--no-git',
+          '--exit',
+          ...modelArgs,
+        ],
+        stdin: null,
+      ),
+      HarnessKind.ollama => (
+        args: <String>[
+          'run',
+          if (modelArgs.isNotEmpty) modelArgs.first else 'llama3',
+          promptWithInstructions,
+        ],
+        stdin: null,
+      ),
     };
   }
 
@@ -453,6 +491,10 @@ class CliAutomationGateway implements AutomationGateway {
       case HarnessKind.claudeCode:
       case HarnessKind.cursor:
       case HarnessKind.antigravity:
+      case HarnessKind.gemini:
+      case HarnessKind.kimi:
+      case HarnessKind.aider:
+      case HarnessKind.ollama:
         message = _resultField(stdout);
       case HarnessKind.pi:
         message = _lastJsonText(stdout, pi: true);

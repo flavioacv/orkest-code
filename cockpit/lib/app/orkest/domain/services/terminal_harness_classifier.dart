@@ -17,11 +17,11 @@ abstract class TerminalHarnessClassifier {
     final spec = _findMatchingSpec(normalized.entryPointName);
     if (spec == null) return null;
 
-    final isInteractive = _isInteractiveInvocation(
+    final isInter = isInteractive(
       spec.kind,
       normalized.harnessArgs,
     );
-    return isInteractive ? spec.kind : null;
+    return isInter ? spec.kind : null;
   }
 
   static HarnessSpec? _findMatchingSpec(String entryPoint) {
@@ -33,14 +33,38 @@ abstract class TerminalHarnessClassifier {
     return null;
   }
 
-  static bool _isInteractiveInvocation(HarnessKind kind, List<String> args) {
-    // Universal admin/help/version flags
+  /// Verifica se uma lista de argumentos para determinado harness configura modo interativo.
+  static bool isInteractive(HarnessKind kind, List<String> args) {
+    // 1. Universal admin/help/version flags
     for (final arg in args) {
-      if (arg == '-h' || arg == '--help' || arg == '-v' || arg == '--version') {
+      if (arg == '-h' ||
+          arg == '--help' ||
+          arg == '-v' ||
+          arg == '--version' ||
+          arg == '-V') {
         return false;
       }
     }
 
+    final spec = HarnessCatalog.specs[kind];
+    if (spec != null) {
+      // 2. Flags não-interativas registradas na especificação do harness
+      for (final arg in args) {
+        if (spec.nonInteractiveFlags.contains(arg)) {
+          return false;
+        }
+      }
+
+      // 3. Subcomandos administrativos no primeiro argumento posicional
+      if (args.isNotEmpty) {
+        final firstArg = args[0].toLowerCase();
+        if (spec.adminSubcommands.contains(firstArg)) {
+          return false;
+        }
+      }
+    }
+
+    // 4. Regras especializadas por harness
     switch (kind) {
       case HarnessKind.antigravity:
         return _checkAntigravity(args);
@@ -56,120 +80,60 @@ abstract class TerminalHarnessClassifier {
         return _checkOpenCode(args);
       case HarnessKind.pi:
         return _checkPi(args);
+      case HarnessKind.gemini:
+        return _checkGemini(args);
+      case HarnessKind.kimi:
+        return _checkKimi(args);
+      case HarnessKind.aider:
+        return _checkAider(args);
+      case HarnessKind.ollama:
+        return _checkOllama(args);
     }
   }
 
   static bool _checkAntigravity(List<String> args) {
-    const adminSubcommands = {
-      'help',
-      'version',
-      'config',
-      'auth',
-      'models',
-      'update',
-    };
     for (int i = 0; i < args.length; i++) {
       final arg = args[i];
       if (arg == '-p' || arg == '--print') return false;
-      if (i == 0 && adminSubcommands.contains(arg.toLowerCase())) return false;
     }
     return true;
   }
 
   static bool _checkClaudeCode(List<String> args) {
-    const adminSubcommands = {
-      'mcp',
-      'plugin',
-      'config',
-      'auth',
-      'doctor',
-      'update',
-      'version',
-      'help',
-    };
     for (int i = 0; i < args.length; i++) {
       final arg = args[i];
       if (arg == '-p' || arg == '--print') return false;
-      if (i == 0 && adminSubcommands.contains(arg.toLowerCase())) return false;
     }
     return true;
   }
 
   static bool _checkCodex(List<String> args) {
-    const adminSubcommandsOrModes = {
-      'exec',
-      'auth',
-      'config',
-      'version',
-      'help',
-      'models',
-    };
-    for (int i = 0; i < args.length; i++) {
-      final arg = args[i];
-      if (i == 0 && adminSubcommandsOrModes.contains(arg.toLowerCase())) {
-        return false;
-      }
-    }
     return true;
   }
 
   static bool _checkCursor(List<String> args) {
-    const adminSubcommands = {
-      'auth',
-      'login',
-      'logout',
-      'list',
-      'version',
-      'help',
-    };
     for (int i = 0; i < args.length; i++) {
       final arg = args[i];
       if (arg == '-p' || arg == '--print') return false;
-      if (i == 0 && adminSubcommands.contains(arg.toLowerCase())) return false;
     }
     return true;
   }
 
   static bool _checkGitHubCopilot(List<String> args) {
-    const adminSubcommands = {'auth', 'config', 'alias', 'version', 'help'};
     for (int i = 0; i < args.length; i++) {
       final arg = args[i];
       if (arg == '-p' || arg == '--prompt' || arg == '-i' || arg == '--input') {
         return false;
       }
-      if (i == 0 && adminSubcommands.contains(arg.toLowerCase())) return false;
     }
     return true;
   }
 
   static bool _checkOpenCode(List<String> args) {
-    const adminSubcommandsOrModes = {
-      'run',
-      'auth',
-      'config',
-      'models',
-      'version',
-      'help',
-    };
-    for (int i = 0; i < args.length; i++) {
-      final arg = args[i];
-      if (i == 0 && adminSubcommandsOrModes.contains(arg.toLowerCase())) {
-        return false;
-      }
-    }
     return true;
   }
 
   static bool _checkPi(List<String> args) {
-    const adminSubcommands = {
-      'export',
-      'auth',
-      'config',
-      'models',
-      'version',
-      'help',
-      'doctor',
-    };
     for (int i = 0; i < args.length; i++) {
       final arg = args[i];
       if (arg == '-p' || arg == '--print') return false;
@@ -185,8 +149,48 @@ abstract class TerminalHarnessClassifier {
           return false;
         }
       }
-      if (i == 0 && adminSubcommands.contains(arg.toLowerCase())) return false;
     }
     return true;
+  }
+
+  static bool _checkGemini(List<String> args) {
+    for (final arg in args) {
+      if (arg == '-p' || arg == '--prompt' || arg == '-q' || arg == '--quiet') {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  static bool _checkKimi(List<String> args) {
+    for (final arg in args) {
+      if (arg == '-p' || arg == '--print' || arg == '-q' || arg == '--quiet') {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  static bool _checkAider(List<String> args) {
+    for (int i = 0; i < args.length; i++) {
+      final arg = args[i];
+      if (arg == '-m' ||
+          arg == '--message' ||
+          arg.startsWith('--message=') ||
+          arg == '--no-git' ||
+          arg == '--exit') {
+        return false;
+      }
+    }
+    return true;
+  }
+
+  static bool _checkOllama(List<String> args) {
+    // Ollama só entra em modo interativo de chat se invocado com subcomando `run <model>`
+    if (args.isEmpty) return false;
+    final first = args[0].toLowerCase();
+    if (first != 'run') return false;
+    // Precisa ter pelo menos o modelo especificado: `ollama run <model>`
+    return args.length >= 2;
   }
 }

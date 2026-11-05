@@ -31,7 +31,12 @@ extension AutomationHarnessSupport on HarnessKind {
   /// o modelo que o próprio CLI já tem configurado (Claude Code), que é sempre
   /// compatível com o plano do usuário.
   bool get hasAccountScopedModels => switch (this) {
-    HarnessKind.claudeCode || HarnessKind.gitHubCopilot => false,
+    HarnessKind.claudeCode ||
+    HarnessKind.gitHubCopilot ||
+    HarnessKind.gemini ||
+    HarnessKind.kimi ||
+    HarnessKind.aider ||
+    HarnessKind.ollama => false,
     _ => true,
   };
 

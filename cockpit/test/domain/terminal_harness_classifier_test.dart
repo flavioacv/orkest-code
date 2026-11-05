@@ -322,5 +322,209 @@ void main() {
         );
       });
     });
+
+    group('Gemini CLI (H03)', () {
+      test('direct interactive launch', () {
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: '/usr/local/bin/gemini',
+            argv: ['gemini'],
+          ),
+          equals(HarnessKind.gemini),
+        );
+      });
+
+      test('interactive with prompt', () {
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: 'gemini-cli',
+            argv: ['gemini-cli', 'how to test flutter?'],
+          ),
+          equals(HarnessKind.gemini),
+        );
+      });
+
+      test('via npx runner', () {
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: 'npx',
+            argv: ['npx', '-y', '@google/gemini-cli'],
+          ),
+          equals(HarnessKind.gemini),
+        );
+      });
+
+      test('rejects non-interactive prompt flags and admin subcommands', () {
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: 'gemini',
+            argv: ['gemini', '-p', 'batch prompt'],
+          ),
+          isNull,
+        );
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: 'gemini',
+            argv: ['gemini', 'auth'],
+          ),
+          isNull,
+        );
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: 'gemini',
+            argv: ['gemini', '--version'],
+          ),
+          isNull,
+        );
+      });
+    });
+
+    group('Kimi CLI (H03)', () {
+      test('direct interactive launch', () {
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: '/usr/bin/kimi',
+            argv: ['kimi'],
+          ),
+          equals(HarnessKind.kimi),
+        );
+      });
+
+      test('rejects quiet mode and login/auth', () {
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: 'kimi',
+            argv: ['kimi', '-q'],
+          ),
+          isNull,
+        );
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: 'kimi',
+            argv: ['kimi', 'login'],
+          ),
+          isNull,
+        );
+      });
+    });
+
+    group('Aider (H03)', () {
+      test('direct interactive launch', () {
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: '/usr/local/bin/aider',
+            argv: ['aider'],
+          ),
+          equals(HarnessKind.aider),
+        );
+      });
+
+      test('via python -m module execution', () {
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: 'python3',
+            argv: ['python3', '-m', 'aider'],
+          ),
+          equals(HarnessKind.aider),
+        );
+      });
+
+      test('via uvx runner', () {
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: 'uvx',
+            argv: ['uvx', 'aider-chat'],
+          ),
+          equals(HarnessKind.aider),
+        );
+      });
+
+      test('rejects batch one-shot flags and admin commands', () {
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: 'aider',
+            argv: ['aider', '-m', 'fix code automatically'],
+          ),
+          isNull,
+        );
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: 'aider',
+            argv: ['aider', '--no-git'],
+          ),
+          isNull,
+        );
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: 'aider',
+            argv: ['aider', 'check-update'],
+          ),
+          isNull,
+        );
+      });
+    });
+
+    group('Ollama (H03)', () {
+      test('interactive chat mode requires run <model>', () {
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: '/usr/local/bin/ollama',
+            argv: ['ollama', 'run', 'llama3'],
+          ),
+          equals(HarnessKind.ollama),
+        );
+      });
+
+      test('rejects daemon, pull, list and bare invocation', () {
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: 'ollama',
+            argv: ['ollama'],
+          ),
+          isNull,
+        );
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: 'ollama',
+            argv: ['ollama', 'serve'],
+          ),
+          isNull,
+        );
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: 'ollama',
+            argv: ['ollama', 'pull', 'mistral'],
+          ),
+          isNull,
+        );
+        expect(
+          TerminalHarnessClassifier.classify(
+            executable: 'ollama',
+            argv: ['ollama', 'list'],
+          ),
+          isNull,
+        );
+      });
+    });
+
+    group('Evidence & Generic Contract (H03)', () {
+      test('unrecognized CLIs adhere strictly to generic contract without invented parsers', () {
+        final unknownCommands = [
+          ['custom-llm-tool', 'chat'],
+          ['gcc', 'main.c', '-o', 'main'],
+          ['python', 'train.py'],
+          ['docker', 'run', '-it', 'ubuntu'],
+        ];
+
+        for (final cmd in unknownCommands) {
+          final result = TerminalHarnessClassifier.classify(
+            executable: cmd[0],
+            argv: cmd,
+          );
+          expect(result, isNull,
+              reason: 'Comando ${cmd[0]} desconhecido não deve inventar harness.');
+        }
+      });
+    });
   });
 }
