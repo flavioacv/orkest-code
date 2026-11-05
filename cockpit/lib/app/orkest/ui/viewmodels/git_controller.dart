@@ -15,9 +15,12 @@ import 'package:orkest_code/app/orkest/domain/entities/file_diff.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_file_status.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_branch.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_info.dart';
+import 'package:orkest_code/app/orkest/domain/entities/git_stash_entry.dart';
+import 'package:orkest_code/app/orkest/domain/entities/git_tag_entry.dart';
 import 'package:orkest_code/app/orkest/domain/exceptions/git_branch_error.dart';
 import 'package:orkest_code/app/orkest/domain/services/git_conflict_service.dart';
 import 'package:orkest_code/app/orkest/domain/services/git_hunk_service.dart';
+import 'package:orkest_code/app/orkest/domain/services/git_work_service.dart';
 import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:orkest_code/app/core/ui/window_activity_controller.dart';
 import 'package:orkest_code/app/core/data/diagnostics/performance_diagnostics.dart';
@@ -468,6 +471,191 @@ class GitController extends ChangeNotifier {
   /// Aborta a operação Git em andamento (`git merge --abort`, `git rebase --abort`, etc).
   Future<Result<void, String>> abortOperation(String root) async {
     final result = await _conflictService.abortOperation(repoRoot: root);
+    if (result.isSuccess) {
+      markHistoryStale();
+      final pid = selectedProjectId?.call();
+      if (pid != null) unawaited(refresh(pid));
+    }
+    return result;
+  }
+
+  // ---- gestão avançada de trabalho Git (G04) --------------------------------
+
+  final GitWorkService _workService = GitWorkService();
+
+  /// Lista stashes disponíveis no repositório.
+  Future<Result<List<GitStashEntry>, String>> listStashes(String root) =>
+      _workService.listStashes(root);
+
+  /// Salva alterações não commitadas no stash (shelf).
+  Future<Result<void, String>> stashPush(
+    String root, {
+    String? message,
+    bool includeUntracked = false,
+    bool keepIndex = false,
+  }) async {
+    final result = await _workService.stashPush(
+      root,
+      message: message,
+      includeUntracked: includeUntracked,
+      keepIndex: keepIndex,
+    );
+    if (result.isSuccess) {
+      markHistoryStale();
+      final pid = selectedProjectId?.call();
+      if (pid != null) unawaited(refresh(pid));
+    }
+    return result;
+  }
+
+  /// Aplica o stash e o remove da lista.
+  Future<Result<void, String>> stashPop(String root, {int index = 0}) async {
+    final result = await _workService.stashPop(root, index: index);
+    if (result.isSuccess) {
+      markHistoryStale();
+      final pid = selectedProjectId?.call();
+      if (pid != null) unawaited(refresh(pid));
+    }
+    return result;
+  }
+
+  /// Aplica o stash preservando-o na lista.
+  Future<Result<void, String>> stashApply(String root, {int index = 0}) async {
+    final result = await _workService.stashApply(root, index: index);
+    if (result.isSuccess) {
+      markHistoryStale();
+      final pid = selectedProjectId?.call();
+      if (pid != null) unawaited(refresh(pid));
+    }
+    return result;
+  }
+
+  /// Descarta um stash permanentemente.
+  Future<Result<void, String>> stashDrop(String root, {int index = 0}) =>
+      _workService.stashDrop(root, index: index);
+
+  /// Visualiza o diff textual do stash indicado.
+  Future<Result<String, String>> stashDiff(String root, {int index = 0}) =>
+      _workService.stashDiff(root, index: index);
+
+  /// Lista todas as tags locais.
+  Future<Result<List<GitTagEntry>, String>> listTags(String root) =>
+      _workService.listTags(root);
+
+  /// Cria uma tag local anotada ou leve.
+  Future<Result<void, String>> createTag(
+    String root, {
+    required String name,
+    String? commitHash,
+    String? message,
+    bool annotated = false,
+  }) async {
+    final result = await _workService.createTag(
+      root,
+      name: name,
+      commitHash: commitHash,
+      message: message,
+      annotated: annotated,
+    );
+    if (result.isSuccess) {
+      markHistoryStale();
+    }
+    return result;
+  }
+
+  /// Remove uma tag local.
+  Future<Result<void, String>> deleteTag(String root, {required String name}) async {
+    final result = await _workService.deleteTag(root, name: name);
+    if (result.isSuccess) {
+      markHistoryStale();
+    }
+    return result;
+  }
+
+  /// Cria um patch unificado com as alterações do repositório.
+  Future<Result<String, String>> createPatch(
+    String root, {
+    String? fromCommit,
+    String? toCommit,
+    List<String>? filePaths,
+    bool staged = false,
+  }) =>
+      _workService.createPatch(
+        root,
+        fromCommit: fromCommit,
+        toCommit: toCommit,
+        filePaths: filePaths,
+        staged: staged,
+      );
+
+  /// Aplica um patch unificado no repositório com suporte a verificação prévia (`checkOnly`).
+  Future<Result<void, String>> applyPatch(
+    String root, {
+    required String patchContent,
+    bool checkOnly = false,
+    bool reverse = false,
+  }) async {
+    final result = await _workService.applyPatch(
+      root,
+      patchContent: patchContent,
+      checkOnly: checkOnly,
+      reverse: reverse,
+    );
+    if (result.isSuccess && !checkOnly) {
+      markHistoryStale();
+      final pid = selectedProjectId?.call();
+      if (pid != null) unawaited(refresh(pid));
+    }
+    return result;
+  }
+
+  /// Executa cherry-pick de um commit isolado na branch atual.
+  Future<Result<void, String>> cherryPick(
+    String root, {
+    required String commitHash,
+    bool noCommit = false,
+  }) async {
+    final result = await _workService.cherryPick(
+      root,
+      commitHash: commitHash,
+      noCommit: noCommit,
+    );
+    if (result.isSuccess) {
+      markHistoryStale();
+      final pid = selectedProjectId?.call();
+      if (pid != null) unawaited(refresh(pid));
+    }
+    return result;
+  }
+
+  /// Reverte um commit criando um novo commit inverso.
+  Future<Result<void, String>> revertCommit(
+    String root, {
+    required String commitHash,
+    bool noCommit = false,
+  }) async {
+    final result = await _workService.revertCommit(
+      root,
+      commitHash: commitHash,
+      noCommit: noCommit,
+    );
+    if (result.isSuccess) {
+      markHistoryStale();
+      final pid = selectedProjectId?.call();
+      if (pid != null) unawaited(refresh(pid));
+    }
+    return result;
+  }
+
+  /// Executa rebase da branch atual sobre o upstream especificado.
+  Future<Result<void, String>> rebase(
+    String root, {
+    required String upstreamBranch,
+  }) async {
+    final result = await _workService.rebase(
+      root,
+      upstreamBranch: upstreamBranch,
+    );
     if (result.isSuccess) {
       markHistoryStale();
       final pid = selectedProjectId?.call();
