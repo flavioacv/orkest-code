@@ -78,7 +78,7 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Destino: Cliente/pool LSP existente, code_editor e controllers.
       Aceite: Completion, resolve, hover semântico e signature help funcionam em Dart e TS; requests cancelados e respostas antigas não alteram documento/versão errados.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-      Progresso: hover (L02a) e signature help (L02b) concluídos; completion permanece pendente.
+      Progresso: hover (L02a), signature help (L02b) e autocomplete simples com resolve (L02c) concluídos. Permanecem homologação TypeScript, snippets e cancelamento remoto; descarte local de respostas antigas já protege o buffer.
 
 - [ ] L03 · Adicionar navegação semântica e busca unificada <!-- id: L03 labels: P1, linguagens blockedBy: L02, W02 -->
       Porte: M. Dependências: L02, W02.
@@ -355,7 +355,7 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Entrega: hover LSP com debounce, posição UTF-16 e tooltip integrado aos diagnósticos, em texto simples.
       Aceite: descartar resposta após edição, troca/fechamento, movimento ou scroll; respeitar navegação e host standalone sem LSP.
       Validação: 52 testes aprovados na rodada final, incluindo servidor Dart real; análise estática limpa; telemetria r_21 sem erros/avisos.
-      Limites: completion, signature help, Markdown rico e cancelamento remoto ainda pendentes em L02.
+      Limites atuais: Markdown rico e cancelamento remoto pendentes em L02; signature help e completion simples entregues em L02b/L02c.
       Detalhes: [hover semântico](72-hover-semantico.md).
 
       <!-- comment: 2026-11-04T21:09 -->
@@ -369,10 +369,20 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: descarte por versão/seleção/geração; Escape, perda de foco, scroll e troca de documento encerram a ajuda; nenhuma mudança no texto pelo atalho.
       Validação: 70 testes aprovados, incluindo servidor Dart real; análise estática limpa e telemetria r_24 sem erros/avisos.
       Fluxo: commits locais somente em fix/harness-state-detection; sem push ou PR.
-      Detalhes: [ajuda de assinatura](72-ajuda-assinatura.md). Completion permanece pendente em L02.
+      Detalhes: [ajuda de assinatura](72-ajuda-assinatura.md). Completion simples entregue em L02c.
 
       <!-- comment: 2026-11-04T21:09 -->
       Implementação, testes e commit local concluídos: 15058443; 70 testes, incluindo servidor Dart real. Homologação ampliada/release permanecem nas atividades específicas; aplicativo instalado ainda não atualizado.
+
+- [x] L02c · Completar código com sugestões LSP e resolve seguro <!-- id: L02c labels: P1, linguagens blockedBy: L02b -->
+      Entrega: autocomplete automático e Ctrl+Espaço; setas, Enter, Tab e clique; Escape inclusive durante consulta pendente; resolução e imports adicionais validados antes de atualizar o buffer.
+      Aceite: descarte por versão/geração/texto/seleção/foco; intervalos UTF-16 válidos e sem sobreposição; preservar atalhos e host standalone.
+      Validação: 90 testes aprovados na rodada final, incluindo servidor Dart real; análise estática limpa; telemetria r_27 com zero erros/avisos.
+      Limites: snippets, comandos de CompletionItem, cancelamento remoto e homologação TypeScript permanecem pendentes em L02/L05. Aplicativo instalado ainda não atualizado.
+      Detalhes: [autocomplete LSP](72-autocomplete.md).
+
+      <!-- comment: 2026-11-04T21:37 -->
+      Implementação, testes e commit local concluídos: 6ae5ee34 em fix/harness-state-detection. Sem nova branch, push ou PR; homologação ampliada e release continuam em suas atividades específicas.
 
 - [x] H00a · Corrigir precisão de espera e retomada dos harnesses <!-- id: H00a labels: P0, harness -->
       Entrega: espera estruturada preservada em redraw, supressão por prompt respondido, reconhecimento de nova aprovação e retomada legítima.
