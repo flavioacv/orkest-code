@@ -76,6 +76,7 @@ class LspClientImpl implements LspClient {
 
   /// Requests pendentes aguardando a `response` com o `id` correspondente.
   final Map<int, Completer<Object?>> _pending = <int, Completer<Object?>>{};
+  final Map<int, ({String uri, String method})> _documentRequests = {};
   int _seq = 0;
 
   /// Serializa escritas no stdin (ver `PiRpcProcess._writeChain`).
@@ -242,6 +243,7 @@ class LspClientImpl implements LspClient {
     required int version,
   }) async {
     if (!_initialized) return;
+    _cancelDocumentRequests(_uri(path));
     _notify('textDocument/didChange', <String, dynamic>{
       'textDocument': <String, dynamic>{'uri': _uri(path), 'version': version},
       // Full sync: mandamos o documento inteiro a cada edição (simples e
@@ -255,6 +257,7 @@ class LspClientImpl implements LspClient {
   @override
   Future<void> didClose({required String path}) async {
     if (!_initialized) return;
+    _cancelDocumentRequests(_uri(path));
     _notify('textDocument/didClose', <String, dynamic>{
       'textDocument': <String, dynamic>{'uri': _uri(path)},
     });
@@ -368,6 +371,7 @@ class LspClientImpl implements LspClient {
     final id = message['id'];
     final method = message['method'];
     if (method == null && id is int) {
+      _documentRequests.remove(id);
       final completer = _pending.remove(id);
       if (completer != null && !completer.isCompleted) {
         final error = message['error'];
@@ -425,9 +429,21 @@ class LspClientImpl implements LspClient {
 
   Future<Object?> _request(String method, Map<String, dynamic> params) async {
     if (_process == null) throw const LspError('Language server not running.');
+    final document = params['textDocument'];
+    final uri = document is Map ? document['uri'] : null;
+    const cancellableMethods = {
+      'textDocument/hover',
+      'textDocument/completion',
+      'textDocument/signatureHelp',
+      'textDocument/semanticTokens/full',
+      'textDocument/definition',
+    };
+    final trackDocument = uri is String && cancellableMethods.contains(method);
+    if (trackDocument) _cancelDocumentRequests(uri, method: method);
     final id = ++_seq;
     final completer = Completer<Object?>();
     _pending[id] = completer;
+    if (trackDocument) _documentRequests[id] = (uri: uri, method: method);
     _send(<String, dynamic>{
       'jsonrpc': '2.0',
       'id': id,
@@ -438,9 +454,33 @@ class LspClientImpl implements LspClient {
       const Duration(seconds: 15),
       onTimeout: () {
         _pending.remove(id);
+        _documentRequests.remove(id);
+        _notify(r'$/cancelRequest', {'id': id});
         throw LspError('Timed out waiting for "$method".');
       },
     );
+  }
+
+  /// Cancela apenas leituras obsoletas; nunca operações que alteram arquivos.
+  void _cancelDocumentRequests(String uri, {String? method}) {
+    final ids = _documentRequests.entries
+        .where(
+          (entry) =>
+              entry.value.uri == uri &&
+              (method == null || entry.value.method == method),
+        )
+        .map((entry) => entry.key)
+        .toList();
+    for (final id in ids) {
+      final request = _documentRequests.remove(id)!;
+      final completer = _pending.remove(id);
+      _notify(r'$/cancelRequest', {'id': id});
+      if (completer != null && !completer.isCompleted) {
+        completer.completeError(
+          LspError('Request cancelled: ${request.method}.'),
+        );
+      }
+    }
   }
 
   void _notify(String method, Map<String, dynamic> params) {
@@ -494,6 +534,7 @@ class LspClientImpl implements LspClient {
       }
     }
     _pending.clear();
+    _documentRequests.clear();
     debugPrint('[lsp:${spec.languageId}] exited code=$code');
   }
 }

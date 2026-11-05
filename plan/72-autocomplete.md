@@ -14,4 +14,6 @@ Os testes cobrem parsing, ordenação, snippets recusados, UTF-16/CRLF, imports,
 
 Limites desta entrega: snippets, commit characters, comandos de CompletionItem, apresentação rica de documentação, ranking/filtro local avançado, gatilhos específicos por servidor e cancelamento remoto por `$/cancelRequest` permanecem pendentes. O descarte local protege o buffer, mas não interrompe processamento no servidor. Não há homologação real de TypeScript ou de todos os perfis LSP, nem build/instalação do aplicativo. L02 continua aberta para esses critérios; L05 acompanha homologação por linguagem.
 
+Evolução posterior: [L02d](72-cancelamento-lsp.md) adiciona envio de cancelamento por substituição de consulta, edição, fechamento e timeout. Escape/foco/scroll e resolve ainda dependem do descarte local descrito acima.
+
 Fluxo da versão: commits locais em `fix/harness-state-detection`, sem nova branch, push ou PR.
