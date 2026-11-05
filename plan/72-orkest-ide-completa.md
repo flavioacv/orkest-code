@@ -347,6 +347,9 @@ Destino: Diagnósticos existentes e testes de estado.
 
 Aceite: Mostrar origem do último estado, idade do sinal e capacidade de detecção com dados limitados; medir falso working/waiting/idle em corpus rotulado; falta de sinal não inventa execução.
 
+Entrega: Implementação da infraestrutura formal de diagnóstico de estado com privacidade estrita e sem captura de conteúdo: modelos de domínio `HarnessDetectionConfidence` (`unasserted`, `low`, `medium`, `high`, `authoritative`), `HarnessStateDiagnostic`, `HarnessLabeledSample` e `HarnessCorpusConfusionMatrix` em `cockpit/lib/app/core/domain/entities/harness_diagnostic.dart`; serviço de diagnóstico `HarnessDiagnosticService` (`cockpit/lib/app/core/domain/services/harness_diagnostic_service.dart`) provendo `buildDiagnostic` (com cômputo da idade do sinal `signalAge`, derivação hierárquica de confiança, tratamento de ambiente degradado `limitedDataMode`, e garantia matemática de que falta de sinal resulta deterministicamente em estado `idle` com confiança `unasserted` sem inventar falsos working ou waiting) e `evaluateCorpusAccuracy` (matriz de confusão sobre amostras rotuladas com taxas de falsos working, waiting e idle); contadores acumulados e distribuição por fonte no `HarnessStateCoordinator`; integração de `harnessDiagnostic` no `TerminalSession`; e proteção rigorosa em `toTelemetryMap()` garantindo zero vazamento de prompts, buffers de terminal, saídas stdout/stderr ou credenciais.
+Validação: 6 testes unitários dedicados em `cockpit/test/domain/harness_diagnostic_service_test.dart`; 69 testes da suíte combinada aprovados sem falhas; análise estática `dart analyze --fatal-infos` 100% limpa (0 issues). Concluído em 05/11/2026. Detalhes em `plan/72-diagnostico-estado-harness.md`.
+
 ### G01 — Entregar revisão e staging por hunks
 
 Prioridade P1 · Porte L · Dependências: W03, A04.
