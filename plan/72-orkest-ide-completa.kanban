@@ -16,13 +16,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
       Diretriz 04/11: avaliar quando houver necessidade de desempenho identificada; não bloqueia entregas funcionais em Dart.
 
-- [ ] X03 · Avaliar Docker, build e deployment <!-- id: X03 labels: P3, ferramentas blockedBy: R01, A04 -->
-      Porte: L. Dependências: R01, A04.
-      Origem: ide-docker, ide-build, ide-remote; build-tools.
-      Destino: Tasks, SSH e serviços remotos existentes.
-      Aceite: Provar logs/inspect/Compose e tarefas build úteis; deployment com preview de diferenças e confirmação; selecionar demandas reais e não instalar ferramentas automaticamente.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] X04 · Avaliar notebooks e extensões <!-- id: X04 labels: P3, ferramentas blockedBy: A04, W02 -->
       Porte: L. Dependências: A04, W02.
       Origem: ide-notebook, ide-plugin, ide-extension, wit/sdk.
@@ -63,11 +56,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] X02 · Aprimorar HTTP, GraphQL e navegação web <!-- id: X02 labels: P2, ferramentas blockedBy: F01 -->
-      Porte: M. Dependências: F01.
-      Origem: ide-http; http-client/graphql/web; Spring route sources.
-      Destino: http_document, http_request_runner e browser atuais.
-      Aceite: Comparar ambientes, histórico, auth, cancelamento e resultados com .http existente; GraphQL/rotas/frameworks somente com validação específica; proteger segredos e não duplicar browser.
+- [ ] X03 · Avaliar Docker, build e deployment <!-- id: X03 labels: P3, ferramentas blockedBy: R01, A04 -->
+      Porte: L. Dependências: R01, A04.
+      Origem: ide-docker, ide-build, ide-remote; build-tools.
+      Destino: Tasks, SSH e serviços remotos existentes.
+      Aceite: Provar logs/inspect/Compose e tarefas build úteis; deployment com preview de diferenças e confirmação; selecionar demandas reais e não instalar ferramentas automaticamente.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -86,6 +79,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] X02 · Aprimorar HTTP, GraphQL e navegação web <!-- id: X02 labels: P2, ferramentas blockedBy: F01 -->
+      Entrega: Implementação da infraestrutura avançada de HTTP, GraphQL e navegação web: modelos de domínio HttpEnvironment, HttpRequestHistoryEntry, enum HttpAuthType, entidade HttpAuthConfig com aplicação determinística e sanitização estrita de cabeçalhos (sanitizeHeaders, maskSecret), GraphQLRequestSpec para serialização de consultas/mutações com variáveis e payload canônico JSON, e ExtractedRoute para mapeamento de endpoints em cockpit/lib/app/core/domain/entities/http_advanced_tools.dart; orquestradores de serviço em cockpit/lib/app/core/domain/services/http_advanced_tools_service.dart: HttpEnvironmentManager (parsing de arquivos .env, alternância de perfis e mesclagem garantindo precedência de variáveis locais do .http), HttpRequestHistoryService (auditoria e armazenamento histórico cronológico FIFO de requisições com filtros por método, status, texto e expurgo automático de credenciais na URL), token de cancelamento determinístico HttpRequestCancellationToken, FrameworkRouteScanner (varredura estática de rotas cobrindo Spring Boot, Express.js, FastAPI e NestJS e gerador automático de arquivos .http) e WebNavigationService (sanitização de credenciais de URLs de navegação e resolução do modo de browser respeitando o contrato BrowserCapability.resolve() sem duplicar instâncias de engine de browser).
+      Aceite: Comparar ambientes, histórico, auth, cancelamento e resultados com .http existente; GraphQL/rotas/frameworks somente com validação específica; proteger segredos e não duplicar browser.
+      Validação: 12 testes unitários dedicados em cockpit/test/domain/http_advanced_tools_test.dart; 46 testes da suíte combinada de ferramentas e HTTP aprovados com 100% de sucesso; análise estática dart analyze --fatal-infos 100% limpa (0 issues).
+      Plano: [detalhamento e arquitetura](72-aprimoramento-http-graphql-navegacao-web.md).
 
 - [x] X01 · Priorizar produtividade de edição e visualização <!-- id: X01 labels: P2, ferramentas blockedBy: W03, L02 -->
       Entrega: Implementação da infraestrutura formal e inventário completo de produtividade de edição e visualização: modelos de domínio ProductivityCategory, CapabilityStatus, ProductivityCapability, catálogo declarativo ProductivityInventoryRegistry cobrindo 10 categorias funcionais com divisão em tiers de uso (1 a 3) e rótulos acessíveis (a11y), modelos imutáveis BookmarkItem, TodoItem, FoldingRange, ColorPreviewMatch, VimMode, MacroAction, EditorMacro e ScratchBuffer em cockpit/lib/app/core/domain/entities/editor_productivity.dart; conjunto de serviços determinísticos em cockpit/lib/app/core/domain/services/editor_productivity_service.dart: EmmetAbbreviationService provendo expansão de sintaxe abreviada HTML/XML/CSS (aninhamento >, irmãos +, multiplicação *N, classes ., IDs #, atributos [] e texto {} com suporte a tags auto-fecháveis), CodeFoldingService computando regiões dobráveis de blocos { ... }, comentários multilinhas e diretivas de região (// #region), TodoScanningService extraindo anotações em comentários (TODO, FIXME, BUG, NOTE, HACK, XXX) com classificação de severidade, ColorPreviewService identificando declarações literais de cor (Hex #RGB/#RRGGBBAA, CSS rgb/rgba e Flutter Color()) com cálculo de luminância e contraste WCAG sobre o limiar calibrado do Orkest (0.24), EditorBookmarkService com alternância e navegação rápida por mnemônico, EditorMacroService gravando e reproduzindo sequências atômicas de teclado, e VimStateController implementando máquina de estados modal com modos normal, insert, visual e buffer de comandos (:w, :q, :wq).
