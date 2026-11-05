@@ -66,27 +66,37 @@ LspPosition offsetToPosition(String text, int offset) {
 /// Decodifica resposta de `textDocument/definition` (pode ser vários formatos).
 /// Retorna primeira location, ou null se não há resultado.
 LspLocation? parseDefinitionResponse(Object? response) {
-  if (response == null) return null;
+  final list = parseLocationsResponse(response);
+  return list.isEmpty ? null : list.first;
+}
+
+/// Decodifica lista de localizações (Location[], LocationLink[], Location único ou null)
+/// usado por definition, implementation e references (L03).
+List<LspLocation> parseLocationsResponse(Object? response) {
+  if (response == null) return const [];
 
   // Map simples — pode ser Location ou LocationLink
   if (response is Map<String, dynamic>) {
     if (response.containsKey('targetUri')) {
-      return LspLocationLink.fromJson(response).toLocation();
+      return [LspLocationLink.fromJson(response).toLocation()];
     }
-    return LspLocation.fromJson(response);
+    return [LspLocation.fromJson(response)];
   }
 
   // Array — Location[] ou LocationLink[]
   if (response is List) {
-    if (response.isEmpty) return null;
-    final first = response[0];
-    if (first is Map<String, dynamic>) {
-      if (first.containsKey('targetUri')) {
-        return LspLocationLink.fromJson(first).toLocation();
+    final results = <LspLocation>[];
+    for (final item in response) {
+      if (item is Map<String, dynamic>) {
+        if (item.containsKey('targetUri')) {
+          results.add(LspLocationLink.fromJson(item).toLocation());
+        } else {
+          results.add(LspLocation.fromJson(item));
+        }
       }
-      return LspLocation.fromJson(first);
     }
+    return results;
   }
 
-  return null;
+  return const [];
 }

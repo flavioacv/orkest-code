@@ -13,6 +13,7 @@ import 'package:orkest_code/app/core/domain/contracts/lsp_client.dart';
 import 'package:orkest_code/app/core/domain/entities/lsp_diagnostic.dart';
 import 'package:orkest_code/app/core/domain/entities/lsp_location.dart';
 import 'package:orkest_code/app/core/domain/entities/lsp_semantic_tokens.dart';
+import 'package:orkest_code/app/core/domain/entities/lsp_symbol.dart';
 import 'package:orkest_code/app/core/domain/exceptions/lsp_error.dart';
 import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:orkest_code/app/core/utils/executable_resolver.dart';
@@ -384,6 +385,54 @@ class LspServerPool {
       character: character,
     );
     return result.fold(parseDefinitionResponse, (_) => null);
+  }
+
+  /// `textDocument/implementation` — implementações de interface ou método abstrato (L03).
+  Future<List<LspLocation>> implementation(String path, int line, int character) async {
+    final doc = _docs[path];
+    if (doc == null || line < 0 || character < 0) return const [];
+    final result = await requestForPath(path, 'textDocument/implementation', {
+      'textDocument': {'uri': Uri.file(path).toString()},
+      'position': {'line': line, 'character': character},
+    });
+    return result.fold(parseLocationsResponse, (_) => const []);
+  }
+
+  /// `textDocument/references` — todas as referências de um símbolo no projeto (L03).
+  Future<List<LspLocation>> references(
+    String path,
+    int line,
+    int character, {
+    bool includeDeclaration = true,
+  }) async {
+    final doc = _docs[path];
+    if (doc == null || line < 0 || character < 0) return const [];
+    final result = await requestForPath(path, 'textDocument/references', {
+      'textDocument': {'uri': Uri.file(path).toString()},
+      'position': {'line': line, 'character': character},
+      'context': {'includeDeclaration': includeDeclaration},
+    });
+    return result.fold(parseLocationsResponse, (_) => const []);
+  }
+
+  /// `textDocument/documentSymbol` — outline estruturado do arquivo (classes, métodos, variáveis) (L03).
+  Future<List<LspDocumentSymbol>> documentSymbols(String path) async {
+    final doc = _docs[path];
+    if (doc == null) return const [];
+    final result = await requestForPath(path, 'textDocument/documentSymbol', {
+      'textDocument': {'uri': Uri.file(path).toString()},
+    });
+    return result.fold(parseDocumentSymbols, (_) => const []);
+  }
+
+  /// `workspace/symbol` — busca unificada de símbolos em todo o workspace (L03).
+  Future<List<LspDocumentSymbol>> workspaceSymbols(String query, {String? path}) async {
+    final targetPath = path ?? _docs.keys.firstOrNull;
+    if (targetPath == null) return const [];
+    final result = await requestForPath(targetPath, 'workspace/symbol', {
+      'query': query,
+    });
+    return result.fold(parseDocumentSymbols, (_) => const []);
   }
 
   /// Teto pra pedir semantic tokens. Acima disso o arquivo fica só com o
