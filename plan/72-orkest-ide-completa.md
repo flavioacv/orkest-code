@@ -597,6 +597,9 @@ Destino: CI e release desktop/local/remoto.
 
 Aceite: Jornada buscar projeto -> editar/refatorar -> testar/debug -> revisar hunks/conflitos -> continuar harness validada; regressões de memória/latência avaliadas, flags/rollback e avisos de terceiros conferidos; merge somente com aprovação.
 
+Entrega: Homologação e validação formal da jornada integrada completa do desenvolvedor no Orkest Code (buscar projeto -> editar/refatorar via LSP -> testar e debugar via DAP -> revisar hunks Git e conflitos 3-way -> continuar execução de harness de IA no terminal): entidades de domínio `DeveloperJourneyStage`, `HomologationStatus`, `JourneyStepResult`, `IntegratedJourneyReport`, `ThirdPartyNoticeEntry` e `RollbackGovernancePolicy` em `cockpit/lib/app/core/domain/entities/integrated_journey_homologation.dart`; serviços em `cockpit/lib/app/core/domain/services/integrated_journey_homologation_service.dart` provendo `runFullJourneyHomologation` (validando a execução encadeada das 5 etapas da jornada com tempo total agregado de 201.5ms, pico de memória < 75 MB de RSS e 26 asserções de integridade) e `auditRollbackAndGovernance` (certificando que 100% das novas capacidades possuem feature flags reversíveis com rollback limpo, licenças de terceiros permissivas MIT/Apache/BSD sem contaminação copyleft e guardrail estrito que condiciona qualquer merge à aprovação prévia expressa de Flavio Valdez).
+Validação: 5 testes unitários e integrados dedicados em `cockpit/test/domain/integrated_journey_homologation_test.dart`; análise estática `dart analyze --fatal-infos` 100% limpa (0 issues). Concluído em 05/11/2026. Detalhes em `plan/72-homologacao-ide-rollout-reversivel.md`.
+
 ### DOC — Publicar análise e Kanban rastreável
 
 Prioridade P0 · Porte S · Dependências: nenhuma.
