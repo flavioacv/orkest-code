@@ -1,5 +1,6 @@
 import 'package:orkest_code/app/orkest/domain/entities/db_connection.dart';
 import 'package:orkest_code/app/orkest/domain/entities/db_result.dart';
+import 'package:orkest_code/app/orkest/domain/entities/db_schema_entities.dart';
 import 'package:orkest_code/app/orkest/ui/viewmodels/orkest_viewmodel.dart';
 import 'package:orkest_code/app/orkest/ui/viewmodels/database_viewmodel.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/confirm_dialog.dart';
@@ -111,8 +112,14 @@ class _DbPanelState extends State<DbPanel> {
         ),
         // "New query" só faz sentido pros SQL (abre tab `.dbq`). Redis abre a
         // tabela de chaves (plano 52); Mongo segue CLI-only.
-        if (conn.engine.isSql)
+        if (conn.engine.isSql) ...[
           AppMenuItem(value: 'dbq', label: tr.newQuery, icon: Icons.add),
+          const AppMenuItem(
+            value: 'refresh-schema',
+            label: 'Recarregar Schema',
+            icon: Icons.refresh,
+          ),
+        ],
         if (conn.engine == DbEngine.redis)
           AppMenuItem(
             value: 'redis',
@@ -136,6 +143,8 @@ class _DbPanelState extends State<DbPanel> {
         await Clipboard.setData(ClipboardData(text: conn.name));
       case 'dbq':
         _newDbq(conn);
+      case 'refresh-schema':
+        context.read<DatabaseViewModel>().invalidateSchema(conn.name);
       case 'redis':
         context.read<OrkestViewModel>().openRedisBrowser(conn.name);
       case 'delete':
@@ -559,6 +568,46 @@ class _SchemaTreeState extends State<_SchemaTree> {
                 ),
               ),
               const SizedBox(width: 4),
+              Builder(
+                builder: (anchor) => AppTooltip(
+                  message: 'Ações da tabela (DDL / SELECT)',
+                  child: HoverTap(
+                    onTap: () async {
+                      final vm = context.read<DatabaseViewModel>();
+                      final action = await showAppMenu<String>(
+                        anchor,
+                        items: [
+                          const AppMenuItem(
+                            value: 'copy-ddl',
+                            label: 'Copiar DDL (CREATE)',
+                            icon: Icons.code,
+                          ),
+                          const AppMenuItem(
+                            value: 'copy-select',
+                            label: 'Copiar SELECT *',
+                            icon: Icons.content_copy,
+                          ),
+                        ],
+                      );
+                      if (action == 'copy-ddl') {
+                        final ddl = await vm.generateDdl(
+                          widget.conn,
+                          t.name,
+                          schema: t.schema,
+                          isView: t.isView,
+                        );
+                        await Clipboard.setData(ClipboardData(text: ddl));
+                      } else if (action == 'copy-select') {
+                        final q = 'SELECT * FROM ${DatabaseViewModel.qualifiedIdent(widget.conn.engine, t.schema, t.name)} LIMIT 100;';
+                        await Clipboard.setData(ClipboardData(text: q));
+                      }
+                    },
+                    padding: const EdgeInsets.all(2),
+                    child: Icon(Icons.more_vert, size: 12, color: colors.text4),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 2),
               AppTooltip(
                 message: context.t.orkest.dbPanel.newQuery,
                 child: HoverTap(
@@ -574,10 +623,11 @@ class _SchemaTreeState extends State<_SchemaTree> {
       if (open)
         Padding(
           padding: EdgeInsets.only(left: indent ? 16 : 0),
-          child: _ColumnList(
+          child: _TableDetailList(
             conn: widget.conn,
             table: t.name,
             schema: t.schema,
+            isView: t.isView,
           ),
         ),
     ];
@@ -786,93 +836,203 @@ class _MongoCollectionsState extends State<_MongoCollections> {
   );
 }
 
-class _ColumnList extends StatefulWidget {
-  const _ColumnList({required this.conn, required this.table, this.schema});
+class _TableDetailList extends StatefulWidget {
+  const _TableDetailList({
+    required this.conn,
+    required this.table,
+    this.schema,
+    this.isView = false,
+  });
+
   final DbConnection conn;
   final String table;
   final String? schema;
+  final bool isView;
 
   @override
-  State<_ColumnList> createState() => _ColumnListState();
+  State<_TableDetailList> createState() => _TableDetailListState();
 }
 
-class _ColumnListState extends State<_ColumnList> {
+class _TableDetailListState extends State<_TableDetailList> {
   late final Future<List<SchemaColumn>> _cols;
+  late final Future<List<SchemaIndex>> _indexes;
+  late final Future<List<SchemaForeignKey>> _fks;
+
+  bool _showIndexes = false;
+  bool _showFks = false;
 
   @override
   void initState() {
     super.initState();
-    _cols = context.read<DatabaseViewModel>().columns(
-      widget.conn,
-      widget.table,
-      schema: widget.schema,
-    );
+    final vm = context.read<DatabaseViewModel>();
+    _cols = vm.columns(widget.conn, widget.table, schema: widget.schema);
+    _indexes = vm.indexes(widget.conn, widget.table, schema: widget.schema);
+    _fks = vm.foreignKeys(widget.conn, widget.table, schema: widget.schema);
   }
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     final typo = context.typo;
+
     return Padding(
-      padding: const EdgeInsets.only(left: 22),
-      child: FutureBuilder<List<SchemaColumn>>(
-        future: _cols,
-        builder: (context, snap) {
-          if (snap.connectionState != ConnectionState.done) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6),
-              child: Text(
-                'Loading…',
-                style: typo.label.copyWith(fontSize: 10, color: colors.text4),
-              ),
-            );
-          }
-          final cols = snap.data ?? const [];
-          return Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              for (final c in cols)
-                Padding(
-                  padding: const EdgeInsets.symmetric(
-                    vertical: 1.5,
-                    horizontal: 6,
+      padding: const EdgeInsets.only(left: 22, bottom: 4),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          // 1. Colunas
+          FutureBuilder<List<SchemaColumn>>(
+            future: _cols,
+            builder: (context, snap) {
+              if (snap.connectionState != ConnectionState.done) {
+                return Padding(
+                  padding: const EdgeInsets.symmetric(vertical: 2, horizontal: 6),
+                  child: Text(
+                    'Carregando colunas…',
+                    style: typo.label.copyWith(fontSize: 10, color: colors.text4),
                   ),
-                  child: Row(
-                    children: [
-                      Flexible(
-                        child: Text(
-                          c.name,
-                          overflow: TextOverflow.ellipsis,
-                          style: typo.mono.copyWith(
-                            fontSize: 11,
-                            color: colors.text2,
+                );
+              }
+              final cols = snap.data ?? const [];
+              return Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  for (final c in cols)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 1.5, horizontal: 6),
+                      child: Row(
+                        children: [
+                          Flexible(
+                            child: Text(
+                              c.name,
+                              overflow: TextOverflow.ellipsis,
+                              style: typo.mono.copyWith(fontSize: 11, color: colors.text2),
+                            ),
                           ),
+                          const SizedBox(width: 6),
+                          Text(
+                            c.type,
+                            style: typo.mono.copyWith(fontSize: 9.5, color: colors.text4),
+                          ),
+                          if (c.primaryKey) ...[
+                            const SizedBox(width: 5),
+                            Text(
+                              'PK',
+                              style: typo.label.copyWith(fontSize: 8.5, color: colors.accent),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                ],
+              );
+            },
+          ),
+
+          // 2. Índices (se SQL e não view)
+          if (!widget.isView && widget.conn.engine.isSql)
+            FutureBuilder<List<SchemaIndex>>(
+              future: _indexes,
+              builder: (context, snap) {
+                final idxs = snap.data ?? const [];
+                if (idxs.isEmpty) return const SizedBox.shrink();
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    HoverTap(
+                      onTap: () => setState(() => _showIndexes = !_showIndexes),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _showIndexes ? Icons.expand_more : Icons.chevron_right,
+                            size: 11,
+                            color: colors.text4,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Índices (${idxs.length})',
+                            style: typo.label.copyWith(fontSize: 9.5, color: colors.text3),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_showIndexes)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (final idx in idxs)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 1),
+                                child: Text(
+                                  '${idx.name} (${idx.columns.join(", ")})${idx.isUnique ? ' [UNIQUE]' : ''}',
+                                  style: typo.mono.copyWith(fontSize: 9.5, color: colors.text4),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
-                      const SizedBox(width: 6),
-                      Text(
-                        c.type,
-                        style: typo.mono.copyWith(
-                          fontSize: 9.5,
-                          color: colors.text4,
+                  ],
+                );
+              },
+            ),
+
+          // 3. Foreign Keys (se SQL e não view)
+          if (!widget.isView && widget.conn.engine.isSql)
+            FutureBuilder<List<SchemaForeignKey>>(
+              future: _fks,
+              builder: (context, snap) {
+                final fks = snap.data ?? const [];
+                if (fks.isEmpty) return const SizedBox.shrink();
+
+                return Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    HoverTap(
+                      onTap: () => setState(() => _showFks = !_showFks),
+                      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                      child: Row(
+                        children: [
+                          Icon(
+                            _showFks ? Icons.expand_more : Icons.chevron_right,
+                            size: 11,
+                            color: colors.text4,
+                          ),
+                          const SizedBox(width: 4),
+                          Text(
+                            'Chaves Estrangeiras (${fks.length})',
+                            style: typo.label.copyWith(fontSize: 9.5, color: colors.text3),
+                          ),
+                        ],
+                      ),
+                    ),
+                    if (_showFks)
+                      Padding(
+                        padding: const EdgeInsets.only(left: 12),
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            for (final fk in fks)
+                              Padding(
+                                padding: const EdgeInsets.symmetric(vertical: 1),
+                                child: Text(
+                                  '${fk.column} ➔ ${fk.referencedTable}.${fk.referencedColumn}',
+                                  style: typo.mono.copyWith(fontSize: 9.5, color: colors.text4),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                          ],
                         ),
                       ),
-                      if (c.primaryKey) ...[
-                        const SizedBox(width: 5),
-                        Text(
-                          'PK',
-                          style: typo.label.copyWith(
-                            fontSize: 8.5,
-                            color: colors.accent,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                ),
-            ],
-          );
-        },
+                  ],
+                );
+              },
+            ),
+        ],
       ),
     );
   }

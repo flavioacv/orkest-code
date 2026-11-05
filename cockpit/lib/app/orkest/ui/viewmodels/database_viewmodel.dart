@@ -7,8 +7,11 @@ import 'package:orkest_code/app/orkest/domain/services/mongo_browse_service.dart
 import 'package:orkest_code/app/orkest/domain/services/redis_browse_service.dart';
 import 'package:orkest_code/app/orkest/domain/contracts/db_connection_store.dart';
 import 'package:orkest_code/app/orkest/domain/contracts/remote_db_writer.dart';
+import 'package:orkest_code/app/orkest/domain/db_schema_sql.dart';
 import 'package:orkest_code/app/orkest/domain/entities/db_connection.dart';
 import 'package:orkest_code/app/orkest/domain/entities/db_result.dart';
+import 'package:orkest_code/app/orkest/domain/entities/db_schema_entities.dart';
+import 'package:orkest_code/app/orkest/domain/services/db_ddl_generator.dart';
 import 'package:flutter/foundation.dart';
 
 /// Uma coluna de tabela na árvore de schema do painel.
@@ -258,6 +261,9 @@ class DatabaseViewModel extends ChangeNotifier {
     _connections = loaded;
     _tablesCache.clear();
     _columnsCache.clear();
+    _indexesCache.clear();
+    _foreignKeysCache.clear();
+    _routinesCache.clear();
     _collectionsCache.clear();
     notifyListeners();
   }
@@ -512,6 +518,20 @@ class DatabaseViewModel extends ChangeNotifier {
   /// painel chama ao expandir). Cacheado por nome de conexão até [reload].
   final _tablesCache = <String, List<SchemaTable>>{};
   final _columnsCache = <String, List<SchemaColumn>>{};
+  final _indexesCache = <String, List<SchemaIndex>>{};
+  final _foreignKeysCache = <String, List<SchemaForeignKey>>{};
+  final _routinesCache = <String, List<SchemaRoutine>>{};
+  final _ddlGenerator = const DbDdlGenerator();
+
+  /// Invalida seletivamente o cache de schema de [connName] (B01).
+  void invalidateSchema(String connName) {
+    _tablesCache.remove(connName);
+    _columnsCache.removeWhere((k, _) => k.startsWith('$connName '));
+    _indexesCache.removeWhere((k, _) => k.startsWith('$connName '));
+    _foreignKeysCache.removeWhere((k, _) => k.startsWith('$connName '));
+    _routinesCache.removeWhere((k, _) => k.startsWith('$connName '));
+    if (!_disposed) notifyListeners();
+  }
 
   Future<List<SchemaTable>> tables(DbConnection conn) async {
     final cached = _tablesCache[conn.name];
@@ -576,6 +596,227 @@ class DatabaseViewModel extends ChangeNotifier {
     ];
     _columnsCache[key] = cols;
     return cols;
+  }
+
+  /// Índices de uma tabela (B01).
+  Future<List<SchemaIndex>> indexes(
+    DbConnection conn,
+    String table, {
+    String? schema,
+  }) async {
+    final key = '${conn.name} ${schema ?? ''} $table';
+    final cached = _indexesCache[key];
+    if (cached != null) return cached;
+    final root = _workspaceRoot;
+    final wsId = _workspaceId;
+    if (root == null || wsId == null) return const [];
+    if (conn.engine == DbEngine.redis || conn.engine == DbEngine.mongo) {
+      return const [];
+    }
+
+    try {
+      final sql = dbIndexesSql(conn.engine, table: table, schema: schema);
+      final rs = await service.query(
+        workspaceRoot: root,
+        workspaceId: wsId,
+        connName: conn.name,
+        sql: sql,
+        limit: 1000,
+      );
+      final ix = {
+        for (var i = 0; i < rs.columns.length; i++) rs.columns[i].name.toLowerCase(): i,
+      };
+
+      final result = <SchemaIndex>[];
+      for (final row in rs.rows) {
+        final name = '${row[ix['name'] ?? ix['indexname'] ?? ix['key_name'] ?? 0]}';
+        final isUnique = '${row[ix['isunique'] ?? ix['unique'] ?? ix['non_unique'] ?? -1]}' == '1' ||
+            '${row[ix['isunique'] ?? -1]}'.toLowerCase() == 'true';
+        final isPrimary = '${row[ix['isprimary'] ?? ix['is_primary_key'] ?? -1]}' == '1' ||
+            name.toUpperCase() == 'PRIMARY';
+
+        // Colunas associadas
+        final colsRaw = ix['columns'] != null && row[ix['columns']!] != null
+            ? '${row[ix['columns']!]}'
+            : (ix['column_name'] != null ? '${row[ix['column_name']!]}' : table);
+        final cols = colsRaw.split(',').map((s) => s.trim()).where((s) => s.isNotEmpty).toList();
+
+        result.add(
+          SchemaIndex(
+            name: name,
+            table: table,
+            columns: cols.isEmpty ? [table] : cols,
+            isUnique: isUnique,
+            isPrimary: isPrimary,
+          ),
+        );
+      }
+      _indexesCache[key] = result;
+      return result;
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// Chaves estrangeiras de uma tabela (B01).
+  Future<List<SchemaForeignKey>> foreignKeys(
+    DbConnection conn,
+    String table, {
+    String? schema,
+  }) async {
+    final key = '${conn.name} ${schema ?? ''} $table';
+    final cached = _foreignKeysCache[key];
+    if (cached != null) return cached;
+    final root = _workspaceRoot;
+    final wsId = _workspaceId;
+    if (root == null || wsId == null) return const [];
+    if (conn.engine == DbEngine.redis || conn.engine == DbEngine.mongo) {
+      return const [];
+    }
+
+    try {
+      final sql = dbForeignKeysSql(conn.engine, table: table, schema: schema);
+      final rs = await service.query(
+        workspaceRoot: root,
+        workspaceId: wsId,
+        connName: conn.name,
+        sql: sql,
+        limit: 1000,
+      );
+      final ix = {
+        for (var i = 0; i < rs.columns.length; i++) rs.columns[i].name.toLowerCase(): i,
+      };
+
+      final result = <SchemaForeignKey>[];
+      for (final row in rs.rows) {
+        final name = '${row[ix['name'] ?? ix['constraint_name'] ?? 0]}';
+        final col = '${row[ix['column'] ?? ix['column_name'] ?? ix['from'] ?? 0]}';
+        final refTable = '${row[ix['referencedtable'] ?? ix['referenced_table_name'] ?? ix['table'] ?? 0]}';
+        final refCol = '${row[ix['referencedcolumn'] ?? ix['referenced_column_name'] ?? ix['to'] ?? 0]}';
+        final onDelete = ix['ondelete'] != null && row[ix['ondelete']!] != null
+            ? '${row[ix['ondelete']!]}'
+            : 'NO ACTION';
+        final onUpdate = ix['onupdate'] != null && row[ix['onupdate']!] != null
+            ? '${row[ix['onupdate']!]}'
+            : 'NO ACTION';
+
+        result.add(
+          SchemaForeignKey(
+            name: name,
+            table: table,
+            column: col,
+            referencedTable: refTable,
+            referencedColumn: refCol,
+            onDelete: onDelete,
+            onUpdate: onUpdate,
+          ),
+        );
+      }
+      _foreignKeysCache[key] = result;
+      return result;
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// Rotinas (funções e procedures) disponíveis na conexão (B01).
+  Future<List<SchemaRoutine>> routines(
+    DbConnection conn, {
+    String? schema,
+  }) async {
+    final key = '${conn.name} ${schema ?? ''}';
+    final cached = _routinesCache[key];
+    if (cached != null) return cached;
+    final root = _workspaceRoot;
+    final wsId = _workspaceId;
+    if (root == null || wsId == null) return const [];
+    if (conn.engine == DbEngine.sqlite ||
+        conn.engine == DbEngine.redis ||
+        conn.engine == DbEngine.mongo) {
+      return const [];
+    }
+
+    try {
+      final sql = dbRoutinesSql(conn.engine, schema: schema);
+      final rs = await service.query(
+        workspaceRoot: root,
+        workspaceId: wsId,
+        connName: conn.name,
+        sql: sql,
+        limit: 1000,
+      );
+      final ix = {
+        for (var i = 0; i < rs.columns.length; i++) rs.columns[i].name.toLowerCase(): i,
+      };
+
+      final result = <SchemaRoutine>[];
+      for (final row in rs.rows) {
+        final name = '${row[ix['name'] ?? ix['routine_name'] ?? 0]}';
+        final rSchema = ix['schema'] != null ? '${row[ix['schema']!]}' : schema;
+        final type = '${row[ix['type'] ?? ix['routine_type'] ?? 0]}';
+        final returnType = ix['returntype'] != null ? '${row[ix['returntype']!]}' : null;
+
+        result.add(
+          SchemaRoutine(
+            name: name,
+            schema: rSchema,
+            type: type,
+            returnType: returnType,
+          ),
+        );
+      }
+      _routinesCache[key] = result;
+      return result;
+    } catch (_) {
+      return const [];
+    }
+  }
+
+  /// Gera a definição DDL completa para [table] (ou view) usando o dialeto nativo (B01).
+  Future<String> generateDdl(
+    DbConnection conn,
+    String table, {
+    String? schema,
+    bool isView = false,
+  }) async {
+    final root = _workspaceRoot;
+    final wsId = _workspaceId;
+    if (root == null || wsId == null) return '';
+
+    if (isView) {
+      try {
+        final sql = dbViewDefinitionSql(conn.engine, view: table, schema: schema);
+        final rs = await service.query(
+          workspaceRoot: root,
+          workspaceId: wsId,
+          connName: conn.name,
+          sql: sql,
+          limit: 1,
+        );
+        final def = rs.rows.isNotEmpty ? '${rs.rows.first.first}' : 'SELECT 1;';
+        return _ddlGenerator.generateViewDdl(
+          engine: conn.engine,
+          view: table,
+          schema: schema,
+          definition: def,
+        );
+      } catch (_) {
+        return 'CREATE VIEW ${qualifiedIdent(conn.engine, schema, table)} AS\n/* Definição indisponível */ SELECT 1;';
+      }
+    }
+
+    final cols = await columns(conn, table, schema: schema);
+    final idxs = await indexes(conn, table, schema: schema);
+    final fks = await foreignKeys(conn, table, schema: schema);
+
+    return _ddlGenerator.generateTableDdl(
+      engine: conn.engine,
+      table: table,
+      schema: schema,
+      columns: cols,
+      indexes: idxs,
+      foreignKeys: fks,
+    );
   }
 
   /// Cita um identificador na sintaxe do engine — tabela CamelCase (ex.
