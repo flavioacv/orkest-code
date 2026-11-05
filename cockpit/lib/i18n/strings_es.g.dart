@@ -804,6 +804,14 @@ class _Translations$orkest$fileTreePanel$es extends Translations$orkest$fileTree
 	@override String get stageHunk => 'Preparar fragmento';
 	@override String get unstageHunk => 'Deshacer preparación';
 	@override String get discardHunk => 'Descartar';
+	@override String conflictsBanner({required Object count}) => '${count} conflicto(s) de fusión sin resolver';
+	@override String get acceptAllOurs => 'Aceptar actual';
+	@override String get acceptAllTheirs => 'Aceptar entrante';
+	@override String get acceptBoth => 'Aceptar ambos';
+	@override String get prevConflict => 'Anterior';
+	@override String get nextConflict => 'Siguiente';
+	@override String continueGitOp({required Object op}) => 'Continuar ${op}';
+	@override String abortGitOp({required Object op}) => 'Abortar ${op}';
 	@override String get galleryTooltip => 'Galería';
 	@override String get sectionGallery => 'GALERÍA';
 	@override String get openAsHtml => 'Abrir como HTML';
@@ -2573,6 +2581,14 @@ extension on TranslationsEs {
 			'orkest.fileTreePanel.stageHunk' => 'Preparar fragmento',
 			'orkest.fileTreePanel.unstageHunk' => 'Deshacer preparación',
 			'orkest.fileTreePanel.discardHunk' => 'Descartar',
+			'orkest.fileTreePanel.conflictsBanner' => ({required Object count}) => '${count} conflicto(s) de fusión sin resolver',
+			'orkest.fileTreePanel.acceptAllOurs' => 'Aceptar actual',
+			'orkest.fileTreePanel.acceptAllTheirs' => 'Aceptar entrante',
+			'orkest.fileTreePanel.acceptBoth' => 'Aceptar ambos',
+			'orkest.fileTreePanel.prevConflict' => 'Anterior',
+			'orkest.fileTreePanel.nextConflict' => 'Siguiente',
+			'orkest.fileTreePanel.continueGitOp' => ({required Object op}) => 'Continuar ${op}',
+			'orkest.fileTreePanel.abortGitOp' => ({required Object op}) => 'Abortar ${op}',
 			'orkest.fileTreePanel.galleryTooltip' => 'Galería',
 			'orkest.fileTreePanel.sectionGallery' => 'GALERÍA',
 			'orkest.fileTreePanel.openAsHtml' => 'Abrir como HTML',
@@ -2598,6 +2614,8 @@ extension on TranslationsEs {
 			'orkest.realmDialogs.namePlaceholder' => 'Nombre del realm',
 			'orkest.realmDialogs.duplicateName' => 'Ya existe un realm con ese nombre.',
 			'orkest.realmDialogs.newRealmTitle' => 'Nuevo realm',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.realmDialogs.renameRealmTitle' => 'Renombrar realm',
 			'orkest.realmDialogs.rename' => 'Renombrar',
 			'orkest.realmDialogs.deleteRealmTitle' => 'Eliminar realm',
@@ -2606,8 +2624,6 @@ extension on TranslationsEs {
 			'orkest.realmDialogs.deleteSuffixMany' => ({required Object count}) => ' Sus ${count} workspaces se moverán a Predeterminado.',
 			'orkest.realmDialogs.manageRealmsTitle' => 'Gestionar realms',
 			'orkest.realmDialogs.workspaceCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 workspace', other: '${n} workspaces', ), 
-			_ => null,
-		} ?? switch (path) {
 			'orkest.dbRedisTable.deleteKeyTitle' => 'Eliminar clave',
 			'orkest.dbRedisTable.deleteKeyMessage' => ({required Object key}) => '¿Eliminar "${key}" de esta base de datos Redis?',
 			'orkest.dbRedisTable.refresh' => 'Actualizar',
@@ -3112,6 +3128,8 @@ extension on TranslationsEs {
 			'settings.page.terminal.engineDesc' => 'Usado por nuevas pestañas de terminal y buffers de salida de tasks. Las pestañas abiertas mantienen su motor actual.',
 			'settings.page.terminal.shellTitle' => 'Shell',
 			'settings.page.terminal.shellDesc' => 'Qué shell abren las nuevas pestañas de terminal. La flecha junto al + sigue abriendo cualquier otro, solo para esa pestaña.',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.terminal.noWslMessage' => 'No se encontraron distros de WSL. Instala una (wsl.exe --install) y reinicia Orkest Code para verla listada aquí.',
 			'settings.page.terminal.sectionBehavior' => 'Comportamiento',
 			'settings.page.terminal.closeOnExitTitle' => 'Cerrar la pestaña cuando el shell termine',
@@ -3120,8 +3138,6 @@ extension on TranslationsEs {
 			'settings.page.appearance.themeTitle' => 'Tema',
 			'settings.page.appearance.themeDesc' => 'Colores de la app, resaltado de código y paleta del terminal.',
 			'settings.page.appearance.modeTitle' => 'Modo',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.appearance.modeDesc' => 'Qué variante del tema usar.',
 			'settings.page.appearance.modeOnlyDark' => ({required Object theme}) => '"${theme}" solo trae la variante oscura, así que esto no tiene efecto.',
 			'settings.page.appearance.modeOnlyLight' => ({required Object theme}) => '"${theme}" solo trae la variante clara, así que esto no tiene efecto.',

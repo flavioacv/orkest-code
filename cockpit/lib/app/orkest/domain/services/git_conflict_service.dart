@@ -1,0 +1,318 @@
+import 'dart:io';
+
+import 'package:orkest_code/app/core/domain/result.dart';
+
+/// Tipos de resolução para um bloco de conflito Git.
+enum ConflictResolution {
+  /// Aceita a versão atual / local ("Ours" / HEAD).
+  ours,
+
+  /// Aceita a versão que está entrando / remota ("Theirs" / Incoming).
+  theirs,
+
+  /// Aceita ambas as versões concatenadas.
+  both,
+
+  /// Reverte para a versão base (quando disponível no formato diff3).
+  base,
+}
+
+/// Operações do Git que podem estar em andamento no repositório.
+enum GitOngoingOperation {
+  none,
+  merge,
+  rebase,
+  cherryPick,
+  revert,
+}
+
+/// Representa um bloco delimitado de conflito no arquivo:
+/// <<<<<<< [oursLabel]
+/// [ours]
+/// ||||||| [baseLabel] (opcional)
+/// [base]
+/// =======
+/// [theirs]
+/// >>>>>>> [theirsLabel]
+class ConflictBlock {
+  final int from;
+  final int to;
+  final int startLine;
+  final int endLine;
+  final String ours;
+  final String? base;
+  final String theirs;
+  final String oursLabel;
+  final String theirsLabel;
+
+  const ConflictBlock({
+    required this.from,
+    required this.to,
+    required this.startLine,
+    required this.endLine,
+    required this.ours,
+    this.base,
+    required this.theirs,
+    required this.oursLabel,
+    required this.theirsLabel,
+  });
+}
+
+/// Serviço de análise, navegação e resolução de conflitos de merge/rebase do Git.
+class GitConflictService {
+  const GitConflictService();
+
+  static const String startMarker = '<<<<<<<';
+  static const String baseMarker = '|||||||';
+  static const String sepMarker = '=======';
+  static const String endMarker = '>>>>>>>';
+
+  /// Verifica rapidamente se a string contém marcadores de conflito.
+  bool hasConflictMarkers(String text) {
+    return text.contains(startMarker);
+  }
+
+  /// Parseia todos os blocos de conflito válidos presentes em [text].
+  List<ConflictBlock> parseConflicts(String text) {
+    if (!hasConflictMarkers(text)) return const [];
+
+    final blocks = <ConflictBlock>[];
+    final lines = text.split('\n');
+
+    var currentOffset = 0;
+    int? blockStartIndex;
+    int? blockStartOffset;
+    int? baseIndex;
+    int? sepIndex;
+
+    for (var i = 0; i < lines.length; i++) {
+      final line = lines[i];
+      final lineEndOffset = currentOffset + line.length + (i < lines.length - 1 ? 1 : 0);
+
+      if (_isMarker(line, startMarker)) {
+        blockStartIndex = i;
+        blockStartOffset = currentOffset;
+        baseIndex = null;
+        sepIndex = null;
+      } else if (blockStartIndex != null && baseIndex == null && sepIndex == null && _isMarker(line, baseMarker)) {
+        baseIndex = i;
+      } else if (blockStartIndex != null && sepIndex == null && _isMarker(line, sepMarker)) {
+        sepIndex = i;
+      } else if (blockStartIndex != null && sepIndex != null && _isMarker(line, endMarker)) {
+        // Encerramento do bloco de conflito
+        final startLineText = lines[blockStartIndex];
+        final endLineText = line;
+
+        final oursStart = blockStartIndex + 1;
+        final oursEnd = baseIndex ?? sepIndex;
+        final oursText = oursStart < oursEnd ? lines.sublist(oursStart, oursEnd).join('\n') : '';
+
+        String? baseText;
+        if (baseIndex != null && baseIndex + 1 < sepIndex) {
+          baseText = lines.sublist(baseIndex + 1, sepIndex).join('\n');
+        }
+
+        final theirsStart = sepIndex + 1;
+        final theirsEnd = i;
+        final theirsText = theirsStart < theirsEnd ? lines.sublist(theirsStart, theirsEnd).join('\n') : '';
+
+        final oursLabel = _extractLabel(startLineText, startMarker);
+        final theirsLabel = _extractLabel(endLineText, endMarker);
+
+        blocks.add(
+          ConflictBlock(
+            from: blockStartOffset!,
+            to: lineEndOffset,
+            startLine: blockStartIndex + 1,
+            endLine: i + 1,
+            ours: oursText,
+            base: baseText,
+            theirs: theirsText,
+            oursLabel: oursLabel.isNotEmpty ? oursLabel : 'HEAD (Atual)',
+            theirsLabel: theirsLabel.isNotEmpty ? theirsLabel : 'Incoming (Entrante)',
+          ),
+        );
+
+        blockStartIndex = null;
+        blockStartOffset = null;
+        baseIndex = null;
+        sepIndex = null;
+      }
+
+      currentOffset = lineEndOffset;
+    }
+
+    return blocks;
+  }
+
+  /// Resolve um único bloco de conflito aplicando a resolução selecionada.
+  String resolveBlock({
+    required String text,
+    required ConflictBlock block,
+    required ConflictResolution resolution,
+    bool reversed = false,
+  }) {
+    final replacement = resolutionText(block, resolution, reversed: reversed);
+    final before = text.substring(0, block.from);
+    final after = text.substring(block.to);
+
+    // Preserva quebra de linha normal se o replacement não for vazio
+    final formattedReplacement = replacement.isNotEmpty && !replacement.endsWith('\n')
+        ? '$replacement\n'
+        : replacement;
+
+    return '$before$formattedReplacement$after';
+  }
+
+  /// Resolve todos os blocos de conflito do arquivo simultaneamente.
+  String resolveAll({
+    required String text,
+    required ConflictResolution resolution,
+    bool reversed = false,
+  }) {
+    final blocks = parseConflicts(text);
+    if (blocks.isEmpty) return text;
+
+    final buffer = StringBuffer();
+    var lastOffset = 0;
+
+    for (final block in blocks) {
+      buffer.write(text.substring(lastOffset, block.from));
+      final replacement = resolutionText(block, resolution, reversed: reversed);
+      if (replacement.isNotEmpty) {
+        buffer.write(replacement);
+        if (!replacement.endsWith('\n')) {
+          buffer.write('\n');
+        }
+      }
+      lastOffset = block.to;
+    }
+
+    buffer.write(text.substring(lastOffset));
+    return buffer.toString();
+  }
+
+  /// Retorna o texto da resolução correspondente.
+  String resolutionText(
+    ConflictBlock block,
+    ConflictResolution resolution, {
+    bool reversed = false,
+  }) {
+    final yours = reversed ? block.theirs : block.ours;
+    final theirs = reversed ? block.ours : block.theirs;
+
+    switch (resolution) {
+      case ConflictResolution.ours:
+        return yours;
+      case ConflictResolution.theirs:
+        return theirs;
+      case ConflictResolution.base:
+        return block.base ?? '';
+      case ConflictResolution.both:
+        if (yours.isEmpty) return theirs;
+        if (theirs.isEmpty) return yours;
+        return yours.endsWith('\n') ? '$yours$theirs' : '$yours\n$theirs';
+    }
+  }
+
+  /// Detecta se há uma operação Git em andamento (merge, rebase, cherry-pick ou revert).
+  GitOngoingOperation detectOngoingOperation(String repoRoot) {
+    try {
+      final gitDir = Directory('$repoRoot/.git');
+      if (!gitDir.existsSync()) return GitOngoingOperation.none;
+
+      if (File('$repoRoot/.git/MERGE_HEAD').existsSync()) {
+        return GitOngoingOperation.merge;
+      }
+      if (Directory('$repoRoot/.git/rebase-merge').existsSync() ||
+          Directory('$repoRoot/.git/rebase-apply').existsSync()) {
+        return GitOngoingOperation.rebase;
+      }
+      if (File('$repoRoot/.git/CHERRY_PICK_HEAD').existsSync()) {
+        return GitOngoingOperation.cherryPick;
+      }
+      if (File('$repoRoot/.git/REVERT_HEAD').existsSync()) {
+        return GitOngoingOperation.revert;
+      }
+    } catch (_) {}
+
+    return GitOngoingOperation.none;
+  }
+
+  /// Continua a operação Git em andamento (`git <op> --continue`).
+  Future<Result<void, String>> continueOperation({
+    required String repoRoot,
+    String gitExecutable = 'git',
+  }) async {
+    final op = detectOngoingOperation(repoRoot);
+    if (op == GitOngoingOperation.none) {
+      return const Failure('Nenhuma operação Git em andamento para continuar.');
+    }
+
+    final cmd = _operationCommandName(op);
+    return _runGit(repoRoot, gitExecutable, [cmd, '--continue']);
+  }
+
+  /// Aborta a operação Git em andamento (`git <op> --abort`).
+  Future<Result<void, String>> abortOperation({
+    required String repoRoot,
+    String gitExecutable = 'git',
+  }) async {
+    final op = detectOngoingOperation(repoRoot);
+    if (op == GitOngoingOperation.none) {
+      return const Failure('Nenhuma operação Git em andamento para abortar.');
+    }
+
+    final cmd = _operationCommandName(op);
+    return _runGit(repoRoot, gitExecutable, [cmd, '--abort']);
+  }
+
+  String _operationCommandName(GitOngoingOperation op) {
+    switch (op) {
+      case GitOngoingOperation.merge:
+        return 'merge';
+      case GitOngoingOperation.rebase:
+        return 'rebase';
+      case GitOngoingOperation.cherryPick:
+        return 'cherry-pick';
+      case GitOngoingOperation.revert:
+        return 'revert';
+      case GitOngoingOperation.none:
+        return '';
+    }
+  }
+
+  Future<Result<void, String>> _runGit(
+    String repoRoot,
+    String gitExecutable,
+    List<String> args,
+  ) async {
+    try {
+      final res = await Process.run(
+        gitExecutable,
+        args,
+        workingDirectory: repoRoot,
+      );
+      if (res.exitCode == 0) {
+        return const Success(null);
+      } else {
+        final err = (res.stderr as String).trim();
+        return Failure(err.isNotEmpty ? err : 'Git falhou com saída ${res.exitCode}');
+      }
+    } catch (e) {
+      return Failure('Erro ao executar git: $e');
+    }
+  }
+
+  bool _isMarker(String line, String marker) {
+    return line.startsWith(marker) &&
+        (line.length == marker.length ||
+            line[marker.length] == ' ' ||
+            line[marker.length] == '\r');
+  }
+
+  String _extractLabel(String line, String marker) {
+    if (line.length <= marker.length) return '';
+    return line.substring(marker.length).trim();
+  }
+}

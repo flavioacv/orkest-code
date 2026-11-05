@@ -1765,6 +1765,30 @@ class Translations$orkest$fileTreePanel$en {
 	/// en: 'Discard'
 	String get discardHunk => 'Discard';
 
+	/// en: '${count} unresolved merge conflict(s)'
+	String conflictsBanner({required Object count}) => '${count} unresolved merge conflict(s)';
+
+	/// en: 'Accept Current'
+	String get acceptAllOurs => 'Accept Current';
+
+	/// en: 'Accept Incoming'
+	String get acceptAllTheirs => 'Accept Incoming';
+
+	/// en: 'Accept Both'
+	String get acceptBoth => 'Accept Both';
+
+	/// en: 'Previous'
+	String get prevConflict => 'Previous';
+
+	/// en: 'Next'
+	String get nextConflict => 'Next';
+
+	/// en: 'Continue ${op}'
+	String continueGitOp({required Object op}) => 'Continue ${op}';
+
+	/// en: 'Abort ${op}'
+	String abortGitOp({required Object op}) => 'Abort ${op}';
+
 	/// en: 'Gallery'
 	String get galleryTooltip => 'Gallery';
 
@@ -4976,6 +5000,14 @@ extension on Translations {
 			'orkest.fileTreePanel.stageHunk' => 'Stage Hunk',
 			'orkest.fileTreePanel.unstageHunk' => 'Unstage Hunk',
 			'orkest.fileTreePanel.discardHunk' => 'Discard',
+			'orkest.fileTreePanel.conflictsBanner' => ({required Object count}) => '${count} unresolved merge conflict(s)',
+			'orkest.fileTreePanel.acceptAllOurs' => 'Accept Current',
+			'orkest.fileTreePanel.acceptAllTheirs' => 'Accept Incoming',
+			'orkest.fileTreePanel.acceptBoth' => 'Accept Both',
+			'orkest.fileTreePanel.prevConflict' => 'Previous',
+			'orkest.fileTreePanel.nextConflict' => 'Next',
+			'orkest.fileTreePanel.continueGitOp' => ({required Object op}) => 'Continue ${op}',
+			'orkest.fileTreePanel.abortGitOp' => ({required Object op}) => 'Abort ${op}',
 			'orkest.fileTreePanel.galleryTooltip' => 'Gallery',
 			'orkest.fileTreePanel.sectionGallery' => 'GALLERY',
 			'orkest.fileTreePanel.openAsHtml' => 'Open as HTML',
@@ -5001,6 +5033,8 @@ extension on Translations {
 			'orkest.realmDialogs.namePlaceholder' => 'Realm name',
 			'orkest.realmDialogs.duplicateName' => 'A realm with this name already exists.',
 			'orkest.realmDialogs.newRealmTitle' => 'New realm',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.realmDialogs.renameRealmTitle' => 'Rename realm',
 			'orkest.realmDialogs.rename' => 'Rename',
 			'orkest.realmDialogs.deleteRealmTitle' => 'Delete realm',
@@ -5009,8 +5043,6 @@ extension on Translations {
 			'orkest.realmDialogs.deleteSuffixMany' => ({required Object count}) => ' Its ${count} workspaces will move to Default.',
 			'orkest.realmDialogs.manageRealmsTitle' => 'Manage realms',
 			'orkest.realmDialogs.workspaceCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 workspace', other: '${n} workspaces', ), 
-			_ => null,
-		} ?? switch (path) {
 			'orkest.dbRedisTable.deleteKeyTitle' => 'Delete key',
 			'orkest.dbRedisTable.deleteKeyMessage' => ({required Object key}) => 'Delete "${key}" from this Redis database?',
 			'orkest.dbRedisTable.refresh' => 'Refresh',
@@ -5515,6 +5547,8 @@ extension on Translations {
 			'settings.page.terminal.engineDesc' => 'Used by new terminal tabs and task output buffers. Open tabs keep their current engine.',
 			'settings.page.terminal.shellTitle' => 'Shell',
 			'settings.page.terminal.shellDesc' => 'Which shell new terminal tabs open. The arrow next to + still opens any other one, just for that tab.',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.terminal.noWslMessage' => 'No WSL distros found. Install one (wsl.exe --install) and restart Orkest Code to see it listed here.',
 			'settings.page.terminal.sectionBehavior' => 'Behavior',
 			'settings.page.terminal.closeOnExitTitle' => 'Close tab when the shell exits',
@@ -5523,8 +5557,6 @@ extension on Translations {
 			'settings.page.appearance.themeTitle' => 'Theme',
 			'settings.page.appearance.themeDesc' => 'App colors, code highlighting and terminal palette.',
 			'settings.page.appearance.modeTitle' => 'Mode',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.appearance.modeDesc' => 'Which variant of the theme to use.',
 			'settings.page.appearance.modeOnlyDark' => ({required Object theme}) => '"${theme}" only ships a dark variant, so this has no effect.',
 			'settings.page.appearance.modeOnlyLight' => ({required Object theme}) => '"${theme}" only ships a light variant, so this has no effect.',

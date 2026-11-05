@@ -804,6 +804,14 @@ class _Translations$orkest$fileTreePanel$pt_BR extends Translations$orkest$fileT
 	@override String get stageHunk => 'Stage Trecho';
 	@override String get unstageHunk => 'Desfazer Stage';
 	@override String get discardHunk => 'Descartar';
+	@override String conflictsBanner({required Object count}) => '${count} conflito(s) de merge não resolvido(s)';
+	@override String get acceptAllOurs => 'Aceitar Atual';
+	@override String get acceptAllTheirs => 'Aceitar Entrante';
+	@override String get acceptBoth => 'Aceitar Ambos';
+	@override String get prevConflict => 'Anterior';
+	@override String get nextConflict => 'Próximo';
+	@override String continueGitOp({required Object op}) => 'Continuar ${op}';
+	@override String abortGitOp({required Object op}) => 'Abortar ${op}';
 	@override String get galleryTooltip => 'Galeria';
 	@override String get sectionGallery => 'GALERIA';
 	@override String get openAsHtml => 'Abrir como HTML';
@@ -2573,6 +2581,14 @@ extension on TranslationsPtBr {
 			'orkest.fileTreePanel.stageHunk' => 'Stage Trecho',
 			'orkest.fileTreePanel.unstageHunk' => 'Desfazer Stage',
 			'orkest.fileTreePanel.discardHunk' => 'Descartar',
+			'orkest.fileTreePanel.conflictsBanner' => ({required Object count}) => '${count} conflito(s) de merge não resolvido(s)',
+			'orkest.fileTreePanel.acceptAllOurs' => 'Aceitar Atual',
+			'orkest.fileTreePanel.acceptAllTheirs' => 'Aceitar Entrante',
+			'orkest.fileTreePanel.acceptBoth' => 'Aceitar Ambos',
+			'orkest.fileTreePanel.prevConflict' => 'Anterior',
+			'orkest.fileTreePanel.nextConflict' => 'Próximo',
+			'orkest.fileTreePanel.continueGitOp' => ({required Object op}) => 'Continuar ${op}',
+			'orkest.fileTreePanel.abortGitOp' => ({required Object op}) => 'Abortar ${op}',
 			'orkest.fileTreePanel.galleryTooltip' => 'Galeria',
 			'orkest.fileTreePanel.sectionGallery' => 'GALERIA',
 			'orkest.fileTreePanel.openAsHtml' => 'Abrir como HTML',
@@ -2598,6 +2614,8 @@ extension on TranslationsPtBr {
 			'orkest.realmDialogs.namePlaceholder' => 'Nome do realm',
 			'orkest.realmDialogs.duplicateName' => 'Já existe um realm com esse nome.',
 			'orkest.realmDialogs.newRealmTitle' => 'Novo realm',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.realmDialogs.renameRealmTitle' => 'Renomear realm',
 			'orkest.realmDialogs.rename' => 'Renomear',
 			'orkest.realmDialogs.deleteRealmTitle' => 'Excluir realm',
@@ -2606,8 +2624,6 @@ extension on TranslationsPtBr {
 			'orkest.realmDialogs.deleteSuffixMany' => ({required Object count}) => ' Os ${count} workspaces dele irão para o Padrão.',
 			'orkest.realmDialogs.manageRealmsTitle' => 'Gerenciar realms',
 			'orkest.realmDialogs.workspaceCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('pt'))(n, one: '1 workspace', other: '${n} workspaces', ), 
-			_ => null,
-		} ?? switch (path) {
 			'orkest.dbRedisTable.deleteKeyTitle' => 'Excluir chave',
 			'orkest.dbRedisTable.deleteKeyMessage' => ({required Object key}) => 'Excluir "${key}" deste banco Redis?',
 			'orkest.dbRedisTable.refresh' => 'Atualizar',
@@ -3112,6 +3128,8 @@ extension on TranslationsPtBr {
 			'settings.page.terminal.engineDesc' => 'Usado por novas abas de terminal e buffers de saída de tasks. Abas abertas mantêm o motor atual.',
 			'settings.page.terminal.shellTitle' => 'Shell',
 			'settings.page.terminal.shellDesc' => 'Qual shell novas abas de terminal abrem. A seta ao lado do + ainda abre qualquer outro, só para aquela aba.',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.terminal.noWslMessage' => 'Nenhuma distro WSL encontrada. Instale uma (wsl.exe --install) e reinicie o Orkest Code para vê-la listada aqui.',
 			'settings.page.terminal.sectionBehavior' => 'Comportamento',
 			'settings.page.terminal.closeOnExitTitle' => 'Fechar a aba quando o shell encerrar',
@@ -3120,8 +3138,6 @@ extension on TranslationsPtBr {
 			'settings.page.appearance.themeTitle' => 'Tema',
 			'settings.page.appearance.themeDesc' => 'Cores do app, realce de código e paleta do terminal.',
 			'settings.page.appearance.modeTitle' => 'Modo',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.appearance.modeDesc' => 'Qual variante do tema usar.',
 			'settings.page.appearance.modeOnlyDark' => ({required Object theme}) => '"${theme}" só traz a variante escura, então isto não tem efeito.',
 			'settings.page.appearance.modeOnlyLight' => ({required Object theme}) => '"${theme}" só traz a variante clara, então isto não tem efeito.',

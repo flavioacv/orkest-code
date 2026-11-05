@@ -9,8 +9,10 @@ import 'package:orkest_code/app/orkest/domain/entities/scm_line_decorations.dart
 import 'package:orkest_code/app/orkest/ui/session/file_viewer_session.dart';
 import 'package:orkest_code/app/orkest/ui/session/document_host.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/agent_markdown.dart';
+import 'package:orkest_code/app/orkest/domain/services/git_conflict_service.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/code_editor.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/file_find_bar.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/git_conflict_banner.dart';
 import 'package:orkest_code/app/core/data/lsp/lsp_command.dart';
 import 'package:orkest_code/app/core/data/lsp/lsp_launchers.dart';
 import 'package:orkest_code/app/core/data/lsp/lsp_text_edit.dart';
@@ -23,6 +25,7 @@ import 'package:orkest_code/app/core/ui/widgets/code_highlight.dart';
 import 'package:orkest_code/app/core/ui/widgets/selectable_scroll.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/media_view.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/web_markdown_preview.dart';
+import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
 import 'package:orkest_code/app/core/ui/widgets/app_tooltip.dart';
 import 'package:orkest_code/app/core/ui/widgets/hover_tap.dart';
@@ -124,6 +127,12 @@ class _FileViewerState extends State<FileViewer> {
   List<LspDiagnostic> _diagnostics = const <LspDiagnostic>[];
   List<SemanticRange> _semanticTokens = const <SemanticRange>[];
 
+  /// Conflitos Git (Merge / Rebase): detector, lista de blocos e navegação (G02).
+  final GitConflictService _conflictService = const GitConflictService();
+  List<ConflictBlock> _conflictBlocks = const <ConflictBlock>[];
+  int _currentConflictIndex = -1;
+  GitOngoingOperation _ongoingGitOp = GitOngoingOperation.none;
+
   /// `true` depois do 1º pedido de semantic tokens pra esta aba. Evita pedir à
   /// toa pra abas **inativas** (o `IndexedStack` mantém todas montadas, mas só
   /// a ativa é visível) — igual VSCode, que só computa semantic tokens do
@@ -206,6 +215,7 @@ class _FileViewerState extends State<FileViewer> {
     _crlf = text.contains('\r\n');
     _ctrl = CodeEditingController(text: text, language: _language)
       ..addListener(_onCtrlChanged);
+    _updateConflictState();
     // Expõe o save do buffer à sessão pro "Salvar e fechar" (limpo no dispose).
     widget.session.saveDraft = _save;
     _ensureAndBindScm(_ctrl!);
@@ -493,6 +503,7 @@ class _FileViewerState extends State<FileViewer> {
     // não recursar e pra não churnar o LSP à toa.
     if (_settingMatches) return;
     _updateDirty(_ctrl != null && _ctrl!.text != _baseline);
+    _updateConflictState();
     // Buffer mudou com a busca aberta → os offsets deslocaram; recasa.
     if (_findOpen && _findCtrl.text.isNotEmpty) _recomputeFind(reveal: false);
     // Edição do usuário → notifica o LSP (debounced p/ juntar rajada de teclas).
@@ -516,6 +527,108 @@ class _FileViewerState extends State<FileViewer> {
   void _updateDirty(bool value) {
     if (value != _dirty) setState(() => _dirty = value);
     widget.session.setDirty(value);
+  }
+
+  void _updateConflictState() {
+    final text = _ctrl?.text;
+    if (text == null || !_conflictService.hasConflictMarkers(text)) {
+      if (_conflictBlocks.isNotEmpty) {
+        setState(() {
+          _conflictBlocks = const <ConflictBlock>[];
+          _currentConflictIndex = -1;
+          _ongoingGitOp = GitOngoingOperation.none;
+        });
+      }
+      return;
+    }
+
+    final blocks = _conflictService.parseConflicts(text);
+    final repoRoot = _findRepoRoot();
+    final op = repoRoot != null
+        ? _conflictService.detectOngoingOperation(repoRoot)
+        : GitOngoingOperation.none;
+
+    setState(() {
+      _conflictBlocks = blocks;
+      if (blocks.isEmpty) {
+        _currentConflictIndex = -1;
+      } else if (_currentConflictIndex < 0 || _currentConflictIndex >= blocks.length) {
+        _currentConflictIndex = 0;
+      }
+      _ongoingGitOp = op;
+    });
+  }
+
+  String? _findRepoRoot() {
+    try {
+      var dir = Directory(widget.session.path).parent;
+      while (dir.path != dir.parent.path) {
+        if (Directory('${dir.path}/.git').existsSync()) {
+          return dir.path;
+        }
+        dir = dir.parent;
+      }
+    } catch (_) {}
+    if (Directory(widget.session.projectId).existsSync()) {
+      return widget.session.projectId;
+    }
+    return null;
+  }
+
+  void _nextConflict() {
+    if (_conflictBlocks.isEmpty) return;
+    final nextIndex = (_currentConflictIndex + 1) % _conflictBlocks.length;
+    setState(() => _currentConflictIndex = nextIndex);
+    final block = _conflictBlocks[nextIndex];
+    widget.session.reveal(block.startLine, select: false);
+  }
+
+  void _prevConflict() {
+    if (_conflictBlocks.isEmpty) return;
+    final prevIndex =
+        (_currentConflictIndex - 1 + _conflictBlocks.length) % _conflictBlocks.length;
+    setState(() => _currentConflictIndex = prevIndex);
+    final block = _conflictBlocks[prevIndex];
+    widget.session.reveal(block.startLine, select: false);
+  }
+
+  void _resolveCurrentConflict(ConflictResolution resolution) {
+    final ctrl = _ctrl;
+    if (ctrl == null || _conflictBlocks.isEmpty) return;
+    final index = _currentConflictIndex >= 0 && _currentConflictIndex < _conflictBlocks.length
+        ? _currentConflictIndex
+        : 0;
+    final block = _conflictBlocks[index];
+    final updated = _conflictService.resolveBlock(
+      text: ctrl.text,
+      block: block,
+      resolution: resolution,
+    );
+    _applyToBuffer(updated);
+  }
+
+  Future<void> _continueGitOperation() async {
+    final repoRoot = _findRepoRoot();
+    if (repoRoot == null) return;
+    final res = await _conflictService.continueOperation(repoRoot: repoRoot);
+    if (!mounted) return;
+    if (res case Failure(:final error)) {
+      DiagnosticsLog.instance.warn('file-viewer', 'git continue failed: $error');
+    } else {
+      _updateConflictState();
+    }
+  }
+
+  Future<void> _abortGitOperation() async {
+    final repoRoot = _findRepoRoot();
+    if (repoRoot == null) return;
+    final res = await _conflictService.abortOperation(repoRoot: repoRoot);
+    if (!mounted) return;
+    if (res case Failure(:final error)) {
+      DiagnosticsLog.instance.warn('file-viewer', 'git abort failed: $error');
+    } else {
+      await _reloadFromDisk();
+    }
   }
 
   void _toggleEditing() {
@@ -1048,6 +1161,27 @@ class _FileViewerState extends State<FileViewer> {
               onToggleCase: () => _toggleFind(() => _findCase = !_findCase),
               onToggleWord: () => _toggleFind(() => _findWord = !_findWord),
               onToggleRegex: () => _toggleFind(() => _findRegex = !_findRegex),
+            ),
+          ),
+        if (_conflictBlocks.isNotEmpty)
+          Positioned(
+            top: widget.session.hasDiskConflict ? 42 : 8,
+            left: 16,
+            right: _findOpen ? 360 : 16,
+            child: Align(
+              alignment: Alignment.topCenter,
+              child: GitConflictBanner(
+                conflictCount: _conflictBlocks.length,
+                currentIndex: _currentConflictIndex,
+                onNext: _nextConflict,
+                onPrev: _prevConflict,
+                onAcceptOurs: () => _resolveCurrentConflict(ConflictResolution.ours),
+                onAcceptTheirs: () => _resolveCurrentConflict(ConflictResolution.theirs),
+                onAcceptBoth: () => _resolveCurrentConflict(ConflictResolution.both),
+                ongoingOperation: _ongoingGitOp,
+                onContinueOperation: _ongoingGitOp != GitOngoingOperation.none ? _continueGitOperation : null,
+                onAbortOperation: _ongoingGitOp != GitOngoingOperation.none ? _abortGitOperation : null,
+              ),
             ),
           ),
         if (widget.session.hasDiskConflict)

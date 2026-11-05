@@ -16,6 +16,7 @@ import 'package:orkest_code/app/orkest/domain/entities/git_file_status.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_branch.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_info.dart';
 import 'package:orkest_code/app/orkest/domain/exceptions/git_branch_error.dart';
+import 'package:orkest_code/app/orkest/domain/services/git_conflict_service.dart';
 import 'package:orkest_code/app/orkest/domain/services/git_hunk_service.dart';
 import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:orkest_code/app/core/ui/window_activity_controller.dart';
@@ -437,6 +438,36 @@ class GitController extends ChangeNotifier {
       relativePath: relativePath,
       hunk: hunk,
     );
+    if (result.isSuccess) {
+      markHistoryStale();
+      final pid = selectedProjectId?.call();
+      if (pid != null) unawaited(refresh(pid));
+    }
+    return result;
+  }
+
+  // ---- resolução de conflitos e operações Git (G02) -------------------------
+
+  final GitConflictService _conflictService = const GitConflictService();
+
+  /// Detecta se há uma operação Git em andamento (merge, rebase, cherry-pick ou revert).
+  GitOngoingOperation detectOngoingOperation(String root) =>
+      _conflictService.detectOngoingOperation(root);
+
+  /// Continua a operação Git em andamento (`git merge --continue`, `git rebase --continue`, etc).
+  Future<Result<void, String>> continueOperation(String root) async {
+    final result = await _conflictService.continueOperation(repoRoot: root);
+    if (result.isSuccess) {
+      markHistoryStale();
+      final pid = selectedProjectId?.call();
+      if (pid != null) unawaited(refresh(pid));
+    }
+    return result;
+  }
+
+  /// Aborta a operação Git em andamento (`git merge --abort`, `git rebase --abort`, etc).
+  Future<Result<void, String>> abortOperation(String root) async {
+    final result = await _conflictService.abortOperation(repoRoot: root);
     if (result.isSuccess) {
       markHistoryStale();
       final pid = selectedProjectId?.call();
