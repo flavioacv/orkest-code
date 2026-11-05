@@ -534,6 +534,9 @@ Destino: Tasks, SSH e serviços remotos existentes.
 
 Aceite: Provar logs/inspect/Compose e tarefas build úteis; deployment com preview de diferenças e confirmação; selecionar demandas reais e não instalar ferramentas automaticamente.
 
+Entrega: Implementação da infraestrutura formal de avaliação e execução de Docker/Podman, build contextual e deployment seguro: modelos imutáveis `DockerContainerStatus`, `DockerContainer`, `DockerInspectReport`, enum `BuildTaskKind`, `UsefulBuildTask`, `DeploymentDiffKind`, `DeploymentDiffEntry` e `DeploymentPlan` em `cockpit/lib/app/core/domain/entities/docker_build_deploy.dart`; serviços especializados em `cockpit/lib/app/core/domain/services/docker_build_deploy_service.dart`: `DockerInspectionParser` decodificando saídas JSON de `docker ps` e relatórios de `docker inspect` (status, IP, portas mapeadas, volumes e restart policies), `UsefulBuildTaskDetector` reconhecendo manifestos reais do projeto (`pubspec.yaml`, `Cargo.toml`, `package.json`, `go.mod`, `Makefile`, `Dockerfile`, `compose.yaml`) sem jamais instalar ferramentas ou dependências de forma arbitrária no host, e `DeploymentPlanService` calculando diferenças detalhadas entre origem e destino (`added`, `modified`, `deleted`, `unchanged`) com pré-visualização de volume de bytes e bloqueio obrigatório contra execuções sem confirmação humana explícita (`isConfirmed == true`).
+Validação: 5 testes unitários dedicados em `cockpit/test/domain/docker_build_deploy_test.dart`; 31 testes da suíte combinada aprovados com 100% de sucesso; análise estática `dart analyze --fatal-infos` 100% limpa (0 issues). Concluído em 05/11/2026. Detalhes em `plan/72-avaliacao-docker-build-deployment.md`.
+
 ### X04 — Avaliar notebooks e extensões
 
 Prioridade P3 · Porte L · Dependências: A04, W02.
