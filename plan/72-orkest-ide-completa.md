@@ -257,6 +257,9 @@ Destino: Operações de arquivo e editor existentes.
 
 Aceite: Rename, quick fixes, organização de imports e formatação com preview de múltiplos arquivos; validar versões antes de aplicar e recuperar/undo em falha parcial.
 
+Entrega: Implementação da infraestrutura completa de refatoração semântica, renomeação e workspace edits seguros: decodificador e modelos universais `LspWorkspaceEdit`, `LspTextDocumentEdit`, `LspPrepareRenameResult` e operações de recursos (`create`, `rename`, `delete`) em `cockpit/lib/app/core/domain/entities/lsp_workspace_edit.dart`; catálogo de ações de código `LspCodeAction` e `LspCodeActionKind` (`quickfix`, `refactor`, `source.organizeImports`) em `cockpit/lib/app/core/domain/entities/lsp_code_action.dart`; serviço de execução segura `SafeWorkspaceEditService` (`cockpit/lib/app/core/domain/services/safe_workspace_edit_service.dart`) fornecendo preview em memória com diffs por arquivo, bloqueio imediato em divergência de versão do documento (`document.version`), execução transacional com rollback automático atômico em caso de falha de gravação/permissão, e geração de token de reversão global (undo atômico); e integração de operações no `LspServerPool` (`prepareRename`, `rename`, `codeActions`, `resolveCodeAction`, `organizeImports` e `formatDocument`).
+Validação: 12 testes unitários e de integração aprovados em `cockpit/test/domain/lsp_workspace_edit_test.dart` (4), `cockpit/test/domain/safe_workspace_edit_service_test.dart` (4) e `cockpit/test/integration/lsp_refactoring_and_rename_test.dart` (4); suíte combinada de navegação e refatoração com 25 testes aprovados; análise estática `dart analyze --fatal-infos` com 0 erros e 0 alertas. Concluído em 05/11/2026. Detalhes em `plan/72-refatoracao-workspace-edits-seguros.md`.
+
 ### L05 — Homologar linguagens por níveis de capacidade
 
 Prioridade P1 · Porte L · Dependências: L02, L03, L04.

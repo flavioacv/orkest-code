@@ -16,13 +16,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
       Diretriz 04/11: avaliar quando houver necessidade de desempenho identificada; não bloqueia entregas funcionais em Dart.
 
-- [ ] L05 · Homologar linguagens por níveis de capacidade <!-- id: L05 labels: P1, linguagens blockedBy: L02, L03, L04 -->
-      Porte: L. Dependências: L02, L03, L04.
-      Origem: 77 definições e fixtures OpenIDEA.
-      Destino: Catálogo e fixtures de teste do Orkest.
-      Aceite: Matriz executada para Dart/Flutter, TS/JS, Python, Rust e Go; fase seguinte Java/C#/PHP; Vue/Svelte/HTML/CSS/JSON/YAML/SQL por demanda; registrar SDK/server/adapter e recurso não suportado sem prometer paridade.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] L06 · Avaliar inteligência avançada e análise estrutural <!-- id: L06 labels: P2, linguagens blockedBy: L05 -->
       Porte: L. Dependências: L05.
       Origem: ide-analysis, ide-syntax; code lens/inlay/hierarchies.
@@ -140,11 +133,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] L04 · Entregar refatoração e workspace edits seguros <!-- id: L04 labels: P1, linguagens blockedBy: L02, W03 -->
-      Porte: L. Dependências: L02, W03.
-      Origem: src/editor/refactor; apply/prepare/undo workspace edit.
-      Destino: Operações de arquivo e editor existentes.
-      Aceite: Rename, quick fixes, organização de imports e formatação com preview de múltiplos arquivos; validar versões antes de aplicar e recuperar/undo em falha parcial.
+- [ ] L05 · Homologar linguagens por níveis de capacidade <!-- id: L05 labels: P1, linguagens blockedBy: L02, L03, L04 -->
+      Porte: L. Dependências: L02, L03, L04.
+      Origem: 77 definições e fixtures OpenIDEA.
+      Destino: Catálogo e fixtures de teste do Orkest.
+      Aceite: Matriz executada para Dart/Flutter, TS/JS, Python, Rust e Go; fase seguinte Java/C#/PHP; Vue/Svelte/HTML/CSS/JSON/YAML/SQL por demanda; registrar SDK/server/adapter e recurso não suportado sem prometer paridade.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -163,6 +156,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] L04 · Entregar refatoração e workspace edits seguros <!-- id: L04 labels: P1, linguagens blockedBy: L02, W03 -->
+      Entrega: Infraestrutura completa de refatoração semântica, renomeação e workspace edits seguros: decodificadores e modelos LspWorkspaceEdit, LspTextDocumentEdit, LspPrepareRenameResult e operações estruturadas de recursos (create, rename, delete); catálogo de ações de código LspCodeAction e LspCodeActionKind (quickfix, refactor, source.organizeImports); serviço transacional SafeWorkspaceEditService com geração de preview em memória com diffs por arquivo, verificação de compatibilidade de versões de documentos abertos (prevenindo version mismatch), execução atômica com rollback automático em caso de falhas parciais de gravação/I/O, e geração de token de reversão global (undo atômico); e integração de métodos no LspServerPool (prepareRename, rename, codeActions, resolveCodeAction, organizeImports e formatDocument).
+      Aceite: Rename, quick fixes, organização de imports e formatação com preview de múltiplos arquivos; validar versões antes de aplicar e recuperar/undo em falha parcial.
+      Validação: 12 testes unitários e de integração dedicados aprovados em test/domain/lsp_workspace_edit_test.dart, test/domain/safe_workspace_edit_service_test.dart e test/integration/lsp_refactoring_and_rename_test.dart; 25 testes da suíte combinada aprovados sem regressões; análise estática dart analyze --fatal-infos limpa (zero issues).
+      Plano: [detalhamento e arquitetura](72-refatoracao-workspace-edits-seguros.md).
 
 - [x] L03 · Adicionar navegação semântica e busca unificada <!-- id: L03 labels: P1, linguagens blockedBy: L02, W02 -->
       Entrega: Implementação da navegação semântica e busca unificada de símbolos: parser e modelo LspLocation (Location e LocationLink), LspSymbolKind com 26 categorias de símbolos da spec LSP, LspDocumentSymbol recursivo para outlines hierárquicos e planos legados (parseDocumentSymbols), histórico de saltos semânticos com Go Back e Go Forward (SemanticNavigationHistory com FIFO cap de 50 entradas e invalidação da pilha de avanço em novos saltos), e operações assíncronas no pool de servidores LspServerPool (implementation, references com includeDeclaration configurável, documentSymbols e workspaceSymbols com query string).
