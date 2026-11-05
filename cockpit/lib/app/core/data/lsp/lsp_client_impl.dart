@@ -169,6 +169,16 @@ class LspClientImpl implements LspClient {
             'dynamicRegistration': false,
             'contentFormat': <String>['plaintext'],
           },
+          'signatureHelp': <String, dynamic>{
+            'dynamicRegistration': false,
+            'signatureInformation': <String, dynamic>{
+              'documentationFormat': <String>['plaintext'],
+              'parameterInformation': <String, dynamic>{
+                'labelOffsetSupport': true,
+              },
+              'activeParameterSupport': true,
+            },
+          },
           // Spec exige `requests`/`tokenTypes`/`tokenModifiers`/`formats` —
           // sem eles o Dart analysis server rejeita o `initialize` inteiro
           // (params.capabilities.textDocument.semanticTokens.formats must

@@ -64,6 +64,10 @@ class _FakeClient implements LspClient {
       _shared.hoverParams = params;
       return _shared.hoverGate?.future ?? const Success(null);
     }
+    if (method == 'textDocument/signatureHelp') {
+      _shared.signatureParams = params;
+      return _shared.signatureGate?.future ?? const Success(null);
+    }
     return const Success(null);
   }
 
@@ -101,6 +105,8 @@ class _Shared {
   Completer<Result<Object?, LspError>>? semanticGate;
   Completer<Result<Object?, LspError>>? hoverGate;
   Map<String, dynamic>? hoverParams;
+  Completer<Result<Object?, LspError>>? signatureGate;
+  Map<String, dynamic>? signatureParams;
 }
 
 class _FakeFactory implements LspClientFactory {
@@ -125,6 +131,52 @@ void main() {
     dartFile = '${tmp.path}/main.dart';
   });
   tearDown(() => tmp.deleteSync(recursive: true));
+
+  test(
+    'signature help routes the caret position and parses the response',
+    () async {
+      final shared = _Shared()
+        ..signatureGate = Completer<Result<Object?, LspError>>();
+      final pool = LspServerPool(_FakeFactory(shared));
+      addTearDown(pool.dispose);
+      await pool.openDocument(path: dartFile, text: 'call(');
+      final reply = pool.signatureHelp(dartFile, 0, 5);
+      expect(shared.signatureParams?['position'], {'line': 0, 'character': 5});
+      shared.signatureGate!.complete(
+        const Success({
+          'signatures': [
+            {'label': 'call(int value)'},
+          ],
+        }),
+      );
+      expect(await reply, 'call(int value)');
+    },
+  );
+
+  for (final mutation in ['edit', 'reopen']) {
+    test('signature help discards a delayed reply after $mutation', () async {
+      final shared = _Shared()
+        ..signatureGate = Completer<Result<Object?, LspError>>();
+      final pool = LspServerPool(_FakeFactory(shared));
+      addTearDown(pool.dispose);
+      await pool.openDocument(path: dartFile, text: 'call(');
+      final reply = pool.signatureHelp(dartFile, 0, 5);
+      if (mutation == 'edit') {
+        await pool.changeDocument(path: dartFile, text: 'other(');
+      } else {
+        await pool.closeDocument(dartFile);
+        await pool.openDocument(path: dartFile, text: 'call(');
+      }
+      shared.signatureGate!.complete(
+        const Success({
+          'signatures': [
+            {'label': 'Old signature'},
+          ],
+        }),
+      );
+      expect(await reply, isNull);
+    });
+  }
 
   test('hover routes UTF-16 position and parses the server response', () async {
     final shared = _Shared()

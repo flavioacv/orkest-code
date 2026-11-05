@@ -2698,6 +2698,18 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
     return _lsp.hover(path, line, character);
   }
 
+  /// Atualiza o buffer antes de consultar os parâmetros da chamada.
+  @override
+  Future<String?> lspSignatureHelp(
+    String path,
+    String text,
+    int line,
+    int character,
+  ) async {
+    await _lsp.changeDocument(path: path, text: text);
+    return _lsp.signatureHelp(path, line, character);
+  }
+
   /// Go to definition: resolve location no servidor, abre arquivo + revela linha.
   /// No-op silencioso se sem servidor / sem definição / erro.
   @override

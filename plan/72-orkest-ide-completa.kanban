@@ -298,6 +298,14 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em revisão
 
+- [ ] L02b · Exibir parâmetros das chamadas durante edição <!-- id: L02b labels: P1, linguagens blockedBy: L02a -->
+      Entrega: signatureHelp automático em parêntese/vírgula, atalho Ctrl+Shift+Espaço, sobrecarga/parâmetro ativos e documentação em texto simples.
+      Aceite: descarte por versão/seleção/geração; Escape, perda de foco, scroll e troca de documento encerram a ajuda; nenhuma mudança no texto pelo atalho.
+      Validação: 70 testes aprovados, incluindo servidor Dart real; análise estática limpa e telemetria r_24 sem erros/avisos.
+      Fluxo: commits locais somente em fix/harness-state-detection; sem push ou PR.
+      Detalhes: [ajuda de assinatura](72-ajuda-assinatura.md). Completion permanece pendente em L02.
+
+
 - [ ] L02a · Mostrar informações semânticas ao apontar para símbolos <!-- id: L02a labels: P1, linguagens blockedBy: L00 -->
       Entrega: hover LSP com debounce, posição UTF-16 e tooltip integrado aos diagnósticos, em texto simples.
       Aceite: descartar resposta após edição, troca/fechamento, movimento ou scroll; respeitar navegação e host standalone sem LSP.

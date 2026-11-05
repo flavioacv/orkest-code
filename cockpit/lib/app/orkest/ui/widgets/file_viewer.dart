@@ -984,6 +984,12 @@ class _FileViewerState extends State<FileViewer> {
               pos.line,
               pos.character,
             ),
+            onSignatureHelp: (pos) async => _vm?.lspSignatureHelp(
+              widget.session.path,
+              ctrl.text,
+              pos.line,
+              pos.character,
+            ),
           ),
         ),
         if (_findOpen)

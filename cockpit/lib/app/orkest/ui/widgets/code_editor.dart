@@ -60,6 +60,7 @@ class CodeEditor extends StatefulWidget {
     this.revealMatchTick = 0,
     this.onGoToDefinition,
     this.onSymbolHover,
+    this.onSignatureHelp,
     this.filePath,
   });
 
@@ -71,6 +72,9 @@ class CodeEditor extends StatefulWidget {
 
   /// Informação semântica fornecida pelo servidor para a posição UTF-16.
   final Future<String?> Function(({int line, int character}))? onSymbolHover;
+
+  /// Parâmetros da chamada na posição UTF-16 do caret.
+  final Future<String?> Function(({int line, int character}))? onSignatureHelp;
 
   /// Caminho do arquivo (só a extensão é usada: fallback da largura de
   /// indentação quando o conteúdo não dá pista). `null` = 4 espaços.
@@ -131,14 +135,18 @@ class _CodeEditorState extends State<CodeEditor> {
   void initState() {
     super.initState();
     _hoverBuffer = widget.controller.text;
+    _signatureSelection = widget.controller.selection;
+    widget.focusNode.addListener(_onSignatureFocusChanged);
     _rebuildLineStarts();
     // Recontar linhas (gutter) a cada digitação que muda o nº de '\n'.
     widget.controller.addListener(_onChanged);
     widget.controller.addListener(_keepHorizontalOnSelection);
     _horizontal.addListener(_onHorizontalScroll);
     _horizontal.addListener(_invalidateSymbolHover);
+    _horizontal.addListener(_dismissSignature);
     _vertical.addListener(_syncGutter);
     _vertical.addListener(_invalidateSymbolHover);
+    _vertical.addListener(_dismissSignature);
     if (widget.revealLine != null) _scheduleReveal(widget.revealLine!);
   }
 
@@ -203,17 +211,24 @@ class _CodeEditorState extends State<CodeEditor> {
   @override
   void didUpdateWidget(CodeEditor old) {
     super.didUpdateWidget(old);
+    if (old.focusNode != widget.focusNode) {
+      old.focusNode.removeListener(_onSignatureFocusChanged);
+      widget.focusNode.addListener(_onSignatureFocusChanged);
+      _dismissSignature();
+    }
     if (old.controller != widget.controller) {
       old.controller.removeListener(_onChanged);
       old.controller.removeListener(_keepHorizontalOnSelection);
       widget.controller.addListener(_onChanged);
       widget.controller.addListener(_keepHorizontalOnSelection);
       _hoverBuffer = widget.controller.text;
+      _signatureSelection = widget.controller.selection;
       _rebuildLineStarts();
     }
     if (old.filePath != widget.filePath ||
         old.controller != widget.controller) {
       _invalidateSymbolHover();
+      _dismissSignature();
       _hoverLine = null;
       _hoverMsgs = const [];
     }
@@ -394,6 +409,12 @@ class _CodeEditorState extends State<CodeEditor> {
   int? _hoverSymbolStart;
   int _hoverRequest = 0;
   Timer? _hoverTimer;
+  Timer? _signatureTimer;
+  int _signatureRequest = 0;
+  bool _signatureActive = false;
+  String? _signatureText;
+  ({int line, int character})? _signaturePosition;
+  TextSelection? _signatureSelection;
   double _hoverDx = 0;
 
   // Go-to-definition: detecta modificador (Cmd/Ctrl) + hover + tap.
@@ -503,11 +524,72 @@ class _CodeEditorState extends State<CodeEditor> {
     if (_hoverInfo != null && mounted) setState(() => _hoverInfo = null);
   }
 
+  void _onSignatureFocusChanged() {
+    if (!widget.focusNode.hasFocus) _dismissSignature();
+  }
+
+  void _dismissSignature() {
+    _signatureTimer?.cancel();
+    _signatureRequest++;
+    _signatureActive = false;
+    _signaturePosition = null;
+    if (_signatureText != null && mounted) {
+      setState(() => _signatureText = null);
+    }
+  }
+
+  void _queueSignature() {
+    final callback = widget.onSignatureHelp;
+    final selection = widget.controller.selection;
+    if (callback == null ||
+        !selection.isValid ||
+        !selection.isCollapsed ||
+        !widget.focusNode.hasFocus) {
+      _dismissSignature();
+      return;
+    }
+    _dismissSignature();
+    _invalidateSymbolHover();
+    _signatureActive = true;
+    final request = _signatureRequest;
+    final text = widget.controller.text;
+    final position = widget.controller.offsetToLineChar(selection.extentOffset);
+    _signatureTimer = Timer(const Duration(milliseconds: 150), () async {
+      try {
+        final info = await callback(position);
+        if (!mounted ||
+            request != _signatureRequest ||
+            widget.controller.text != text ||
+            widget.controller.selection != selection ||
+            !widget.focusNode.hasFocus) {
+          return;
+        }
+        setState(() {
+          _signatureText = info;
+          _signaturePosition = info == null ? null : position;
+          _signatureActive = info != null;
+        });
+      } catch (error, stack) {
+        if (mounted && request == _signatureRequest) _dismissSignature();
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stack,
+            library: 'Orkest signature help',
+          ),
+        );
+      }
+    });
+  }
+
   void _requestSymbolHover(PointerHoverEvent event) {
     final callback = widget.onSymbolHover;
     final offset = _offsetForHover(event);
     final range = offset == null ? null : widget.controller.wordRangeAt(offset);
-    if (callback == null || range == null || _definitionModeActive) {
+    if (callback == null ||
+        range == null ||
+        _definitionModeActive ||
+        _signatureActive) {
       _invalidateSymbolHover();
       return;
     }
@@ -613,6 +695,19 @@ class _CodeEditorState extends State<CodeEditor> {
     final cmd =
         (Platform.isMacOS && keys.isMetaPressed) || keys.isControlPressed;
     final key = event.logicalKey;
+    if (key == LogicalKeyboardKey.escape && _signatureActive) {
+      _cancelChord();
+      _dismissSignature();
+      return KeyEventResult.handled;
+    }
+    if (key == LogicalKeyboardKey.space &&
+        keys.isControlPressed &&
+        keys.isShiftPressed &&
+        widget.onSignatureHelp != null) {
+      _cancelChord();
+      _queueSignature();
+      return KeyEventResult.handled;
+    }
     if (_chordPending) {
       _cancelChord();
       if (key == LogicalKeyboardKey.keyC) {
@@ -684,9 +779,26 @@ class _CodeEditorState extends State<CodeEditor> {
   }
 
   void _onChanged() {
-    if (_hoverBuffer != widget.controller.text) {
+    final textChanged = _hoverBuffer != widget.controller.text;
+    final selection = widget.controller.selection;
+    final selectionChanged = selection != _signatureSelection;
+    _signatureSelection = selection;
+    if (textChanged) {
       _hoverBuffer = widget.controller.text;
       _invalidateSymbolHover();
+    }
+    if ((textChanged || selectionChanged) && widget.focusNode.hasFocus) {
+      final offset = selection.extentOffset;
+      final trigger =
+          textChanged &&
+          selection.isCollapsed &&
+          offset > 0 &&
+          offset <= widget.controller.text.length &&
+          const {
+            40,
+            44,
+          }.contains(widget.controller.text.codeUnitAt(offset - 1));
+      if (_signatureActive || trigger) _queueSignature();
     }
     _rebuildLineStarts();
     final n = '\n'.allMatches(widget.controller.text).length + 1;
@@ -709,6 +821,9 @@ class _CodeEditorState extends State<CodeEditor> {
 
   @override
   void dispose() {
+    _signatureTimer?.cancel();
+    _signatureRequest++;
+    widget.focusNode.removeListener(_onSignatureFocusChanged);
     _hoverTimer?.cancel();
     _hoverRequest++;
     _chordTimer?.cancel();
@@ -716,8 +831,10 @@ class _CodeEditorState extends State<CodeEditor> {
     widget.controller.removeListener(_keepHorizontalOnSelection);
     _horizontal.removeListener(_onHorizontalScroll);
     _horizontal.removeListener(_invalidateSymbolHover);
+    _horizontal.removeListener(_dismissSignature);
     _vertical.removeListener(_syncGutter);
     _vertical.removeListener(_invalidateSymbolHover);
+    _vertical.removeListener(_dismissSignature);
     widget.controller.definitionHoverRange = null;
     _vertical.dispose();
     _horizontal.dispose();
@@ -862,11 +979,47 @@ class _CodeEditorState extends State<CodeEditor> {
             builder: (context, viewport) => Stack(
               children: [
                 _editorScroll(),
-                if ((_hoverMsgs.isNotEmpty || _hoverInfo != null) &&
+                if (_signatureText != null && _signaturePosition != null)
+                  _signatureOverlay(
+                    context,
+                    viewport.maxWidth,
+                    viewport.maxHeight,
+                  )
+                else if ((_hoverMsgs.isNotEmpty || _hoverInfo != null) &&
                     _hoverLine != null)
                   _hoverOverlay(context, viewport.maxWidth),
               ],
             ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _signatureOverlay(BuildContext context, double width, double height) {
+    final scroll = _vertical.hasClients ? _vertical.offset : 0.0;
+    final top =
+        (_padTop + (_signaturePosition!.line + 1) * _lineHeight - scroll).clamp(
+          0.0,
+          (height - 110).clamp(0.0, height),
+        );
+    return Positioned(
+      left: (_gutterWidth + 8).clamp(0.0, (width - 100).clamp(0.0, width)),
+      top: top,
+      right: 8,
+      child: IgnorePointer(
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 7),
+          decoration: BoxDecoration(
+            color: context.colors.panel2,
+            borderRadius: BorderRadius.circular(7),
+            border: Border.all(color: context.colors.border),
+          ),
+          child: Text(
+            _signatureText!,
+            maxLines: 6,
+            overflow: TextOverflow.ellipsis,
+            style: context.typo.label.copyWith(color: context.colors.text),
           ),
         ),
       ),

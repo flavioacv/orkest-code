@@ -4,6 +4,7 @@ import 'dart:io';
 import 'package:orkest_code/app/core/data/lsp/lsp_command.dart';
 import 'package:orkest_code/app/core/data/lsp/lsp_launchers.dart';
 import 'package:orkest_code/app/core/data/lsp/lsp_hover.dart';
+import 'package:orkest_code/app/core/data/lsp/lsp_signature_help.dart';
 import 'package:orkest_code/app/core/data/lsp/lsp_text_edit.dart';
 import 'package:orkest_code/app/core/data/lsp/project_root_finder.dart';
 import 'package:orkest_code/app/core/domain/contracts/lsp_client.dart';
@@ -304,6 +305,19 @@ class LspServerPool {
     });
     if (!identical(_docs[path], doc) || doc.version != version) return null;
     return result.fold(parseHoverText, (_) => null);
+  }
+
+  /// Assinatura da chamada, validada contra a versão atual do documento.
+  Future<String?> signatureHelp(String path, int line, int character) async {
+    final doc = _docs[path];
+    if (doc == null || line < 0 || character < 0) return null;
+    final version = doc.version;
+    final result = await requestForPath(path, 'textDocument/signatureHelp', {
+      'textDocument': {'uri': Uri.file(path).toString()},
+      'position': {'line': line, 'character': character},
+    });
+    if (!identical(_docs[path], doc) || doc.version != version) return null;
+    return result.fold(parseSignatureHelpText, (_) => null);
   }
 
   /// `textDocument/definition` — definição de símbolo na posição.

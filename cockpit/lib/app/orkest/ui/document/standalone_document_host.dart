@@ -96,6 +96,14 @@ class StandaloneDocumentHost implements DocumentHost {
   Future<String?> lspHover(String path, String text, int line, int character) =>
       Future.value(null);
 
+  @override
+  Future<String?> lspSignatureHelp(
+    String path,
+    String text,
+    int line,
+    int character,
+  ) => Future.value(null);
+
   // ---- filesystem ----------------------------------------------------------
 
   @override
