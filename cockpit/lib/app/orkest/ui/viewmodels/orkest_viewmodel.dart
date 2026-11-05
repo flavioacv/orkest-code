@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/core/domain/entities/lsp_completion.dart';
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io'
@@ -2709,6 +2710,24 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
     await _lsp.changeDocument(path: path, text: text);
     return _lsp.signatureHelp(path, line, character);
   }
+
+  /// Sincroniza o buffer antes de consultar as sugestões do servidor.
+  @override
+  Future<List<LspCompletionItem>> lspCompletions(
+    String path,
+    String text,
+    int line,
+    int character,
+  ) async {
+    await _lsp.changeDocument(path: path, text: text);
+    return _lsp.completions(path, line, character);
+  }
+
+  @override
+  Future<LspCompletionItem?> lspResolveCompletion(
+    String path,
+    LspCompletionItem item,
+  ) => _lsp.resolveCompletion(path, item);
 
   /// Go to definition: resolve location no servidor, abre arquivo + revela linha.
   /// No-op silencioso se sem servidor / sem definição / erro.

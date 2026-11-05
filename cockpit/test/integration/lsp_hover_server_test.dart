@@ -3,6 +3,8 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orkest_code/app/core/data/lsp/lsp_client_impl.dart';
 import 'package:orkest_code/app/core/data/lsp/lsp_hover.dart';
+import 'package:orkest_code/app/core/data/lsp/lsp_completion.dart';
+import 'package:orkest_code/app/core/domain/services/lsp_completion_edits.dart';
 import 'package:orkest_code/app/core/data/lsp/lsp_signature_help.dart';
 import 'package:orkest_code/app/core/domain/contracts/lsp_client.dart';
 import 'package:path/path.dart' as p;
@@ -46,6 +48,15 @@ void main() {
       final parameters = signature.fold(parseSignatureHelpText, (_) => null);
       expect(parameters, contains('print('));
       expect(parameters, contains('object'));
+      final completion = await client.request('textDocument/completion', {
+        'textDocument': {'uri': file.uri.toString()},
+        'position': {'line': 2, 'character': 11},
+        'context': {'triggerKind': 1},
+      });
+      final suggestions = completion.fold(parseCompletions, (_) => const []);
+      final answer = suggestions.firstWhere((item) => item.label == 'answer');
+      final caret = text.indexOf('print(answer)') + 'print(ans'.length;
+      expect(applyCompletion(text, caret, answer)?.text, text);
     },
     skip: executable.isEmpty
         ? 'Set ORKEST_TEST_DART with --dart-define to run a real server.'

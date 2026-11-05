@@ -6,6 +6,8 @@ import 'package:orkest_code/app/orkest/ui/widgets/editor_comment.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/editor_indent.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/editor_overview_ruler.dart';
 import 'package:orkest_code/app/core/domain/entities/lsp_diagnostic.dart';
+import 'package:orkest_code/app/core/domain/entities/lsp_completion.dart';
+import 'package:orkest_code/app/core/domain/services/lsp_completion_edits.dart';
 import 'package:orkest_code/app/core/ui/clamping_scroll_behavior.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
 import 'package:orkest_code/app/core/ui/widgets/app_tooltip.dart';
@@ -61,6 +63,8 @@ class CodeEditor extends StatefulWidget {
     this.onGoToDefinition,
     this.onSymbolHover,
     this.onSignatureHelp,
+    this.onCompletions,
+    this.onResolveCompletion,
     this.filePath,
   });
 
@@ -75,6 +79,10 @@ class CodeEditor extends StatefulWidget {
 
   /// Parâmetros da chamada na posição UTF-16 do caret.
   final Future<String?> Function(({int line, int character}))? onSignatureHelp;
+  final Future<List<LspCompletionItem>> Function(({int line, int character}))?
+  onCompletions;
+  final Future<LspCompletionItem?> Function(LspCompletionItem)?
+  onResolveCompletion;
 
   /// Caminho do arquivo (só a extensão é usada: fallback da largura de
   /// indentação quando o conteúdo não dá pista). `null` = 4 espaços.
@@ -144,9 +152,11 @@ class _CodeEditorState extends State<CodeEditor> {
     _horizontal.addListener(_onHorizontalScroll);
     _horizontal.addListener(_invalidateSymbolHover);
     _horizontal.addListener(_dismissSignature);
+    _horizontal.addListener(_dismissCompletions);
     _vertical.addListener(_syncGutter);
     _vertical.addListener(_invalidateSymbolHover);
     _vertical.addListener(_dismissSignature);
+    _vertical.addListener(_dismissCompletions);
     if (widget.revealLine != null) _scheduleReveal(widget.revealLine!);
   }
 
@@ -215,6 +225,7 @@ class _CodeEditorState extends State<CodeEditor> {
       old.focusNode.removeListener(_onSignatureFocusChanged);
       widget.focusNode.addListener(_onSignatureFocusChanged);
       _dismissSignature();
+      _dismissCompletions();
     }
     if (old.controller != widget.controller) {
       old.controller.removeListener(_onChanged);
@@ -229,6 +240,7 @@ class _CodeEditorState extends State<CodeEditor> {
         old.controller != widget.controller) {
       _invalidateSymbolHover();
       _dismissSignature();
+      _dismissCompletions();
       _hoverLine = null;
       _hoverMsgs = const [];
     }
@@ -415,6 +427,15 @@ class _CodeEditorState extends State<CodeEditor> {
   String? _signatureText;
   ({int line, int character})? _signaturePosition;
   TextSelection? _signatureSelection;
+  final _completionScroll = ScrollController();
+  Timer? _completionTimer;
+  int _completionRequest = 0;
+  bool _completionActive = false;
+  bool _completionAccepting = false;
+  bool _applyingCompletion = false;
+  List<LspCompletionItem> _completions = const [];
+  int _completionIndex = 0;
+  ({int line, int character})? _completionPosition;
   double _hoverDx = 0;
 
   // Go-to-definition: detecta modificador (Cmd/Ctrl) + hover + tap.
@@ -525,7 +546,150 @@ class _CodeEditorState extends State<CodeEditor> {
   }
 
   void _onSignatureFocusChanged() {
-    if (!widget.focusNode.hasFocus) _dismissSignature();
+    if (!widget.focusNode.hasFocus) {
+      _dismissSignature();
+      _dismissCompletions();
+    }
+  }
+
+  Map<ShortcutActivator, VoidCallback> get _completionBindings => {
+    if (widget.onCompletions != null)
+      const SingleActivator(LogicalKeyboardKey.space, control: true):
+          _queueCompletions,
+    if (_completionActive)
+      const SingleActivator(LogicalKeyboardKey.escape): _dismissCompletions,
+    if (_completions.isNotEmpty) ...{
+      const SingleActivator(LogicalKeyboardKey.arrowDown): () =>
+          _moveCompletion(1),
+      const SingleActivator(LogicalKeyboardKey.arrowUp): () =>
+          _moveCompletion(-1),
+      const SingleActivator(LogicalKeyboardKey.enter): () =>
+          unawaited(_acceptCompletion()),
+      const SingleActivator(LogicalKeyboardKey.tab): () =>
+          unawaited(_acceptCompletion()),
+    },
+  };
+
+  void _dismissCompletions() {
+    _completionTimer?.cancel();
+    _completionRequest++;
+    _completionActive = false;
+    _completionAccepting = false;
+    if (_completions.isNotEmpty && mounted) {
+      setState(() => _completions = const []);
+    }
+  }
+
+  void _moveCompletion(int delta) {
+    if (_completions.isEmpty || _completionAccepting) return;
+    setState(
+      () => _completionIndex = (_completionIndex + delta) % _completions.length,
+    );
+    if (_completionScroll.hasClients) {
+      final top = _completionIndex * 28.0;
+      final offset = _completionScroll.offset;
+      final viewport = _completionScroll.position.viewportDimension;
+      if (top < offset || top + 28 > offset + viewport) {
+        _completionScroll.jumpTo(
+          (top < offset ? top : top + 28 - viewport).clamp(
+            0.0,
+            _completionScroll.position.maxScrollExtent,
+          ),
+        );
+      }
+    }
+  }
+
+  void _queueCompletions() {
+    final callback = widget.onCompletions;
+    final selection = widget.controller.selection;
+    if (callback == null ||
+        !selection.isValid ||
+        !selection.isCollapsed ||
+        !widget.focusNode.hasFocus) {
+      _dismissCompletions();
+      return;
+    }
+    _dismissCompletions();
+    _dismissSignature();
+    _invalidateSymbolHover();
+    _completionActive = true;
+    final request = _completionRequest;
+    final text = widget.controller.text;
+    final position = widget.controller.offsetToLineChar(selection.extentOffset);
+    _completionTimer = Timer(const Duration(milliseconds: 200), () async {
+      try {
+        final items = await callback(position);
+        if (!mounted ||
+            request != _completionRequest ||
+            widget.controller.text != text ||
+            widget.controller.selection != selection ||
+            !widget.focusNode.hasFocus) {
+          return;
+        }
+        setState(() {
+          _completions = items;
+          _completionIndex = 0;
+          _completionPosition = position;
+          _completionActive = items.isNotEmpty;
+        });
+      } catch (error, stack) {
+        if (mounted && request == _completionRequest) _dismissCompletions();
+        FlutterError.reportError(
+          FlutterErrorDetails(
+            exception: error,
+            stack: stack,
+            library: 'Orkest completion',
+          ),
+        );
+      }
+    });
+  }
+
+  Future<void> _acceptCompletion() async {
+    if (_completions.isEmpty || _completionAccepting) return;
+    _completionAccepting = true;
+    final request = _completionRequest;
+    final controller = widget.controller;
+    final text = controller.text;
+    final selection = controller.selection;
+    final item = _completions[_completionIndex];
+    try {
+      final resolved = widget.onResolveCompletion == null
+          ? item
+          : await widget.onResolveCompletion!(item);
+      if (!mounted ||
+          request != _completionRequest ||
+          controller != widget.controller ||
+          controller.text != text ||
+          controller.selection != selection ||
+          !widget.focusNode.hasFocus) {
+        return;
+      }
+      final result = resolved == null
+          ? null
+          : applyCompletion(text, selection.extentOffset, resolved);
+      _dismissCompletions();
+      if (result == null) return;
+      _applyingCompletion = true;
+      try {
+        controller.value = TextEditingValue(
+          text: result.text,
+          selection: TextSelection.collapsed(offset: result.caret),
+        );
+      } finally {
+        _applyingCompletion = false;
+      }
+    } catch (error, stack) {
+      if (mounted && request == _completionRequest) _dismissCompletions();
+      FlutterError.reportError(
+        FlutterErrorDetails(
+          exception: error,
+          stack: stack,
+          library: 'Orkest completion application',
+        ),
+      );
+    }
   }
 
   void _dismissSignature() {
@@ -548,6 +712,7 @@ class _CodeEditorState extends State<CodeEditor> {
       _dismissSignature();
       return;
     }
+    _dismissCompletions();
     _dismissSignature();
     _invalidateSymbolHover();
     _signatureActive = true;
@@ -589,7 +754,8 @@ class _CodeEditorState extends State<CodeEditor> {
     if (callback == null ||
         range == null ||
         _definitionModeActive ||
-        _signatureActive) {
+        _signatureActive ||
+        _completionActive) {
       _invalidateSymbolHover();
       return;
     }
@@ -695,6 +861,11 @@ class _CodeEditorState extends State<CodeEditor> {
     final cmd =
         (Platform.isMacOS && keys.isMetaPressed) || keys.isControlPressed;
     final key = event.logicalKey;
+    if (key == LogicalKeyboardKey.escape && _completionActive) {
+      _cancelChord();
+      _dismissCompletions();
+      return KeyEventResult.handled;
+    }
     if (key == LogicalKeyboardKey.escape && _signatureActive) {
       _cancelChord();
       _dismissSignature();
@@ -799,6 +970,29 @@ class _CodeEditorState extends State<CodeEditor> {
             44,
           }.contains(widget.controller.text.codeUnitAt(offset - 1));
       if (_signatureActive || trigger) _queueSignature();
+      if (!_applyingCompletion) {
+        final text = widget.controller.text;
+        final unit = offset > 0 && offset <= text.length
+            ? text.codeUnitAt(offset - 1)
+            : null;
+        if (textChanged &&
+            selection.isCollapsed &&
+            unit != null &&
+            (isCompletionWordUnit(unit) || unit == 46)) {
+          var start = offset;
+          while (start > 0 &&
+              isCompletionWordUnit(text.codeUnitAt(start - 1))) {
+            start--;
+          }
+          if (_completionActive || unit == 46 || offset - start >= 2) {
+            _queueCompletions();
+          } else {
+            _dismissCompletions();
+          }
+        } else {
+          _dismissCompletions();
+        }
+      }
     }
     _rebuildLineStarts();
     final n = '\n'.allMatches(widget.controller.text).length + 1;
@@ -821,6 +1015,9 @@ class _CodeEditorState extends State<CodeEditor> {
 
   @override
   void dispose() {
+    _completionTimer?.cancel();
+    _completionRequest++;
+    _completionScroll.dispose();
     _signatureTimer?.cancel();
     _signatureRequest++;
     widget.focusNode.removeListener(_onSignatureFocusChanged);
@@ -832,9 +1029,11 @@ class _CodeEditorState extends State<CodeEditor> {
     _horizontal.removeListener(_onHorizontalScroll);
     _horizontal.removeListener(_invalidateSymbolHover);
     _horizontal.removeListener(_dismissSignature);
+    _horizontal.removeListener(_dismissCompletions);
     _vertical.removeListener(_syncGutter);
     _vertical.removeListener(_invalidateSymbolHover);
     _vertical.removeListener(_dismissSignature);
+    _vertical.removeListener(_dismissCompletions);
     widget.controller.definitionHoverRange = null;
     _vertical.dispose();
     _horizontal.dispose();
@@ -964,31 +1163,89 @@ class _CodeEditorState extends State<CodeEditor> {
     // última linha) foca o campo — como num editor de verdade. Cliques sobre o
     // próprio TextField ganham a arena de gestos e posicionam o cursor; os
     // demais caem aqui. `translucent` pra não roubar o tap do campo.
-    return GestureDetector(
-      behavior: HitTestBehavior.translucent,
-      onTap: () {
-        if (!widget.focusNode.hasFocus) widget.focusNode.requestFocus();
-      },
-      child: ColoredBox(
-        color: syntax.background,
-        child: MouseRegion(
-          cursor: _defCursor,
-          onHover: _onHover,
-          onExit: (_) => _clearHover(),
-          child: LayoutBuilder(
-            builder: (context, viewport) => Stack(
-              children: [
-                _editorScroll(),
-                if (_signatureText != null && _signaturePosition != null)
-                  _signatureOverlay(
-                    context,
-                    viewport.maxWidth,
-                    viewport.maxHeight,
-                  )
-                else if ((_hoverMsgs.isNotEmpty || _hoverInfo != null) &&
-                    _hoverLine != null)
-                  _hoverOverlay(context, viewport.maxWidth),
-              ],
+    return CallbackShortcuts(
+      bindings: _completionBindings,
+      child: GestureDetector(
+        behavior: HitTestBehavior.translucent,
+        onTap: () {
+          if (!widget.focusNode.hasFocus) widget.focusNode.requestFocus();
+        },
+        child: ColoredBox(
+          color: syntax.background,
+          child: MouseRegion(
+            cursor: _defCursor,
+            onHover: _onHover,
+            onExit: (_) => _clearHover(),
+            child: LayoutBuilder(
+              builder: (context, viewport) => Stack(
+                children: [
+                  _editorScroll(),
+                  if (_completions.isNotEmpty && _completionPosition != null)
+                    _completionOverlay(
+                      context,
+                      viewport.maxWidth,
+                      viewport.maxHeight,
+                    )
+                  else if (_signatureText != null && _signaturePosition != null)
+                    _signatureOverlay(
+                      context,
+                      viewport.maxWidth,
+                      viewport.maxHeight,
+                    )
+                  else if ((_hoverMsgs.isNotEmpty || _hoverInfo != null) &&
+                      _hoverLine != null)
+                    _hoverOverlay(context, viewport.maxWidth),
+                ],
+              ),
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _completionOverlay(BuildContext context, double width, double height) {
+    final popupHeight = _completions.length.clamp(1, 8) * 28.0;
+    final scroll = _vertical.hasClients ? _vertical.offset : 0.0;
+    final top =
+        (_padTop + (_completionPosition!.line + 1) * _lineHeight - scroll)
+            .clamp(0.0, (height - popupHeight - 4).clamp(0.0, height));
+    return Positioned(
+      left: (_gutterWidth + 8).clamp(0.0, (width - 100).clamp(0.0, width)),
+      right: 8,
+      top: top,
+      child: TextFieldTapRegion(
+        child: Container(
+          height: popupHeight,
+          decoration: BoxDecoration(
+            color: context.colors.panel2,
+            border: Border.all(color: context.colors.border),
+            borderRadius: BorderRadius.circular(5),
+          ),
+          child: ListView.builder(
+            controller: _completionScroll,
+            padding: EdgeInsets.zero,
+            itemExtent: 28,
+            itemCount: _completions.length,
+            itemBuilder: (context, index) => GestureDetector(
+              behavior: HitTestBehavior.opaque,
+              onTap: () {
+                _completionIndex = index;
+                unawaited(_acceptCompletion());
+              },
+              child: Container(
+                color: index == _completionIndex
+                    ? context.colors.accent.withValues(alpha: 0.15)
+                    : null,
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  _completions[index].label,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: context.typo.mono.copyWith(color: context.colors.text),
+                ),
+              ),
             ),
           ),
         ),

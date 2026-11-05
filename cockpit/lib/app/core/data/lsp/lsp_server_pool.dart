@@ -4,6 +4,8 @@ import 'dart:io';
 import 'package:orkest_code/app/core/data/lsp/lsp_command.dart';
 import 'package:orkest_code/app/core/data/lsp/lsp_launchers.dart';
 import 'package:orkest_code/app/core/data/lsp/lsp_hover.dart';
+import 'package:orkest_code/app/core/data/lsp/lsp_completion.dart';
+import 'package:orkest_code/app/core/domain/entities/lsp_completion.dart';
 import 'package:orkest_code/app/core/data/lsp/lsp_signature_help.dart';
 import 'package:orkest_code/app/core/data/lsp/lsp_text_edit.dart';
 import 'package:orkest_code/app/core/data/lsp/project_root_finder.dart';
@@ -292,6 +294,47 @@ class LspServerPool {
       'options': {'tabSize': tabSize, 'insertSpaces': insertSpaces},
     });
     return result.fold(parseTextEdits, (_) => const <LspTextEdit>[]);
+  }
+
+  /// Sugestões para o caret; descarta respostas de versões anteriores do buffer.
+  Future<List<LspCompletionItem>> completions(
+    String path,
+    int line,
+    int character,
+  ) async {
+    final doc = _docs[path];
+    if (doc == null || line < 0 || character < 0) return const [];
+    final version = doc.version;
+    final result = await requestForPath(path, 'textDocument/completion', {
+      'textDocument': {'uri': Uri.file(path).toString()},
+      'position': {'line': line, 'character': character},
+      'context': {'triggerKind': 1},
+    });
+    if (!identical(_docs[path], doc) || doc.version != version) return const [];
+    return result.fold(parseCompletions, (_) => const []);
+  }
+
+  Future<LspCompletionItem?> resolveCompletion(
+    String path,
+    LspCompletionItem item,
+  ) async {
+    final doc = _docs[path];
+    if (doc == null) return null;
+    if (item.raw['data'] == null) return item;
+    final version = doc.version;
+    final result = await requestForPath(
+      path,
+      'completionItem/resolve',
+      item.raw,
+    );
+    if (!identical(_docs[path], doc) || doc.version != version) return null;
+    return result.fold((value) {
+      if (value is! Map<String, dynamic>) return item;
+      final parsed = parseCompletions([
+        {...item.raw, ...value},
+      ]);
+      return parsed.isEmpty ? null : parsed.first;
+    }, (_) => item);
   }
 
   /// Informação do símbolo; descarta resposta de uma versão anterior do buffer.

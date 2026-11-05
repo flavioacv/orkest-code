@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/core/domain/entities/lsp_completion.dart';
 import 'dart:typed_data';
 
 import 'package:orkest_code/app/orkest/domain/entities/file_node.dart';
@@ -32,6 +33,16 @@ abstract class DocumentHost {
   Future<List<LspTextEdit>> lspFormat(String path, String text);
   Future<SemanticTokens> lspSemanticTokensFull(String path);
   Future<String?> lspHover(String path, String text, int line, int character);
+  Future<List<LspCompletionItem>> lspCompletions(
+    String path,
+    String text,
+    int line,
+    int character,
+  );
+  Future<LspCompletionItem?> lspResolveCompletion(
+    String path,
+    LspCompletionItem item,
+  );
   Future<String?> lspSignatureHelp(
     String path,
     String text,

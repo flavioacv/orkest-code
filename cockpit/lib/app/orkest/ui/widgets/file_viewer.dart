@@ -990,6 +990,16 @@ class _FileViewerState extends State<FileViewer> {
               pos.line,
               pos.character,
             ),
+            onCompletions: (pos) async =>
+                (await _vm?.lspCompletions(
+                  widget.session.path,
+                  ctrl.text,
+                  pos.line,
+                  pos.character,
+                )) ??
+                const [],
+            onResolveCompletion: (item) async =>
+                _vm?.lspResolveCompletion(widget.session.path, item),
           ),
         ),
         if (_findOpen)

@@ -64,6 +64,11 @@ class _FakeClient implements LspClient {
       _shared.hoverParams = params;
       return _shared.hoverGate?.future ?? const Success(null);
     }
+    if (method == 'textDocument/completion' ||
+        method == 'completionItem/resolve') {
+      _shared.completionParams = params;
+      return _shared.completionGate?.future ?? const Success(null);
+    }
     if (method == 'textDocument/signatureHelp') {
       _shared.signatureParams = params;
       return _shared.signatureGate?.future ?? const Success(null);
@@ -96,6 +101,8 @@ class _FakeClient implements LspClient {
 }
 
 class _Shared {
+  Completer<Result<Object?, LspError>>? completionGate;
+  Map<String, dynamic>? completionParams;
   bool startSucceeds = true;
   int startCalls = 0;
   final List<_FakeClient> created = [];
@@ -131,6 +138,78 @@ void main() {
     dartFile = '${tmp.path}/main.dart';
   });
   tearDown(() => tmp.deleteSync(recursive: true));
+
+  test('completion routes position and resolves additional data', () async {
+    final shared = _Shared()
+      ..completionGate = Completer<Result<Object?, LspError>>();
+    final pool = LspServerPool(_FakeFactory(shared));
+    addTearDown(pool.dispose);
+    await pool.openDocument(path: dartFile, text: 'ans');
+    final reply = pool.completions(dartFile, 0, 3);
+    expect(shared.completionParams?['position'], {'line': 0, 'character': 3});
+    shared.completionGate!.complete(
+      const Success([
+        {'label': 'answer', 'data': 42},
+      ]),
+    );
+    final item = (await reply).single;
+    shared.completionGate = Completer<Result<Object?, LspError>>();
+    final resolved = pool.resolveCompletion(dartFile, item);
+    expect(shared.completionParams?['data'], 42);
+    shared.completionGate!.complete(const Success({'detail': 'int answer'}));
+    expect((await resolved)?.detail, 'int answer');
+  });
+
+  for (final mutation in ['edit', 'reopen']) {
+    test(
+      'completion resolve discards delayed response after $mutation',
+      () async {
+        final shared = _Shared()
+          ..completionGate = Completer<Result<Object?, LspError>>();
+        final pool = LspServerPool(_FakeFactory(shared));
+        addTearDown(pool.dispose);
+        await pool.openDocument(path: dartFile, text: 'ans');
+        final first = pool.completions(dartFile, 0, 3);
+        shared.completionGate!.complete(
+          const Success([
+            {'label': 'answer', 'data': 42},
+          ]),
+        );
+        final item = (await first).single;
+        shared.completionGate = Completer<Result<Object?, LspError>>();
+        final reply = pool.resolveCompletion(dartFile, item);
+        if (mutation == 'edit') {
+          await pool.changeDocument(path: dartFile, text: 'changed');
+        } else {
+          await pool.closeDocument(dartFile);
+          await pool.openDocument(path: dartFile, text: 'ans');
+        }
+        shared.completionGate!.complete(const Success({'detail': 'old'}));
+        expect(await reply, isNull);
+      },
+    );
+
+    test('completion discards delayed response after $mutation', () async {
+      final shared = _Shared()
+        ..completionGate = Completer<Result<Object?, LspError>>();
+      final pool = LspServerPool(_FakeFactory(shared));
+      addTearDown(pool.dispose);
+      await pool.openDocument(path: dartFile, text: 'ans');
+      final reply = pool.completions(dartFile, 0, 3);
+      if (mutation == 'edit') {
+        await pool.changeDocument(path: dartFile, text: 'changed');
+      } else {
+        await pool.closeDocument(dartFile);
+        await pool.openDocument(path: dartFile, text: 'ans');
+      }
+      shared.completionGate!.complete(
+        const Success([
+          {'label': 'answer'},
+        ]),
+      );
+      expect(await reply, isEmpty);
+    });
+  }
 
   test(
     'signature help routes the caret position and parses the response',

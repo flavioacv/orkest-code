@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/core/domain/entities/lsp_completion.dart';
 import 'dart:io';
 import 'dart:typed_data';
 
@@ -103,6 +104,20 @@ class StandaloneDocumentHost implements DocumentHost {
     int line,
     int character,
   ) => Future.value(null);
+
+  @override
+  Future<List<LspCompletionItem>> lspCompletions(
+    String path,
+    String text,
+    int line,
+    int character,
+  ) async => const [];
+
+  @override
+  Future<LspCompletionItem?> lspResolveCompletion(
+    String path,
+    LspCompletionItem item,
+  ) async => null;
 
   // ---- filesystem ----------------------------------------------------------
 

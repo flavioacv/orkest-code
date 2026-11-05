@@ -169,6 +169,17 @@ class LspClientImpl implements LspClient {
             'dynamicRegistration': false,
             'contentFormat': <String>['plaintext'],
           },
+          'completion': <String, dynamic>{
+            'dynamicRegistration': false,
+            'completionItem': <String, dynamic>{
+              'snippetSupport': false,
+              'insertReplaceSupport': true,
+              'documentationFormat': <String>['plaintext'],
+              'resolveSupport': {
+                'properties': ['detail', 'additionalTextEdits'],
+              },
+            },
+          },
           'signatureHelp': <String, dynamic>{
             'dynamicRegistration': false,
             'signatureInformation': <String, dynamic>{
