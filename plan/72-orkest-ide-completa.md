@@ -462,6 +462,9 @@ Destino: Tasks, telemetria e gutter de editor.
 
 Aceite: Árvore de testes/reexecutar falhas e cobertura por formato validado; profiler somente por demanda; relatório aponta ferramenta/linguagem e não apresenta dado ausente como zero.
 
+Entrega: Implementação da suíte de teste, cobertura e profiling sob demanda: entidades imutáveis `TestStatus`, `TestCaseNode`, `TestSuiteNode`, `TestTreeReport`, `LineCoverageStatus`, `FileCoverageReport`, `GlobalCoverageReport`, `ProfilerHotSpot` e `ProfilerReport` em `cockpit/lib/app/core/domain/entities/test_coverage_profiler.dart`; orquestrador e parser determinístico `TestCoverageProfilerService` em `cockpit/lib/app/core/domain/services/test_coverage_profiler_service.dart` decodificando eventos JSON de executores de teste (`parseDartTestJson`), montando comandos de reexecução seletiva de falhas (`buildRerunFailedCommand`), processando relatórios canônicos LCOV (`parseLcov`) com garantia estrita de retornar `coveragePercent == null` (e nunca `0.0%`) quando dados estiverem ausentes, e extração tabular de hotspots de profiler (`parseProfilerOutput`) operando unicamente sob demanda pontual (`isRealtime: false`).
+Validação: 5 testes unitários dedicados em `cockpit/test/domain/test_coverage_profiler_test.dart`; 13 testes combinados de depuração e testes aprovados com 100% de sucesso; análise estática `dart analyze --fatal-infos` 100% limpa (0 issues). Concluído em 05/11/2026. Detalhes em `plan/72-integracao-testes-coverage-profiler.md`.
+
 ### B01 — Ampliar introspecção e navegação de bancos
 
 Prioridade P2 · Porte M · Dependências: F01.

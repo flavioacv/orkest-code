@@ -16,13 +16,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
       Diretriz 04/11: avaliar quando houver necessidade de desempenho identificada; não bloqueia entregas funcionais em Dart.
 
-- [ ] X01 · Priorizar produtividade de edição e visualização <!-- id: X01 labels: P2, ferramentas blockedBy: W03, L02 -->
-      Porte: M. Dependências: W03, L02.
-      Origem: templates, macros, vim, todo, scratch, color-preview, viewers.
-      Destino: Editor e viewers já existentes.
-      Aceite: Inventário de snippets/templates/Emmet/folding/bookmarks/TODO/Vim/macros; selecionar e dividir entregas por uso; atalhos e preview seguem tema, i18n e acessibilidade.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] X02 · Aprimorar HTTP, GraphQL e navegação web <!-- id: X02 labels: P2, ferramentas blockedBy: F01 -->
       Porte: M. Dependências: F01.
       Origem: ide-http; http-client/graphql/web; Spring route sources.
@@ -77,11 +70,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] R05 · Integrar resultados de testes, coverage e profiler <!-- id: R05 labels: P2, debug blockedBy: R01, L05 -->
-      Porte: L. Dependências: R01, L05.
-      Origem: ide-coverage, ide-profiler, run TestTreeView.
-      Destino: Tasks, telemetria e gutter de editor.
-      Aceite: Árvore de testes/reexecutar falhas e cobertura por formato validado; profiler somente por demanda; relatório aponta ferramenta/linguagem e não apresenta dado ausente como zero.
+- [ ] X01 · Priorizar produtividade de edição e visualização <!-- id: X01 labels: P2, ferramentas blockedBy: W03, L02 -->
+      Porte: M. Dependências: W03, L02.
+      Origem: templates, macros, vim, todo, scratch, color-preview, viewers.
+      Destino: Editor e viewers já existentes.
+      Aceite: Inventário de snippets/templates/Emmet/folding/bookmarks/TODO/Vim/macros; selecionar e dividir entregas por uso; atalhos e preview seguem tema, i18n e acessibilidade.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -100,6 +93,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] R05 · Integrar resultados de testes, coverage e profiler <!-- id: R05 labels: P2, debug blockedBy: R01, L05 -->
+      Entrega: Implementação da suíte de teste, cobertura e profiling sob demanda: entidades imutáveis TestStatus, TestCaseNode, TestSuiteNode, TestTreeReport, LineCoverageStatus, FileCoverageReport, GlobalCoverageReport, ProfilerHotSpot e ProfilerReport em cockpit/lib/app/core/domain/entities/test_coverage_profiler.dart; orquestrador e parser determinístico TestCoverageProfilerService em cockpit/lib/app/core/domain/services/test_coverage_profiler_service.dart decodificando eventos JSON de executores de teste (parseDartTestJson), montando comandos de reexecução seletiva de falhas (buildRerunFailedCommand), processando relatórios canônicos LCOV (parseLcov) com garantia estrita de retornar coveragePercent == null (e nunca 0.0%) quando dados estiverem ausentes, e extração tabular de hotspots de profiler (parseProfilerOutput) operando unicamente sob demanda pontual (isRealtime: false).
+      Aceite: Árvore de testes/reexecutar falhas e cobertura por formato validado; profiler somente por demanda; relatório aponta ferramenta/linguagem e não apresenta dado ausente como zero.
+      Validação: 5 testes unitários dedicados em cockpit/test/domain/test_coverage_profiler_test.dart; 13 testes combinados de depuração e testes aprovados com 100% de sucesso; análise estática dart analyze --fatal-infos 100% limpa (0 issues).
+      Plano: [detalhamento e arquitetura](72-integracao-testes-coverage-profiler.md).
 
 - [x] R04 · Expandir debug multilinguagem progressivamente <!-- id: R04 labels: P2, debug blockedBy: R02, L05 -->
       Entrega: Implementação da infraestrutura formal de depuração multilinguagem via Debug Adapter Protocol (DAP): entidades de domínio DebugAdapterCapabilities, DebugAdapterDefinition e catálogo declarativo MultiLanguageDebugRegistry em cockpit/lib/app/core/domain/entities/multi_language_debug_adapter.dart cobrindo TypeScript/JavaScript (pwa-node), Python (debugpy), Rust/C/C++ (lldb/codelldb), Go (dlv), Java/Kotlin (java), C#/.NET (coreclr) e Dart/Flutter (dart); matriz estrita de capacidades documentando limitações e recursos de cada ecossistema (hardware watchpoints em LLDB/Delve/Java; HotSwap em Dart, Java, Node e .NET; Restart Frame em Dart, TS e Java); orquestrador unificado MultiLanguageDebugAdapter em cockpit/lib/app/core/data/dap/multi_language_debug_adapter.dart provendo resolução de comandos com suporte a overrides customizados de executáveis e argumentos (ex: virtualenv de Python), formatação de argumentos de launch mesclando templates e flags, e serviço de auditoria auditAdapter gerando relatórios de conformidade e instrução de instalação com licenças transparentes (MIT, GPL-2.0, EPL-1.0, BSD-3-Clause).
