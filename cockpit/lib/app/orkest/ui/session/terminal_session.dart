@@ -12,6 +12,7 @@ import 'package:orkest_code/app/orkest/domain/contracts/terminal_status_server.d
 import 'package:orkest_code/app/core/data/diagnostics/performance_diagnostics.dart';
 import 'package:orkest_code/app/core/domain/entities/harness.dart';
 import 'package:orkest_code/app/core/domain/entities/harness_signal.dart';
+import 'package:orkest_code/app/core/domain/entities/harness_diagnostic.dart';
 import 'package:orkest_code/app/core/domain/services/harness_state_coordinator.dart';
 import 'package:orkest_code/app/core/terminal/secret_redactor.dart';
 import 'package:orkest_code/app/core/terminal/pty_command_markers.dart';
@@ -515,6 +516,9 @@ class TerminalSession extends PaneItem {
 
   /// Snapshot formal dos eixos ortogonais de estado do harness (H01).
   HarnessStateSnapshot get harnessSnapshot => harnessCoordinator.snapshot;
+
+  /// Diagnóstico seguro de estado sem retenção de conteúdo sensível (H05).
+  HarnessStateDiagnostic get harnessDiagnostic => harnessCoordinator.getDiagnostic();
 
   /// Trata a queda ou perda de transporte remoto/SSH/WSL sem conceder aprovação falsa (H04).
   void handleTransportDisconnection({String? reason}) {

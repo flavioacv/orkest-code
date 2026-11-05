@@ -1,5 +1,7 @@
 import 'dart:collection';
+import 'package:orkest_code/app/core/domain/entities/harness_diagnostic.dart';
 import 'package:orkest_code/app/core/domain/entities/harness_signal.dart';
+import 'package:orkest_code/app/core/domain/services/harness_diagnostic_service.dart';
 
 /// Coordenador de estado e precedência formal dos sinais de harness (H01).
 ///
@@ -30,6 +32,10 @@ class HarnessStateCoordinator {
   HarnessSignalSource _lastSource = HarnessSignalSource.userInput;
   DateTime _lastUpdatedAt;
 
+  bool _hasEverReceivedSignal = false;
+  int _totalSignalsReceived = 0;
+  final Map<HarnessSignalSource, int> _sourceDistribution = <HarnessSignalSource, int>{};
+
   final LinkedHashSet<String> _settledActivityIds = LinkedHashSet<String>();
   final LinkedHashSet<String> _activeActivityIds = LinkedHashSet<String>();
 
@@ -52,6 +58,33 @@ class HarnessStateCoordinator {
   String? get currentSessionId => _currentSessionId;
   String? get currentTurnId => _currentTurnId;
   bool get hasActiveActivities => _activeActivityIds.isNotEmpty;
+
+  /// Retorna se ao menos um sinal já foi processado e aceito na sessão.
+  bool get hasEverReceivedSignal => _hasEverReceivedSignal;
+
+  /// Total acumulado de sinais aceitos na sessão.
+  int get totalSignalsReceived => _totalSignalsReceived;
+
+  /// Origem do último sinal recebido ou `null` se nenhum sinal foi emitido.
+  HarnessSignalSource? get lastSource => _hasEverReceivedSignal ? _lastSource : null;
+
+  /// Timestamp do último sinal recebido ou `null` se nenhum sinal foi emitido.
+  DateTime? get lastUpdatedAt => _hasEverReceivedSignal ? _lastUpdatedAt : null;
+
+  /// Distribuição de sinais aceitos por fonte.
+  Map<HarnessSignalSource, int> get sourceDistribution => Map.unmodifiable(_sourceDistribution);
+
+  /// Gera um diagnóstico de estado seguro e livre de dados sensíveis (H05).
+  HarnessStateDiagnostic getDiagnostic({
+    DateTime? referenceTime,
+    bool limitedDataMode = false,
+  }) {
+    return HarnessDiagnosticService.buildDiagnostic(
+      coordinator: this,
+      referenceTime: referenceTime,
+      limitedDataMode: limitedDataMode,
+    );
+  }
 
   /// Processa um sinal de entrada e resolve a precedência determinística.
   ///
@@ -133,6 +166,10 @@ class HarnessStateCoordinator {
     if (signal.turnId != null) {
       _currentTurnId = signal.turnId;
     }
+
+    _hasEverReceivedSignal = true;
+    _totalSignalsReceived++;
+    _sourceDistribution[signal.source] = (_sourceDistribution[signal.source] ?? 0) + 1;
 
     return true;
   }
