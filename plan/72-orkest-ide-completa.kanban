@@ -78,7 +78,7 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Destino: Cliente/pool LSP existente, code_editor e controllers.
       Aceite: Completion, resolve, hover semântico e signature help funcionam em Dart e TS; requests cancelados e respostas antigas não alteram documento/versão errados.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-      Progresso: hover (L02a), signature help (L02b) e autocomplete simples com resolve (L02c) concluídos. Permanecem homologação TypeScript, snippets e cancelamento remoto; descarte local de respostas antigas já protege o buffer.
+      Progresso: hover (L02a), signature help (L02b), autocomplete simples com resolve (L02c) e cancelamento de consultas obsoletas (L02d) concluídos. Permanecem homologação TypeScript, snippets e cancelamento imediato por Escape/foco/scroll e de resolve; descarte local protege o buffer.
 
 - [ ] L03 · Adicionar navegação semântica e busca unificada <!-- id: L03 labels: P1, linguagens blockedBy: L02, W02 -->
       Porte: M. Dependências: L02, W02.
@@ -297,6 +297,7 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 ## Em andamento
 
 
+
 ## Em revisão
 
 - [ ] H00 · Homologar em build a correção de espera já implementada <!-- id: H00 labels: P0, harness blockedBy: H00a -->
@@ -355,7 +356,7 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Entrega: hover LSP com debounce, posição UTF-16 e tooltip integrado aos diagnósticos, em texto simples.
       Aceite: descartar resposta após edição, troca/fechamento, movimento ou scroll; respeitar navegação e host standalone sem LSP.
       Validação: 52 testes aprovados na rodada final, incluindo servidor Dart real; análise estática limpa; telemetria r_21 sem erros/avisos.
-      Limites atuais: Markdown rico e cancelamento remoto pendentes em L02; signature help e completion simples entregues em L02b/L02c.
+      Limites atuais: Markdown rico e cancelamento imediato por UI/resolve pendentes em L02; cancelamento por substituição/edição/fechamento/timeout entregue em L02d; signature help e completion simples em L02b/L02c.
       Detalhes: [hover semântico](72-hover-semantico.md).
 
       <!-- comment: 2026-11-04T21:09 -->
@@ -378,11 +379,19 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Entrega: autocomplete automático e Ctrl+Espaço; setas, Enter, Tab e clique; Escape inclusive durante consulta pendente; resolução e imports adicionais validados antes de atualizar o buffer.
       Aceite: descarte por versão/geração/texto/seleção/foco; intervalos UTF-16 válidos e sem sobreposição; preservar atalhos e host standalone.
       Validação: 90 testes aprovados na rodada final, incluindo servidor Dart real; análise estática limpa; telemetria r_27 com zero erros/avisos.
-      Limites: snippets, comandos de CompletionItem, cancelamento remoto e homologação TypeScript permanecem pendentes em L02/L05. Aplicativo instalado ainda não atualizado.
+      Limites: snippets, comandos de CompletionItem, cancelamento imediato por UI/resolve e homologação TypeScript permanecem pendentes em L02/L05; cancelamento de consultas obsoletas entregue em L02d. Aplicativo instalado ainda não atualizado.
       Detalhes: [autocomplete LSP](72-autocomplete.md).
 
       <!-- comment: 2026-11-04T21:37 -->
       Implementação, testes e commit local concluídos: 6ae5ee34 em fix/harness-state-detection. Sem nova branch, push ou PR; homologação ampliada e release continuam em suas atividades específicas.
+
+- [x] L02d · Cancelar consultas LSP obsoletas no servidor <!-- id: L02d labels: P1, linguagens blockedBy: L02c -->
+      Entrega: $/cancelRequest por ID ao substituir leituras do mesmo método/URI, editar/fechar documento e expirar requisições; respostas tardias ignoradas.
+      Aceite: preservar consultas de outros documentos/métodos e operações de alteração no cancelamento automático; conexão segue utilizável após cancelamento/timeout.
+      Validação: 101 testes aprovados, incluindo protocolo stdio controlado e servidor Dart real; análise estática limpa; telemetria r_29 com zero erros/avisos.
+      Limites: Escape/foco/scroll e resolve ainda usam descarte local até resposta/timeout; homologação TypeScript pendente, sem servidor localizado nos locais consultados e sem instalar dependências. Aplicativo instalado ainda não atualizado.
+      Detalhes: [cancelamento LSP](72-cancelamento-lsp.md).
+      Concluído: commit local e0497b4e em fix/harness-state-detection; sem nova branch, push ou PR.
 
 - [x] H00a · Corrigir precisão de espera e retomada dos harnesses <!-- id: H00a labels: P0, harness -->
       Entrega: espera estruturada preservada em redraw, supressão por prompt respondido, reconhecimento de nova aprovação e retomada legítima.
