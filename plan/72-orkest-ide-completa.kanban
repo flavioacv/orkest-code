@@ -94,13 +94,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: Mostrar origem do último estado, idade do sinal e capacidade de detecção com dados limitados; medir falso working/waiting/idle em corpus rotulado; falta de sinal não inventa execução.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
-- [ ] G04 · Adicionar gestão avançada de trabalho Git <!-- id: G04 labels: P2, git blockedBy: G02 -->
-      Porte: L. Dependências: G02.
-      Origem: ide-vcs/manage, shelf, patch, rebasePlan.
-      Destino: Serviços Git local/remoto.
-      Aceite: Worktrees, stash/shelf, changelists, patches, tags e rebase/cherry-pick/revert em subentregas; pré-condições/abort/recovery e processos cancelados testados, sem merge automático na main.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] G05 · Integrar revisão de PR no contexto do código <!-- id: G05 labels: P2, git blockedBy: G01 -->
       Porte: M. Dependências: G01.
       Origem: ide-github e src/features/github.
@@ -205,11 +198,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] G03 · Evoluir histórico, autoria e comparação <!-- id: G03 labels: P2, git blockedBy: G01 -->
-      Porte: L. Dependências: G01.
-      Origem: GitLog, graph, block_history, blame, log_index.
-      Destino: git_history_panel e leitores de histórico.
-      Aceite: Grafo/filtros/paginação, blame e histórico de arquivo/seleção; comparar revisões/branches e navegar para código; desempenho medido em repositório grande.
+- [ ] G04 · Adicionar gestão avançada de trabalho Git <!-- id: G04 labels: P2, git blockedBy: G02 -->
+      Porte: L. Dependências: G02.
+      Origem: ide-vcs/manage, shelf, patch, rebasePlan.
+      Destino: Serviços Git local/remoto.
+      Aceite: Worktrees, stash/shelf, changelists, patches, tags e rebase/cherry-pick/revert em subentregas; pré-condições/abort/recovery e processos cancelados testados, sem merge automático na main.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -228,6 +221,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] G03 · Evoluir histórico, autoria e comparação <!-- id: G03 labels: P2, git blockedBy: G01 -->
+      Entrega: Modelos de autoria GitBlameHunk, consulta avançada GitHistoryQuery e comparação entre revisões GitComparison; decodificador GitBlameParser para o formato estruturado git blame --porcelain com cache de metadados de commits repetidos; GitHistoryReaderImpl expandido com suporte a paginação (limit, skip), acompanhamento de renomeações de arquivos (--follow), filtros por autor (--author), busca por mensagem (--grep) e flag all; método compareRefs executando comparação atômica de arquivos e commits entre branches divergentes; componente visual GitBlameView com busca reativa por autor/mensagem, navegação direta por clique na linha e cópia de hash.
+      Aceite: Grafo/filtros/paginação, blame e histórico de arquivo/seleção; comparar revisões/branches e navegar para código; desempenho medido em repositório grande.
+      Validação: 22 testes unitários e de integração aprovados em test/data/git_blame_parser_test.dart, test/data/git_history_evolution_test.dart, test/ui/git_blame_view_test.dart, test/data/git_history_reader_impl_test.dart e test/ui/git_history_panel_test.dart; análise estática dart analyze --fatal-infos limpa (zero issues).
+      Detalhes: [evolução de histórico, autoria e comparação](72-evolucao-historico-autoria-comparacao.md).
 
 - [x] R03 · Homologar debug Dart e Flutter <!-- id: R03 labels: P1, debug blockedBy: R02 -->
       Entrega: Orquestrador DartDebugAdapter com resolução automatizada de comandos oficiais dart debug_adapter e flutter debug_adapter com suporte a sdkPath; modelo configurável DartDebugTarget cobrindo Dart CLI, Dart Test, Flutter App e Flutter Test com formatação determinística de argumentos para launch e attach (vmServiceUri); protocolo DAP estendido com a factory DapClient.fromProcess, configuração de filtros de exceções setExceptionBreakpoints (None, All, Unhandled) e requisições customizadas Flutter DAP de Hot Reload e Hot Restart; controle reativo em DebugSessionController via startDartSession e detecção isFlutter; botões dedicados de Hot Reload (ícone de raio/zap) e Hot Restart (ícone de rotação) na barra flutuante DebugToolbar com suporte a atalhos de teclado Ctrl+F5 e Ctrl+Shift+F5; desativação limpa de processos e recursos sem interferir na sessão PTY de terminal.

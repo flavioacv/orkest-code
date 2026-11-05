@@ -350,6 +350,9 @@ Destino: git_history_panel e leitores de histórico.
 
 Aceite: Grafo/filtros/paginação, blame e histórico de arquivo/seleção; comparar revisões/branches e navegar para código; desempenho medido em repositório grande.
 
+Entrega: Modelos tipados de autoria (`GitBlameHunk`), consulta avançada (`GitHistoryQuery`) com suporte a paginação (`limit`, `skip`), acompanhamento de renomeações de arquivo (`--follow`), filtros por autor (`--author`), busca por mensagem (`--grep`), intervalos de revisão e flag `all`; comparação atômica de revisões e branches divergentes (`GitComparison` e `compareRefs`); parser estruturado `GitBlameParser` para `git blame --porcelain` com cache de metadados em blocos contíguos; componente visual `GitBlameView` com filtragem rápida em tempo real, badges de linhas, identificação de commit, autor, data relativa e navegação clicável para código-fonte.
+Validação: 22 testes unitários e de integração aprovados em `cockpit/test/data/git_blame_parser_test.dart`, `cockpit/test/data/git_history_evolution_test.dart`, `cockpit/test/ui/git_blame_view_test.dart`, `cockpit/test/data/git_history_reader_impl_test.dart` e `cockpit/test/ui/git_history_panel_test.dart`; análise estática `dart analyze --fatal-infos` limpa (0 issues). Concluído em 05/11/2026. Detalhes em `plan/72-evolucao-historico-autoria-comparacao.md`.
+
 ### G04 — Adicionar gestão avançada de trabalho Git
 
 Prioridade P2 · Porte L · Dependências: G02.
