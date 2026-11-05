@@ -23,13 +23,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: Provar inlays, hierarquias, busca estrutural/duplicações e análise apenas onde servidor suporta; medir custo e escolher subset útil.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
-- [ ] H04 · Verificar paridade local, SSH e WSL de harness <!-- id: H04 labels: P1, harness blockedBy: H02, H03 -->
-      Porte: M. Dependências: H02, H03.
-      Origem: Correlação ACP como referência; protocolo atual Orkest.
-      Destino: orkest_protocol, remote adapters e host server.
-      Aceite: Mesmas sequências geram mesmos estados em local/remoto; geração antiga não ressuscita sessão; desconexão não se apresenta falsamente como fim de turno ou aprovação.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] H05 · Expor diagnóstico de estado sem capturar conteúdo <!-- id: H05 labels: P2, harness blockedBy: H01 -->
       Porte: M. Dependências: H01.
       Origem: Probe/capabilities ide-agent; telemetria Orkest.
@@ -112,11 +105,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] H03 · Ampliar reconhecimento de CLI por evidência <!-- id: H03 labels: P1, harness blockedBy: H02 -->
-      Porte: M. Dependências: H02.
-      Origem: provider.rs e registry como metadados de referência.
-      Destino: HarnessCatalog, normalizer, classifier, monitor.
-      Aceite: Para cada CLI selecionada, validar executável/wrappers/flags e modos não interativos no host; hooks opcionais; fornecedores não reconhecidos continuam via contrato genérico, sem parser inventado.
+- [ ] H04 · Verificar paridade local, SSH e WSL de harness <!-- id: H04 labels: P1, harness blockedBy: H02, H03 -->
+      Porte: M. Dependências: H02, H03.
+      Origem: Correlação ACP como referência; protocolo atual Orkest.
+      Destino: orkest_protocol, remote adapters e host server.
+      Aceite: Mesmas sequências geram mesmos estados em local/remoto; geração antiga não ressuscita sessão; desconexão não se apresenta falsamente como fim de turno ou aprovação.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -135,6 +128,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] H03 · Ampliar reconhecimento de CLI por evidência <!-- id: H03 labels: P1, harness blockedBy: H02 -->
+      Entrega: Ampliação e consolidação do reconhecimento de CLI por evidência: enriquecimento de HarnessSpec com metadados de capacidades (supportsStructuredHooks, supportsPtyMarkers, supportsResume, resumeSyntax, nonInteractiveFlags, adminSubcommands, knownWrappers); catálogo expandido para 11 ferramentas em harness.dart com Gemini CLI (gemini), Kimi CLI (kimi), Aider (aider) e Ollama (ollama) e provisão de SVGs dedicados em assets/harness_icons/; serviço de evidência no host HarnessHostEvidence (harness_host_evidence.dart) com relatório HarnessEvidenceReport e probe de binários no host (isExecutableAvailable); normalizador multi-runtime TerminalHarnessNormalizer com suporte a python -m, npx, bunx, uvx, pipx, pnpm e yarn; classificador declarativo TerminalHarnessClassifier com regras para flags de help/versão, modos não interativos/batch/print/quiet e subcomandos administrativos; e contrato genérico estrito que retorna null determinístico para comandos desconhecidos sem alucinar parsers ad-hoc.
+      Aceite: Para cada CLI selecionada, validar executável/wrappers/flags e modos não interativos no host; hooks opcionais; fornecedores não reconhecidos continuam via contrato genérico, sem parser inventado.
+      Validação: 40 testes unitários aprovados em test/domain/terminal_harness_classifier_test.dart (30) e test/domain/harness_host_evidence_test.dart (10); 19 testes de regressão aprovados em harness_corpus_replay_test.dart, harness_signal_precedence_test.dart e agent_harness_test.dart; análise estática dart analyze --fatal-infos limpa (zero issues).
+      Plano: [detalhamento e arquitetura](72-reconhecimento-cli-evidencia-harness.md).
 
 - [x] H02 · Criar corpus e replay de leitura de harness <!-- id: H02 labels: P1, harness blockedBy: H01 -->
       Entrega: Criação da infraestrutura de corpus e replay determinístico de leitura de harness: modelos serializáveis HarnessReplayEvent, HarnessReplayTransition e HarnessReplayScenario; motor de execução determinístico HarnessReplayRunner com recomposição de sequências ANSI fragmentadas, detecção de marcadores PTY (OSC 133/activity), avaliação de precedência temporal baseada no timestamp dos eventos (abs() < 5000ms), métricas de integridade e isolamento de gerações de sessão no cômputo de flicker; suporte formal a ciclos de vida hierárquicos de subagentes no HarnessStateCoordinator mantendo working até a conclusão de todas as subtarefas; catálogo com 8 cenários versionados e sanitizados em JSON (test/fixtures/harness/: 01_ansi_fragmented, 02_screen_redraw, 03_repeated_prompts, 04_concurrent_permissions, 05_subagents, 06_stop_session_end, 07_wsl_environment, 08_session_reconnect).
