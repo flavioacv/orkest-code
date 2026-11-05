@@ -305,6 +305,8 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Limite: não instala servidores nem comprova funcionamento real de cada servidor; L01/L05 permanecem abertas.
       Plano: [auditoria e entrega](72-auditoria-paridade.md).
 
+      <!-- comment: 2026-11-04T20:27 -->
+      PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 - [ ] H00 · Revisar e integrar correção de espera já implementada <!-- id: H00 labels: P0, harness -->
       Porte: S. Dependências: nenhuma.
@@ -313,6 +315,8 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: Confirmar PR, revisão e merge expressamente autorizado; build e validação real antes de marcar entregue; 102 testes anteriores não equivalem a validação de todas as CLIs.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
+      <!-- comment: 2026-11-04T20:27 -->
+      PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
 

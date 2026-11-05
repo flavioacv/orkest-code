@@ -97,7 +97,7 @@ P0 = habilitador/risco central; P1 = núcleo de IDE; P2 = aprofundamento; P3 = c
 
 Manter no máximo duas atividades em implementação e uma em revisão. Uma atividade só entra em Prontas quando dependências e critérios de teste estiverem definidos; Bloqueadas não é usado para representar um item que apenas aguarda sua ordem no backlog. O quadro registra dependências nativas por IDs.
 
-H00 está Em revisão porque o commit da correção de harness já foi publicado, mas merge/PR/build não estão confirmados. DOC está Concluídas por ser o planejamento desta entrega; isso não marca implementações futuras como entregues.
+H00 está Em revisão porque o commit da correção de harness já foi publicado, mas merge/build não estão confirmados; a PR #12 reúne a correção e a primeira entrega do catálogo. DOC está Concluídas por ser o planejamento desta entrega; isso não marca implementações futuras como entregues.
 
 ### Ajuste de execução autorizado
 
