@@ -183,6 +183,8 @@ Destino: projects_rail, workspace_actions, file_viewer_session, document host.
 
 Aceite: Projeto continua entrada principal; editor, terminal, Git, problemas e debug seguem a raiz/host corretos; trocar projeto não mistura estado; restauração preserva layouts e arquivos abertos.
 
+Incremento concluído: garantia de isolamento de estado e contexto de ferramentas por projeto documentados em [workspace por projetos com ferramentas IDE](72-workspace-projetos-ferramentas-ide.md); roteamento canônico de raiz via Project.effectiveRoot, associação de sessões ao projectId, preservação do ciclo de workspaces e suite de testes de isolamento validada; 4 testes unitários e análise estática limpos.
+
 ### W02 — Unificar ações, atalhos e navegação do desenvolvedor
 
 Prioridade P1 · Porte M · Dependências: W01.

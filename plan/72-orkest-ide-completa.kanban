@@ -37,13 +37,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: Bins/bibliotecas por OS/arch, encerramento de filhos, handshake incompatível, reinício, logs sem segredos, atualização/rollback e ausência de ferramentas externas testados.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
-- [ ] W01 · Garantir workspace por projetos com ferramentas IDE <!-- id: W01 labels: P0, workspace blockedBy: F01 -->
-      Porte: M. Dependências: F01.
-      Origem: Workbench/contributions como referência de integração.
-      Destino: projects_rail, workspace_actions, file_viewer_session, document host.
-      Aceite: Projeto continua entrada principal; editor, terminal, Git, problemas e debug seguem a raiz/host corretos; trocar projeto não mistura estado; restauração preserva layouts e arquivos abertos.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] W02 · Unificar ações, atalhos e navegação do desenvolvedor <!-- id: W02 labels: P1, workspace blockedBy: W01 -->
       Porte: M. Dependências: W01.
       Origem: src/platform actions/keymaps; contributions.
@@ -298,6 +291,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] W01 · Garantir workspace por projetos com ferramentas IDE <!-- id: W01 labels: P0, workspace blockedBy: F01 -->
+      Entrega: garantia formal e validação do modelo project-first no Orkest Code; isolamento de abas, terminais e buffers por projectId; roteamento canônico de raiz via Project.effectiveRoot (suportando workspaces locais no POSIX/Windows e remotos via SSH/sidecar); contextualização de DocumentHost e FileViewerSession; preservação do ciclo de workspaces e suite de testes unitários de isolamento.
+      Aceite: projeto continua entrada principal; editor, terminal, Git, problemas e debug seguem a raiz/host corretos; trocar projeto não mistura estado; restauração preserva layouts e arquivos abertos.
+      Validação: 4 testes unitários de isolamento de workspace aprovados (cockpit/test/domain/workspace_project_isolation_test.dart); análise estática dart analyze --fatal-infos limpa (zero issues).
+      Detalhes: [workspace por projetos com ferramentas IDE](72-workspace-projetos-ferramentas-ide.md).
 
 - [x] A01 · Especificar contratos de serviços e capacidades <!-- id: A01 labels: P0, arquitetura blockedBy: F01 -->
       Entrega: especificação formal de contratos de serviços, modelo de ownership de recursos (projeto, sessão PTY, documento/buffer com Single Writer Rule), coordenadas de texto em UTF-16 code units, preservação/normalização de EOL (CRLF/LF), catálogo de erros tipados em RemoteError e RpcResponse, cancelamento cooperativo em duas camadas com mensagem RpcCancel (t: 'rpc.cancel', rid), negociação de capacidades com caps em Hello e HelloAck, limites de payload/backpressure e matriz de mapeamento dos 41 domínios OpenIDEA para Orkest.
