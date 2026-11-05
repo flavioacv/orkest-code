@@ -1756,6 +1756,15 @@ class Translations$orkest$fileTreePanel$en {
 	/// en: 'Could not read the diff: ${detail}'
 	String diffError({required Object detail}) => 'Could not read the diff: ${detail}';
 
+	/// en: 'Stage Hunk'
+	String get stageHunk => 'Stage Hunk';
+
+	/// en: 'Unstage Hunk'
+	String get unstageHunk => 'Unstage Hunk';
+
+	/// en: 'Discard'
+	String get discardHunk => 'Discard';
+
 	/// en: 'Gallery'
 	String get galleryTooltip => 'Gallery';
 
@@ -4964,6 +4973,9 @@ extension on Translations {
 			'orkest.fileTreePanel.diffBinaryFile' => 'Binary file - no text diff.',
 			'orkest.fileTreePanel.diffNoChanges' => 'No changes.',
 			'orkest.fileTreePanel.diffError' => ({required Object detail}) => 'Could not read the diff: ${detail}',
+			'orkest.fileTreePanel.stageHunk' => 'Stage Hunk',
+			'orkest.fileTreePanel.unstageHunk' => 'Unstage Hunk',
+			'orkest.fileTreePanel.discardHunk' => 'Discard',
 			'orkest.fileTreePanel.galleryTooltip' => 'Gallery',
 			'orkest.fileTreePanel.sectionGallery' => 'GALLERY',
 			'orkest.fileTreePanel.openAsHtml' => 'Open as HTML',
@@ -4997,11 +5009,11 @@ extension on Translations {
 			'orkest.realmDialogs.deleteSuffixMany' => ({required Object count}) => ' Its ${count} workspaces will move to Default.',
 			'orkest.realmDialogs.manageRealmsTitle' => 'Manage realms',
 			'orkest.realmDialogs.workspaceCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('en'))(n, one: '1 workspace', other: '${n} workspaces', ), 
+			_ => null,
+		} ?? switch (path) {
 			'orkest.dbRedisTable.deleteKeyTitle' => 'Delete key',
 			'orkest.dbRedisTable.deleteKeyMessage' => ({required Object key}) => 'Delete "${key}" from this Redis database?',
 			'orkest.dbRedisTable.refresh' => 'Refresh',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.dbRedisTable.newKey' => 'New key',
 			'orkest.dbRedisTable.columnKey' => 'KEY',
 			'orkest.dbRedisTable.columnValue' => 'VALUE',
@@ -5511,11 +5523,11 @@ extension on Translations {
 			'settings.page.appearance.themeTitle' => 'Theme',
 			'settings.page.appearance.themeDesc' => 'App colors, code highlighting and terminal palette.',
 			'settings.page.appearance.modeTitle' => 'Mode',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.appearance.modeDesc' => 'Which variant of the theme to use.',
 			'settings.page.appearance.modeOnlyDark' => ({required Object theme}) => '"${theme}" only ships a dark variant, so this has no effect.',
 			'settings.page.appearance.modeOnlyLight' => ({required Object theme}) => '"${theme}" only ships a light variant, so this has no effect.',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.appearance.themeFileTitle' => 'Theme file',
 			'settings.page.appearance.themeFileDesc' => 'Import a theme from a JSON file, or export the active one.',
 			'settings.page.appearance.previewCode' => 'Code',

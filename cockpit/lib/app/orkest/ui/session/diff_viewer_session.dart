@@ -15,6 +15,10 @@ class DiffViewerSession extends PaneItem {
     this.repoRoot,
     this.previousRelativePath,
     this.isPreview = false,
+    this.isStaged = false,
+    this.onStageHunk,
+    this.onUnstageHunk,
+    this.onDiscardHunk,
   });
 
   @override
@@ -37,6 +41,14 @@ class DiffViewerSession extends PaneItem {
 
   /// Caminho anterior de um rename/copy, relativo a [repoRoot].
   String? previousRelativePath;
+
+  /// `true` se este diff representa alterações preparadas no index (`git diff --cached`).
+  bool isStaged;
+
+  /// Ações interativas granulares por hunk (G01).
+  Future<void> Function(DiffHunk hunk)? onStageHunk;
+  Future<void> Function(DiffHunk hunk)? onUnstageHunk;
+  Future<void> Function(DiffHunk hunk)? onDiscardHunk;
 
   // `package:path`, não corte no `/`: no Windows o path pode vir com `\`.
   @override

@@ -11,10 +11,12 @@ import 'dart:io'
 
 import 'package:orkest_code/app/orkest/domain/contracts/git_command_runner.dart';
 import 'package:orkest_code/app/orkest/domain/contracts/git_status_reader.dart';
+import 'package:orkest_code/app/orkest/domain/entities/file_diff.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_file_status.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_branch.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_info.dart';
 import 'package:orkest_code/app/orkest/domain/exceptions/git_branch_error.dart';
+import 'package:orkest_code/app/orkest/domain/services/git_hunk_service.dart';
 import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:orkest_code/app/core/ui/window_activity_controller.dart';
 import 'package:orkest_code/app/core/data/diagnostics/performance_diagnostics.dart';
@@ -380,6 +382,67 @@ class GitController extends ChangeNotifier {
           : GitBranchErrorKind.checkoutFailed,
       detail: detail,
     );
+  }
+
+  // ---- staging e unstage por hunk (G01) -------------------------------------
+
+  final GitHunkService _hunkService = const GitHunkService();
+
+  /// Aplica o hunk no index do Git (`git apply --cached -`).
+  Future<Result<void, String>> stageHunk({
+    required String root,
+    required String relativePath,
+    required DiffHunk hunk,
+  }) async {
+    final result = await _hunkService.stageHunk(
+      repoRoot: root,
+      relativePath: relativePath,
+      hunk: hunk,
+    );
+    if (result.isSuccess) {
+      markHistoryStale();
+      final pid = selectedProjectId?.call();
+      if (pid != null) unawaited(refresh(pid));
+    }
+    return result;
+  }
+
+  /// Remove o hunk do index do Git (`git apply --cached --reverse -`).
+  Future<Result<void, String>> unstageHunk({
+    required String root,
+    required String relativePath,
+    required DiffHunk hunk,
+  }) async {
+    final result = await _hunkService.unstageHunk(
+      repoRoot: root,
+      relativePath: relativePath,
+      hunk: hunk,
+    );
+    if (result.isSuccess) {
+      markHistoryStale();
+      final pid = selectedProjectId?.call();
+      if (pid != null) unawaited(refresh(pid));
+    }
+    return result;
+  }
+
+  /// Descarta as mudanças do hunk diretamente no working tree (`git apply --reverse -`).
+  Future<Result<void, String>> discardHunk({
+    required String root,
+    required String relativePath,
+    required DiffHunk hunk,
+  }) async {
+    final result = await _hunkService.discardHunk(
+      repoRoot: root,
+      relativePath: relativePath,
+      hunk: hunk,
+    );
+    if (result.isSuccess) {
+      markHistoryStale();
+      final pid = selectedProjectId?.call();
+      if (pid != null) unawaited(refresh(pid));
+    }
+    return result;
   }
 
   // ---- ciclo de vida --------------------------------------------------------

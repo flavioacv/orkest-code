@@ -801,6 +801,9 @@ class _Translations$orkest$fileTreePanel$es extends Translations$orkest$fileTree
 	@override String get diffBinaryFile => 'Archivo binario - sin diff de texto.';
 	@override String get diffNoChanges => 'Sin cambios.';
 	@override String diffError({required Object detail}) => 'No se pudo leer el diff: ${detail}';
+	@override String get stageHunk => 'Preparar fragmento';
+	@override String get unstageHunk => 'Deshacer preparación';
+	@override String get discardHunk => 'Descartar';
 	@override String get galleryTooltip => 'Galería';
 	@override String get sectionGallery => 'GALERÍA';
 	@override String get openAsHtml => 'Abrir como HTML';
@@ -2567,6 +2570,9 @@ extension on TranslationsEs {
 			'orkest.fileTreePanel.diffBinaryFile' => 'Archivo binario - sin diff de texto.',
 			'orkest.fileTreePanel.diffNoChanges' => 'Sin cambios.',
 			'orkest.fileTreePanel.diffError' => ({required Object detail}) => 'No se pudo leer el diff: ${detail}',
+			'orkest.fileTreePanel.stageHunk' => 'Preparar fragmento',
+			'orkest.fileTreePanel.unstageHunk' => 'Deshacer preparación',
+			'orkest.fileTreePanel.discardHunk' => 'Descartar',
 			'orkest.fileTreePanel.galleryTooltip' => 'Galería',
 			'orkest.fileTreePanel.sectionGallery' => 'GALERÍA',
 			'orkest.fileTreePanel.openAsHtml' => 'Abrir como HTML',
@@ -2600,11 +2606,11 @@ extension on TranslationsEs {
 			'orkest.realmDialogs.deleteSuffixMany' => ({required Object count}) => ' Sus ${count} workspaces se moverán a Predeterminado.',
 			'orkest.realmDialogs.manageRealmsTitle' => 'Gestionar realms',
 			'orkest.realmDialogs.workspaceCount' => ({required num n}) => (_root.$meta.cardinalResolver ?? PluralResolvers.cardinal('es'))(n, one: '1 workspace', other: '${n} workspaces', ), 
+			_ => null,
+		} ?? switch (path) {
 			'orkest.dbRedisTable.deleteKeyTitle' => 'Eliminar clave',
 			'orkest.dbRedisTable.deleteKeyMessage' => ({required Object key}) => '¿Eliminar "${key}" de esta base de datos Redis?',
 			'orkest.dbRedisTable.refresh' => 'Actualizar',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.dbRedisTable.newKey' => 'Nueva clave',
 			'orkest.dbRedisTable.columnKey' => 'CLAVE',
 			'orkest.dbRedisTable.columnValue' => 'VALOR',
@@ -3114,11 +3120,11 @@ extension on TranslationsEs {
 			'settings.page.appearance.themeTitle' => 'Tema',
 			'settings.page.appearance.themeDesc' => 'Colores de la app, resaltado de código y paleta del terminal.',
 			'settings.page.appearance.modeTitle' => 'Modo',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.appearance.modeDesc' => 'Qué variante del tema usar.',
 			'settings.page.appearance.modeOnlyDark' => ({required Object theme}) => '"${theme}" solo trae la variante oscura, así que esto no tiene efecto.',
 			'settings.page.appearance.modeOnlyLight' => ({required Object theme}) => '"${theme}" solo trae la variante clara, así que esto no tiene efecto.',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.appearance.themeFileTitle' => 'Archivo de tema',
 			'settings.page.appearance.themeFileDesc' => 'Importa un tema desde un archivo JSON, o exporta el activo.',
 			'settings.page.appearance.previewCode' => 'Código',

@@ -40,7 +40,7 @@ class DiffViewer extends StatelessWidget {
         children: [
           Expanded(
             child: _DiffBody(
-              diff: session.diff,
+              session: session,
               language: _languageOf(session.path),
             ),
           ),
@@ -90,8 +90,8 @@ class _Row {
 sealed class _Item {}
 
 final class _HunkHeaderItem extends _Item {
-  _HunkHeaderItem(this.header);
-  final String header;
+  _HunkHeaderItem(this.hunk);
+  final DiffHunk hunk;
 }
 
 final class _RowItem extends _Item {
@@ -105,7 +105,7 @@ final class _RowItem extends _Item {
 List<_Item> _buildDiffItems(List<DiffHunk> hunks) {
   final items = <_Item>[];
   for (final hunk in hunks) {
-    items.add(_HunkHeaderItem(hunk.header));
+    items.add(_HunkHeaderItem(hunk));
     for (final row in _rowsOf(hunk)) {
       items.add(_RowItem(row));
     }
@@ -155,10 +155,12 @@ List<_Row> _rowsOf(DiffHunk hunk) {
 // ---------------------------------------------------------------------------
 
 class _DiffBody extends StatefulWidget {
-  const _DiffBody({required this.diff, required this.language});
+  const _DiffBody({required this.session, required this.language});
 
-  final FileDiff diff;
+  final DiffViewerSession session;
   final String? language;
+
+  FileDiff get diff => session.diff;
 
   @override
   State<_DiffBody> createState() => _DiffBodyState();
@@ -178,7 +180,7 @@ class _DiffBodyState extends State<_DiffBody> {
   @override
   void didUpdateWidget(_DiffBody old) {
     super.didUpdateWidget(old);
-    if (!identical(old.diff, widget.diff)) {
+    if (!identical(old.session.diff, widget.session.diff)) {
       _items = _buildDiffItems(widget.diff.hunks);
     }
   }
@@ -244,9 +246,20 @@ class _DiffBodyState extends State<_DiffBody> {
                     if (i == 0) return _revisionHeader(context, diff, side);
                     final item = _items[i - 1];
                     return switch (item) {
-                      _HunkHeaderItem(:final header) => _HunkHeader(
-                        text: header,
+                      _HunkHeaderItem(:final hunk) => _HunkHeader(
+                        hunk: hunk,
                         width: total,
+                        isStaged: widget.session.isStaged,
+                        isHistorical: widget.session.commitHash != null,
+                        onStage: widget.session.onStageHunk != null
+                            ? () => widget.session.onStageHunk!(hunk)
+                            : null,
+                        onUnstage: widget.session.onUnstageHunk != null
+                            ? () => widget.session.onUnstageHunk!(hunk)
+                            : null,
+                        onDiscard: widget.session.onDiscardHunk != null
+                            ? () => widget.session.onDiscardHunk!(hunk)
+                            : null,
                       ),
                       _RowItem(:final row) => _DiffRow(
                         row: row,
@@ -373,22 +386,118 @@ class _RevisionHeader extends StatelessWidget {
 }
 
 class _HunkHeader extends StatelessWidget {
-  const _HunkHeader({required this.text, required this.width});
-  final String text;
+  const _HunkHeader({
+    required this.hunk,
+    required this.width,
+    this.isStaged = false,
+    this.isHistorical = false,
+    this.onStage,
+    this.onUnstage,
+    this.onDiscard,
+  });
+
+  final DiffHunk hunk;
   final double width;
+  final bool isStaged;
+  final bool isHistorical;
+  final VoidCallback? onStage;
+  final VoidCallback? onUnstage;
+  final VoidCallback? onDiscard;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    final tr = context.t.orkest.fileTreePanel;
+
     return Container(
       width: width,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
       color: colors.panel3,
-      child: Text(
-        text,
-        maxLines: 1,
-        overflow: TextOverflow.ellipsis,
-        style: context.typo.mono.copyWith(fontSize: 11.5, color: colors.text3),
+      child: Row(
+        children: [
+          Expanded(
+            child: Text(
+              hunk.header,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.typo.mono.copyWith(fontSize: 11.5, color: colors.text3),
+            ),
+          ),
+          if (!isHistorical) ...[
+            if (isStaged && onUnstage != null)
+              _HunkActionButton(
+                label: tr.unstageHunk,
+                icon: LucideIcons.minus,
+                onPressed: onUnstage!,
+              )
+            else if (!isStaged) ...[
+              if (onStage != null)
+                _HunkActionButton(
+                  label: tr.stageHunk,
+                  icon: LucideIcons.plus,
+                  isPrimary: true,
+                  onPressed: onStage!,
+                ),
+              if (onDiscard != null) ...[
+                const SizedBox(width: 6),
+                _HunkActionButton(
+                  label: tr.discardHunk,
+                  icon: LucideIcons.undo,
+                  onPressed: onDiscard!,
+                ),
+              ],
+            ],
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _HunkActionButton extends StatelessWidget {
+  const _HunkActionButton({
+    required this.label,
+    required this.icon,
+    required this.onPressed,
+    this.isPrimary = false,
+  });
+
+  final String label;
+  final IconData icon;
+  final VoidCallback onPressed;
+  final bool isPrimary;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    final bg = isPrimary ? colors.gitStaged.withValues(alpha: 0.15) : colors.bg;
+    final border = isPrimary ? colors.gitStaged.withValues(alpha: 0.4) : colors.border;
+    final textColor = isPrimary ? colors.gitStaged : colors.text2;
+
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+        decoration: BoxDecoration(
+          color: bg,
+          border: Border.all(color: border),
+          borderRadius: BorderRadius.circular(4),
+        ),
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 11, color: textColor),
+            const SizedBox(width: 4),
+            Text(
+              label,
+              style: context.typo.label.copyWith(
+                fontSize: 10.5,
+                color: textColor,
+                fontWeight: isPrimary ? FontWeight.w600 : FontWeight.normal,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
