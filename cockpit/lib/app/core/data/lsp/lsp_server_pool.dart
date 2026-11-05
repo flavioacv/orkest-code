@@ -14,6 +14,8 @@ import 'package:orkest_code/app/core/domain/entities/lsp_diagnostic.dart';
 import 'package:orkest_code/app/core/domain/entities/lsp_location.dart';
 import 'package:orkest_code/app/core/domain/entities/lsp_semantic_tokens.dart';
 import 'package:orkest_code/app/core/domain/entities/lsp_symbol.dart';
+import 'package:orkest_code/app/core/domain/entities/lsp_workspace_edit.dart';
+import 'package:orkest_code/app/core/domain/entities/lsp_code_action.dart';
 import 'package:orkest_code/app/core/domain/exceptions/lsp_error.dart';
 import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:orkest_code/app/core/utils/executable_resolver.dart';
@@ -433,6 +435,95 @@ class LspServerPool {
       'query': query,
     });
     return result.fold(parseDocumentSymbols, (_) => const []);
+  }
+
+  /// `textDocument/prepareRename` — valida se o símbolo na posição pode ser renomeado (L04).
+  Future<LspPrepareRenameResult> prepareRename(String path, int line, int character) async {
+    final doc = _docs[path];
+    if (doc == null || line < 0 || character < 0) {
+      return LspPrepareRenameResult.cannotRename();
+    }
+    final result = await requestForPath(path, 'textDocument/prepareRename', {
+      'textDocument': {'uri': Uri.file(path).toString()},
+      'position': {'line': line, 'character': character},
+    });
+    return result.fold(
+      LspPrepareRenameResult.fromJson,
+      (_) => LspPrepareRenameResult.cannotRename(),
+    );
+  }
+
+  /// `textDocument/rename` — solicita o WorkspaceEdit de renomeação em múltiplos arquivos (L04).
+  Future<LspWorkspaceEdit?> rename(
+    String path,
+    int line,
+    int character,
+    String newName,
+  ) async {
+    final doc = _docs[path];
+    if (doc == null || line < 0 || character < 0 || newName.isEmpty) return null;
+    final result = await requestForPath(path, 'textDocument/rename', {
+      'textDocument': {'uri': Uri.file(path).toString()},
+      'position': {'line': line, 'character': character},
+      'newName': newName,
+    });
+    return result.fold(parseWorkspaceEdit, (_) => null);
+  }
+
+  /// `textDocument/codeAction` — busca quick fixes, refatorações e ações de código (L04).
+  Future<List<LspCodeAction>> codeActions(
+    String path,
+    LspRange range, {
+    List<LspDiagnostic> diagnostics = const [],
+    List<String>? kinds,
+  }) async {
+    final doc = _docs[path];
+    if (doc == null) return const [];
+    final context = <String, dynamic>{
+      'diagnostics': [
+        for (final d in diagnostics)
+          {
+            'range': d.range.toJson(),
+            'message': d.message,
+            'severity': d.severity.index + 1,
+            if (d.code != null) 'code': d.code,
+            if (d.source != null) 'source': d.source,
+          },
+      ],
+      'only': ?kinds,
+    };
+
+    final result = await requestForPath(path, 'textDocument/codeAction', {
+      'textDocument': {'uri': Uri.file(path).toString()},
+      'range': range.toJson(),
+      'context': context,
+    });
+    return result.fold(parseCodeActions, (_) => const []);
+  }
+
+  /// `codeAction/resolve` — resolve edições sob demanda para uma ação selecionada (L04).
+  Future<LspCodeAction?> resolveCodeAction(String path, LspCodeAction action) async {
+    final doc = _docs[path];
+    if (doc == null) return null;
+    final result = await requestForPath(path, 'codeAction/resolve', {
+      'title': action.title,
+      if (action.kind != null) 'kind': action.kind,
+      if (action.command != null) 'command': action.command,
+      if (action.data != null) 'data': action.data,
+    });
+    return result.fold(
+      (res) => res is Map ? LspCodeAction.fromJson(res.cast<String, dynamic>()) : null,
+      (_) => null,
+    );
+  }
+
+  /// `textDocument/codeAction` filtrado para organização de imports (L04).
+  Future<List<LspCodeAction>> organizeImports(String path, LspRange range) {
+    return codeActions(
+      path,
+      range,
+      kinds: const [LspCodeActionKind.sourceOrganizeImports],
+    );
   }
 
   /// Teto pra pedir semantic tokens. Acima disso o arquivo fica só com o
