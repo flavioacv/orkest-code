@@ -165,6 +165,7 @@ Referência: Medições A02/A03 e contratos A01.
 Destino: ADR Dart, processo Rust ou FFI por domínio.
 
 Aceite: ADR compara custo total, paridade, distribuição e manutenção; decide por componente e mantém fallback; FFI somente se justificada; preserva Flutter e suporte a projetos Dart.
+Entrega: ADR formalizado em `plan/72-decisao-arquitetura-por-dominio.md`. Decisão por Dart nativo via CLI Git do sistema (`GitController`) para ciclo de vida VCS e algoritmo em Dart puro para hunks/patches (G01); cliente DAP Dart puro sobre stdio para depuração sem processo intermediário; manutenção do StdioLspClient em Dart; FFI terminantemente rejeitada para VCS, DAP e Editor; Isolate Dart + ripgrep para busca textual. Desbloqueia formalmente G01, R02 e A05. Concluído em 05/11/2026.
 
 ### A05 — Empacotar e supervisionar serviços nativos selecionados
 
