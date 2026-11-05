@@ -59,7 +59,7 @@ void main() {
   });
 
   group('languageById', () {
-    test('finds all 17 registered languages by exact ID', () {
+    test('finds all 20 registered languages by exact ID', () {
       const ids = [
         'dart',
         'typescript',
@@ -78,6 +78,9 @@ void main() {
         'jsonc',
         'yaml',
         'shellscript',
+        'sql',
+        'vue',
+        'svelte',
       ];
       expect(kLanguageDefs.length, ids.length);
       for (final id in ids) {

@@ -85,6 +85,18 @@ class SdkConfig {
   final String? documentationUrl;
 }
 
+/// Nível ou tier de maturidade e capacidade da linguagem na IDE (L05).
+enum LanguageTier {
+  /// Tier 1: Primeira classe / suporte completo (LSP, DAP, Formatação, Semântica avançada).
+  tier1Core,
+
+  /// Tier 2: Suporte corporativo e sistemas (LSP estruturado, DAP adapter documentado).
+  tier2Enterprise,
+
+  /// Tier 3: Configuração, dados, web e templates sob demanda (LSP focado, sintaxe).
+  tier3WebData,
+}
+
 /// Definição declarativa completa de uma linguagem no catálogo.
 ///
 /// Separa detecção de arquivos/comentários, marcadores de projeto, servidor LSP,
@@ -96,6 +108,7 @@ class LanguageDef {
     required this.label,
     required this.extensions,
     required this.markers,
+    this.tier = LanguageTier.tier3WebData,
     String? defaultExecutable,
     List<String> defaultArgs = const <String>[],
     this.filenames = const <String>[],
@@ -113,6 +126,9 @@ class LanguageDef {
 
   /// Nome amigável pra UI (tela Language).
   final String label;
+
+  /// Nível de suporte e maturidade na IDE.
+  final LanguageTier tier;
 
   /// Extensões (sem ponto, minúsculas) que mapeiam pra esta linguagem.
   final List<String> extensions;
@@ -194,6 +210,7 @@ const List<LanguageDef> kLanguageDefs = <LanguageDef>[
     label: 'Dart',
     extensions: <String>['dart'],
     markers: <String>['pubspec.yaml'],
+    tier: LanguageTier.tier1Core,
     server: LanguageServerConfig(
       name: 'dart',
       executable: 'dart',
@@ -228,6 +245,7 @@ const List<LanguageDef> kLanguageDefs = <LanguageDef>[
     label: 'TypeScript',
     extensions: <String>['ts', 'tsx', 'mts', 'cts'],
     markers: <String>['tsconfig.json', 'package.json'],
+    tier: LanguageTier.tier1Core,
     server: LanguageServerConfig(
       name: 'typescript-language-server',
       executable: 'typescript-language-server',
@@ -261,6 +279,7 @@ const List<LanguageDef> kLanguageDefs = <LanguageDef>[
     label: 'JavaScript',
     extensions: <String>['js', 'jsx', 'mjs', 'cjs'],
     markers: <String>['jsconfig.json', 'package.json'],
+    tier: LanguageTier.tier1Core,
     server: LanguageServerConfig(
       name: 'typescript-language-server',
       executable: 'typescript-language-server',
@@ -299,6 +318,7 @@ const List<LanguageDef> kLanguageDefs = <LanguageDef>[
       'requirements.txt',
       'Pipfile',
     ],
+    tier: LanguageTier.tier1Core,
     server: LanguageServerConfig(
       name: 'pyright',
       executable: 'pyright-langserver',
@@ -331,6 +351,7 @@ const List<LanguageDef> kLanguageDefs = <LanguageDef>[
     label: 'Go',
     extensions: <String>['go'],
     markers: <String>['go.mod', 'go.work'],
+    tier: LanguageTier.tier1Core,
     server: LanguageServerConfig(
       name: 'gopls',
       executable: 'gopls',
@@ -363,6 +384,7 @@ const List<LanguageDef> kLanguageDefs = <LanguageDef>[
     label: 'Rust',
     extensions: <String>['rs'],
     markers: <String>['Cargo.toml'],
+    tier: LanguageTier.tier1Core,
     server: LanguageServerConfig(
       name: 'rust-analyzer',
       executable: 'rust-analyzer',
@@ -394,6 +416,7 @@ const List<LanguageDef> kLanguageDefs = <LanguageDef>[
     label: 'PHP',
     extensions: <String>['php'],
     markers: <String>['composer.json'],
+    tier: LanguageTier.tier2Enterprise,
     server: LanguageServerConfig(
       name: 'intelephense',
       executable: 'intelephense',
@@ -421,6 +444,7 @@ const List<LanguageDef> kLanguageDefs = <LanguageDef>[
     label: 'C#',
     extensions: <String>['cs'],
     markers: <String>['*.csproj', '*.sln'],
+    tier: LanguageTier.tier2Enterprise,
     server: LanguageServerConfig(
       name: 'csharp-ls',
       executable: 'csharp-ls',
@@ -457,6 +481,7 @@ const List<LanguageDef> kLanguageDefs = <LanguageDef>[
       'build.gradle.kts',
       'settings.gradle',
     ],
+    tier: LanguageTier.tier2Enterprise,
     server: LanguageServerConfig(
       name: 'jdtls',
       executable: 'jdtls',
@@ -487,6 +512,7 @@ const List<LanguageDef> kLanguageDefs = <LanguageDef>[
     label: 'HTML',
     extensions: <String>['html', 'htm', 'xhtml', 'shtml'],
     markers: <String>['package.json'],
+    tier: LanguageTier.tier3WebData,
     server: LanguageServerConfig(
       name: 'vscode-html-language-server',
       executable: 'vscode-html-language-server',
@@ -509,6 +535,7 @@ const List<LanguageDef> kLanguageDefs = <LanguageDef>[
     label: 'CSS',
     extensions: <String>['css'],
     markers: <String>['package.json'],
+    tier: LanguageTier.tier3WebData,
     server: LanguageServerConfig(
       name: 'vscode-css-language-server',
       executable: 'vscode-css-language-server',
@@ -531,6 +558,7 @@ const List<LanguageDef> kLanguageDefs = <LanguageDef>[
     label: 'SCSS',
     extensions: <String>['scss'],
     markers: <String>['package.json'],
+    tier: LanguageTier.tier3WebData,
     server: LanguageServerConfig(
       name: 'vscode-css-language-server',
       executable: 'vscode-css-language-server',
@@ -554,6 +582,7 @@ const List<LanguageDef> kLanguageDefs = <LanguageDef>[
     label: 'Less',
     extensions: <String>['less'],
     markers: <String>['package.json'],
+    tier: LanguageTier.tier3WebData,
     server: LanguageServerConfig(
       name: 'vscode-css-language-server',
       executable: 'vscode-css-language-server',
@@ -578,6 +607,7 @@ const List<LanguageDef> kLanguageDefs = <LanguageDef>[
     extensions: <String>['json', 'geojson', 'webmanifest', 'avsc'],
     filenames: <String>['.prettierrc', '.watchmanconfig', 'composer.lock'],
     markers: <String>['package.json', 'composer.json', 'pubspec.yaml'],
+    tier: LanguageTier.tier3WebData,
     server: LanguageServerConfig(
       name: 'vscode-json-language-server',
       executable: 'vscode-json-language-server',
@@ -615,6 +645,7 @@ const List<LanguageDef> kLanguageDefs = <LanguageDef>[
       'biome.json',
     ],
     markers: <String>['package.json', 'deno.json'],
+    tier: LanguageTier.tier3WebData,
     server: LanguageServerConfig(
       name: 'vscode-json-language-server',
       executable: 'vscode-json-language-server',
@@ -639,6 +670,7 @@ const List<LanguageDef> kLanguageDefs = <LanguageDef>[
     extensions: <String>['yaml', 'yml'],
     filenames: <String>['.clang-format', '.clang-tidy', '.clangd'],
     markers: <String>['package.json', 'pubspec.yaml'],
+    tier: LanguageTier.tier3WebData,
     server: LanguageServerConfig(
       name: 'yaml-language-server',
       executable: 'yaml-language-server',
@@ -668,6 +700,7 @@ const List<LanguageDef> kLanguageDefs = <LanguageDef>[
       '.envrc',
     ],
     markers: <String>['package.json', 'Makefile'],
+    tier: LanguageTier.tier3WebData,
     server: LanguageServerConfig(
       name: 'bash-language-server',
       executable: 'bash-language-server',
@@ -684,6 +717,91 @@ const List<LanguageDef> kLanguageDefs = <LanguageDef>[
       semanticTokens: false,
     ),
     lineComment: '#',
+  ),
+  LanguageDef(
+    id: 'sql',
+    label: 'SQL',
+    extensions: <String>['sql'],
+    markers: <String>['schema.sql', 'migrations'],
+    tier: LanguageTier.tier3WebData,
+    server: LanguageServerConfig(
+      name: 'sql-language-server',
+      executable: 'sql-language-server',
+      args: <String>['up', '--method', 'stdio'],
+      installHint: 'npm install -g sql-language-server',
+    ),
+    capabilities: LanguageCapabilities(
+      lsp: true,
+      debug: false,
+      formatting: true,
+      hover: true,
+      completion: true,
+      signatureHelp: false,
+      semanticTokens: false,
+    ),
+    lineComment: '--',
+    blockComment: <String>['/*', '*/'],
+  ),
+  LanguageDef(
+    id: 'vue',
+    label: 'Vue',
+    extensions: <String>['vue'],
+    markers: <String>[
+      'package.json',
+      'vite.config.ts',
+      'vite.config.js',
+      'nuxt.config.ts',
+    ],
+    tier: LanguageTier.tier3WebData,
+    server: LanguageServerConfig(
+      name: 'vue-language-server',
+      executable: 'vue-language-server',
+      args: <String>['--stdio'],
+      installHint: 'npm install -g @vue/language-server',
+    ),
+    sdk: SdkConfig(
+      name: 'Vue 3 / Vite',
+      installHint: 'https://vuejs.org',
+      documentationUrl: 'https://vuejs.org/guide/introduction.html',
+    ),
+    capabilities: LanguageCapabilities(
+      lsp: true,
+      debug: false,
+      formatting: true,
+      hover: true,
+      completion: true,
+      signatureHelp: true,
+      semanticTokens: true,
+    ),
+    blockComment: <String>['<!--', '-->'],
+  ),
+  LanguageDef(
+    id: 'svelte',
+    label: 'Svelte',
+    extensions: <String>['svelte'],
+    markers: <String>['package.json', 'svelte.config.js'],
+    tier: LanguageTier.tier3WebData,
+    server: LanguageServerConfig(
+      name: 'svelte-language-server',
+      executable: 'svelteserver',
+      args: <String>['--stdio'],
+      installHint: 'npm install -g svelte-language-server',
+    ),
+    sdk: SdkConfig(
+      name: 'Svelte / SvelteKit',
+      installHint: 'https://svelte.dev',
+      documentationUrl: 'https://svelte.dev/docs',
+    ),
+    capabilities: LanguageCapabilities(
+      lsp: true,
+      debug: false,
+      formatting: true,
+      hover: true,
+      completion: true,
+      signatureHelp: true,
+      semanticTokens: true,
+    ),
+    blockComment: <String>['<!--', '-->'],
   ),
 ];
 
