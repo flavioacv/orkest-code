@@ -386,6 +386,9 @@ Destino: Contratos de debug e painéis Flutter a definir.
 
 Aceite: Launch/attach, lifecycle, breakpoints verificados, pause/resume/step, threads/stack/scopes/variáveis/evaluate e console; ações dependem de capabilities; limpar processos e rejeitar resposta de sessão antiga.
 
+Entrega: Protocolo completo DAP em Dart puro com modelos fortemente tipados (`DapRequest`, `DapResponse`, `DapEvent`, `DapCapabilities`, etc.); codec de enquadramento `Content-Length` e buffer persistente resiliente a fragmentação de rede/I-O; cliente assíncrono `DapClient` com pareamento determinístico de `request_seq`; `DebugSessionController` reativo para ciclo de vida e sincronização de breakpoints; widgets especializados `DebugToolbar` (com atalhos F5, F10, F11, Shift+F11, Shift+F5) e painel colapsável `DebugPanel` com Call Stack, Variáveis e Breakpoints com navegação clicável para código-fonte.
+Validação: 10 testes unitários e de widgets aprovados em `cockpit/test/data/dap_core_test.dart` e `cockpit/test/ui/debug_widgets_test.dart`; análise estática `dart analyze --fatal-infos` limpa (0 issues). Concluído em 05/11/2026. Detalhes em `plan/72-nucleo-dap-ui-depuracao.md`.
+
 ### R03 — Homologar debug Dart e Flutter
 
 Prioridade P1 · Porte L · Dependências: R02.

@@ -115,13 +115,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: Listar/detalhar/criar PR, comentários/review/diff e checkout conforme ferramenta disponível; falhas de autenticação explícitas; nenhuma operação de publicação/merge fora de autorização.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
-- [ ] R03 · Homologar debug Dart e Flutter <!-- id: R03 labels: P1, debug blockedBy: R02 -->
-      Porte: L. Dependências: R02.
-      Origem: languages/dart.toml; adapter.rs.
-      Destino: Configuração SDK e tasks Flutter existentes.
-      Aceite: Dart CLI e Flutter launch/attach em targets selecionados; breakpoints, exceptions, source mapping, hot reload/restart reais e lifecycle testados; distinguir chaves PTY atuais das funções via DAP.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] R04 · Expandir debug multilinguagem progressivamente <!-- id: R04 labels: P2, debug blockedBy: R02, L05 -->
       Porte: L. Dependências: R02, L05.
       Origem: debugpy, js-debug, codelldb e configs de linguagens.
@@ -219,11 +212,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] R02 · Entregar núcleo DAP e UI de depuração <!-- id: R02 labels: P1, debug blockedBy: A04, R01, W03 -->
-      Porte: L. Dependências: A04, R01, W03.
-      Origem: ide-dap; debugger; commands/debug.rs.
-      Destino: Contratos de debug e painéis Flutter a definir.
-      Aceite: Launch/attach, lifecycle, breakpoints verificados, pause/resume/step, threads/stack/scopes/variáveis/evaluate e console; ações dependem de capabilities; limpar processos e rejeitar resposta de sessão antiga.
+- [ ] R03 · Homologar debug Dart e Flutter <!-- id: R03 labels: P1, debug blockedBy: R02 -->
+      Porte: L. Dependências: R02.
+      Origem: languages/dart.toml; adapter.rs.
+      Destino: Configuração SDK e tasks Flutter existentes.
+      Aceite: Dart CLI e Flutter launch/attach em targets selecionados; breakpoints, exceptions, source mapping, hot reload/restart reais e lifecycle testados; distinguir chaves PTY atuais das funções via DAP.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -242,6 +235,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] R02 · Entregar núcleo DAP e UI de depuração <!-- id: R02 labels: P1, debug blockedBy: A04, R01, W03 -->
+      Entrega: Protocolo completo DAP em Dart puro com modelos fortemente tipados (DapRequest, DapResponse, DapEvent, DapCapabilities, SourceBreakpoint, DapBreakpoint, DapThread, DapStackFrame, DapScope, DapVariable, DapStoppedEvent, DapOutputEvent, DapEvaluateResult); codec com enquadramento Content-Length e buffer persistente resiliente a fragmentação; cliente assíncrono DapClient para controle de subprocesso stdio e troca sequencial de mensagens com casamento por request_seq; DebugSessionController reativo para sincronização dinâmica de breakpoints, controle de estados do ciclo de vida e auto-inspeção de pilhas de execução e variáveis; componentes de UI especializados com a barra flutuante DebugToolbar (status RODANDO/PAUSADO e atalhos F5/F10/F11/Shift+F11/Shift+F5) e o painel colapsável DebugPanel para Call Stack, Variáveis e Breakpoints clicáveis com navegação direta para o arquivo e linha no editor.
+      Aceite: Launch/attach, lifecycle, breakpoints verificados, pause/resume/step, threads/stack/scopes/variáveis/evaluate e console; ações dependem de capabilities; limpar processos e rejeitar resposta de sessão antiga.
+      Validação: 10 testes unitários e de widgets aprovados em cockpit/test/data/dap_core_test.dart e cockpit/test/ui/debug_widgets_test.dart; análise estática dart analyze --fatal-infos limpa (zero issues).
+      Detalhes: [núcleo DAP e UI de depuração](72-nucleo-dap-ui-depuracao.md).
 
 - [x] R01 · Integrar configurações de execução e testes <!-- id: R01 labels: P1, debug blockedBy: W01, L01 -->
       Entrega: Modelo unificado RunConfiguration (run, test, custom) convertível para TaskDefinition do PtyTaskRunner; RunConfigurationProducer gerando configurações contextuais para Dart/Flutter (*_test.dart e executáveis), TypeScript/JavaScript (testes e scripts via tsx), Python (pytest e scripts) e Rust (cargo test e run); LaunchJsonLoader importando configurações .vscode/launch.json e .orkest/run.json com interpolação de variáveis e suporte JSONC; ConsoleLinkMatcher com parser regex de alta precisão para console clicável e navegação de stack traces.
