@@ -108,13 +108,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: Árvore de testes/reexecutar falhas e cobertura por formato validado; profiler somente por demanda; relatório aponta ferramenta/linguagem e não apresenta dado ausente como zero.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
-- [ ] B03 · Evoluir console SQL e avaliar ClickHouse <!-- id: B03 labels: P2, bancos blockedBy: B01 -->
-      Porte: M. Dependências: B01.
-      Origem: db_completion, explain/history/export; clickhouse.rs.
-      Destino: db_query_view e serviços SQL.
-      Aceite: Completion por schema, explain/histórico/export e limites de resultado; ClickHouse é decisão separada conforme demanda, sem remover suporte atual nem expor credenciais.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] X01 · Priorizar produtividade de edição e visualização <!-- id: X01 labels: P2, ferramentas blockedBy: W03, L02 -->
       Porte: M. Dependências: W03, L02.
       Origem: templates, macros, vim, todo, scratch, color-preview, viewers.
@@ -177,11 +170,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] B02 · Provar transações e edição persistente de dados <!-- id: B02 labels: P2, bancos blockedBy: B01, A04 -->
-      Porte: L. Dependências: B01, A04.
-      Origem: ide-db transactions e db_apply_edits.
-      Destino: DbDriver efêmero atual e painéis SQL.
-      Aceite: ADR decide sessão dedicada para transação manual; commit/rollback/disconnect e atualização otimista seguros; não simular transação entre conexões efêmeras; schema do produto só muda por migration versionada.
+- [ ] B03 · Evoluir console SQL e avaliar ClickHouse <!-- id: B03 labels: P2, bancos blockedBy: B01 -->
+      Porte: M. Dependências: B01.
+      Origem: db_completion, explain/history/export; clickhouse.rs.
+      Destino: db_query_view e serviços SQL.
+      Aceite: Completion por schema, explain/histórico/export e limites de resultado; ClickHouse é decisão separada conforme demanda, sem remover suporte atual nem expor credenciais.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -200,6 +193,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] B02 · Provar transações e edição persistente de dados <!-- id: B02 labels: P2, bancos blockedBy: B01, A04 -->
+      Entrega: ADR e implementação formal de transações manuais com sessões dedicadas DbTransactionSession e DbTransactionManager, mantendo o canal físico exclusivo e impondo rollback preventivo em caso de timeout de inatividade (padrão: 60s) ou no descarte da sessão (dispose); serviço de edição persistente de dados DbRowEditService implementando generateOptimisticUpdateSql (com verificação de chave primária e concorrência otimista via WHERE pk = val AND col = old_val), generateRowDeleteSql e generateRowInsertSql; guardrail rigoroso rejeitando edições e exclusões em tabelas sem chave primária definida (DbEditException).
+      Aceite: ADR decide sessão dedicada para transação manual; commit/rollback/disconnect e atualização otimista seguros; não simular transação entre conexões efêmeras; schema do produto só muda por migration versionada.
+      Validação: 11 testes unitários aprovados em test/domain/db_row_edit_service_test.dart e test/domain/db_transaction_session_test.dart cobrindo ciclo completo de transação (execute, commit, rollback explícito, auto-rollback por timeout e dispose preventivo) e geração de DML otimista; 35 testes combinados de B01 e B02 aprovados sem falhas; análise estática dart analyze --fatal-infos limpa (zero issues).
+      Plano: [detalhamento e arquitetura](72-transacoes-edicao-persistente-dados.md).
 
 - [x] B01 · Ampliar introspecção e navegação de bancos <!-- id: B01 labels: P2, bancos blockedBy: W02 -->
       Entrega: Modelos estruturados de introspecção SchemaIndex, SchemaForeignKey, SchemaRoutine e SchemaTableDetail; gerador determinístico DbDdlGenerator de scripts CREATE TABLE (com delimitação multi-dialeto, colunas tipadas, PKs, FKs e índices secundários) e CREATE VIEW; consultas SQL especializadas em db_schema_sql.dart para índices, foreign keys, rotinas e definições de view em SQLite, PostgreSQL, MySQL e MSSQL; integração de métodos e caches no DatabaseViewModel com suporte a invalidação seletiva via invalidateSchema; visualizador _TableDetailList no DbPanel exibindo seções expansíveis de colunas, índices e chaves estrangeiras, além de ações de contexto na tabela/view para copiar DDL e consulta SELECT.
