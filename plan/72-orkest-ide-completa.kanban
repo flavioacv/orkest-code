@@ -8,14 +8,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Backlog
 
-- [ ] A02 · Medir baseline Dart, TypeScript e pontes <!-- id: A02 labels: P0, arquitetura blockedBy: F01 -->
-      Porte: M. Dependências: F01.
-      Origem: OpenIDEA perf; comparação TS; Office snapshots.
-      Destino: Diagnósticos e telemetria existentes do Orkest.
-      Aceite: Registrar hardware, versões, corpus pequeno/grande, cold/warm, p50/p95, RSS, CPU idle, jank, cancelamento, bytes IPC e remoto; nenhum ganho de Rust presumido.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-      Diretriz 04/11: avaliar quando houver necessidade de desempenho identificada; não bloqueia entregas funcionais em Dart.
-
 - [ ] M01 · Comparar algoritmos TS de diff/merge com Rust <!-- id: M01 labels: P1, desempenho blockedBy: A02, F02 -->
       Porte: L. Dependências: A02, F02.
       Origem: src/features/vcs/comparison, mergeDiff3, graph.
@@ -49,12 +41,13 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] X04 · Avaliar notebooks e extensões <!-- id: X04 labels: P3, ferramentas blockedBy: A04, W02 -->
-      Porte: L. Dependências: A04, W02.
-      Origem: ide-notebook, ide-plugin, ide-extension, wit/sdk.
-      Destino: Pontos de extensão e viewers do Orkest.
-      Aceite: RFCs separados para notebook e plugin; definir kernel/lifecycle ou sandbox/permissões/API/versão; plugins React não são widgets Flutter; incluir decisão explícita de adiar quando custo não se justifica.
+- [ ] A02 · Medir baseline Dart, TypeScript e pontes <!-- id: A02 labels: P0, arquitetura blockedBy: F01 -->
+      Porte: M. Dependências: F01.
+      Origem: OpenIDEA perf; comparação TS; Office snapshots.
+      Destino: Diagnósticos e telemetria existentes do Orkest.
+      Aceite: Registrar hardware, versões, corpus pequeno/grande, cold/warm, p50/p95, RSS, CPU idle, jank, cancelamento, bytes IPC e remoto; nenhum ganho de Rust presumido.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
+      Diretriz 04/11: avaliar quando houver necessidade de desempenho identificada; não bloqueia entregas funcionais em Dart.
 
 ## Em revisão
 
@@ -72,6 +65,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] X04 · Avaliar notebooks e extensões <!-- id: X04 labels: P3, ferramentas blockedBy: A04, W02 -->
+      Entrega: Formalização das diretrizes e infraestrutura técnica de avaliação de cadernos interativos e ecossistemas de plugins: duas RFCs normativas elaboradas (plan/rfc-01-notebooks-interativos.md cobrindo modelo de células NotebookCellKind, outputs estruturados NotebookCellOutput, máquina de estados de kernel idle/starting/busy/dead e justificativa do adiamento de runtime nativo ZeroMQ; plan/rfc-02-sistema-extensoes-plugins.md estabelecendo que plugins React NÃO são widgets Flutter e rejeitando WebViews por plugin para preservar 60fps e economizar memória); modelos de domínio em cockpit/lib/app/core/domain/entities/notebook_plugin_eval.dart (JupyterNotebookDocument, PluginManifest, PluginSandboxPolicy, ExtensibilityEvaluationReport); e serviços em cockpit/lib/app/core/domain/services/notebook_plugin_eval_service.dart: JupyterNotebookParser decodificando arquivos .ipynb canônicos, PluginManifestValidator checando versão SemVer e auditando permissões de sandbox (bloqueando disco/rede/PTY por padrão), e catálogo formal de ADRs ExtensibilityEvaluationRegistry registrando a decisão explícita de adiar runtimes onerosos em favor do modelo project-first baseado em LSP/DAP/MCP.
+      Aceite: RFCs separados para notebook e plugin; definir kernel/lifecycle ou sandbox/permissões/API/versão; plugins React não são widgets Flutter; incluir decisão explícita de adiar quando custo não se justifica.
+      Validação: 5 testes unitários dedicados em cockpit/test/domain/notebook_plugin_eval_test.dart; 36 testes da suíte combinada aprovados com 100% de sucesso; análise estática dart analyze --fatal-infos 100% limpa (0 issues).
+      Plano: [detalhamento e arquitetura](72-avaliacao-notebooks-extensoes.md).
 
 - [x] X03 · Avaliar Docker, build e deployment <!-- id: X03 labels: P3, ferramentas blockedBy: R01, A04 -->
       Entrega: Implementação da infraestrutura formal de avaliação e execução de Docker/Podman, build contextual e deployment seguro: modelos imutáveis DockerContainerStatus, DockerContainer, DockerInspectReport, enum BuildTaskKind, UsefulBuildTask, DeploymentDiffKind, DeploymentDiffEntry e DeploymentPlan em cockpit/lib/app/core/domain/entities/docker_build_deploy.dart; serviços especializados em cockpit/lib/app/core/domain/services/docker_build_deploy_service.dart: DockerInspectionParser decodificando saídas JSON de docker ps e relatórios de docker inspect (status, IP, portas mapeadas, volumes e restart policies), UsefulBuildTaskDetector reconhecendo manifestos reais do projeto (pubspec.yaml, Cargo.toml, package.json, go.mod, Makefile, Dockerfile, compose.yaml) sem jamais instalar ferramentas ou dependências de forma arbitrária no host, e DeploymentPlanService calculando diferenças detalhadas entre origem e destino (added, modified, deleted, unchanged) com pré-visualização de volume de bytes e bloqueio obrigatório contra execuções sem confirmação humana explícita (isConfirmed == true).

@@ -546,6 +546,9 @@ Destino: Pontos de extensão e viewers do Orkest.
 
 Aceite: RFCs separados para notebook e plugin; definir kernel/lifecycle ou sandbox/permissões/API/versão; plugins React não são widgets Flutter; incluir decisão explícita de adiar quando custo não se justifica.
 
+Entrega: Formalização das diretrizes e infraestrutura técnica de avaliação de cadernos interativos e ecossistemas de plugins: duas RFCs normativas elaboradas (`plan/rfc-01-notebooks-interativos.md` cobrindo modelo de células `NotebookCellKind`, outputs estruturados `NotebookCellOutput`, máquina de estados de kernel `idle`/`starting`/`busy`/`dead` e justificativa do adiamento de runtime nativo ZeroMQ; `plan/rfc-02-sistema-extensoes-plugins.md` estabelecendo que plugins React NÃO são widgets Flutter e rejeitando WebViews por plugin para preservar 60fps e economizar memória); modelos de domínio em `cockpit/lib/app/core/domain/entities/notebook_plugin_eval.dart` (`JupyterNotebookDocument`, `PluginManifest`, `PluginSandboxPolicy`, `ExtensibilityEvaluationReport`); e serviços em `cockpit/lib/app/core/domain/services/notebook_plugin_eval_service.dart`: `JupyterNotebookParser` decodificando arquivos `.ipynb` canônicos, `PluginManifestValidator` checando versão SemVer e auditando permissões de sandbox (bloqueando disco/rede/PTY por padrão), e catálogo formal de ADRs `ExtensibilityEvaluationRegistry` registrando a decisão explícita de adiar runtimes onerosos em favor do modelo project-first baseado em LSP/DAP/MCP.
+Validação: 5 testes unitários dedicados em `cockpit/test/domain/notebook_plugin_eval_test.dart`; 36 testes da suíte combinada aprovados com 100% de sucesso; análise estática `dart analyze --fatal-infos` 100% limpa (0 issues). Concluído em 05/11/2026. Detalhes em `plan/72-avaliacao-notebooks-extensoes.md`.
+
 ### M01 — Comparar algoritmos TS de diff/merge com Rust
 
 Prioridade P1 · Porte L · Dependências: A02, F02.
