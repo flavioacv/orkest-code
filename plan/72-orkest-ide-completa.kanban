@@ -115,13 +115,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Aceite: Listar/detalhar/criar PR, comentários/review/diff e checkout conforme ferramenta disponível; falhas de autenticação explícitas; nenhuma operação de publicação/merge fora de autorização.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
-- [ ] R02 · Entregar núcleo DAP e UI de depuração <!-- id: R02 labels: P1, debug blockedBy: A04, R01, W03 -->
-      Porte: L. Dependências: A04, R01, W03.
-      Origem: ide-dap; debugger; commands/debug.rs.
-      Destino: Contratos de debug e painéis Flutter a definir.
-      Aceite: Launch/attach, lifecycle, breakpoints verificados, pause/resume/step, threads/stack/scopes/variáveis/evaluate e console; ações dependem de capabilities; limpar processos e rejeitar resposta de sessão antiga.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] R03 · Homologar debug Dart e Flutter <!-- id: R03 labels: P1, debug blockedBy: R02 -->
       Porte: L. Dependências: R02.
       Origem: languages/dart.toml; adapter.rs.
@@ -226,11 +219,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] R01 · Integrar configurações de execução e testes <!-- id: R01 labels: P1, debug blockedBy: W01, L01 -->
-      Porte: M. Dependências: W01, L01.
-      Origem: ide-run; src/features/run e producers.
-      Destino: Tasks, pty_task_runner e perfis existentes.
-      Aceite: Executar arquivo/teste/projeto com cwd/env/SDK explícitos; importar configurações selecionadas; console clicável e parar processo sem duplicar runner nem perder interatividade do terminal.
+- [ ] R02 · Entregar núcleo DAP e UI de depuração <!-- id: R02 labels: P1, debug blockedBy: A04, R01, W03 -->
+      Porte: L. Dependências: A04, R01, W03.
+      Origem: ide-dap; debugger; commands/debug.rs.
+      Destino: Contratos de debug e painéis Flutter a definir.
+      Aceite: Launch/attach, lifecycle, breakpoints verificados, pause/resume/step, threads/stack/scopes/variáveis/evaluate e console; ações dependem de capabilities; limpar processos e rejeitar resposta de sessão antiga.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -249,6 +242,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] R01 · Integrar configurações de execução e testes <!-- id: R01 labels: P1, debug blockedBy: W01, L01 -->
+      Entrega: Modelo unificado RunConfiguration (run, test, custom) convertível para TaskDefinition do PtyTaskRunner; RunConfigurationProducer gerando configurações contextuais para Dart/Flutter (*_test.dart e executáveis), TypeScript/JavaScript (testes e scripts via tsx), Python (pytest e scripts) e Rust (cargo test e run); LaunchJsonLoader importando configurações .vscode/launch.json e .orkest/run.json com interpolação de variáveis e suporte JSONC; ConsoleLinkMatcher com parser regex de alta precisão para console clicável e navegação de stack traces.
+      Aceite: Executar arquivo/teste/projeto com cwd/env/SDK explícitos; importar configurações selecionadas; console clicável e parar processo sem duplicar runner nem perder interatividade do terminal.
+      Validação: 13 testes unitários aprovados em test/tasks/run_configuration_test.dart e test/terminal/console_link_matcher_test.dart; 36 testes da suíte de regressão aprovados sem falhas; análise estática dart analyze --fatal-infos limpa (zero issues).
+      Detalhes: [configurações de execução e testes](72-configuracoes-execucao-testes.md).
 
 - [x] G02 · Adicionar resolução visual de conflitos <!-- id: G02 labels: P1, git blockedBy: G01 -->
       Entrega: Serviço GitConflictService em Dart puro com parsing de conflitos 2-way e 3-way (diff3 com base comum); resoluções atômicas unitárias (ours, theirs, both, base) e em lote (resolveAll); detecção não-bloqueante de operações Git em andamento (MERGE_HEAD, rebase-merge, rebase-apply, CHERRY_PICK_HEAD, REVERT_HEAD) com continueOperation e abortOperation; componente visual flutuante GitConflictBanner com contagem, navegação (anterior/próximo), botões contextuais de resolução e atalhos de continuar/abortar merge/rebase; integração reativa ao FileViewer no _initContent e _onCtrlChanged mantendo o histórico de undo/redo; integração ao GitController; suporte multilíngue em pt_BR, en e es via slang.
