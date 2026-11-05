@@ -136,6 +136,8 @@ Destino: orkest_protocol, orkest_engine, orkest_server.
 
 Aceite: Definir ownership de projeto/sessão/documento, UTF-16, erros, versão, cancelamento, streaming, backpressure e capacidades; mapear comandos locais/remotos e evitar dois donos do mesmo documento.
 
+Incremento concluído: especificação formal de contratos de serviços, ownership (Single Writer Rule), UTF-16, EOL CRLF/LF, erros tipados, cancelamento cooperativo com RpcCancel, negociação declarativa de capacidades (caps em Hello/HelloAck) e mapeamento dos 41 domínios OpenIDEA em [contratos de serviços e capacidades](72-contratos-servicos-capacidades.md); 17 testes de orkest_protocol e 40 testes de orkest_server aprovados; análise estática limpa.
+
 ### A02 — Medir baseline Dart, TypeScript e pontes
 
 Prioridade P0 · Porte M · Dependências: F01.

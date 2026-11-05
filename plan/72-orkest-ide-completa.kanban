@@ -8,13 +8,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Backlog
 
-- [ ] A01 · Especificar contratos de serviços e capacidades <!-- id: A01 labels: P0, arquitetura blockedBy: F01 -->
-      Porte: M. Dependências: F01.
-      Origem: ide-core; ide-host/src/rpc.rs; commands.
-      Destino: orkest_protocol, orkest_engine, orkest_server.
-      Aceite: Definir ownership de projeto/sessão/documento, UTF-16, erros, versão, cancelamento, streaming, backpressure e capacidades; mapear comandos locais/remotos e evitar dois donos do mesmo documento.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] A02 · Medir baseline Dart, TypeScript e pontes <!-- id: A02 labels: P0, arquitetura blockedBy: F01 -->
       Porte: M. Dependências: F01.
       Origem: OpenIDEA perf; comparação TS; Office snapshots.
@@ -289,9 +282,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-
-
-
 ## Em revisão
 
 - [ ] H00 · Homologar em build a correção de espera já implementada <!-- id: H00 labels: P0, harness blockedBy: H00a -->
@@ -308,6 +298,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] A01 · Especificar contratos de serviços e capacidades <!-- id: A01 labels: P0, arquitetura blockedBy: F01 -->
+      Entrega: especificação formal de contratos de serviços, modelo de ownership de recursos (projeto, sessão PTY, documento/buffer com Single Writer Rule), coordenadas de texto em UTF-16 code units, preservação/normalização de EOL (CRLF/LF), catálogo de erros tipados em RemoteError e RpcResponse, cancelamento cooperativo em duas camadas com mensagem RpcCancel (t: 'rpc.cancel', rid), negociação de capacidades com caps em Hello e HelloAck, limites de payload/backpressure e matriz de mapeamento dos 41 domínios OpenIDEA para Orkest.
+      Aceite: ownership de projeto/sessão/documento definido; consistência UTF-16; catálogo de erros e versionamento forward-compatible; cancelamento cooperativo e preventivo; backpressure e streaming documentados; negociação declarativa de capacidades; matriz dos 41 domínios mapeada; single writer garantido.
+      Validação: 17 testes de orkest_protocol aprovados (incluindo roundtrip de RpcRequest, RpcResponse, RpcCancel e Hello/HelloAck com caps); 40 testes de orkest_server aprovados; análise estática dart analyze --fatal-infos limpa (zero issues).
+      Detalhes: [contratos de serviços e capacidades](72-contratos-servicos-capacidades.md).
 
 - [x] L01 · Evoluir catálogo declarativo de linguagens <!-- id: L01 labels: P1, linguagens blockedBy: F01 -->
       Entrega: separação declarativa de detecção, marcadores de raiz, servidores LSP (LanguageServerConfig), adaptadores de debug (DebugAdapterConfig), SDKs (SdkConfig) e matriz de capacidades (LanguageCapabilities); suporte a comandos e caminhos com espaços via splitLspCommand; busca por ID (languageById) e 100% de compatibilidade com o pool e configurações do usuário.
