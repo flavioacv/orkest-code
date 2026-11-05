@@ -2,6 +2,10 @@
 
 Data: 04/11/2026. Estado: execução autorizada pelo usuário após elaboração do plano; arquitetura híbrida recomendada, sujeita às provas e decisões listadas. Agregar funcionalidades preservando a base atual é a prioridade. Ajustes visuais e otimizações motivadas apenas por desempenho ficam para avaliação futura quando houver necessidade identificada.
 
+## Diretriz vigente de Git desta versão
+
+Por instrução explícita de Flavio nesta conversa, todas as atividades desta versão devem continuar na mesma branch `fix/harness-state-detection`, com commits incrementais locais. Não criar novas branches por atividade, não fazer push e não abrir PR sem novo pedido explícito. As PRs #12 e #13 foram fechadas sem merge. As alterações já foram concentradas na primeira branch por fast-forward, preservando os commits existentes. Referências anteriores a branches separadas/PRs descrevem o histórico e não autorizam repetir esse fluxo.
+
 ## Contexto e direção
 
 Preservar o modelo de workspace do Orkest centrado em buscar, abrir e alternar projetos, incluindo hosts remotos. Evoluir a profundidade do trabalho humano no código: compreender, editar, refatorar, executar, depurar e revisar alterações no mesmo projeto, com terminais e agentes integrados.
@@ -97,7 +101,7 @@ P0 = habilitador/risco central; P1 = núcleo de IDE; P2 = aprofundamento; P3 = c
 
 Manter no máximo duas atividades em implementação e uma em revisão. Uma atividade só entra em Prontas quando dependências e critérios de teste estiverem definidos; Bloqueadas não é usado para representar um item que apenas aguarda sua ordem no backlog. O quadro registra dependências nativas por IDs.
 
-H00 está Em revisão porque o commit da correção de harness já foi publicado, mas merge/build não estão confirmados; a PR #12 reúne a correção e a primeira entrega do catálogo. DOC está Concluídas por ser o planejamento desta entrega; isso não marca implementações futuras como entregues.
+H00 está Em revisão porque o commit da correção de harness já foi publicado, mas build/validação integrada ainda estão pendentes; as PRs #12 e #13 foram encerradas sem merge conforme a nova diretriz de branch única. DOC está Concluídas por ser o planejamento desta entrega; isso não marca implementações futuras como entregues.
 
 ### Ajuste de execução autorizado
 
@@ -256,7 +260,7 @@ Prioridade P0 · Porte S · Dependências: nenhuma.
 Referência: Commit 8d01a751, fix/harness-state-detection.
 Destino: TerminalSession e terminal_status_test.
 
-Aceite: Confirmar PR, revisão e merge expressamente autorizado; build e validação real antes de marcar entregue; 102 testes anteriores não equivalem a validação de todas as CLIs.
+Aceite: Revisar na branch única; build e validação real antes de marcar entregue; 102 testes anteriores não equivalem a validação de todas as CLIs.
 
 ### H01 — Formalizar estado e precedência dos sinais de harness
 
@@ -549,7 +553,7 @@ Aceite: Plano e quadro abertos pelo CLI; todos os 41 domínios de comandos refer
 
 ## Definição de pronto e controles de migração
 
-Cada implementação deve consultar impacto estrutural antes de alterar código, trabalhar em branch própria, manter tipos/comentários/regras atuais e produzir PR revisável. Push somente após conclusão declarada e merge exclusivamente com aprovação expressa. Não executar migrations nem mudanças de schema nesta fase de planejamento.
+Cada implementação deve consultar impacto estrutural antes de alterar código, manter tipos/comentários/regras atuais e gerar commits incrementais na branch única `fix/harness-state-detection`. Push e abertura de PR somente sob novo pedido explícito de Flavio; merge exclusivamente com aprovação expressa. A implementação foi autorizada, mas mudanças de schema continuam exigindo migration estruturada quando necessárias.
 
 Para entrega de serviço: contrato e capacidades testados, erros/cancelamento/desconexão simulados, recursos/processos encerrados e paridade local/remota verificada. Para UI: tema/i18n/acessibilidade/atalhos e fluxo humano testados. Para algoritmo: corpus de equivalência e benchmark versionados. Para harness: precisão por transição no corpus rotulado, isolamento por sessão e manutenção da presença idle. Aprovação visual de CLI real complementa testes simulados.
 
