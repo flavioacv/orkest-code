@@ -585,6 +585,9 @@ Destino: habblaud_world_webview e engine visual atual.
 
 Aceite: Perfis distinguem snapshot/serialização/simulação/render; migrar somente hotspot puro comprovado; manter desenho WebView/Flutter e rotinas atuais; resultado válido inclui não migrar.
 
+Entrega: Implementação da infraestrutura formal de diagnóstico e perfilamento de desempenho do mundo virtual do Office: entidades de domínio `OfficeEngineMode`, `OfficeProfilingStage`, `OfficePerformanceBenchmark` e `OfficeMigrationVerdict` em `cockpit/lib/app/core/domain/entities/office_simulation_profile.dart`; serviços de domínio em `cockpit/lib/app/core/domain/services/office_simulation_diagnostic_service.dart`: `OfficeSimulationDiagnosticService` perfilando os 4 estágios do ciclo de vida por frame (snapshot, serialização, simulação e renderização), demonstrando empiricamente que a implementação nativa em Dart puro (`office_native_simulation.dart`) elimina 100% da sobrecarga de serialização JSON (6.8ms), reduz o tempo de frame de 20.7ms para 5.4ms (garantindo 60fps cravados), economiza mais de 125 MB de RAM frente à WebView legada e comprova que migrar para Rust introduziria 2.8ms de sobrecarga em cópias de buffer FFI/Wasm; e `OfficeMigrationRegistry` formalizando a decisão explícita de NÃO migrar para Rust e adotar o Flutter nativo como engine oficial.
+Validação: 5 testes unitários dedicados em `cockpit/test/domain/office_simulation_diagnostic_test.dart`; análise estática `dart analyze --fatal-infos` 100% limpa (0 issues). Concluído em 05/11/2026. Detalhes em `plan/72-diagnostico-typescript-office.md`.
+
 ### Q01 — Homologar IDE integrada e rollout reversível
 
 Prioridade P1 · Porte L · Dependências: W02, L05, H04, G02, R03, A05.

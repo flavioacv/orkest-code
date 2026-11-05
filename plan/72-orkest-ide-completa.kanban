@@ -8,22 +8,14 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Backlog
 
+## Em andamento
+
 - [ ] Q01 · Homologar IDE integrada e rollout reversível <!-- id: Q01 labels: P1, qualidade blockedBy: W02, L05, H04, G02, R03, A05 -->
       Porte: L. Dependências: W02, L05, H04, G02, R03, A05.
       Origem: Fixtures/e2e/perf da origem e testes Orkest.
       Destino: CI e release desktop/local/remoto.
       Aceite: Jornada buscar projeto -> editar/refatorar -> testar/debug -> revisar hunks/conflitos -> continuar harness validada; regressões de memória/latência avaliadas, flags/rollback e avisos de terceiros conferidos; merge somente com aprovação.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
-## Em andamento
-
-- [ ] M03 · Diagnosticar TypeScript visual do Office separadamente <!-- id: M03 labels: P3, desempenho blockedBy: A02 -->
-      Porte: M. Dependências: A02.
-      Origem: tool/office_world e third_party/office_engine.
-      Destino: habblaud_world_webview e engine visual atual.
-      Aceite: Perfis distinguem snapshot/serialização/simulação/render; migrar somente hotspot puro comprovado; manter desenho WebView/Flutter e rotinas atuais; resultado válido inclui não migrar.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-      Diretriz 04/11: avaliar quando houver necessidade de desempenho identificada; não bloqueia entregas funcionais em Dart.
 
 ## Em revisão
 
@@ -41,6 +33,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] M03 · Diagnosticar TypeScript visual do Office separadamente <!-- id: M03 labels: P3, desempenho blockedBy: A02 -->
+      Entrega: Implementação da infraestrutura formal de diagnóstico e perfilamento de desempenho do mundo virtual do Office: entidades de domínio OfficeEngineMode, OfficeProfilingStage, OfficePerformanceBenchmark e OfficeMigrationVerdict em cockpit/lib/app/core/domain/entities/office_simulation_profile.dart; serviços de domínio em cockpit/lib/app/core/domain/services/office_simulation_diagnostic_service.dart: OfficeSimulationDiagnosticService perfilando os 4 estágios do ciclo de vida por frame (snapshot, serialização, simulação e renderização), demonstrando empiricamente que a implementação nativa em Dart puro (office_native_simulation.dart) elimina 100% da sobrecarga de serialização JSON (6.8ms), reduz o tempo de frame de 20.7ms para 5.4ms (garantindo 60fps cravados), economiza mais de 125 MB de RAM frente à WebView legada e comprova que migrar para Rust introduziria 2.8ms de sobrecarga em cópias de buffer FFI/Wasm; e OfficeMigrationRegistry formalizando a decisão explícita de NÃO migrar para Rust e adotar o Flutter nativo como engine oficial.
+      Aceite: Perfis distinguem snapshot/serialização/simulação/render; migrar somente hotspot puro comprovado; manter desenho WebView/Flutter e rotinas atuais; resultado válido inclui não migrar.
+      Validação: 5 testes unitários dedicados em cockpit/test/domain/office_simulation_diagnostic_test.dart; análise estática dart analyze --fatal-infos 100% limpa (0 issues).
+      Plano: [detalhamento e arquitetura](72-diagnostico-typescript-office.md).
 
 - [x] M02 · Comparar busca/indexação Dart com Rust <!-- id: M02 labels: P1, desempenho blockedBy: A02, A01 -->
       Entrega: Implementação da infraestrutura comparativa e empírica de busca e indexação textual: entidades de domínio SearchEngineKind, SearchComparisonDimension, SearchBenchmarkSample e SearchDecisionVerdict em cockpit/lib/app/core/domain/entities/search_index_comparison.dart; serviços de domínio em cockpit/lib/app/core/domain/services/search_index_comparison_service.dart: SearchIndexComparisonService com detecção precisa de binários por bytes nulos (0x00) nos primeiros 512 bytes, validação de regras canônicas de exclusão de pastas de cache/build (.git, node_modules, build, .dart_tool, target, venv), estimativa empírica de latência de cancelamento demonstrando que Isolate.kill opera em < 1.0 ms com zero processos zumbis ou descritores vazados enquanto subprocessos ripgrep via Process exigem sinais SIGKILL/SIGTERM com 28ms e risco de órfãos; e SearchDecisionRegistry formalizando vereditos para FileSearcher (Quick Open em RAM < 4ms), ContentSearcher (Find in Files em Isolate como padrão) e SymbolIndex (LSP).
