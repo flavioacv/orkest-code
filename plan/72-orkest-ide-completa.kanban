@@ -16,14 +16,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
       Diretriz 04/11: avaliar quando houver necessidade de desempenho identificada; não bloqueia entregas funcionais em Dart.
 
-- [ ] L02 · Completar assistência LSP no editor <!-- id: L02 labels: P1, linguagens blockedBy: W03, L01 -->
-      Porte: L. Dependências: W03, L01.
-      Origem: src/editor/lsp; commands/lsp.rs.
-      Destino: Cliente/pool LSP existente, code_editor e controllers.
-      Aceite: Completion, resolve, hover semântico e signature help funcionam em Dart e TS; requests cancelados e respostas antigas não alteram documento/versão errados.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-      Progresso: hover (L02a), signature help (L02b), autocomplete simples com resolve (L02c), cancelamento de consultas obsoletas (L02d) e cancelamento pela UI/resolve (L02e) concluídos. Permanecem homologação TypeScript, snippets e demais capacidades avançadas; descarte local continua protegendo o buffer após cancelamento remoto.
-
 - [ ] L03 · Adicionar navegação semântica e busca unificada <!-- id: L03 labels: P1, linguagens blockedBy: L02, W02 -->
       Porte: M. Dependências: L02, W02.
       Origem: code-insight; search; nav.
@@ -162,12 +154,13 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] A05 · Empacotar e supervisionar serviços nativos selecionados <!-- id: A05 labels: P1, arquitetura blockedBy: A04 -->
-      Porte: L. Dependências: A04.
-      Origem: ide-core/process; host; crates selecionadas.
-      Destino: Build/release desktop e transporte remoto existentes.
-      Aceite: Bins/bibliotecas por OS/arch, encerramento de filhos, handshake incompatível, reinício, logs sem segredos, atualização/rollback e ausência de ferramentas externas testados.
+- [ ] L02 · Completar assistência LSP no editor <!-- id: L02 labels: P1, linguagens blockedBy: W03, L01 -->
+      Porte: L. Dependências: W03, L01.
+      Origem: src/editor/lsp; commands/lsp.rs.
+      Destino: Cliente/pool LSP existente, code_editor e controllers.
+      Aceite: Completion, resolve, hover semântico e signature help funcionam em Dart e TS; requests cancelados e respostas antigas não alteram documento/versão errados.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
+      Progresso: hover (L02a), signature help (L02b), autocomplete simples com resolve (L02c), cancelamento de consultas obsoletas (L02d) e cancelamento pela UI/resolve (L02e) concluídos. Permanecem homologação TypeScript, snippets e demais capacidades avançadas; descarte local continua protegendo o buffer após cancelamento remoto.
 
 ## Em revisão
 
@@ -185,6 +178,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] A05 · Empacotar e supervisionar serviços nativos selecionados <!-- id: A05 labels: P1, arquitetura blockedBy: A04 -->
+      Entrega: Subsistema de resolução e supervisão de processos nativos NativeBinaryResolver, NativeServiceSupervisor e LogSanitizer; resolução multiplataforma de binários por SO/arch (macOS arm64/x64, Linux arm64/x64, Windows arm64/x64 com .exe) e fallbacks estruturados (bundle -> .orkest/bin/ -> PATH); ciclo de vida supervisionado com encerramento forçado de processos filhos (SIGTERM seguido de SIGKILL) prevenindo processos órfãos no descarte (dispose); verificação de compatibilidade de versão de protocolo no handshake (IncompatibleProtocolException); proteção contra loop de quedas (crash loop) com auto-restart controlado e transição para estado degraded; rollback resiliente para binário anterior (fallbackBinaryPath); sanitização rigorosa de logs em tempo real mascarando tokens Bearer, senhas CLI, JSON, chaves privadas PEM e URLs com credenciais embedded.
+      Aceite: Bins/bibliotecas por OS/arch, encerramento de filhos, handshake incompatível, reinício, logs sem segredos, atualização/rollback e ausência de ferramentas externas testados.
+      Validação: 15 testes unitários dedicados aprovados em test/domain/log_sanitizer_test.dart, test/domain/native_binary_resolver_test.dart e test/domain/native_service_supervisor_test.dart; análise estática dart analyze --fatal-infos limpa (zero issues).
+      Plano: [detalhamento e arquitetura](72-empacotamento-supervisao-servicos-nativos.md).
 
 - [x] B03 · Evoluir console SQL e avaliar ClickHouse <!-- id: B03 labels: P2, bancos blockedBy: B01 -->
       Entrega: Serviço de exportação estruturada DbExportService com suporte completo a CSV (delimitador customizável, cabeçalhos, escape de aspas dobradas, quebras de linha embutidas e formatação de DateTime/blobs) e JSON formatado (pretty e compacto); consultas EXPLAIN e EXPLAIN ANALYZE contextuais multi-engine via dbExplainSql em db_schema_sql.dart para SQLite, PostgreSQL, MySQL e MSSQL; serviço de histórico de consultas DbQueryHistoryService e entidade DbQueryHistoryEntry com tracking de status, contagem de linhas e retenção máxima configurável (FIFO); serviço de autocompletion de SQL por schema DbSqlCompletionService com sugestão inteligente de keywords, funções, tabelas e colunas qualificadas; avaliação técnica formal de ClickHouse (ADR) documentada em plan/72-avaliacao-clickhouse.md decidindo pela não inclusão desnecessária no bundle básico e adoção da interface HTTP sob demanda (KISS/YAGNI).
