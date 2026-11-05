@@ -1,5 +1,6 @@
 import '../../domain/entities/lsp_completion.dart';
 import '../../domain/entities/lsp_diagnostic.dart';
+import '../../domain/services/lsp_snippet_service.dart';
 
 LspRange? _range(Object? value) {
   if (value is! Map) return null;
@@ -23,8 +24,11 @@ LspRange? _range(Object? value) {
   return LspRange(start, end);
 }
 
-/// Lê CompletionItem[] e CompletionList, sem anunciar suporte a snippets.
-List<LspCompletionItem> parseCompletions(Object? response) {
+/// Lê CompletionItem[] e CompletionList, com suporte configurável a snippets.
+List<LspCompletionItem> parseCompletions(
+  Object? response, {
+  bool supportSnippets = false,
+}) {
   final rawItems = response is List
       ? response
       : response is Map
@@ -35,6 +39,8 @@ List<LspCompletionItem> parseCompletions(Object? response) {
       ? response['itemDefaults'] as Map
       : const {};
   final items = <LspCompletionItem>[];
+  const snippetService = LspSnippetService();
+
   for (final raw in rawItems.take(200)) {
     if (raw is! Map ||
         raw['label'] is! String ||
@@ -43,20 +49,28 @@ List<LspCompletionItem> parseCompletions(Object? response) {
     }
     if (raw.keys.any((key) => key is! String)) continue;
     final json = Map<String, dynamic>.from(raw);
-    if ((json['insertTextFormat'] ?? defaults['insertTextFormat']) == 2) {
+    final isSnippet = (json['insertTextFormat'] ?? defaults['insertTextFormat']) == 2;
+    if (isSnippet && !supportSnippets) {
       continue;
     }
     final label = json['label'] as String;
     var insert = json['insertText'] is String
         ? json['insertText'] as String
         : label;
+    if (isSnippet) {
+      insert = snippetService.expand(insert).text;
+    }
     LspCompletionEdit? edit;
     final textEdit = json['textEdit'];
     if (textEdit != null) {
       if (textEdit is! Map || textEdit['newText'] is! String) continue;
       final range = _range(textEdit['range'] ?? textEdit['replace']);
       if (range == null) continue;
-      insert = textEdit['newText'] as String;
+      var rawNewText = textEdit['newText'] as String;
+      if (isSnippet) {
+        rawNewText = snippetService.expand(rawNewText).text;
+      }
+      insert = rawNewText;
       edit = LspCompletionEdit(range, insert);
     } else if (defaults['editRange'] != null) {
       final rawRange = defaults['editRange'];
@@ -68,6 +82,9 @@ List<LspCompletionItem> parseCompletions(Object? response) {
       if (range == null) continue;
       if (json['textEditText'] is String) {
         insert = json['textEditText'] as String;
+        if (isSnippet) {
+          insert = snippetService.expand(insert).text;
+        }
       }
       edit = LspCompletionEdit(range, insert);
       json['textEdit'] = {
