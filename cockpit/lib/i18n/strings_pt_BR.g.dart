@@ -278,6 +278,7 @@ class _Translations$core$menu$pt_BR extends Translations$core$menu$en {
 	@override String get newTerminal => 'Novo Terminal';
 	@override String get openWorkspace => 'Abrir Workspace';
 	@override String get goToFile => 'Ir para Arquivo…';
+	@override String get commandPalette => 'Paleta de Comandos…';
 	@override String get save => 'Salvar';
 	@override String get discard => 'Descartar';
 	@override String get format => 'Formatar';
@@ -2122,6 +2123,7 @@ extension on TranslationsPtBr {
 			'core.menu.newTerminal' => 'Novo Terminal',
 			'core.menu.openWorkspace' => 'Abrir Workspace',
 			'core.menu.goToFile' => 'Ir para Arquivo…',
+			'core.menu.commandPalette' => 'Paleta de Comandos…',
 			'core.menu.save' => 'Salvar',
 			'core.menu.discard' => 'Descartar',
 			'core.menu.format' => 'Formatar',
@@ -2601,9 +2603,9 @@ extension on TranslationsPtBr {
 			'orkest.dbRedisTable.deleteKeyTitle' => 'Excluir chave',
 			'orkest.dbRedisTable.deleteKeyMessage' => ({required Object key}) => 'Excluir "${key}" deste banco Redis?',
 			'orkest.dbRedisTable.refresh' => 'Atualizar',
-			'orkest.dbRedisTable.newKey' => 'Nova chave',
 			_ => null,
 		} ?? switch (path) {
+			'orkest.dbRedisTable.newKey' => 'Nova chave',
 			'orkest.dbRedisTable.columnKey' => 'CHAVE',
 			'orkest.dbRedisTable.columnValue' => 'VALOR',
 			'orkest.dbRedisTable.columnType' => 'TIPO',
@@ -3115,9 +3117,9 @@ extension on TranslationsPtBr {
 			'settings.page.appearance.modeDesc' => 'Qual variante do tema usar.',
 			'settings.page.appearance.modeOnlyDark' => ({required Object theme}) => '"${theme}" só traz a variante escura, então isto não tem efeito.',
 			'settings.page.appearance.modeOnlyLight' => ({required Object theme}) => '"${theme}" só traz a variante clara, então isto não tem efeito.',
-			'settings.page.appearance.themeFileTitle' => 'Arquivo de tema',
 			_ => null,
 		} ?? switch (path) {
+			'settings.page.appearance.themeFileTitle' => 'Arquivo de tema',
 			'settings.page.appearance.themeFileDesc' => 'Importe um tema de um arquivo JSON, ou exporte o tema ativo.',
 			'settings.page.appearance.previewCode' => 'Código',
 			'settings.page.appearance.previewTerminal' => 'Terminal',

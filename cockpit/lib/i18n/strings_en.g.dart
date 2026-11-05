@@ -391,6 +391,9 @@ class Translations$core$menu$en {
 	/// en: 'Go to File…'
 	String get goToFile => 'Go to File…';
 
+	/// en: 'Command Palette…'
+	String get commandPalette => 'Command Palette…';
+
 	/// en: 'Save'
 	String get save => 'Save';
 
@@ -4517,6 +4520,7 @@ extension on Translations {
 			'core.menu.newTerminal' => 'New Terminal',
 			'core.menu.openWorkspace' => 'Open Workspace',
 			'core.menu.goToFile' => 'Go to File…',
+			'core.menu.commandPalette' => 'Command Palette…',
 			'core.menu.save' => 'Save',
 			'core.menu.discard' => 'Discard',
 			'core.menu.format' => 'Format',
@@ -4996,9 +5000,9 @@ extension on Translations {
 			'orkest.dbRedisTable.deleteKeyTitle' => 'Delete key',
 			'orkest.dbRedisTable.deleteKeyMessage' => ({required Object key}) => 'Delete "${key}" from this Redis database?',
 			'orkest.dbRedisTable.refresh' => 'Refresh',
-			'orkest.dbRedisTable.newKey' => 'New key',
 			_ => null,
 		} ?? switch (path) {
+			'orkest.dbRedisTable.newKey' => 'New key',
 			'orkest.dbRedisTable.columnKey' => 'KEY',
 			'orkest.dbRedisTable.columnValue' => 'VALUE',
 			'orkest.dbRedisTable.columnType' => 'TYPE',
@@ -5510,9 +5514,9 @@ extension on Translations {
 			'settings.page.appearance.modeDesc' => 'Which variant of the theme to use.',
 			'settings.page.appearance.modeOnlyDark' => ({required Object theme}) => '"${theme}" only ships a dark variant, so this has no effect.',
 			'settings.page.appearance.modeOnlyLight' => ({required Object theme}) => '"${theme}" only ships a light variant, so this has no effect.',
-			'settings.page.appearance.themeFileTitle' => 'Theme file',
 			_ => null,
 		} ?? switch (path) {
+			'settings.page.appearance.themeFileTitle' => 'Theme file',
 			'settings.page.appearance.themeFileDesc' => 'Import a theme from a JSON file, or export the active one.',
 			'settings.page.appearance.previewCode' => 'Code',
 			'settings.page.appearance.previewTerminal' => 'Terminal',

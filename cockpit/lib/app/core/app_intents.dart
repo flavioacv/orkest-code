@@ -19,3 +19,6 @@ VoidCallback? requestOpenProject;
 /// Menu **Orkest → Verificar atualizações…** → dispara um check imediato do
 /// self-updater (Sparkle/WinSparkle) e, se já houver download pronto, instala.
 VoidCallback? requestCheckForUpdates;
+
+/// Menu **Exibir → Paleta de comandos…** (⇧⌘P / F1) → abre a Command Palette unificada.
+VoidCallback? requestOpenCommandPalette;

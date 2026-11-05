@@ -10,6 +10,9 @@ import 'package:orkest_code/app/orkest/ui/actions/workspace_actions.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/git_branch_picker.dart';
 import 'package:orkest_code/app/orkest/ui/actions/worktree_actions.dart';
 import 'package:orkest_code/app/core/app_intents.dart';
+import 'package:orkest_code/app/core/ui/commands/command_item.dart';
+import 'package:orkest_code/app/core/ui/menu/editor_menu_bridge.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/command_palette.dart';
 import 'package:orkest_code/app/orkest/domain/entities/project.dart';
 import 'package:orkest_code/app/orkest/ui/session/pane_item.dart';
 import 'package:orkest_code/app/orkest/ui/session/terminal_session.dart';
@@ -195,6 +198,10 @@ class _OrkestPageState extends State<OrkestPage> {
     requestOpenSettings = () {
       if (!mounted) return;
       context.pushNamed(RoutePaths.settings);
+    };
+    requestOpenCommandPalette = () {
+      if (!mounted) return;
+      _openCommandPalette();
     };
     // O motor/perfil precisam chegar antes do init: ele já pode restaurar ou
     // criar terminais, e a preferência do usuário deve valer desde o 1º buffer.
@@ -644,6 +651,7 @@ class _OrkestPageState extends State<OrkestPage> {
     requestOpenProject = null;
     requestCheckForUpdates = null;
     requestOpenSettings = null;
+    requestOpenCommandPalette = null;
     _searchFocusSignal.dispose();
     super.dispose();
   }
@@ -653,11 +661,149 @@ class _OrkestPageState extends State<OrkestPage> {
   void _openFileFinder() {
     final vm = _vm;
     final project = vm.selectedProject;
-    if (project == null) return;
+    if (project == null) {
+      _openCommandPalette();
+      return;
+    }
     showFileFinderPalette(
       context,
       search: (query) => vm.searchFiles(project.path, query),
       onPick: vm.openProjectFile,
+      onCommandMode: (q) => _openCommandPalette(initialQuery: q),
+    );
+  }
+
+  /// Cmd+Shift+P / Ctrl+Shift+P / F1: abre a Command Palette unificada.
+  void _openCommandPalette({String initialQuery = ''}) {
+    final vm = _vm;
+    final editor = context.read<EditorMenuBridge>();
+    final workspace = context.read<WorkspaceMenuBridge>();
+    final t = context.t;
+    final hasProject = vm.selectedProject != null;
+
+    final commands = <AppCommandItem>[
+      AppCommandItem(
+        id: 'file.openWorkspace',
+        title: t.core.menu.openWorkspace,
+        category: 'File',
+        shortcutHint: '⌘O',
+        onSelected: () => requestOpenProject?.call(),
+      ),
+      AppCommandItem(
+        id: 'file.goToFile',
+        title: t.core.menu.goToFile,
+        category: 'File',
+        shortcutHint: '⌘P',
+        isEnabled: hasProject,
+        disabledReason: 'Requer workspace de projeto aberto',
+        onSelected: _openFileFinder,
+      ),
+      AppCommandItem(
+        id: 'file.save',
+        title: t.core.menu.save,
+        category: 'File',
+        shortcutHint: '⌘S',
+        isEnabled: editor.canSave,
+        disabledReason: 'Nenhum buffer editável com alterações pendentes',
+        onSelected: editor.save,
+      ),
+      AppCommandItem(
+        id: 'file.discard',
+        title: t.core.menu.discard,
+        category: 'File',
+        isEnabled: editor.canDiscard,
+        disabledReason: 'Nenhum buffer editável com alterações pendentes',
+        onSelected: editor.discard,
+      ),
+      AppCommandItem(
+        id: 'edit.format',
+        title: t.core.menu.format,
+        category: 'Edit',
+        shortcutHint: '⇧⌘F',
+        isEnabled: editor.canFormat,
+        disabledReason: 'Nenhum editor de texto ativo',
+        onSelected: editor.format,
+      ),
+      AppCommandItem(
+        id: 'terminal.new',
+        title: t.core.menu.newTerminal,
+        category: 'Terminal',
+        shortcutHint: '⌘T',
+        isEnabled: hasProject,
+        disabledReason: 'Requer workspace de projeto aberto',
+        onSelected: () => workspace.newTerminal(),
+      ),
+      AppCommandItem(
+        id: 'view.commandPalette',
+        title: t.core.menu.commandPalette,
+        category: 'View',
+        shortcutHint: '⇧⌘P',
+        onSelected: () => _openCommandPalette(),
+      ),
+      AppCommandItem(
+        id: 'view.toggleWorkspacePanel',
+        title: t.core.menu.toggleWorkspacePanel,
+        category: 'View',
+        shortcutHint: '⌘B',
+        isEnabled: hasProject,
+        disabledReason: 'Requer workspace de projeto aberto',
+        onSelected: workspace.toggleRail,
+      ),
+      AppCommandItem(
+        id: 'view.toggleFiles',
+        title: t.core.menu.toggleFiles,
+        category: 'View',
+        shortcutHint: '⇧⌘B',
+        isEnabled: hasProject,
+        disabledReason: 'Requer workspace de projeto aberto',
+        onSelected: workspace.toggleFiles,
+      ),
+      AppCommandItem(
+        id: 'view.splitRight',
+        title: t.core.menu.splitRight,
+        category: 'View',
+        shortcutHint: '⌘D',
+        isEnabled: hasProject,
+        disabledReason: 'Requer workspace de projeto aberto',
+        onSelected: workspace.splitRight,
+      ),
+      AppCommandItem(
+        id: 'view.splitDown',
+        title: t.core.menu.splitDown,
+        category: 'View',
+        shortcutHint: '⇧⌘D',
+        isEnabled: hasProject,
+        disabledReason: 'Requer workspace de projeto aberto',
+        onSelected: workspace.splitDown,
+      ),
+      AppCommandItem(
+        id: 'view.closeActiveTab',
+        title: 'Close Active Tab',
+        category: 'View',
+        shortcutHint: '⌘W',
+        isEnabled: vm.focusedTab() != null,
+        disabledReason: 'Nenhuma aba aberta na pane ativa',
+        onSelected: _closeActiveTab,
+      ),
+      AppCommandItem(
+        id: 'preferences.settings',
+        title: t.core.menu.settings,
+        category: 'Preferences',
+        shortcutHint: '⌘,',
+        onSelected: () => requestOpenSettings?.call(),
+      ),
+      AppCommandItem(
+        id: 'preferences.checkForUpdates',
+        title: t.core.menu.checkForUpdates,
+        category: 'Preferences',
+        onSelected: () => requestCheckForUpdates?.call(),
+      ),
+    ];
+
+    showCommandPalette(
+      context,
+      commands: commands,
+      initialQuery: initialQuery,
     );
   }
 
@@ -675,6 +821,11 @@ class _OrkestPageState extends State<OrkestPage> {
     const SingleActivator(LogicalKeyboardKey.keyP, meta: true): _openFileFinder,
     const SingleActivator(LogicalKeyboardKey.keyP, control: true):
         _openFileFinder,
+    const SingleActivator(LogicalKeyboardKey.keyP, meta: true, shift: true):
+        _openCommandPalette,
+    const SingleActivator(LogicalKeyboardKey.keyP, control: true, shift: true):
+        _openCommandPalette,
+    const SingleActivator(LogicalKeyboardKey.f1): _openCommandPalette,
     const SingleActivator(LogicalKeyboardKey.keyF, meta: true, shift: true):
         _focusContentSearch,
     const SingleActivator(LogicalKeyboardKey.keyF, control: true, shift: true):

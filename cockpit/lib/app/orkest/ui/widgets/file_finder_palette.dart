@@ -14,19 +14,29 @@ Future<void> showFileFinderPalette(
   BuildContext context, {
   required Future<List<String>> Function(String query) search,
   required void Function(String relativePath) onPick,
+  void Function(String commandQuery)? onCommandMode,
 }) {
   return showDialog<void>(
     context: context,
     barrierColor: context.colors.scrim,
-    builder: (context) => _FileFinderPalette(search: search, onPick: onPick),
+    builder: (context) => _FileFinderPalette(
+      search: search,
+      onPick: onPick,
+      onCommandMode: onCommandMode,
+    ),
   );
 }
 
 class _FileFinderPalette extends StatefulWidget {
-  const _FileFinderPalette({required this.search, required this.onPick});
+  const _FileFinderPalette({
+    required this.search,
+    required this.onPick,
+    this.onCommandMode,
+  });
 
   final Future<List<String>> Function(String query) search;
   final void Function(String relativePath) onPick;
+  final void Function(String commandQuery)? onCommandMode;
 
   @override
   State<_FileFinderPalette> createState() => _FileFinderPaletteState();
@@ -58,6 +68,11 @@ class _FileFinderPaletteState extends State<_FileFinderPalette> {
   }
 
   void _onChanged(String value) {
+    if (value.startsWith('>') && widget.onCommandMode != null) {
+      Navigator.of(context).pop();
+      widget.onCommandMode!(value);
+      return;
+    }
     _debounce?.cancel();
     _debounce = Timer(const Duration(milliseconds: 120), () => _query(value));
   }

@@ -133,6 +133,17 @@ List<MenuBarMenu> buildAppMenus(
     // `_zoomBindings` do `AppRoot` em todas as plataformas. `shortcutHandledExternally`
     // impede o `menuShortcuts` de registrar de novo fora do macOS (disparo duplo).
     MenuBarMenu(tr.view, <MenuNode>[
+      if (!isMobilePlatform)
+        MenuAction(
+          tr.commandPalette,
+          accelerator: const MenuAccelerator(
+            LogicalKeyboardKey.keyP,
+            shift: true,
+          ),
+          shortcutHandledExternally: true,
+          onSelected: () => requestOpenCommandPalette?.call(),
+        ),
+      if (!isMobilePlatform) const MenuSeparator(),
       // Layout do workspace (ativos só com workspace aberto). Aceleradores reais:
       // no macOS o menu nativo dispara; fora dele o `menuShortcuts` registra.
       // No mobile os toggles viram os drawers (por largura) e o split fica no

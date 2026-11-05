@@ -45,6 +45,7 @@
       "newTerminal": "Novo Terminal",
       "openWorkspace": "Abrir Workspace",
       "goToFile": "Ir para Arquivo…",
+      "commandPalette": "Paleta de Comandos…",
       "save": "Salvar",
       "discard": "Descartar",
       "format": "Formatar",
