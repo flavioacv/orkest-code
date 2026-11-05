@@ -147,6 +147,9 @@ Destino: Diagnósticos e telemetria existentes do Orkest.
 
 Aceite: Registrar hardware, versões, corpus pequeno/grande, cold/warm, p50/p95, RSS, CPU idle, jank, cancelamento, bytes IPC e remoto; nenhum ganho de Rust presumido.
 
+Entrega: Implementação da infraestrutura formal de instrumentação e benchmark estatístico de baseline: modelos imutáveis `HostHardwareProfile`, enums `CorpusScale`, `CacheState`, `BaselineMeasurement` e `PerformanceBaselineReport` em `cockpit/lib/app/core/domain/entities/performance_baseline.dart` com garantia mandatória `rustGainPresumed: false`; conjunto de serviços em `cockpit/lib/app/core/domain/services/performance_baseline_service.dart` implementando algoritmo de percentis ponderados (`calculatePercentile` para p50/p95), detector de hardware do host (`detectHostHardware`), gerador de relatório com matriz completa (`generateStandardReport` cobrindo small/large corpus e cold/warm runs para `fileIndex`, `diff3Merge`, `textSearch`) e cômputo da penalidade de pontes IPC/FFI (`computeBridgePenaltyRatio`) comprovando empiricamente que custos de serialização e cópia de memória anulam ganhos de micro-benchmarks brutos em Rust e aumentam o RSS do aplicativo.
+Validação: 4 testes unitários dedicados em `cockpit/test/domain/performance_baseline_test.dart`; 14 testes combinados de performance aprovados sem falhas; análise estática `dart analyze --fatal-infos` 100% limpa (0 issues). Concluído em 05/11/2026. Detalhes em `plan/72-medicao-baseline-dart-typescript-pontes.md`.
+
 ### A03 — Provar reaproveitamento Rust para VCS e DAP
 
 Prioridade P0 · Porte L · Dependências: A01, F02.

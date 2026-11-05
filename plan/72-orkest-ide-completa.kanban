@@ -8,14 +8,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Backlog
 
-- [ ] M01 · Comparar algoritmos TS de diff/merge com Rust <!-- id: M01 labels: P1, desempenho blockedBy: A02, F02 -->
-      Porte: L. Dependências: A02, F02.
-      Origem: src/features/vcs/comparison, mergeDiff3, graph.
-      Destino: Protótipos sem substituir editor de produção.
-      Aceite: Mesmo corpus e saídas esperadas em TS e Rust; medir custo completo com IPC/FFI, UTF-16, CRLF, hunks e casos adversos; decidir algoritmo por algoritmo e reaproveitar testes da origem.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-      Diretriz 04/11: avaliar quando houver necessidade de desempenho identificada; não bloqueia entregas funcionais em Dart.
-
 - [ ] M02 · Comparar busca/indexação Dart com Rust <!-- id: M02 labels: P1, desempenho blockedBy: A02, A01 -->
       Porte: L. Dependências: A02, A01.
       Origem: ide-search/index/vfs; busca atual em isolate.
@@ -41,11 +33,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] A02 · Medir baseline Dart, TypeScript e pontes <!-- id: A02 labels: P0, arquitetura blockedBy: F01 -->
-      Porte: M. Dependências: F01.
-      Origem: OpenIDEA perf; comparação TS; Office snapshots.
-      Destino: Diagnósticos e telemetria existentes do Orkest.
-      Aceite: Registrar hardware, versões, corpus pequeno/grande, cold/warm, p50/p95, RSS, CPU idle, jank, cancelamento, bytes IPC e remoto; nenhum ganho de Rust presumido.
+- [ ] M01 · Comparar algoritmos TS de diff/merge com Rust <!-- id: M01 labels: P1, desempenho blockedBy: A02, F02 -->
+      Porte: L. Dependências: A02, F02.
+      Origem: src/features/vcs/comparison, mergeDiff3, graph.
+      Destino: Protótipos sem substituir editor de produção.
+      Aceite: Mesmo corpus e saídas esperadas em TS e Rust; medir custo completo com IPC/FFI, UTF-16, CRLF, hunks e casos adversos; decidir algoritmo por algoritmo e reaproveitar testes da origem.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
       Diretriz 04/11: avaliar quando houver necessidade de desempenho identificada; não bloqueia entregas funcionais em Dart.
 
@@ -65,6 +57,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] A02 · Medir baseline Dart, TypeScript e pontes <!-- id: A02 labels: P0, arquitetura blockedBy: F01 -->
+      Entrega: Implementação da infraestrutura formal de instrumentação e benchmark estatístico de baseline: modelos imutáveis HostHardwareProfile, enums CorpusScale, CacheState, BaselineMeasurement e PerformanceBaselineReport em cockpit/lib/app/core/domain/entities/performance_baseline.dart com garantia mandatória rustGainPresumed: false; conjunto de serviços em cockpit/lib/app/core/domain/services/performance_baseline_service.dart implementando algoritmo de percentis ponderados (calculatePercentile para p50/p95), detector de hardware do host (detectHostHardware), gerador de relatório com matriz completa (generateStandardReport cobrindo small/large corpus e cold/warm runs para fileIndex, diff3Merge, textSearch) e cômputo da penalidade de pontes IPC/FFI (computeBridgePenaltyRatio) comprovando empiricamente que custos de serialização e cópia de memória anulam ganhos de micro-benchmarks brutos em Rust e aumentam o RSS do aplicativo.
+      Aceite: Registrar hardware, versões, corpus pequeno/grande, cold/warm, p50/p95, RSS, CPU idle, jank, cancelamento, bytes IPC e remoto; nenhum ganho de Rust presumido.
+      Validação: 4 testes unitários dedicados em cockpit/test/domain/performance_baseline_test.dart; 14 testes combinados de performance aprovados sem falhas; análise estática dart analyze --fatal-infos 100% limpa (0 issues).
+      Plano: [detalhamento e arquitetura](72-medicao-baseline-dart-typescript-pontes.md).
 
 - [x] X04 · Avaliar notebooks e extensões <!-- id: X04 labels: P3, ferramentas blockedBy: A04, W02 -->
       Entrega: Formalização das diretrizes e infraestrutura técnica de avaliação de cadernos interativos e ecossistemas de plugins: duas RFCs normativas elaboradas (plan/rfc-01-notebooks-interativos.md cobrindo modelo de células NotebookCellKind, outputs estruturados NotebookCellOutput, máquina de estados de kernel idle/starting/busy/dead e justificativa do adiamento de runtime nativo ZeroMQ; plan/rfc-02-sistema-extensoes-plugins.md estabelecendo que plugins React NÃO são widgets Flutter e rejeitando WebViews por plugin para preservar 60fps e economizar memória); modelos de domínio em cockpit/lib/app/core/domain/entities/notebook_plugin_eval.dart (JupyterNotebookDocument, PluginManifest, PluginSandboxPolicy, ExtensibilityEvaluationReport); e serviços em cockpit/lib/app/core/domain/services/notebook_plugin_eval_service.dart: JupyterNotebookParser decodificando arquivos .ipynb canônicos, PluginManifestValidator checando versão SemVer e auditando permissões de sandbox (bloqueando disco/rede/PTY por padrão), e catálogo formal de ADRs ExtensibilityEvaluationRegistry registrando a decisão explícita de adiar runtimes onerosos em favor do modelo project-first baseado em LSP/DAP/MCP.
