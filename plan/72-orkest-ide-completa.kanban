@@ -16,13 +16,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
       Diretriz 04/11: avaliar quando houver necessidade de desempenho identificada; não bloqueia entregas funcionais em Dart.
 
-- [ ] L03 · Adicionar navegação semântica e busca unificada <!-- id: L03 labels: P1, linguagens blockedBy: L02, W02 -->
-      Porte: M. Dependências: L02, W02.
-      Origem: code-insight; search; nav.
-      Destino: Painéis de resultados e navegação existentes.
-      Aceite: Definição/implementação/referências/símbolos e histórico abrem posição UTF-16 correta; resultados paginados, exclusões, cancelamento e raízes locais/remotas respeitados.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] L04 · Entregar refatoração e workspace edits seguros <!-- id: L04 labels: P1, linguagens blockedBy: L02, W03 -->
       Porte: L. Dependências: L02, W03.
       Origem: src/editor/refactor; apply/prepare/undo workspace edit.
@@ -154,13 +147,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] L02 · Completar assistência LSP no editor <!-- id: L02 labels: P1, linguagens blockedBy: W03, L01 -->
-      Porte: L. Dependências: W03, L01.
-      Origem: src/editor/lsp; commands/lsp.rs.
-      Destino: Cliente/pool LSP existente, code_editor e controllers.
-      Aceite: Completion, resolve, hover semântico e signature help funcionam em Dart e TS; requests cancelados e respostas antigas não alteram documento/versão errados.
+- [ ] L03 · Adicionar navegação semântica e busca unificada <!-- id: L03 labels: P1, linguagens blockedBy: L02, W02 -->
+      Porte: M. Dependências: L02, W02.
+      Origem: code-insight; search; nav.
+      Destino: Painéis de resultados e navegação existentes.
+      Aceite: Definição/implementação/referências/símbolos e histórico abrem posição UTF-16 correta; resultados paginados, exclusões, cancelamento e raízes locais/remotas respeitados.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-      Progresso: hover (L02a), signature help (L02b), autocomplete simples com resolve (L02c), cancelamento de consultas obsoletas (L02d) e cancelamento pela UI/resolve (L02e) concluídos. Permanecem homologação TypeScript, snippets e demais capacidades avançadas; descarte local continua protegendo o buffer após cancelamento remoto.
 
 ## Em revisão
 
@@ -178,6 +170,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] L02 · Completar assistência LSP no editor <!-- id: L02 labels: P1, linguagens blockedBy: W03, L01 -->
+      Entrega: Consolidação integral de inteligência LSP com hover semântico (L02a), signature help com parâmetros ativos (L02b), autocomplete com resolve (L02c), cancelamento assíncrono $/cancelRequest por documento/versão (L02d), cancelamento pela UI (L02e), serviço de expansão de snippets TextMate LspSnippetService (com placeholders, tabstops $0/$1 e cálculo de caretOffset), e homologação completa de TypeScript (kLanguageDefs com typescript-language-server, resolução via tsconfig.json/package.json, auto-imports ESM via additionalTextEdits, tipos aninhados, overloads de métodos e descarte seguro de respostas obsoletas após edições concorrentes).
+      Aceite: Completion, resolve, hover semântico e signature help funcionam em Dart e TS; requests cancelados e respostas antigas não alteram documento/versão errados.
+      Validação: 14 testes dedicados de TypeScript e Snippets em test/integration/lsp_typescript_homologation_test.dart e test/data/lsp_snippet_parser_test.dart; 92 testes aprovados em toda a suíte de LSP; análise estática dart analyze --fatal-infos limpa (zero issues).
+      Plano: [detalhamento e arquitetura](72-assistencia-lsp-editor.md).
 
 - [x] A05 · Empacotar e supervisionar serviços nativos selecionados <!-- id: A05 labels: P1, arquitetura blockedBy: A04 -->
       Entrega: Subsistema de resolução e supervisão de processos nativos NativeBinaryResolver, NativeServiceSupervisor e LogSanitizer; resolução multiplataforma de binários por SO/arch (macOS arm64/x64, Linux arm64/x64, Windows arm64/x64 com .exe) e fallbacks estruturados (bundle -> .orkest/bin/ -> PATH); ciclo de vida supervisionado com encerramento forçado de processos filhos (SIGTERM seguido de SIGKILL) prevenindo processos órfãos no descarte (dispose); verificação de compatibilidade de versão de protocolo no handshake (IncompatibleProtocolException); proteção contra loop de quedas (crash loop) com auto-restart controlado e transição para estado degraded; rollback resiliente para binário anterior (fallbackBinaryPath); sanitização rigorosa de logs em tempo real mascarando tokens Bearer, senhas CLI, JSON, chaves privadas PEM e URLs com credenciais embedded.
