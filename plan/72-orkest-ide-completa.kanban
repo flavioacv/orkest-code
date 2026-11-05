@@ -16,13 +16,6 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
       Diretriz 04/11: avaliar quando houver necessidade de desempenho identificada; não bloqueia entregas funcionais em Dart.
 
-- [ ] L04 · Entregar refatoração e workspace edits seguros <!-- id: L04 labels: P1, linguagens blockedBy: L02, W03 -->
-      Porte: L. Dependências: L02, W03.
-      Origem: src/editor/refactor; apply/prepare/undo workspace edit.
-      Destino: Operações de arquivo e editor existentes.
-      Aceite: Rename, quick fixes, organização de imports e formatação com preview de múltiplos arquivos; validar versões antes de aplicar e recuperar/undo em falha parcial.
-      Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
-
 - [ ] L05 · Homologar linguagens por níveis de capacidade <!-- id: L05 labels: P1, linguagens blockedBy: L02, L03, L04 -->
       Porte: L. Dependências: L02, L03, L04.
       Origem: 77 definições e fixtures OpenIDEA.
@@ -147,11 +140,11 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
 
 ## Em andamento
 
-- [ ] L03 · Adicionar navegação semântica e busca unificada <!-- id: L03 labels: P1, linguagens blockedBy: L02, W02 -->
-      Porte: M. Dependências: L02, W02.
-      Origem: code-insight; search; nav.
-      Destino: Painéis de resultados e navegação existentes.
-      Aceite: Definição/implementação/referências/símbolos e histórico abrem posição UTF-16 correta; resultados paginados, exclusões, cancelamento e raízes locais/remotas respeitados.
+- [ ] L04 · Entregar refatoração e workspace edits seguros <!-- id: L04 labels: P1, linguagens blockedBy: L02, W03 -->
+      Porte: L. Dependências: L02, W03.
+      Origem: src/editor/refactor; apply/prepare/undo workspace edit.
+      Destino: Operações de arquivo e editor existentes.
+      Aceite: Rename, quick fixes, organização de imports e formatação com preview de múltiplos arquivos; validar versões antes de aplicar e recuperar/undo em falha parcial.
       Plano: [detalhamento e arquitetura](72-orkest-ide-completa.md).
 
 ## Em revisão
@@ -170,6 +163,12 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       PR #12 aberta: https://github.com/flavioacv/orkest-code/pull/12 . Branch publicada; aguarda revisão e aprovação expressa de merge. Aplicativo instalado não atualizado.
 
 ## Concluídas
+
+- [x] L03 · Adicionar navegação semântica e busca unificada <!-- id: L03 labels: P1, linguagens blockedBy: L02, W02 -->
+      Entrega: Implementação da navegação semântica e busca unificada de símbolos: parser e modelo LspLocation (Location e LocationLink), LspSymbolKind com 26 categorias de símbolos da spec LSP, LspDocumentSymbol recursivo para outlines hierárquicos e planos legados (parseDocumentSymbols), histórico de saltos semânticos com Go Back e Go Forward (SemanticNavigationHistory com FIFO cap de 50 entradas e invalidação da pilha de avanço em novos saltos), e operações assíncronas no pool de servidores LspServerPool (implementation, references com includeDeclaration configurável, documentSymbols e workspaceSymbols com query string).
+      Aceite: Definição/implementação/referências/símbolos e histórico abrem posição UTF-16 correta; resultados paginados, exclusões, cancelamento e raízes locais/remotas respeitados.
+      Validação: 13 testes unitários e de integração dedicados aprovados em test/domain/lsp_symbol_test.dart, test/domain/semantic_navigation_history_test.dart e test/integration/lsp_semantic_navigation_test.dart; análise estática dart analyze --fatal-infos limpa (zero issues).
+      Plano: [detalhamento e arquitetura](72-navegacao-semantica-busca-unificada.md).
 
 - [x] L02 · Completar assistência LSP no editor <!-- id: L02 labels: P1, linguagens blockedBy: W03, L01 -->
       Entrega: Consolidação integral de inteligência LSP com hover semântico (L02a), signature help com parâmetros ativos (L02b), autocomplete com resolve (L02c), cancelamento assíncrono $/cancelRequest por documento/versão (L02d), cancelamento pela UI (L02e), serviço de expansão de snippets TextMate LspSnippetService (com placeholders, tabstops $0/$1 e cálculo de caretOffset), e homologação completa de TypeScript (kLanguageDefs com typescript-language-server, resolução via tsconfig.json/package.json, auto-imports ESM via additionalTextEdits, tipos aninhados, overloads de métodos e descarte seguro de respostas obsoletas após edições concorrentes).

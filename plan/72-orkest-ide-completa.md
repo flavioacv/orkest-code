@@ -245,6 +245,9 @@ Destino: Painéis de resultados e navegação existentes.
 
 Aceite: Definição/implementação/referências/símbolos e histórico abrem posição UTF-16 correta; resultados paginados, exclusões, cancelamento e raízes locais/remotas respeitados.
 
+Entrega: Implementação da navegação semântica completa e busca unificada de símbolos: decodificação universal de localizações LSP (`parseLocationsResponse` em `cockpit/lib/app/core/domain/entities/lsp_location.dart`) com suporte a `Location` e `LocationLink`; modelo e parser universal de símbolos (`LspSymbolKind` com 26 categorias, `LspDocumentSymbol` e `parseDocumentSymbols` em `cockpit/lib/app/core/domain/entities/lsp_symbol.dart`) cobrindo hierarquias modernas (`DocumentSymbol`) e formatos legados planos (`SymbolInformation`); histórico semântico bidirecional com Go Back e Go Forward (`SemanticNavigationHistory` em `cockpit/lib/app/core/domain/services/semantic_navigation_history.dart`); e métodos de navegação assíncronos no pool de servidores (`implementation`, `references`, `documentSymbols`, `workspaceSymbols` em `cockpit/lib/app/core/data/lsp/lsp_server_pool.dart`).
+Validação: 13 testes automatizados aprovados em `cockpit/test/domain/lsp_symbol_test.dart` (4), `cockpit/test/domain/semantic_navigation_history_test.dart` (5) e `cockpit/test/integration/lsp_semantic_navigation_test.dart` (4); análise estática `dart analyze --fatal-infos` com 0 erros/alertas. Concluído em 05/11/2026. Detalhes em `plan/72-navegacao-semantica-busca-unificada.md`.
+
 ### L04 — Entregar refatoração e workspace edits seguros
 
 Prioridade P1 · Porte L · Dependências: L02, W03.
