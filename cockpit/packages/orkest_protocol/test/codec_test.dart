@@ -10,7 +10,17 @@ void main() {
   test('roundtrip das mensagens principais', () {
     final messages = <RemoteMessage>[
       const Hello(version: 1, client: 'test'),
+      const Hello(
+        version: 2,
+        client: 'test-caps',
+        capabilities: {'rpc_cancel': true, 'fs': true},
+      ),
       const HelloAck(version: 1, server: '0.1.0'),
+      const HelloAck(
+        version: 2,
+        server: '0.2.0',
+        capabilities: {'rpc_cancel': true, 'git': true},
+      ),
       const PtyOpen(
         executable: '/bin/zsh',
         arguments: ['-l'],
@@ -31,6 +41,25 @@ void main() {
       const PtyAttach(sessionId: 's1', fromOffset: 128),
       const PtyExited(sessionId: 's1', exitCode: 0),
       const RemoteError(code: 'session_not_found', sessionId: 's9'),
+      const RpcRequest(
+        rid: 101,
+        method: 'fs.list',
+        params: {'path': '/test'},
+      ),
+      const RpcResponse(
+        rid: 101,
+        ok: true,
+        data: {
+          'files': ['a.dart'],
+        },
+      ),
+      const RpcResponse(
+        rid: 102,
+        ok: false,
+        code: 'file_not_found',
+        detail: 'missing /test',
+      ),
+      const RpcCancel(rid: 101, reason: 'user_cancelled'),
     ];
 
     for (final message in messages) {

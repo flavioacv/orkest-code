@@ -498,6 +498,7 @@ class _Connection {
 
   final Map<String, StreamSubscription<PtyEvent>> _attachments = {};
   final Map<String, PtyOutputCoalescer> _coalescers = {};
+  final Set<int> _cancelledRpcRids = <int>{};
 
   Future<void> _detach(String sessionId) async {
     await _attachments.remove(sessionId)?.cancel();
@@ -700,6 +701,9 @@ class _Connection {
         case RpcRequest():
           await _handleRpc(message);
 
+        case RpcCancel():
+          _cancelledRpcRids.add(message.rid);
+
         // Resposta do CLIENTE a um comando da CLI que encaminhamos (direção
         // inversa do RPC: normalmente é o cliente que pergunta).
         case RpcResponse():
@@ -832,12 +836,18 @@ class _Connection {
   static int? _ridOf(RemoteMessage message) => switch (message) {
     PtyOpen(:final rid) => rid,
     PtyList(:final rid) => rid,
+    RpcRequest(:final rid) => rid,
+    RpcCancel(:final rid) => rid,
     _ => null,
   };
 
   /// Domínios request/response (fs.*, git.*). Erros viram RpcResponse{ok:false}
   /// com code/detail tipados — a frase nasce na UI do cliente.
   Future<void> _handleRpc(RpcRequest req) async {
+    if (_cancelledRpcRids.remove(req.rid)) {
+      _send(RpcResponse(rid: req.rid, ok: false, code: 'rpc_cancelled'));
+      return;
+    }
     try {
       final p = req.params;
       final data = switch (req.method) {
@@ -962,6 +972,10 @@ class _Connection {
         }(),
         _ => throw _RpcUnknown(req.method),
       };
+      if (_cancelledRpcRids.remove(req.rid)) {
+        _send(RpcResponse(rid: req.rid, ok: false, code: 'rpc_cancelled'));
+        return;
+      }
       _send(RpcResponse(rid: req.rid, ok: true, data: await _awaited(data)));
     } on FileException catch (e) {
       _send(

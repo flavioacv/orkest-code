@@ -39,6 +39,7 @@ sealed class RemoteMessage {
       TurnStatus.kType => TurnStatus.fromJson(json),
       RpcRequest.kType => RpcRequest.fromJson(json),
       RpcResponse.kType => RpcResponse.fromJson(json),
+      RpcCancel.kType => RpcCancel.fromJson(json),
       RemoteError.kType => RemoteError.fromJson(json),
       // Tolerante a tipos desconhecidos (forward-compat): um cliente/servidor
       // mais antigo simplesmente ignora um `t` que não conhece, em vez de
@@ -70,6 +71,7 @@ class Hello extends RemoteMessage {
     required this.client,
     this.token,
     this.local = false,
+    this.capabilities = const {},
   });
   static const kType = 'hello';
 
@@ -90,11 +92,16 @@ class Hello extends RemoteMessage {
   /// servidor de versões diferentes seguem se entendendo no POSIX.
   final String? token;
 
+  /// Mapa declarativo de capacidades do cliente para negociação com o servidor
+  /// (ex.: `rpc_cancel`, `fs_streaming`, `pty_ack`).
+  final Map<String, Object?> capabilities;
+
   factory Hello.fromJson(Map<String, Object?> j) => Hello(
     version: j['v'] as int,
     client: j['client'] as String,
     token: j['tok'] as String?,
     local: j['loc'] as bool? ?? false,
+    capabilities: (j['caps'] as Map? ?? const {}).cast<String, Object?>(),
   );
 
   @override
@@ -106,6 +113,7 @@ class Hello extends RemoteMessage {
     'client': client,
     if (token != null) 'tok': token,
     if (local) 'loc': true,
+    if (capabilities.isNotEmpty) 'caps': capabilities,
   };
 }
 
@@ -115,6 +123,7 @@ class HelloAck extends RemoteMessage {
     required this.server,
     this.executable,
     this.pid,
+    this.capabilities = const {},
   });
   static const kType = 'hello.ack';
 
@@ -134,11 +143,16 @@ class HelloAck extends RemoteMessage {
   /// Pid do servidor, para o cliente encerrar um adotado que não serve.
   final int? pid;
 
+  /// Mapa declarativo de capacidades do servidor suportadas nesta sessão
+  /// (ex.: `rpc_cancel`, `fs`, `git`, `dap`, `pty_resize`).
+  final Map<String, Object?> capabilities;
+
   factory HelloAck.fromJson(Map<String, Object?> j) => HelloAck(
     version: j['v'] as int,
     server: j['server'] as String,
     executable: j['exe'] as String?,
     pid: j['pid'] as int?,
+    capabilities: (j['caps'] as Map? ?? const {}).cast<String, Object?>(),
   );
 
   @override
@@ -150,6 +164,7 @@ class HelloAck extends RemoteMessage {
     'server': server,
     if (executable != null) 'exe': executable,
     if (pid != null) 'pid': pid,
+    if (capabilities.isNotEmpty) 'caps': capabilities,
   };
 }
 
@@ -630,6 +645,34 @@ class RpcResponse extends RemoteMessage {
     if (data != null) 'data': data,
     if (code != null) 'code': code,
     if (detail != null) 'detail': detail,
+  };
+}
+
+/// Cancelamento cooperativo de uma chamada RPC em voo.
+/// Informa ao servidor ou executor remoto para interromper a execução do [rid],
+/// liberando recursos do outro lado enquanto a UI local já invalidou o retorno.
+class RpcCancel extends RemoteMessage {
+  const RpcCancel({
+    required this.rid,
+    this.reason,
+  });
+  static const kType = 'rpc.cancel';
+
+  final int rid;
+  final String? reason;
+
+  factory RpcCancel.fromJson(Map<String, Object?> j) => RpcCancel(
+    rid: j['rid'] as int,
+    reason: j['reason'] as String?,
+  );
+
+  @override
+  String get type => kType;
+  @override
+  Map<String, Object?> toJson() => {
+    't': kType,
+    'rid': rid,
+    if (reason != null) 'reason': reason,
   };
 }
 
