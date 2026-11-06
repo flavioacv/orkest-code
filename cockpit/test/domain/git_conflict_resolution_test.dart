@@ -6,6 +6,58 @@ import 'package:orkest_code/app/orkest/domain/services/git_conflict_service.dart
 void main() {
   const service = GitConflictService();
 
+  test('edited block preserves CRLF and unrelated content', () {
+    const text =
+        'before\r\n<<<<<<< HEAD\r\nours\r\n||||||| base\r\n\r\n=======\r\ntheirs\r\n>>>>>>> branch\r\nafter\r\n';
+    final block = service.parseConflicts(text).single;
+    expect(block.ours, 'ours');
+    expect(block.base, '');
+    expect(
+      service.replaceBlock(
+        text: text,
+        block: block,
+        replacement: 'edited\nresult',
+      ),
+      'before\r\nedited\r\nresult\r\nafter\r\n',
+    );
+    expect(
+      service.resolveAll(text: text, resolution: ConflictResolution.theirs),
+      'before\r\ntheirs\r\nafter\r\n',
+    );
+  });
+
+  test('resolution at EOF does not introduce an unrequested newline', () {
+    const text = 'before\n<<<<<<< HEAD\nours\n=======\ntheirs\n>>>>>>> branch';
+    final block = service.parseConflicts(text).single;
+    expect(
+      service.resolveBlock(
+        text: text,
+        block: block,
+        resolution: ConflictResolution.ours,
+      ),
+      'before\nours',
+    );
+    expect(
+      service.replaceBlock(text: text, block: block, replacement: ''),
+      'before\n',
+    );
+  });
+
+  test('empty diff3 base is available as an explicit resolution', () {
+    const text =
+        '<<<<<<< HEAD\nours\n||||||| base\n=======\ntheirs\n>>>>>>> branch\n';
+    final block = service.parseConflicts(text).single;
+    expect(block.base, '');
+    expect(
+      service.resolveBlock(
+        text: text,
+        block: block,
+        resolution: ConflictResolution.base,
+      ),
+      '',
+    );
+  });
+
   group('GitConflictService - Parsing', () {
     test('detecta ausência de marcadores de conflito', () {
       const cleanText = '''
@@ -202,27 +254,44 @@ delta
     });
 
     test('detecta repositório sem operação em andamento', () {
-      expect(service.detectOngoingOperation(tempDir.path), equals(GitOngoingOperation.none));
+      expect(
+        service.detectOngoingOperation(tempDir.path),
+        equals(GitOngoingOperation.none),
+      );
     });
 
     test('detecta merge em andamento (MERGE_HEAD)', () {
       File('${tempDir.path}/.git/MERGE_HEAD').writeAsStringSync('dummy_sha');
-      expect(service.detectOngoingOperation(tempDir.path), equals(GitOngoingOperation.merge));
+      expect(
+        service.detectOngoingOperation(tempDir.path),
+        equals(GitOngoingOperation.merge),
+      );
     });
 
     test('detecta rebase em andamento (rebase-merge)', () {
       Directory('${tempDir.path}/.git/rebase-merge').createSync();
-      expect(service.detectOngoingOperation(tempDir.path), equals(GitOngoingOperation.rebase));
+      expect(
+        service.detectOngoingOperation(tempDir.path),
+        equals(GitOngoingOperation.rebase),
+      );
     });
 
     test('detecta cherry-pick em andamento (CHERRY_PICK_HEAD)', () {
-      File('${tempDir.path}/.git/CHERRY_PICK_HEAD').writeAsStringSync('dummy_sha');
-      expect(service.detectOngoingOperation(tempDir.path), equals(GitOngoingOperation.cherryPick));
+      File(
+        '${tempDir.path}/.git/CHERRY_PICK_HEAD',
+      ).writeAsStringSync('dummy_sha');
+      expect(
+        service.detectOngoingOperation(tempDir.path),
+        equals(GitOngoingOperation.cherryPick),
+      );
     });
 
     test('detecta revert em andamento (REVERT_HEAD)', () {
       File('${tempDir.path}/.git/REVERT_HEAD').writeAsStringSync('dummy_sha');
-      expect(service.detectOngoingOperation(tempDir.path), equals(GitOngoingOperation.revert));
+      expect(
+        service.detectOngoingOperation(tempDir.path),
+        equals(GitOngoingOperation.revert),
+      );
     });
   });
 }

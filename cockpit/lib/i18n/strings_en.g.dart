@@ -1780,6 +1780,33 @@ class Translations$orkest$fileTreePanel$en {
 	/// en: 'Discard'
 	String get discardHunk => 'Discard';
 
+	/// en: 'Review conflict'
+	String get reviewConflict => 'Review conflict';
+
+	/// en: 'Result (editable)'
+	String get mergeResult => 'Result (editable)';
+
+	/// en: 'Base'
+	String get mergeBase => 'Base';
+
+	/// en: 'Current'
+	String get mergeOurs => 'Current';
+
+	/// en: 'Incoming'
+	String get mergeTheirs => 'Incoming';
+
+	/// en: 'Apply to editor'
+	String get mergeApply => 'Apply to editor';
+
+	/// en: 'The file changed during review. Open the conflict again to review its current contents.'
+	String get mergeStale => 'The file changed during review. Open the conflict again to review its current contents.';
+
+	/// en: 'Remove conflict markers before applying the result.'
+	String get mergeMarkers => 'Remove conflict markers before applying the result.';
+
+	/// en: 'Save the file after applying the result.'
+	String get mergePendingSave => 'Save the file after applying the result.';
+
 	/// en: '${count} unresolved merge conflict(s)'
 	String conflictsBanner({required Object count}) => '${count} unresolved merge conflict(s)';
 
@@ -5020,6 +5047,15 @@ extension on Translations {
 			'orkest.fileTreePanel.stageHunk' => 'Stage Hunk',
 			'orkest.fileTreePanel.unstageHunk' => 'Unstage Hunk',
 			'orkest.fileTreePanel.discardHunk' => 'Discard',
+			'orkest.fileTreePanel.reviewConflict' => 'Review conflict',
+			'orkest.fileTreePanel.mergeResult' => 'Result (editable)',
+			'orkest.fileTreePanel.mergeBase' => 'Base',
+			'orkest.fileTreePanel.mergeOurs' => 'Current',
+			'orkest.fileTreePanel.mergeTheirs' => 'Incoming',
+			'orkest.fileTreePanel.mergeApply' => 'Apply to editor',
+			'orkest.fileTreePanel.mergeStale' => 'The file changed during review. Open the conflict again to review its current contents.',
+			'orkest.fileTreePanel.mergeMarkers' => 'Remove conflict markers before applying the result.',
+			'orkest.fileTreePanel.mergePendingSave' => 'Save the file after applying the result.',
 			'orkest.fileTreePanel.conflictsBanner' => ({required Object count}) => '${count} unresolved merge conflict(s)',
 			'orkest.fileTreePanel.acceptAllOurs' => 'Accept Current',
 			'orkest.fileTreePanel.acceptAllTheirs' => 'Accept Incoming',
@@ -5039,6 +5075,8 @@ extension on Translations {
 			'orkest.fileViewer.cantOpen' => 'Can\'t open this file.',
 			'orkest.fileViewer.couldNotLoadImage' => 'Could not load the image.',
 			'orkest.fileViewer.preview' => 'Preview',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.fileViewer.source' => 'Source',
 			'orkest.fileViewer.reload' => 'Reload',
 			'orkest.workspaceSettingsDialog.choosePhotoTitle' => 'Choose workspace photo',
@@ -5048,8 +5086,6 @@ extension on Translations {
 			'orkest.workspaceSettingsDialog.changePhoto' => 'Change photo',
 			'orkest.workspaceSettingsDialog.remove' => 'Remove',
 			'orkest.workspaceSettingsDialog.color' => 'Color',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.workspaceSettingsDialog.host' => 'Host',
 			'orkest.workspaceSettingsDialog.folder' => 'Folder',
 			'orkest.realmDialogs.namePlaceholder' => 'Realm name',
@@ -5553,6 +5589,8 @@ extension on Translations {
 			'settings.page.storage.resetDesc' => 'Delete all local data — projects, layouts, settings and terminal history — and return to the default location.',
 			'settings.page.storage.resetButton' => 'Reset…',
 			'settings.page.storage.resetConfirm' => 'Reset',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.storage.resetDialogTitle' => 'Reset Orkest Code?',
 			'settings.page.storage.resetDialogContent' => 'This permanently deletes all local Orkest Code data — projects, layouts, settings and terminal history. This cannot be undone. Orkest Code will close so you can start fresh.',
 			'settings.page.storage.restartRequiredTitle' => 'Restart required',
@@ -5562,8 +5600,6 @@ extension on Translations {
 			'settings.page.storage.later' => 'Later',
 			'settings.page.storage.quitOrkest' => 'Quit Orkest Code',
 			'settings.page.storage.chooseFolderDialogTitle' => 'Choose a folder for Orkest Code data',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.terminal.sectionDefaultTerminal' => 'Default terminal',
 			'settings.page.terminal.engineTitle' => 'Engine',
 			'settings.page.terminal.engineDesc' => 'Used by new terminal tabs and task output buffers. Open tabs keep their current engine.',

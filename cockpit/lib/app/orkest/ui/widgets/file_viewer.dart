@@ -13,6 +13,8 @@ import 'package:orkest_code/app/orkest/domain/services/git_conflict_service.dart
 import 'package:orkest_code/app/orkest/ui/widgets/code_editor.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/file_find_bar.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/git_conflict_banner.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/merge_conflict_editor.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/confirm_dialog.dart';
 import 'package:orkest_code/app/core/data/lsp/lsp_command.dart';
 import 'package:orkest_code/app/core/data/lsp/lsp_launchers.dart';
 import 'package:orkest_code/app/core/data/lsp/lsp_text_edit.dart';
@@ -552,7 +554,8 @@ class _FileViewerState extends State<FileViewer> {
       _conflictBlocks = blocks;
       if (blocks.isEmpty) {
         _currentConflictIndex = -1;
-      } else if (_currentConflictIndex < 0 || _currentConflictIndex >= blocks.length) {
+      } else if (_currentConflictIndex < 0 ||
+          _currentConflictIndex >= blocks.length) {
         _currentConflictIndex = 0;
       }
       _ongoingGitOp = op;
@@ -586,7 +589,8 @@ class _FileViewerState extends State<FileViewer> {
   void _prevConflict() {
     if (_conflictBlocks.isEmpty) return;
     final prevIndex =
-        (_currentConflictIndex - 1 + _conflictBlocks.length) % _conflictBlocks.length;
+        (_currentConflictIndex - 1 + _conflictBlocks.length) %
+        _conflictBlocks.length;
     setState(() => _currentConflictIndex = prevIndex);
     final block = _conflictBlocks[prevIndex];
     widget.session.reveal(block.startLine, select: false);
@@ -595,7 +599,9 @@ class _FileViewerState extends State<FileViewer> {
   void _resolveCurrentConflict(ConflictResolution resolution) {
     final ctrl = _ctrl;
     if (ctrl == null || _conflictBlocks.isEmpty) return;
-    final index = _currentConflictIndex >= 0 && _currentConflictIndex < _conflictBlocks.length
+    final index =
+        _currentConflictIndex >= 0 &&
+            _currentConflictIndex < _conflictBlocks.length
         ? _currentConflictIndex
         : 0;
     final block = _conflictBlocks[index];
@@ -607,13 +613,51 @@ class _FileViewerState extends State<FileViewer> {
     _applyToBuffer(updated);
   }
 
+  Future<void> _reviewCurrentConflict() async {
+    final ctrl = _ctrl;
+    if (ctrl == null || _conflictBlocks.isEmpty) return;
+    final session = widget.session;
+    final path = session.path;
+    final snapshot = ctrl.text;
+    final block =
+        _conflictBlocks[_currentConflictIndex < 0 ? 0 : _currentConflictIndex];
+    final result = await showMergeConflictEditor(
+      context,
+      block: block,
+      language: ctrl.language,
+    );
+    if (!mounted || result == null) return;
+    if (!identical(_ctrl, ctrl) ||
+        !identical(widget.session, session) ||
+        widget.session.path != path ||
+        ctrl.text != snapshot ||
+        widget.session.hasDiskConflict) {
+      await showInfoDialog(
+        context,
+        title: context.t.orkest.fileTreePanel.reviewConflict,
+        message: context.t.orkest.fileTreePanel.mergeStale,
+      );
+      return;
+    }
+    _applyToBuffer(
+      _conflictService.replaceBlock(
+        text: snapshot,
+        block: block,
+        replacement: result,
+      ),
+    );
+  }
+
   Future<void> _continueGitOperation() async {
     final repoRoot = _findRepoRoot();
     if (repoRoot == null) return;
     final res = await _conflictService.continueOperation(repoRoot: repoRoot);
     if (!mounted) return;
     if (res case Failure(:final error)) {
-      DiagnosticsLog.instance.warn('file-viewer', 'git continue failed: $error');
+      DiagnosticsLog.instance.warn(
+        'file-viewer',
+        'git continue failed: $error',
+      );
     } else {
       _updateConflictState();
     }
@@ -687,7 +731,11 @@ class _FileViewerState extends State<FileViewer> {
 
   void _discard() {
     final ctrl = _ctrl;
-    if (ctrl == null || (!_dirty && !widget.session.hasDiskConflict) || _saving) return;
+    if (ctrl == null ||
+        (!_dirty && !widget.session.hasDiskConflict) ||
+        _saving) {
+      return;
+    }
     // Adota a versão do disco mais recente, atualiza baseline e zera estado sujo/conflito.
     final diskText = _editableText ?? _baseline;
     ctrl.text = diskText;
@@ -1171,16 +1219,24 @@ class _FileViewerState extends State<FileViewer> {
             child: Align(
               alignment: Alignment.topCenter,
               child: GitConflictBanner(
+                onReviewConflict: _reviewCurrentConflict,
                 conflictCount: _conflictBlocks.length,
                 currentIndex: _currentConflictIndex,
                 onNext: _nextConflict,
                 onPrev: _prevConflict,
-                onAcceptOurs: () => _resolveCurrentConflict(ConflictResolution.ours),
-                onAcceptTheirs: () => _resolveCurrentConflict(ConflictResolution.theirs),
-                onAcceptBoth: () => _resolveCurrentConflict(ConflictResolution.both),
+                onAcceptOurs: () =>
+                    _resolveCurrentConflict(ConflictResolution.ours),
+                onAcceptTheirs: () =>
+                    _resolveCurrentConflict(ConflictResolution.theirs),
+                onAcceptBoth: () =>
+                    _resolveCurrentConflict(ConflictResolution.both),
                 ongoingOperation: _ongoingGitOp,
-                onContinueOperation: _ongoingGitOp != GitOngoingOperation.none ? _continueGitOperation : null,
-                onAbortOperation: _ongoingGitOp != GitOngoingOperation.none ? _abortGitOperation : null,
+                onContinueOperation: _ongoingGitOp != GitOngoingOperation.none
+                    ? _continueGitOperation
+                    : null,
+                onAbortOperation: _ongoingGitOp != GitOngoingOperation.none
+                    ? _abortGitOperation
+                    : null,
               ),
             ),
           ),

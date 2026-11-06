@@ -809,6 +809,15 @@ class _Translations$orkest$fileTreePanel$pt_BR extends Translations$orkest$fileT
 	@override String get stageHunk => 'Stage Trecho';
 	@override String get unstageHunk => 'Desfazer Stage';
 	@override String get discardHunk => 'Descartar';
+	@override String get reviewConflict => 'Revisar conflito';
+	@override String get mergeResult => 'Resultado (editável)';
+	@override String get mergeBase => 'Base';
+	@override String get mergeOurs => 'Atual';
+	@override String get mergeTheirs => 'Entrante';
+	@override String get mergeApply => 'Aplicar no editor';
+	@override String get mergeStale => 'O arquivo mudou durante a revisão. Abra o conflito novamente para revisar o conteúdo atual.';
+	@override String get mergeMarkers => 'Remova os marcadores de conflito antes de aplicar o resultado.';
+	@override String get mergePendingSave => 'Salve o arquivo após aplicar o resultado.';
 	@override String conflictsBanner({required Object count}) => '${count} conflito(s) de merge não resolvido(s)';
 	@override String get acceptAllOurs => 'Aceitar Atual';
 	@override String get acceptAllTheirs => 'Aceitar Entrante';
@@ -2591,6 +2600,15 @@ extension on TranslationsPtBr {
 			'orkest.fileTreePanel.stageHunk' => 'Stage Trecho',
 			'orkest.fileTreePanel.unstageHunk' => 'Desfazer Stage',
 			'orkest.fileTreePanel.discardHunk' => 'Descartar',
+			'orkest.fileTreePanel.reviewConflict' => 'Revisar conflito',
+			'orkest.fileTreePanel.mergeResult' => 'Resultado (editável)',
+			'orkest.fileTreePanel.mergeBase' => 'Base',
+			'orkest.fileTreePanel.mergeOurs' => 'Atual',
+			'orkest.fileTreePanel.mergeTheirs' => 'Entrante',
+			'orkest.fileTreePanel.mergeApply' => 'Aplicar no editor',
+			'orkest.fileTreePanel.mergeStale' => 'O arquivo mudou durante a revisão. Abra o conflito novamente para revisar o conteúdo atual.',
+			'orkest.fileTreePanel.mergeMarkers' => 'Remova os marcadores de conflito antes de aplicar o resultado.',
+			'orkest.fileTreePanel.mergePendingSave' => 'Salve o arquivo após aplicar o resultado.',
 			'orkest.fileTreePanel.conflictsBanner' => ({required Object count}) => '${count} conflito(s) de merge não resolvido(s)',
 			'orkest.fileTreePanel.acceptAllOurs' => 'Aceitar Atual',
 			'orkest.fileTreePanel.acceptAllTheirs' => 'Aceitar Entrante',
@@ -2610,6 +2628,8 @@ extension on TranslationsPtBr {
 			'orkest.fileViewer.cantOpen' => 'Não é possível abrir este arquivo.',
 			'orkest.fileViewer.couldNotLoadImage' => 'Não foi possível carregar a imagem.',
 			'orkest.fileViewer.preview' => 'Pré-visualização',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.fileViewer.source' => 'Código-fonte',
 			'orkest.fileViewer.reload' => 'Recarregar',
 			'orkest.workspaceSettingsDialog.choosePhotoTitle' => 'Escolher foto do workspace',
@@ -2619,8 +2639,6 @@ extension on TranslationsPtBr {
 			'orkest.workspaceSettingsDialog.changePhoto' => 'Alterar foto',
 			'orkest.workspaceSettingsDialog.remove' => 'Remover',
 			'orkest.workspaceSettingsDialog.color' => 'Cor',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.workspaceSettingsDialog.host' => 'Host',
 			'orkest.workspaceSettingsDialog.folder' => 'Pasta',
 			'orkest.realmDialogs.namePlaceholder' => 'Nome do realm',
@@ -3124,6 +3142,8 @@ extension on TranslationsPtBr {
 			'settings.page.storage.resetDesc' => 'Exclui todos os dados locais — projetos, layouts, configurações e histórico do terminal — e volta ao local padrão.',
 			'settings.page.storage.resetButton' => 'Redefinir…',
 			'settings.page.storage.resetConfirm' => 'Redefinir',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.storage.resetDialogTitle' => 'Redefinir o Orkest Code?',
 			'settings.page.storage.resetDialogContent' => 'Isso exclui permanentemente todos os dados locais do Orkest Code — projetos, layouts, configurações e histórico do terminal. Isso não pode ser desfeito. O Orkest Code será fechado para você começar do zero.',
 			'settings.page.storage.restartRequiredTitle' => 'Reinicialização necessária',
@@ -3133,8 +3153,6 @@ extension on TranslationsPtBr {
 			'settings.page.storage.later' => 'Mais tarde',
 			'settings.page.storage.quitOrkest' => 'Sair do Orkest Code',
 			'settings.page.storage.chooseFolderDialogTitle' => 'Escolha uma pasta para os dados do Orkest Code',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.terminal.sectionDefaultTerminal' => 'Terminal padrão',
 			'settings.page.terminal.engineTitle' => 'Motor',
 			'settings.page.terminal.engineDesc' => 'Usado por novas abas de terminal e buffers de saída de tasks. Abas abertas mantêm o motor atual.',

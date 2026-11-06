@@ -22,6 +22,7 @@ class GitConflictBanner extends StatelessWidget {
     this.ongoingOperation = GitOngoingOperation.none,
     this.onContinueOperation,
     this.onAbortOperation,
+    this.onReviewConflict,
   });
 
   final int conflictCount;
@@ -34,6 +35,7 @@ class GitConflictBanner extends StatelessWidget {
   final GitOngoingOperation ongoingOperation;
   final VoidCallback? onContinueOperation;
   final VoidCallback? onAbortOperation;
+  final VoidCallback? onReviewConflict;
 
   @override
   Widget build(BuildContext context) {
@@ -44,10 +46,10 @@ class GitConflictBanner extends StatelessWidget {
     final opName = ongoingOperation == GitOngoingOperation.merge
         ? 'Merge'
         : ongoingOperation == GitOngoingOperation.rebase
-            ? 'Rebase'
-            : ongoingOperation == GitOngoingOperation.cherryPick
-                ? 'Cherry-pick'
-                : 'Git';
+        ? 'Rebase'
+        : ongoingOperation == GitOngoingOperation.cherryPick
+        ? 'Cherry-pick'
+        : 'Git';
 
     return Material(
       color: Colors.transparent,
@@ -57,7 +59,10 @@ class GitConflictBanner extends StatelessWidget {
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
         decoration: BoxDecoration(
           color: colors.panel2,
-          border: Border.all(color: colors.gitConflict.withValues(alpha: 0.5), width: 1.2),
+          border: Border.all(
+            color: colors.gitConflict.withValues(alpha: 0.5),
+            width: 1.2,
+          ),
           borderRadius: BorderRadius.circular(6),
         ),
         child: Wrap(
@@ -95,6 +100,12 @@ class GitConflictBanner extends StatelessWidget {
               ],
             ),
             // Navegação entre blocos de conflito
+            if (onReviewConflict != null)
+              _ConflictActionButton(
+                label: tr.reviewConflict,
+                icon: sc.LucideIcons.columns3,
+                onPressed: onReviewConflict!,
+              ),
             Row(
               mainAxisSize: MainAxisSize.min,
               children: [
@@ -141,11 +152,7 @@ class GitConflictBanner extends StatelessWidget {
             ),
             // Operação Git em andamento (Continue / Abort)
             if (hasOperation) ...[
-              Container(
-                width: 1,
-                height: 16,
-                color: colors.border,
-              ),
+              Container(width: 1, height: 16, color: colors.border),
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -194,8 +201,12 @@ class _ConflictActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final color = accentColor ?? colors.text;
-    final bg = accentColor != null ? accentColor!.withValues(alpha: 0.12) : colors.bg;
-    final border = accentColor != null ? accentColor!.withValues(alpha: 0.35) : colors.border;
+    final bg = accentColor != null
+        ? accentColor!.withValues(alpha: 0.12)
+        : colors.bg;
+    final border = accentColor != null
+        ? accentColor!.withValues(alpha: 0.35)
+        : colors.border;
 
     final button = GestureDetector(
       onTap: onPressed,
@@ -216,7 +227,9 @@ class _ConflictActionButton extends StatelessWidget {
               style: context.typo.label.copyWith(
                 fontSize: 11,
                 color: color,
-                fontWeight: accentColor != null ? FontWeight.w600 : FontWeight.normal,
+                fontWeight: accentColor != null
+                    ? FontWeight.w600
+                    : FontWeight.normal,
               ),
             ),
           ],
@@ -225,10 +238,7 @@ class _ConflictActionButton extends StatelessWidget {
     );
 
     if (tooltip != null) {
-      return Tooltip(
-        message: tooltip!,
-        child: button,
-      );
+      return Tooltip(message: tooltip!, child: button);
     }
     return button;
   }
@@ -260,11 +270,7 @@ class _ConflictIconButton extends StatelessWidget {
             border: Border.all(color: colors.border),
             borderRadius: BorderRadius.circular(4),
           ),
-          child: Icon(
-            icon,
-            size: 12,
-            color: colors.text2,
-          ),
+          child: Icon(icon, size: 12, color: colors.text2),
         ),
       ),
     );

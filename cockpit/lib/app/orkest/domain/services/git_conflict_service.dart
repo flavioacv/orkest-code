@@ -18,13 +18,7 @@ enum ConflictResolution {
 }
 
 /// Operações do Git que podem estar em andamento no repositório.
-enum GitOngoingOperation {
-  none,
-  merge,
-  rebase,
-  cherryPick,
-  revert,
-}
+enum GitOngoingOperation { none, merge, rebase, cherryPick, revert }
 
 /// Representa um bloco delimitado de conflito no arquivo:
 /// <<<<<<< [oursLabel]
@@ -87,34 +81,50 @@ class GitConflictService {
 
     for (var i = 0; i < lines.length; i++) {
       final line = lines[i];
-      final lineEndOffset = currentOffset + line.length + (i < lines.length - 1 ? 1 : 0);
+      final lineEndOffset =
+          currentOffset + line.length + (i < lines.length - 1 ? 1 : 0);
 
       if (_isMarker(line, startMarker)) {
         blockStartIndex = i;
         blockStartOffset = currentOffset;
         baseIndex = null;
         sepIndex = null;
-      } else if (blockStartIndex != null && baseIndex == null && sepIndex == null && _isMarker(line, baseMarker)) {
+      } else if (blockStartIndex != null &&
+          baseIndex == null &&
+          sepIndex == null &&
+          _isMarker(line, baseMarker)) {
         baseIndex = i;
-      } else if (blockStartIndex != null && sepIndex == null && _isMarker(line, sepMarker)) {
+      } else if (blockStartIndex != null &&
+          sepIndex == null &&
+          _isMarker(line, sepMarker)) {
         sepIndex = i;
-      } else if (blockStartIndex != null && sepIndex != null && _isMarker(line, endMarker)) {
+      } else if (blockStartIndex != null &&
+          sepIndex != null &&
+          _isMarker(line, endMarker)) {
         // Encerramento do bloco de conflito
         final startLineText = lines[blockStartIndex];
         final endLineText = line;
 
         final oursStart = blockStartIndex + 1;
         final oursEnd = baseIndex ?? sepIndex;
-        final oursText = oursStart < oursEnd ? lines.sublist(oursStart, oursEnd).join('\n') : '';
+        String content(int start, int end) => lines
+            .sublist(start, end)
+            .map(
+              (line) => line.endsWith('\r')
+                  ? line.substring(0, line.length - 1)
+                  : line,
+            )
+            .join('\n');
+        final oursText = content(oursStart, oursEnd);
 
         String? baseText;
-        if (baseIndex != null && baseIndex + 1 < sepIndex) {
-          baseText = lines.sublist(baseIndex + 1, sepIndex).join('\n');
+        if (baseIndex != null) {
+          baseText = content(baseIndex + 1, sepIndex);
         }
 
         final theirsStart = sepIndex + 1;
         final theirsEnd = i;
-        final theirsText = theirsStart < theirsEnd ? lines.sublist(theirsStart, theirsEnd).join('\n') : '';
+        final theirsText = content(theirsStart, theirsEnd);
 
         final oursLabel = _extractLabel(startLineText, startMarker);
         final theirsLabel = _extractLabel(endLineText, endMarker);
@@ -129,7 +139,9 @@ class GitConflictService {
             base: baseText,
             theirs: theirsText,
             oursLabel: oursLabel.isNotEmpty ? oursLabel : 'HEAD (Atual)',
-            theirsLabel: theirsLabel.isNotEmpty ? theirsLabel : 'Incoming (Entrante)',
+            theirsLabel: theirsLabel.isNotEmpty
+                ? theirsLabel
+                : 'Incoming (Entrante)',
           ),
         );
 
@@ -153,15 +165,33 @@ class GitConflictService {
     bool reversed = false,
   }) {
     final replacement = resolutionText(block, resolution, reversed: reversed);
-    final before = text.substring(0, block.from);
-    final after = text.substring(block.to);
+    return replaceBlock(text: text, block: block, replacement: replacement);
+  }
 
-    // Preserva quebra de linha normal se o replacement não for vazio
-    final formattedReplacement = replacement.isNotEmpty && !replacement.endsWith('\n')
-        ? '$replacement\n'
-        : replacement;
+  /// Applies an edited result only to the selected block, retaining its EOL and
+  /// whether its closing marker had a final newline.
+  String replaceBlock({
+    required String text,
+    required ConflictBlock block,
+    required String replacement,
+  }) => text.replaceRange(
+    block.from,
+    block.to,
+    _formatReplacement(text, block, replacement),
+  );
 
-    return '$before$formattedReplacement$after';
+  String _formatReplacement(
+    String text,
+    ConflictBlock block,
+    String replacement,
+  ) {
+    final original = text.substring(block.from, block.to);
+    final eol = original.contains('\r\n') ? '\r\n' : '\n';
+    var result = replacement.replaceAll('\r\n', '\n').replaceAll('\n', eol);
+    if (result.isNotEmpty && original.endsWith('\n') && !result.endsWith(eol)) {
+      result += eol;
+    }
+    return result;
   }
 
   /// Resolve todos os blocos de conflito do arquivo simultaneamente.
@@ -179,12 +209,7 @@ class GitConflictService {
     for (final block in blocks) {
       buffer.write(text.substring(lastOffset, block.from));
       final replacement = resolutionText(block, resolution, reversed: reversed);
-      if (replacement.isNotEmpty) {
-        buffer.write(replacement);
-        if (!replacement.endsWith('\n')) {
-          buffer.write('\n');
-        }
-      }
+      buffer.write(_formatReplacement(text, block, replacement));
       lastOffset = block.to;
     }
 
@@ -297,7 +322,9 @@ class GitConflictService {
         return const Success(null);
       } else {
         final err = (res.stderr as String).trim();
-        return Failure(err.isNotEmpty ? err : 'Git falhou com saída ${res.exitCode}');
+        return Failure(
+          err.isNotEmpty ? err : 'Git falhou com saída ${res.exitCode}',
+        );
       }
     } catch (e) {
       return Failure('Erro ao executar git: $e');
