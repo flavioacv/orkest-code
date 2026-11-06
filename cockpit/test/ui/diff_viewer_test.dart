@@ -28,6 +28,52 @@ void main() {
     ),
   );
 
+  testWidgets(
+    'unified diff preserves removal/addition order and context once',
+    (tester) async {
+      await tester.pumpWidget(
+        host(
+          const FileDiff(
+            path: '/repo/a.txt',
+            kind: FileDiffKind.modified,
+            hunks: [
+              DiffHunk(
+                header: '@@ -1,2 +1,2 @@',
+                lines: [
+                  DiffLine(
+                    kind: DiffLineKind.context,
+                    text: 'context',
+                    oldLine: 1,
+                    newLine: 1,
+                  ),
+                  DiffLine(
+                    kind: DiffLineKind.removed,
+                    text: 'before',
+                    oldLine: 2,
+                  ),
+                  DiffLine(kind: DiffLineKind.added, text: 'after', newLine: 2),
+                ],
+              ),
+            ],
+          ),
+        ),
+      );
+      await tester.pumpAndSettle();
+      expect(find.text('context'), findsNWidgets(2));
+      await tester.tap(find.byKey(const ValueKey('diff-layout-toggle')));
+      await tester.pumpAndSettle();
+      expect(find.text('context'), findsOneWidget);
+      expect(
+        tester.getTopLeft(find.text('before')).dy,
+        lessThan(tester.getTopLeft(find.text('after')).dy),
+      );
+      await tester.tap(find.byKey(const ValueKey('diff-layout-toggle')));
+      await tester.pumpAndSettle();
+      expect(find.text('context'), findsNWidgets(2));
+      expect(tester.takeException(), isNull);
+    },
+  );
+
   testWidgets('modified diff renderiza sem exceção de layout', (tester) async {
     final diff = FileDiff(
       path: '/repo/a.txt',

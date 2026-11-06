@@ -798,6 +798,8 @@ class _Translations$orkest$fileTreePanel$pt_BR extends Translations$orkest$fileT
 	@override String diffOriginal({required Object ref}) => 'Original ${ref}';
 	@override String diffModified({required Object ref}) => 'Modificado ${ref}';
 	@override String get diffWorkingTree => 'Diretorio de trabalho';
+	@override String get diffUnified => 'Diff unificado';
+	@override String get diffSplit => 'Diff lado a lado';
 	@override String get diffBinaryFile => 'Arquivo binario - sem diff de texto.';
 	@override String get diffNoChanges => 'Sem alteracoes.';
 	@override String diffError({required Object detail}) => 'Não foi possível ler o diff: ${detail}';
@@ -2575,6 +2577,8 @@ extension on TranslationsPtBr {
 			'orkest.fileTreePanel.diffOriginal' => ({required Object ref}) => 'Original ${ref}',
 			'orkest.fileTreePanel.diffModified' => ({required Object ref}) => 'Modificado ${ref}',
 			'orkest.fileTreePanel.diffWorkingTree' => 'Diretorio de trabalho',
+			'orkest.fileTreePanel.diffUnified' => 'Diff unificado',
+			'orkest.fileTreePanel.diffSplit' => 'Diff lado a lado',
 			'orkest.fileTreePanel.diffBinaryFile' => 'Arquivo binario - sem diff de texto.',
 			'orkest.fileTreePanel.diffNoChanges' => 'Sem alteracoes.',
 			'orkest.fileTreePanel.diffError' => ({required Object detail}) => 'Não foi possível ler o diff: ${detail}',
@@ -2612,10 +2616,10 @@ extension on TranslationsPtBr {
 			'orkest.workspaceSettingsDialog.host' => 'Host',
 			'orkest.workspaceSettingsDialog.folder' => 'Pasta',
 			'orkest.realmDialogs.namePlaceholder' => 'Nome do realm',
-			'orkest.realmDialogs.duplicateName' => 'Já existe um realm com esse nome.',
-			'orkest.realmDialogs.newRealmTitle' => 'Novo realm',
 			_ => null,
 		} ?? switch (path) {
+			'orkest.realmDialogs.duplicateName' => 'Já existe um realm com esse nome.',
+			'orkest.realmDialogs.newRealmTitle' => 'Novo realm',
 			'orkest.realmDialogs.renameRealmTitle' => 'Renomear realm',
 			'orkest.realmDialogs.rename' => 'Renomear',
 			'orkest.realmDialogs.deleteRealmTitle' => 'Excluir realm',
@@ -3126,10 +3130,10 @@ extension on TranslationsPtBr {
 			'settings.page.terminal.sectionDefaultTerminal' => 'Terminal padrão',
 			'settings.page.terminal.engineTitle' => 'Motor',
 			'settings.page.terminal.engineDesc' => 'Usado por novas abas de terminal e buffers de saída de tasks. Abas abertas mantêm o motor atual.',
-			'settings.page.terminal.shellTitle' => 'Shell',
-			'settings.page.terminal.shellDesc' => 'Qual shell novas abas de terminal abrem. A seta ao lado do + ainda abre qualquer outro, só para aquela aba.',
 			_ => null,
 		} ?? switch (path) {
+			'settings.page.terminal.shellTitle' => 'Shell',
+			'settings.page.terminal.shellDesc' => 'Qual shell novas abas de terminal abrem. A seta ao lado do + ainda abre qualquer outro, só para aquela aba.',
 			'settings.page.terminal.noWslMessage' => 'Nenhuma distro WSL encontrada. Instale uma (wsl.exe --install) e reinicie o Orkest Code para vê-la listada aqui.',
 			'settings.page.terminal.sectionBehavior' => 'Comportamento',
 			'settings.page.terminal.closeOnExitTitle' => 'Fechar a aba quando o shell encerrar',

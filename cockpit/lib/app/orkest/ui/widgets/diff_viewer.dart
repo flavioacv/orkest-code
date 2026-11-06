@@ -20,9 +20,8 @@ String? _languageOf(String path) {
   return name.substring(dot + 1).toLowerCase();
 }
 
-/// Visualizador de **diff** read-only, split (estilo VSCode): esquerda = versão
-/// antiga (linhas removidas em vermelho), direita = nova (adicionadas em verde),
-/// contexto nos dois lados. Sem ações — só leitura. O conteúdo vem parseado na
+/// Visualizador de diff com layouts unificado e lado a lado. O texto é somente
+/// leitura; ações de stage/unstage/descarte por hunk são fornecidas pela
 /// [DiffViewerSession].
 class DiffViewer extends StatelessWidget {
   const DiffViewer({super.key, required this.session, this.displayPath});
@@ -104,11 +103,14 @@ final class _RowItem extends _Item {
 /// Converte hunks em uma lista plana de [_Item]s (header + linhas pares).
 /// Separado do widget para poder ser computado uma única vez por diff,
 /// não a cada `build()`.
-List<_Item> _buildDiffItems(List<DiffHunk> hunks) {
+List<_Item> _buildDiffItems(List<DiffHunk> hunks, {bool unified = false}) {
   final items = <_Item>[];
   for (final hunk in hunks) {
     items.add(_HunkHeaderItem(hunk));
-    for (final row in _rowsOf(hunk)) {
+    for (final row
+        in unified
+            ? hunk.lines.map((line) => _Row(left: line))
+            : _rowsOf(hunk)) {
       items.add(_RowItem(row));
     }
   }
@@ -174,12 +176,14 @@ class _DiffBodyState extends State<_DiffBody> {
   late List<_Item> _items;
   FileDiff? _renderedDiff;
   int? _selectedHunk;
+  bool _unified = false;
 
   void _selectHunk(int? index) {
     setState(() {
       _selectedHunk = index;
       _items = _buildDiffItems(
         index == null ? widget.diff.hunks : [widget.diff.hunks[index]],
+        unified: _unified,
       );
     });
   }
@@ -197,7 +201,7 @@ class _DiffBodyState extends State<_DiffBody> {
     if (!identical(_renderedDiff, widget.diff)) {
       _renderedDiff = widget.diff;
       _selectedHunk = null;
-      _items = _buildDiffItems(widget.diff.hunks);
+      _items = _buildDiffItems(widget.diff.hunks, unified: _unified);
     }
   }
 
@@ -245,6 +249,24 @@ class _DiffBodyState extends State<_DiffBody> {
                 style: context.typo.label.copyWith(color: colors.text2),
               ),
               const Spacer(),
+              AppTooltip(
+                message: _unified
+                    ? context.t.orkest.fileTreePanel.diffSplit
+                    : context.t.orkest.fileTreePanel.diffUnified,
+                child: HoverTap(
+                  key: const ValueKey('diff-layout-toggle'),
+                  onTap: () {
+                    _unified = !_unified;
+                    _selectHunk(_selectedHunk);
+                  },
+                  padding: const EdgeInsets.all(5),
+                  child: Icon(
+                    _unified ? LucideIcons.columns2 : LucideIcons.rows2,
+                    size: 14,
+                    color: colors.text2,
+                  ),
+                ),
+              ),
               Text(
                 _selectedHunk == null
                     ? '${diff.hunks.length}'
@@ -297,10 +319,13 @@ class _DiffBodyState extends State<_DiffBody> {
                 // Cada coluna preenche metade da largura disponível, respeitando um
                 // mínimo (abaixo do qual rola na horizontal).
                 final avail = constraints.maxWidth;
-                final side = ((avail - 1) / 2).clamp(
-                  _minSideWidth,
-                  double.infinity,
-                );
+                final side =
+                    (_unified
+                            ? (avail.clamp(_minSideWidth, double.infinity) -
+                                      1) /
+                                  2
+                            : (avail - 1) / 2)
+                        .clamp(_unified ? 0.0 : _minSideWidth, double.infinity);
                 final total = side * 2 + 1;
 
                 // Seleção contínua entre linhas (copiar blocos de código do diff).
@@ -341,11 +366,26 @@ class _DiffBodyState extends State<_DiffBody> {
                                   ? () => widget.session.onDiscardHunk!(hunk)
                                   : null,
                             ),
-                            _RowItem(:final row) => _DiffRow(
-                              row: row,
-                              sideWidth: side,
-                              language: language,
-                            ),
+                            _RowItem(:final row) =>
+                              _unified
+                                  ? _Side(
+                                      line: row.left,
+                                      side:
+                                          row.left?.kind == DiffLineKind.removed
+                                          ? _SideKind.old
+                                          : _SideKind.newSide,
+                                      lineNo:
+                                          row.left?.kind == DiffLineKind.removed
+                                          ? row.left?.oldLine
+                                          : row.left?.newLine,
+                                      width: total,
+                                      language: language,
+                                    )
+                                  : _DiffRow(
+                                      row: row,
+                                      sideWidth: side,
+                                      language: language,
+                                    ),
                           };
                         },
                       ),

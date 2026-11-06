@@ -1747,6 +1747,12 @@ class Translations$orkest$fileTreePanel$en {
 	/// en: 'Working tree'
 	String get diffWorkingTree => 'Working tree';
 
+	/// en: 'Unified diff'
+	String get diffUnified => 'Unified diff';
+
+	/// en: 'Side-by-side diff'
+	String get diffSplit => 'Side-by-side diff';
+
 	/// en: 'Binary file - no text diff.'
 	String get diffBinaryFile => 'Binary file - no text diff.';
 
@@ -4994,6 +5000,8 @@ extension on Translations {
 			'orkest.fileTreePanel.diffOriginal' => ({required Object ref}) => 'Original ${ref}',
 			'orkest.fileTreePanel.diffModified' => ({required Object ref}) => 'Modified ${ref}',
 			'orkest.fileTreePanel.diffWorkingTree' => 'Working tree',
+			'orkest.fileTreePanel.diffUnified' => 'Unified diff',
+			'orkest.fileTreePanel.diffSplit' => 'Side-by-side diff',
 			'orkest.fileTreePanel.diffBinaryFile' => 'Binary file - no text diff.',
 			'orkest.fileTreePanel.diffNoChanges' => 'No changes.',
 			'orkest.fileTreePanel.diffError' => ({required Object detail}) => 'Could not read the diff: ${detail}',
@@ -5031,10 +5039,10 @@ extension on Translations {
 			'orkest.workspaceSettingsDialog.host' => 'Host',
 			'orkest.workspaceSettingsDialog.folder' => 'Folder',
 			'orkest.realmDialogs.namePlaceholder' => 'Realm name',
-			'orkest.realmDialogs.duplicateName' => 'A realm with this name already exists.',
-			'orkest.realmDialogs.newRealmTitle' => 'New realm',
 			_ => null,
 		} ?? switch (path) {
+			'orkest.realmDialogs.duplicateName' => 'A realm with this name already exists.',
+			'orkest.realmDialogs.newRealmTitle' => 'New realm',
 			'orkest.realmDialogs.renameRealmTitle' => 'Rename realm',
 			'orkest.realmDialogs.rename' => 'Rename',
 			'orkest.realmDialogs.deleteRealmTitle' => 'Delete realm',
@@ -5545,10 +5553,10 @@ extension on Translations {
 			'settings.page.terminal.sectionDefaultTerminal' => 'Default terminal',
 			'settings.page.terminal.engineTitle' => 'Engine',
 			'settings.page.terminal.engineDesc' => 'Used by new terminal tabs and task output buffers. Open tabs keep their current engine.',
-			'settings.page.terminal.shellTitle' => 'Shell',
-			'settings.page.terminal.shellDesc' => 'Which shell new terminal tabs open. The arrow next to + still opens any other one, just for that tab.',
 			_ => null,
 		} ?? switch (path) {
+			'settings.page.terminal.shellTitle' => 'Shell',
+			'settings.page.terminal.shellDesc' => 'Which shell new terminal tabs open. The arrow next to + still opens any other one, just for that tab.',
 			'settings.page.terminal.noWslMessage' => 'No WSL distros found. Install one (wsl.exe --install) and restart Orkest Code to see it listed here.',
 			'settings.page.terminal.sectionBehavior' => 'Behavior',
 			'settings.page.terminal.closeOnExitTitle' => 'Close tab when the shell exits',

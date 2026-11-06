@@ -515,6 +515,8 @@
       "diffOriginal": "Original ${ref}",
       "diffModified": "Modificado ${ref}",
       "diffWorkingTree": "Diretorio de trabalho",
+      "diffUnified": "Diff unificado",
+      "diffSplit": "Diff lado a lado",
       "diffBinaryFile": "Arquivo binario - sem diff de texto.",
       "diffNoChanges": "Sem alteracoes.",
       "diffError": "Não foi possível ler o diff: ${detail}",
