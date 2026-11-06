@@ -4,6 +4,8 @@ import 'package:orkest_code/app/orkest/ui/widgets/file_path_breadcrumb.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
 import 'package:orkest_code/app/core/ui/widgets/code_highlight.dart';
 import 'package:orkest_code/i18n/strings.g.dart';
+import 'package:orkest_code/app/core/ui/widgets/hover_tap.dart';
+import 'package:orkest_code/app/core/ui/widgets/app_tooltip.dart';
 import 'package:flutter/material.dart' show SelectionArea;
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
@@ -170,17 +172,31 @@ class _DiffBodyState extends State<_DiffBody> {
   /// Lista plana de itens (hunk headers + rows). Recalculada só quando o diff
   /// muda, não a cada `build()`.
   late List<_Item> _items;
+  FileDiff? _renderedDiff;
+  int? _selectedHunk;
+
+  void _selectHunk(int? index) {
+    setState(() {
+      _selectedHunk = index;
+      _items = _buildDiffItems(
+        index == null ? widget.diff.hunks : [widget.diff.hunks[index]],
+      );
+    });
+  }
 
   @override
   void initState() {
     super.initState();
     _items = _buildDiffItems(widget.diff.hunks);
+    _renderedDiff = widget.diff;
   }
 
   @override
   void didUpdateWidget(_DiffBody old) {
     super.didUpdateWidget(old);
-    if (!identical(old.session.diff, widget.session.diff)) {
+    if (!identical(_renderedDiff, widget.diff)) {
+      _renderedDiff = widget.diff;
+      _selectedHunk = null;
       _items = _buildDiffItems(widget.diff.hunks);
     }
   }
@@ -215,65 +231,132 @@ class _DiffBodyState extends State<_DiffBody> {
       );
     }
 
-    return ColoredBox(
-      color: colors.bg,
-      child: LayoutBuilder(
-        builder: (context, constraints) {
-          // Cada coluna preenche metade da largura disponível, respeitando um
-          // mínimo (abaixo do qual rola na horizontal).
-          final avail = constraints.maxWidth;
-          final side = ((avail - 1) / 2).clamp(_minSideWidth, double.infinity);
-          final total = side * 2 + 1;
-
-          // Seleção contínua entre linhas (copiar blocos de código do diff).
-          // Os números de linha ficam fora da seleção (SelectionContainer.disabled
-          // em _Side). A SelectionArea fica DENTRO do scroll horizontal de
-          // propósito: em volta dele a seleção escorrega ao rolar com Interface
-          // size != 14 — ver [SelectableScroll].
-          //
-          // O scroll vertical é feito pelo ListView.builder, que virtualiza:
-          // só os widgets visíveis (~30) são construídos, em vez de todos os N
-          // do diff. Isso elimina a lentidão na abertura de diffs grandes.
-          return SingleChildScrollView(
-            scrollDirection: Axis.horizontal,
-            child: SizedBox(
-              width: total,
-              child: SelectionArea(
-                child: ListView.builder(
-                  // item 0 = revision header; restantes = _items
-                  itemCount: _items.length + 1,
-                  itemBuilder: (context, i) {
-                    if (i == 0) return _revisionHeader(context, diff, side);
-                    final item = _items[i - 1];
-                    return switch (item) {
-                      _HunkHeaderItem(:final hunk) => _HunkHeader(
-                        hunk: hunk,
-                        width: total,
-                        isStaged: widget.session.isStaged,
-                        isHistorical: widget.session.commitHash != null,
-                        onStage: widget.session.onStageHunk != null
-                            ? () => widget.session.onStageHunk!(hunk)
-                            : null,
-                        onUnstage: widget.session.onUnstageHunk != null
-                            ? () => widget.session.onUnstageHunk!(hunk)
-                            : null,
-                        onDiscard: widget.session.onDiscardHunk != null
-                            ? () => widget.session.onDiscardHunk!(hunk)
-                            : null,
-                      ),
-                      _RowItem(:final row) => _DiffRow(
-                        row: row,
-                        sideWidth: side,
-                        language: language,
-                      ),
-                    };
-                  },
+    return Column(
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+          decoration: BoxDecoration(
+            border: Border(bottom: BorderSide(color: colors.border)),
+          ),
+          child: Row(
+            children: [
+              Text(
+                context.t.orkest.fileTreePanel.changes,
+                style: context.typo.label.copyWith(color: colors.text2),
+              ),
+              const Spacer(),
+              Text(
+                _selectedHunk == null
+                    ? '${diff.hunks.length}'
+                    : '${_selectedHunk! + 1} / ${diff.hunks.length}',
+                style: context.typo.mono.copyWith(
+                  fontSize: 11,
+                  color: colors.text3,
                 ),
               ),
+              const SizedBox(width: 8),
+              for (final delta in [-1, 1])
+                AppTooltip(
+                  message: diff
+                      .hunks[((_selectedHunk ?? (delta < 0 ? 0 : -1)) + delta) %
+                          diff.hunks.length]
+                      .header,
+                  child: HoverTap(
+                    onTap: () => _selectHunk(
+                      ((_selectedHunk ?? (delta < 0 ? 0 : -1)) + delta) %
+                          diff.hunks.length,
+                    ),
+                    padding: const EdgeInsets.all(5),
+                    child: Icon(
+                      delta < 0 ? LucideIcons.arrowUp : LucideIcons.arrowDown,
+                      size: 14,
+                      color: colors.text2,
+                    ),
+                  ),
+                ),
+              AppTooltip(
+                message: context.t.orkest.fileTreePanel.changes,
+                child: HoverTap(
+                  onTap: () => _selectHunk(null),
+                  padding: const EdgeInsets.all(5),
+                  child: Icon(
+                    LucideIcons.list,
+                    size: 14,
+                    color: _selectedHunk == null ? colors.text : colors.text3,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ColoredBox(
+            color: colors.bg,
+            child: LayoutBuilder(
+              builder: (context, constraints) {
+                // Cada coluna preenche metade da largura disponível, respeitando um
+                // mínimo (abaixo do qual rola na horizontal).
+                final avail = constraints.maxWidth;
+                final side = ((avail - 1) / 2).clamp(
+                  _minSideWidth,
+                  double.infinity,
+                );
+                final total = side * 2 + 1;
+
+                // Seleção contínua entre linhas (copiar blocos de código do diff).
+                // Os números de linha ficam fora da seleção (SelectionContainer.disabled
+                // em _Side). A SelectionArea fica DENTRO do scroll horizontal de
+                // propósito: em volta dele a seleção escorrega ao rolar com Interface
+                // size != 14 — ver [SelectableScroll].
+                //
+                // O scroll vertical é feito pelo ListView.builder, que virtualiza:
+                // só os widgets visíveis (~30) são construídos, em vez de todos os N
+                // do diff. Isso elimina a lentidão na abertura de diffs grandes.
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: SizedBox(
+                    width: total,
+                    child: SelectionArea(
+                      child: ListView.builder(
+                        // item 0 = revision header; restantes = _items
+                        itemCount: _items.length + 1,
+                        itemBuilder: (context, i) {
+                          if (i == 0) {
+                            return _revisionHeader(context, diff, side);
+                          }
+                          final item = _items[i - 1];
+                          return switch (item) {
+                            _HunkHeaderItem(:final hunk) => _HunkHeader(
+                              hunk: hunk,
+                              width: total,
+                              isStaged: widget.session.isStaged,
+                              isHistorical: widget.session.commitHash != null,
+                              onStage: widget.session.onStageHunk != null
+                                  ? () => widget.session.onStageHunk!(hunk)
+                                  : null,
+                              onUnstage: widget.session.onUnstageHunk != null
+                                  ? () => widget.session.onUnstageHunk!(hunk)
+                                  : null,
+                              onDiscard: widget.session.onDiscardHunk != null
+                                  ? () => widget.session.onDiscardHunk!(hunk)
+                                  : null,
+                            ),
+                            _RowItem(:final row) => _DiffRow(
+                              row: row,
+                              sideWidth: side,
+                              language: language,
+                            ),
+                          };
+                        },
+                      ),
+                    ),
+                  ),
+                );
+              },
             ),
-          );
-        },
-      ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -420,7 +503,10 @@ class _HunkHeader extends StatelessWidget {
               hunk.header,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: context.typo.mono.copyWith(fontSize: 11.5, color: colors.text3),
+              style: context.typo.mono.copyWith(
+                fontSize: 11.5,
+                color: colors.text3,
+              ),
             ),
           ),
           if (!isHistorical) ...[
@@ -471,7 +557,9 @@ class _HunkActionButton extends StatelessWidget {
   Widget build(BuildContext context) {
     final colors = context.colors;
     final bg = isPrimary ? colors.gitStaged.withValues(alpha: 0.15) : colors.bg;
-    final border = isPrimary ? colors.gitStaged.withValues(alpha: 0.4) : colors.border;
+    final border = isPrimary
+        ? colors.gitStaged.withValues(alpha: 0.4)
+        : colors.border;
     final textColor = isPrimary ? colors.gitStaged : colors.text2;
 
     return GestureDetector(
