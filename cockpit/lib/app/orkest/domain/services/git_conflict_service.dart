@@ -50,6 +50,51 @@ class ConflictBlock {
     required this.oursLabel,
     required this.theirsLabel,
   });
+
+  ConflictBlock copyWith({
+    int? from,
+    int? to,
+    int? startLine,
+    int? endLine,
+    String? ours,
+    String? base,
+    String? theirs,
+    String? oursLabel,
+    String? theirsLabel,
+  }) => ConflictBlock(
+    from: from ?? this.from,
+    to: to ?? this.to,
+    startLine: startLine ?? this.startLine,
+    endLine: endLine ?? this.endLine,
+    ours: ours ?? this.ours,
+    base: base ?? this.base,
+    theirs: theirs ?? this.theirs,
+    oursLabel: oursLabel ?? this.oursLabel,
+    theirsLabel: theirsLabel ?? this.theirsLabel,
+  );
+}
+
+/// Conteúdos das versões em conflito de um arquivo recuperadas diretamente
+/// dos estágios do índice do Git (stage 1: base comum, stage 2: ours, stage 3: theirs).
+class GitConflictStages {
+  const GitConflictStages({
+    this.base,
+    this.ours,
+    this.theirs,
+  });
+
+  /// Versão do ancestral comum (Stage 1: `:1:<path>`).
+  final String? base;
+
+  /// Nossa versão / HEAD (Stage 2: `:2:<path>`).
+  final String? ours;
+
+  /// Versão entrante / remota (Stage 3: `:3:<path>`).
+  final String? theirs;
+
+  bool get hasBase => base != null && base!.isNotEmpty;
+  bool get hasOurs => ours != null;
+  bool get hasTheirs => theirs != null;
 }
 
 /// Serviço de análise, navegação e resolução de conflitos de merge/rebase do Git.
@@ -372,5 +417,60 @@ class GitConflictService {
   String _extractLabel(String line, String marker) {
     if (line.length <= marker.length) return '';
     return line.substring(marker.length).trim();
+  }
+
+  /// Lê as versões de um arquivo diretamente dos estágios do índice do Git:
+  /// - Estágio 1 (`:1:<path>`): ancestral comum (Base)
+  /// - Estágio 2 (`:2:<path>`): nosso lado (Ours / HEAD)
+  /// - Estágio 3 (`:3:<path>`): lado entrante (Theirs / Incoming)
+  Future<Result<GitConflictStages, String>> readConflictStages({
+    required String repoRoot,
+    required String relativePath,
+    String gitExecutable = 'git',
+  }) async {
+    final cleanPath = relativePath.startsWith('/')
+        ? relativePath.substring(1)
+        : relativePath;
+
+    Future<String?> readStage(int stage) async {
+      try {
+        final res = await Process.run(
+          gitExecutable,
+          ['show', ':$stage:$cleanPath'],
+          workingDirectory: repoRoot,
+        );
+        if (res.exitCode == 0) {
+          return res.stdout as String;
+        }
+        return null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    final base = await readStage(1);
+    final ours = await readStage(2);
+    final theirs = await readStage(3);
+
+    return Success(
+      GitConflictStages(
+        base: base,
+        ours: ours,
+        theirs: theirs,
+      ),
+    );
+  }
+
+  /// Enriquece blocos de conflito com o ancestral comum obtido dos estágios do índice,
+  /// caso o bloco original seja padrão de 2 vias (sem marcador diff3 `|||||||`).
+  List<ConflictBlock> enrichBlocksWithBase({
+    required List<ConflictBlock> blocks,
+    required GitConflictStages stages,
+  }) {
+    if (!stages.hasBase) return blocks;
+    return blocks.map((block) {
+      if (block.base != null) return block;
+      return block.copyWith(base: stages.base);
+    }).toList();
   }
 }

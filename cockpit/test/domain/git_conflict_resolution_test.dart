@@ -1,6 +1,7 @@
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
+import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:orkest_code/app/orkest/domain/services/git_conflict_service.dart';
 
 void main() {
@@ -375,6 +376,101 @@ delta
         service.detectOngoingOperation(tempDir.path),
         equals(GitOngoingOperation.revert),
       );
+    });
+  });
+
+  group('GitConflictService - Estágios do Índice Git (Stages :1:, :2:, :3:)', () {
+    test('enrichBlocksWithBase preenche ancestral quando bloco não possui diff3', () {
+      const block2Way = ConflictBlock(
+        from: 0,
+        to: 10,
+        startLine: 1,
+        endLine: 5,
+        ours: 'alpha',
+        theirs: 'beta',
+        oursLabel: 'HEAD',
+        theirsLabel: 'incoming',
+      );
+      const stages = GitConflictStages(
+        base: 'common ancestor code',
+        ours: 'alpha',
+        theirs: 'beta',
+      );
+
+      final enriched = service.enrichBlocksWithBase(
+        blocks: [block2Way],
+        stages: stages,
+      );
+
+      expect(enriched.single.base, 'common ancestor code');
+      expect(enriched.single.ours, 'alpha');
+      expect(enriched.single.theirs, 'beta');
+    });
+
+    test('readConflictStages recupera base, ours e theirs de conflito real no índice', () async {
+      final tempDir = Directory.systemTemp.createTempSync('git_stages_test_');
+      try {
+        void runGit(List<String> args) {
+          final res = Process.runSync(
+            'git',
+            args,
+            workingDirectory: tempDir.path,
+          );
+          if (res.exitCode != 0) {
+            throw Exception('Git failed: ${res.stderr}');
+          }
+        }
+
+        runGit(['init', '-b', 'main']);
+        runGit(['config', 'user.name', 'Test']);
+        runGit(['config', 'user.email', 'test@test.com']);
+
+        // 1. Commit base (ancestral)
+        final testFile = File('${tempDir.path}/conflict_file.txt');
+        testFile.writeAsStringSync('common ancestor content\n');
+        runGit(['add', 'conflict_file.txt']);
+        runGit(['commit', '-m', 'commit base']);
+
+        // 2. Branch feature (theirs)
+        runGit(['checkout', '-b', 'feature']);
+        testFile.writeAsStringSync('theirs incoming content\n');
+        runGit(['add', 'conflict_file.txt']);
+        runGit(['commit', '-m', 'commit feature']);
+
+        // 3. Voltar para main e alterar o mesmo arquivo (ours)
+        runGit(['checkout', 'main']);
+        testFile.writeAsStringSync('ours local content\n');
+        runGit(['add', 'conflict_file.txt']);
+        runGit(['commit', '-m', 'commit main']);
+
+        // 4. Merge provocando conflito
+        final mergeRes = Process.runSync(
+          'git',
+          ['merge', 'feature'],
+          workingDirectory: tempDir.path,
+        );
+        // O merge deve falhar com conflito (exitCode != 0)
+        expect(mergeRes.exitCode, isNot(0));
+
+        // 5. Ler os estágios reais do índice através de readConflictStages
+        final result = await service.readConflictStages(
+          repoRoot: tempDir.path,
+          relativePath: 'conflict_file.txt',
+        );
+
+        expect(result.isSuccess, isTrue);
+        final stages = (result as Success<GitConflictStages, String>).value;
+        expect(stages.hasBase, isTrue);
+        expect(stages.hasOurs, isTrue);
+        expect(stages.hasTheirs, isTrue);
+        expect(stages.base?.trim(), 'common ancestor content');
+        expect(stages.ours?.trim(), 'ours local content');
+        expect(stages.theirs?.trim(), 'theirs incoming content');
+      } finally {
+        if (tempDir.existsSync()) {
+          tempDir.deleteSync(recursive: true);
+        }
+      }
     });
   });
 }
