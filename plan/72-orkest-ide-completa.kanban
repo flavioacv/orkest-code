@@ -219,6 +219,7 @@ labels: {P0: red, P1: orange, P2: blue, P3: gray, arquitetura: purple, workspace
       Detalhes: [resolução visual de conflitos](72-resolucao-visual-conflitos.md).
 
 - [x] G01 · Entregar revisão e staging por hunks <!-- id: G01 labels: P1, git blockedBy: W03, A04 -->
+      Refinamento visual adicional: cabeçalhos com truncamento de títulos preservam ações em painéis estreitos; estado sem alterações usa ícone semântico e mensagem centralizada no tema atual.
       Entrega: Serviço desacoplado GitHunkService com suporte a geração de patches unificados compatíveis com git apply --cached e --reverse; staging e unstage granulares por trecho; descarte isolado no working tree (discardHunk); botões interativos contextuais no DiffViewer (_HunkHeader) com cores semânticas do tema (gitStaged); integração no GitController com atualização assíncrona; proteção atômica contra conflitos e corridas no index; suporte multilíngue em pt_BR, en e es via slang; refinamento visual do Source Control com badge de caminhos alterados no ícone Git, seletor segmentado Changes/History e ícones semânticos em Changes/Staged mantendo o tema existente.
       Aceite: Stage/unstage por trecho, diff staged/unstaged, commit parcial/amend e preview; validar HEAD/index contra corridas e preservar alterações não selecionadas, arquivos binários e untracked.
       Validação: 4 testes unitários com repo Git temporário em cockpit/test/domain/git_hunk_staging_test.dart; 13 testes de regressão de diff aprovados; análise estática dart analyze --fatal-infos limpa (zero issues).

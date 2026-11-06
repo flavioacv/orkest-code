@@ -3158,9 +3158,24 @@ class _ChangedTree extends StatelessWidget {
   Widget build(BuildContext context) {
     if (stagedPaths.isEmpty && unstagedPaths.isEmpty) {
       return Center(
-        child: Text(
-          context.t.orkest.fileTreePanel.noChanges,
-          style: context.typo.label.copyWith(color: context.colors.text3),
+        child: Padding(
+          padding: const EdgeInsets.all(24),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(
+                Icons.check_circle_outline,
+                size: 28,
+                color: context.colors.gitStaged,
+              ),
+              const SizedBox(height: 12),
+              Text(
+                context.t.orkest.fileTreePanel.noChanges,
+                textAlign: TextAlign.center,
+                style: context.typo.label.copyWith(color: context.colors.text3),
+              ),
+            ],
+          ),
         ),
       );
     }
@@ -3250,17 +3265,22 @@ class _ChangedTree extends StatelessWidget {
                 color: staged ? context.colors.gitStaged : context.colors.warn,
               ),
               const SizedBox(width: 5),
-              Text(
-                staged
-                    ? context.t.orkest.fileTreePanel.stagedChangesHeader(
-                        count: files.length,
-                      )
-                    : context.t.orkest.fileTreePanel.changesHeader(
-                        count: files.length,
-                      ),
-                style: context.typo.label.copyWith(color: context.colors.text3),
+              Expanded(
+                child: Text(
+                  staged
+                      ? context.t.orkest.fileTreePanel.stagedChangesHeader(
+                          count: files.length,
+                        )
+                      : context.t.orkest.fileTreePanel.changesHeader(
+                          count: files.length,
+                        ),
+                  style: context.typo.label.copyWith(
+                    color: context.colors.text3,
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
               ),
-              const Spacer(),
               _PanelHeaderAction(
                 key: ValueKey(
                   staged
@@ -3930,15 +3950,18 @@ class _PanelHeader extends StatelessWidget {
       padding: const EdgeInsets.fromLTRB(12, 10, 6, 4),
       child: Row(
         children: [
-          Text(
-            title,
-            style: context.typo.label.copyWith(
-              fontSize: 10,
-              letterSpacing: 1.1,
-              color: colors.text3,
+          Expanded(
+            child: Text(
+              title,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.typo.label.copyWith(
+                fontSize: 10,
+                letterSpacing: 1.1,
+                color: colors.text3,
+              ),
             ),
           ),
-          const Spacer(),
           ...actions,
         ],
       ),
