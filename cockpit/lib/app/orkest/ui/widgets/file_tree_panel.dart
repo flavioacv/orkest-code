@@ -1,3 +1,5 @@
+import 'package:orkest_code/app/orkest/ui/widgets/source_control_panel.dart';
+import 'package:orkest_code/app/orkest/domain/entities/workbench_layout_state.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/workbench_tool_host.dart';
 import 'dart:io' show Platform;
 
@@ -91,6 +93,8 @@ class FileTreePanel extends StatefulWidget {
     super.key,
     required this.rootPath,
     this.workspaceId,
+    this.workbenchLayout,
+    this.onWorkbenchLayoutChanged,
     required this.revision,
     this.selectedPath,
     required this.listChildren,
@@ -273,6 +277,8 @@ class FileTreePanel extends StatefulWidget {
 
   final String rootPath;
   final String? workspaceId;
+  final WorkbenchLayoutState? workbenchLayout;
+  final ValueChanged<WorkbenchLayoutState>? onWorkbenchLayoutChanged;
 
   /// Token externo (VM) que sobe a cada mutação — força reler as pastas abertas.
   final int revision;
@@ -393,20 +399,6 @@ class FileTreePanel extends StatefulWidget {
   State<FileTreePanel> createState() => _FileTreePanelState();
 }
 
-/// Aba ativa do painel direito: árvore de arquivos, busca por conteúdo,
-/// source control ou conexões de banco (plano 51). Ordem visual no header:
-/// Files · Search · Source Control · Database.
-enum _RightPaneTab {
-  files,
-  search,
-  sourceControl,
-  database,
-  gallery,
-  telemetry,
-}
-
-enum _SourceControlView { changes, history }
-
 /// Intenção de criação inline pendente: dentro de [parentPath], arquivo ou pasta.
 class _PendingCreate {
   const _PendingCreate(this.parentPath, this.isFolder);
@@ -424,22 +416,40 @@ class _FileTreePanelState extends State<FileTreePanel> {
     super.didChangeDependencies();
     if (!_toolSelectionRestored) {
       _toolSelectionRestored = true;
+      if (widget.workbenchLayout case final layout?) {
+        _tab = layout.activeTool;
+        _sourceControlView = layout.sourceControlSection;
+        return;
+      }
       final saved = PageStorage.maybeOf(
         context,
       )?.readState(context, identifier: _toolStorageId);
       if (saved is String) {
-        for (final value in _RightPaneTab.values) {
+        for (final value in WorkbenchToolId.values) {
           if (value.name == saved) _tab = value;
         }
       }
     }
   }
 
-  void _activateTool(_RightPaneTab tool) {
+  void _activateTool(WorkbenchToolId tool) {
     PageStorage.maybeOf(
       context,
     )?.writeState(context, tool.name, identifier: _toolStorageId);
     setState(() => _tab = tool);
+    _saveWorkbenchLayout();
+  }
+
+  void _saveWorkbenchLayout() => widget.onWorkbenchLayoutChanged?.call(
+    WorkbenchLayoutState(
+      activeTool: _tab,
+      sourceControlSection: _sourceControlView,
+    ),
+  );
+
+  void _selectSourceControlSection(SourceControlSection section) {
+    setState(() => _sourceControlView = section);
+    _saveWorkbenchLayout();
   }
 
   int _localRefresh = 0;
@@ -481,12 +491,12 @@ class _FileTreePanelState extends State<FileTreePanel> {
   }
 
   /// Aba ativa do painel: árvore de arquivos, busca ou source control.
-  _RightPaneTab _tab = _RightPaneTab.files;
+  WorkbenchToolId _tab = WorkbenchToolId.files;
 
   /// Source Control começa no default global e pode alternar temporariamente
   /// sem afetar a árvore principal de arquivos.
   late bool _sourceControlTree;
-  _SourceControlView _sourceControlView = _SourceControlView.changes;
+  SourceControlSection _sourceControlView = SourceControlSection.changes;
 
   /// Expansão das pastas do Source Control, chaveada pelo caminho absoluto e
   /// compartilhada entre Changes/Staged. Não removemos entradas quando uma
@@ -520,6 +530,11 @@ class _FileTreePanelState extends State<FileTreePanel> {
   @override
   void didUpdateWidget(FileTreePanel oldWidget) {
     super.didUpdateWidget(oldWidget);
+    if (oldWidget.workbenchLayout != widget.workbenchLayout &&
+        widget.workbenchLayout != null) {
+      _tab = widget.workbenchLayout!.activeTool;
+      _sourceControlView = widget.workbenchLayout!.sourceControlSection;
+    }
     if (oldWidget.searchFocusSignal != widget.searchFocusSignal) {
       oldWidget.searchFocusSignal?.removeListener(_onSearchFocusRequested);
       widget.searchFocusSignal?.addListener(_onSearchFocusRequested);
@@ -534,7 +549,7 @@ class _FileTreePanelState extends State<FileTreePanel> {
         widget.revealGen != _revealGen) {
       _revealGen = widget.revealGen;
       _revealExpand = _ancestorDirs(widget.revealPath);
-      _tab = _RightPaneTab.files;
+      _tab = WorkbenchToolId.files;
       setState(() {});
     }
   }
@@ -968,7 +983,7 @@ class _FileTreePanelState extends State<FileTreePanel> {
     }
     switch (choice) {
       case 'commit':
-        setState(() => _sourceControlView = _SourceControlView.changes);
+        _selectSourceControlSection(SourceControlSection.changes);
         await _commitStaged();
       case 'stage-all':
         await _toggleStageAll(widget.unstagedPaths, false);
@@ -977,7 +992,7 @@ class _FileTreePanelState extends State<FileTreePanel> {
       case 'discard-all':
         await _discardAll(widget.unstagedPaths);
       case 'history':
-        setState(() => _sourceControlView = _SourceControlView.history);
+        _selectSourceControlSection(SourceControlSection.history);
     }
   }
 
@@ -1082,8 +1097,8 @@ class _FileTreePanelState extends State<FileTreePanel> {
 
   /// Cmd+Shift+F: revela a aba de busca (o campo é focado pelo próprio painel).
   void _onSearchFocusRequested() {
-    if (widget.searchPanel != null && _tab != _RightPaneTab.search) {
-      setState(() => _tab = _RightPaneTab.search);
+    if (widget.searchPanel != null && _tab != WorkbenchToolId.search) {
+      _activateTool(WorkbenchToolId.search);
     }
   }
 
@@ -1496,35 +1511,129 @@ class _FileTreePanelState extends State<FileTreePanel> {
     // Se a condição da aba ativa sumiu, cai de volta pra Files.
     final hasSearch = widget.searchPanel != null;
     var tab = _tab;
-    if (tab == _RightPaneTab.sourceControl && !widget.isGitRepo) {
-      tab = _RightPaneTab.files;
+    if (tab == WorkbenchToolId.sourceControl && !widget.isGitRepo) {
+      tab = WorkbenchToolId.files;
     }
-    if (tab == _RightPaneTab.search && !hasSearch) {
-      tab = _RightPaneTab.files;
+    if (tab == WorkbenchToolId.search && !hasSearch) {
+      tab = WorkbenchToolId.files;
     }
     final hasDatabase = widget.databasePanel != null;
-    if (tab == _RightPaneTab.database && !hasDatabase) {
-      tab = _RightPaneTab.files;
+    if (tab == WorkbenchToolId.database && !hasDatabase) {
+      tab = WorkbenchToolId.files;
     }
     final hasGallery = widget.galleryPanel != null;
-    if (tab == _RightPaneTab.gallery && !hasGallery) {
-      tab = _RightPaneTab.files;
+    if (tab == WorkbenchToolId.gallery && !hasGallery) {
+      tab = WorkbenchToolId.files;
     }
     final hasTelemetry = widget.telemetryPanel != null;
-    if (tab == _RightPaneTab.telemetry && !hasTelemetry) {
-      tab = _RightPaneTab.files;
+    if (tab == WorkbenchToolId.telemetry && !hasTelemetry) {
+      tab = WorkbenchToolId.files;
     }
-    Widget buildTool(_RightPaneTab tab) {
-      final scMode = tab == _RightPaneTab.sourceControl;
-      final searchMode = tab == _RightPaneTab.search;
-      final dbMode = tab == _RightPaneTab.database;
-      final galleryMode = tab == _RightPaneTab.gallery;
-      final telemetryMode = tab == _RightPaneTab.telemetry;
+    Widget buildSourceControl() => SourceControlPanel(
+      section: _sourceControlView,
+      onSectionChanged: _selectSourceControlSection,
+      onMenuRequested: _showSourceControlMenu,
+      changeCount: sourceControlChangeCount,
+      repositoryLabel: widget.roots.length == 1
+          ? '${widget.roots.first.name} · ${widget.roots.first.git?.branch ?? ""}'
+          : null,
+      changesBuilder: (_) => _ChangedTree(
+        rootPath: widget.rootPath,
+        roots: widget.roots,
+        onFileContextMenu: _showChangedFileMenu,
+        onStageToggle: _toggleStage,
+        onStageAll: _toggleStageAll,
+        onDiscard: _discardOne,
+        onDiscardAll: _discardAll,
+        isFolderExpanded: (path) => _sourceControlFolderExpanded[path] ?? true,
+        onFolderExpansionChanged: (path, expanded) =>
+            setState(() => _sourceControlFolderExpanded[path] = expanded),
+        stagedPaths: effectiveStaged,
+        unstagedPaths: effectiveUnstaged,
+        gitStatusOf: widget.gitStatusOf,
+        selectedPath: effectiveSelected,
+        onOpenDiff: widget.onOpenDiff,
+        viewAsTree: _sourceControlTree,
+        onToggleViewMode: () {
+          final next = !_sourceControlTree;
+          setState(() => _sourceControlTree = next);
+          widget.onSourceControlViewModeChanged?.call(
+            next ? SourceControlViewMode.tree : SourceControlViewMode.list,
+          );
+        },
+        onTapDiff: (path) {
+          _select(path);
+          (widget.onTapDiff ?? widget.onOpenDiff)(path);
+        },
+        onOpenFile: (path) {
+          final openChanged = widget.onOpenChangedFile;
+          if (openChanged != null) {
+            openChanged(path);
+          } else {
+            widget.onOpenFile(path);
+          }
+        },
+      ),
+      historyBuilder: (_) => GitHistoryPanel(
+        roots: [
+          for (final root in widget.roots)
+            GitHistoryRoot(
+              path: root.path,
+              name: root.name,
+              branch: root.git?.branch,
+            ),
+        ],
+        loadHistory: widget.onLoadGitHistory ?? (_) async => const Success([]),
+        loadFiles:
+            widget.onLoadGitHistoryFiles ?? (_, _) async => const Success([]),
+        onOpenFileDiff: widget.onOpenGitHistoryDiff ?? (_, _, _) async {},
+        onRevertCommit: widget.onRevertGitCommit,
+        onUndoLastCommit: widget.onUndoLastGitCommit,
+        refreshToken: widget.gitHistoryRevision,
+      ),
+      composerBuilder: (_) => _CommitComposer(
+        controller: _commitMessage,
+        height: _commitHeight,
+        onResize: (delta) => setState(() {
+          _commitHeight = (_commitHeight - delta).clamp(170.0, 520.0);
+        }),
+        submitting: _committing,
+        generating: _generatingCommit,
+        amend: _amend,
+        amendHash: _amendHash,
+        amendSubject: _amendSubject,
+        loadCommits: widget.onLoadCommits,
+        loadMessage: widget.onLoadCommitMessage,
+        onAmendChanged: (value, hash, message, subject) => setState(() {
+          _amend = value;
+          _amendHash = hash;
+          _amendSubject = subject;
+          if (message != null) _commitMessage.text = message;
+        }),
+        error: _commitError,
+        onChanged: () => setState(() => _commitError = null),
+        onGenerate: widget.onGenerateStagedCommitMessage == null
+            ? null
+            : _generateStagedCommitMessage,
+        onCancelGenerate: _cancelStagedCommitGeneration,
+        generatorLabel: widget.commitMessageGeneratorLabel,
+        onCommit: _commitStaged,
+      ),
+    );
+
+    Widget buildTool(WorkbenchToolId tab) {
+      if (tab == WorkbenchToolId.sourceControl && widget.rootPath.isNotEmpty) {
+        return buildSourceControl();
+      }
+      final searchMode = tab == WorkbenchToolId.search;
+      final dbMode = tab == WorkbenchToolId.database;
+      final galleryMode = tab == WorkbenchToolId.gallery;
+      final telemetryMode = tab == WorkbenchToolId.telemetry;
       return Column(
         children: [
           // Título da aba ativa + ações contextuais ao lado, no padrão do
           // painel Database (a barra de tabs acima fica só com as tabs).
-          if (widget.rootPath.isNotEmpty && tab == _RightPaneTab.files)
+          if (widget.rootPath.isNotEmpty && tab == WorkbenchToolId.files)
             _PanelHeader(
               title: context.t.orkest.fileTreePanel.sectionFiles,
               actions: [
@@ -1556,41 +1665,6 @@ class _FileTreePanelState extends State<FileTreePanel> {
             ),
           if (widget.rootPath.isNotEmpty && galleryMode)
             _PanelHeader(title: context.t.orkest.fileTreePanel.sectionGallery),
-          if (widget.rootPath.isNotEmpty && scMode)
-            _PanelHeader(
-              title: context.t.orkest.fileTreePanel.sectionSourceControl,
-              actions: [
-                Builder(
-                  builder: (menuContext) => _PanelHeaderAction(
-                    key: const ValueKey('source-control-menu'),
-                    icon: Icons.more_horiz,
-                    tooltip:
-                        context.t.orkest.fileTreePanel.sectionSourceControl,
-                    onTap: () => _showSourceControlMenu(menuContext),
-                  ),
-                ),
-                _SourceControlViewButton(
-                  key: const ValueKey('source-control-changes-tab'),
-                  icon: Icons.edit_note_outlined,
-                  label: context.t.orkest.fileTreePanel.changes,
-                  selected: _sourceControlView == _SourceControlView.changes,
-                  badgeCount: sourceControlChangeCount,
-                  showBadge: true,
-                  onTap: () => setState(
-                    () => _sourceControlView = _SourceControlView.changes,
-                  ),
-                ),
-                _SourceControlViewButton(
-                  key: const ValueKey('source-control-history-tab'),
-                  icon: Icons.history,
-                  label: context.t.orkest.fileTreePanel.history,
-                  selected: _sourceControlView == _SourceControlView.history,
-                  onTap: () => setState(
-                    () => _sourceControlView = _SourceControlView.history,
-                  ),
-                ),
-              ],
-            ),
           Expanded(
             child: widget.rootPath.isEmpty
                 ? Center(
@@ -1608,72 +1682,6 @@ class _FileTreePanelState extends State<FileTreePanel> {
                 ? (widget.galleryPanel ?? const SizedBox.shrink())
                 : telemetryMode
                 ? (widget.telemetryPanel ?? const SizedBox.shrink())
-                : scMode
-                ? _sourceControlView == _SourceControlView.history
-                      ? GitHistoryPanel(
-                          roots: [
-                            for (final root in widget.roots)
-                              GitHistoryRoot(
-                                path: root.path,
-                                name: root.name,
-                                branch: root.git?.branch,
-                              ),
-                          ],
-                          loadHistory:
-                              widget.onLoadGitHistory ??
-                              (_) async => const Success([]),
-                          loadFiles:
-                              widget.onLoadGitHistoryFiles ??
-                              (_, _) async => const Success([]),
-                          onOpenFileDiff:
-                              widget.onOpenGitHistoryDiff ?? (_, _, _) async {},
-                          onRevertCommit: widget.onRevertGitCommit,
-                          onUndoLastCommit: widget.onUndoLastGitCommit,
-                          refreshToken: widget.gitHistoryRevision,
-                        )
-                      : _ChangedTree(
-                          rootPath: widget.rootPath,
-                          roots: widget.roots,
-                          onFileContextMenu: _showChangedFileMenu,
-                          onStageToggle: _toggleStage,
-                          onStageAll: _toggleStageAll,
-                          onDiscard: _discardOne,
-                          onDiscardAll: _discardAll,
-                          isFolderExpanded: (path) =>
-                              _sourceControlFolderExpanded[path] ?? true,
-                          onFolderExpansionChanged: (path, expanded) =>
-                              setState(
-                                () => _sourceControlFolderExpanded[path] =
-                                    expanded,
-                              ),
-                          stagedPaths: effectiveStaged,
-                          unstagedPaths: effectiveUnstaged,
-                          gitStatusOf: widget.gitStatusOf,
-                          selectedPath: effectiveSelected,
-                          onOpenDiff: widget.onOpenDiff,
-                          viewAsTree: _sourceControlTree,
-                          onToggleViewMode: () {
-                            final next = !_sourceControlTree;
-                            setState(() => _sourceControlTree = next);
-                            widget.onSourceControlViewModeChanged?.call(
-                              next
-                                  ? SourceControlViewMode.tree
-                                  : SourceControlViewMode.list,
-                            );
-                          },
-                          onTapDiff: (path) {
-                            _select(path);
-                            (widget.onTapDiff ?? widget.onOpenDiff)(path);
-                          },
-                          onOpenFile: (path) {
-                            final openChanged = widget.onOpenChangedFile;
-                            if (openChanged != null) {
-                              openChanged(path);
-                            } else {
-                              widget.onOpenFile(path);
-                            }
-                          },
-                        )
                 : DropTarget(
                     // Drop NATIVO do SO (Finder/Explorer/GTK): a pasta sob o
                     // cursor recebe; o espaço vazio manda pra raiz.
@@ -1737,46 +1745,17 @@ class _FileTreePanelState extends State<FileTreePanel> {
                     ),
                   ),
           ),
-          if (scMode && _sourceControlView == _SourceControlView.changes)
-            _CommitComposer(
-              controller: _commitMessage,
-              height: _commitHeight,
-              onResize: (delta) => setState(() {
-                _commitHeight = (_commitHeight - delta).clamp(170.0, 520.0);
-              }),
-              submitting: _committing,
-              generating: _generatingCommit,
-              amend: _amend,
-              amendHash: _amendHash,
-              amendSubject: _amendSubject,
-              loadCommits: widget.onLoadCommits,
-              loadMessage: widget.onLoadCommitMessage,
-              onAmendChanged: (value, hash, message, subject) => setState(() {
-                _amend = value;
-                _amendHash = hash;
-                _amendSubject = subject;
-                if (message != null) _commitMessage.text = message;
-              }),
-              error: _commitError,
-              onChanged: () => setState(() => _commitError = null),
-              onGenerate: widget.onGenerateStagedCommitMessage == null
-                  ? null
-                  : _generateStagedCommitMessage,
-              onCancelGenerate: _cancelStagedCommitGeneration,
-              generatorLabel: widget.commitMessageGeneratorLabel,
-              onCommit: _commitStaged,
-            ),
         ],
       );
     }
 
     WorkbenchTool tool(
-      _RightPaneTab id,
+      WorkbenchToolId id,
       String title,
       IconData icon, {
       int count = 0,
     }) => WorkbenchTool(
-      id: id == _RightPaneTab.sourceControl ? 'source-control' : id.name,
+      id: id == WorkbenchToolId.sourceControl ? 'source-control' : id.name,
       title: title,
       icon: icon,
       badgeCount: count,
@@ -1793,51 +1772,51 @@ class _FileTreePanelState extends State<FileTreePanel> {
         children: [
           Expanded(
             child: WorkbenchToolHost(
-              selectedId: tab == _RightPaneTab.sourceControl
+              selectedId: tab == WorkbenchToolId.sourceControl
                   ? 'source-control'
                   : tab.name,
               onSelected: (id) => _activateTool(
                 id == 'source-control'
-                    ? _RightPaneTab.sourceControl
-                    : _RightPaneTab.values.byName(id),
+                    ? WorkbenchToolId.sourceControl
+                    : WorkbenchToolId.values.byName(id),
               ),
               tools: [
                 tool(
-                  _RightPaneTab.files,
+                  WorkbenchToolId.files,
                   tr.filesTooltip,
                   Icons.folder_outlined,
                 ),
                 if (hasSearch)
-                  tool(_RightPaneTab.search, tr.searchTooltip, Icons.search),
+                  tool(WorkbenchToolId.search, tr.searchTooltip, Icons.search),
                 if (widget.isGitRepo)
                   tool(
-                    _RightPaneTab.sourceControl,
+                    WorkbenchToolId.sourceControl,
                     tr.sourceControlTooltip,
                     Icons.account_tree_outlined,
                     count: sourceControlChangeCount,
                   ),
                 if (hasDatabase)
                   tool(
-                    _RightPaneTab.database,
+                    WorkbenchToolId.database,
                     tr.databaseTooltip,
                     Icons.storage,
                   ),
                 if (hasTelemetry)
                   tool(
-                    _RightPaneTab.telemetry,
+                    WorkbenchToolId.telemetry,
                     context.t.orkest.telemetry.tooltip,
                     Icons.monitor_heart_outlined,
                   ),
                 if (hasGallery)
                   tool(
-                    _RightPaneTab.gallery,
+                    WorkbenchToolId.gallery,
                     tr.galleryTooltip,
                     Icons.auto_awesome_mosaic_outlined,
                   ),
               ],
             ),
           ),
-          if (tab != _RightPaneTab.sourceControl) ?widget.tasksPanel,
+          if (tab != WorkbenchToolId.sourceControl) ?widget.tasksPanel,
           ?widget.footer,
         ],
       ),
@@ -4026,70 +4005,6 @@ class _PanelHeaderAction extends StatelessWidget {
         onTap: onTap,
         padding: const EdgeInsets.all(3),
         child: Icon(icon, size: 14, color: colors.text3),
-      ),
-    );
-  }
-}
-
-/// Alternador compacto de Changes/History, con estado ativo legível e badge
-/// de alterações no fluxo principal do Source Control.
-class _SourceControlViewButton extends StatelessWidget {
-  const _SourceControlViewButton({
-    super.key,
-    required this.icon,
-    required this.label,
-    required this.selected,
-    required this.onTap,
-    this.badgeCount = 0,
-    this.showBadge = false,
-  });
-
-  final IconData icon;
-  final String label;
-  final bool selected;
-  final int badgeCount;
-  final bool showBadge;
-  final VoidCallback onTap;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    return AppTooltip(
-      message: label,
-      child: HoverTap(
-        key: ValueKey('source-control-mode-${label.toLowerCase()}'),
-        color: selected ? colors.panel2 : Colors.transparent,
-        hoverColor: colors.panel2,
-        borderRadius: BorderRadius.circular(5),
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-        onTap: onTap,
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 14, color: selected ? colors.text : colors.text3),
-            if (selected) ...[
-              const SizedBox(width: 4),
-              Text(
-                label,
-                style: context.typo.label.copyWith(
-                  fontSize: 10,
-                  color: colors.text,
-                ),
-              ),
-            ],
-            if (showBadge && badgeCount > 0) ...[
-              const SizedBox(width: 4),
-              Text(
-                badgeCount > 99 ? '99+' : '$badgeCount',
-                style: context.typo.mono.copyWith(
-                  fontSize: 9,
-                  color: colors.warn,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-            ],
-          ],
-        ),
       ),
     );
   }

@@ -19,6 +19,24 @@ class WorkbenchTool {
   final int badgeCount;
 }
 
+/// Visibility of a tool, including any containing tool host.
+class WorkbenchToolVisibility extends InheritedWidget {
+  const WorkbenchToolVisibility({
+    super.key,
+    required this.active,
+    required super.child,
+  });
+  final bool active;
+  static bool isActive(BuildContext context) =>
+      context
+          .dependOnInheritedWidgetOfExactType<WorkbenchToolVisibility>()
+          ?.active ??
+      true;
+  @override
+  bool updateShouldNotify(WorkbenchToolVisibility oldWidget) =>
+      active != oldWidget.active;
+}
+
 /// Hosts tools independently from file navigation. Visited tools remain mounted
 /// while hidden, preserving scroll, drafts and connection inspection state.
 class WorkbenchToolHost extends StatefulWidget {
@@ -27,10 +45,12 @@ class WorkbenchToolHost extends StatefulWidget {
     required this.tools,
     required this.selectedId,
     required this.onSelected,
+    this.showActiveTitle = false,
   });
   final List<WorkbenchTool> tools;
   final String selectedId;
   final ValueChanged<String> onSelected;
+  final bool showActiveTitle;
   @override
   State<WorkbenchToolHost> createState() => _WorkbenchToolHostState();
 }
@@ -40,6 +60,7 @@ class _WorkbenchToolHostState extends State<WorkbenchToolHost> {
   @override
   Widget build(BuildContext context) {
     final tools = widget.tools;
+    final parentActive = WorkbenchToolVisibility.isActive(context);
     if (tools.isEmpty) return const SizedBox.shrink();
     final active = tools.any((t) => t.id == widget.selectedId)
         ? widget.selectedId
@@ -84,6 +105,17 @@ class _WorkbenchToolHostState extends State<WorkbenchToolHost> {
                                   ? colors.text
                                   : colors.text3,
                             ),
+                            if (widget.showActiveTitle &&
+                                tool.id == active) ...[
+                              const SizedBox(width: 5),
+                              Text(
+                                tool.title,
+                                style: context.typo.label.copyWith(
+                                  fontSize: 11,
+                                  color: colors.text,
+                                ),
+                              ),
+                            ],
                             if (tool.badgeCount > 0) ...[
                               const SizedBox(width: 3),
                               Text(
@@ -118,7 +150,10 @@ class _WorkbenchToolHostState extends State<WorkbenchToolHost> {
                         enabled: tool.id == active,
                         child: ExcludeFocus(
                           excluding: tool.id != active,
-                          child: Builder(builder: tool.builder),
+                          child: WorkbenchToolVisibility(
+                            active: parentActive && tool.id == active,
+                            child: Builder(builder: tool.builder),
+                          ),
                         ),
                       ),
                     ),

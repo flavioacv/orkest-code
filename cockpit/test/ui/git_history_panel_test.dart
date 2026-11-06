@@ -4,6 +4,7 @@ import 'package:orkest_code/app/orkest/domain/entities/git_history_commit.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_history_file_change.dart';
 import 'package:orkest_code/app/orkest/domain/exceptions/git_history_error.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/git_history_panel.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/workbench_tool_host.dart';
 import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
 import 'package:orkest_code/i18n/strings.g.dart';
@@ -26,6 +27,53 @@ void main() {
       ),
     );
   }
+
+  testWidgets('hidden history suspends polling and resumes when visible', (
+    tester,
+  ) async {
+    var active = true;
+    var loads = 0;
+    late StateSetter rebuild;
+    await tester.pumpWidget(
+      host(
+        StatefulBuilder(
+          builder: (context, setState) {
+            rebuild = setState;
+            return WorkbenchToolVisibility(
+              active: active,
+              child: GitHistoryPanel(
+                roots: const [GitHistoryRoot(path: '/repo', name: 'repo')],
+                refreshToken: 0,
+                loadHistory: (_) async {
+                  loads++;
+                  return const Success([]);
+                },
+                loadFiles: (_, _) async => const Success([]),
+                onOpenFileDiff: (_, _, _) async {},
+              ),
+            );
+          },
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    final initial = loads;
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pump();
+    expect(loads, greaterThan(initial));
+    rebuild(() => active = false);
+    await tester.pump();
+    final hidden = loads;
+    await tester.pump(const Duration(seconds: 12));
+    await tester.pump();
+    expect(loads, hidden);
+    rebuild(() => active = true);
+    await tester.pump();
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pump();
+    expect(loads, greaterThan(hidden));
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
 
   testWidgets('shows a compact timeline without raw parent hashes', (
     tester,

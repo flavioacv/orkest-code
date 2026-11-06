@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/orkest/domain/entities/workbench_layout_state.dart';
 import 'package:orkest_code/app/core/domain/entities/lsp_completion.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -686,6 +687,19 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
     };
     notifyListeners();
     _scheduleSave(rootId);
+  }
+
+  WorkbenchLayoutState workbenchLayout(String projectId) =>
+      WorkbenchLayoutState.fromJson(_savedLayouts[projectId]?['workbench']);
+
+  void setWorkbenchLayout(String projectId, WorkbenchLayoutState layout) {
+    if (workbenchLayout(projectId) == layout) return;
+    _savedLayouts[projectId] = <String, dynamic>{
+      ...?_savedLayouts[projectId],
+      'workbench': layout.toJson(),
+    };
+    notifyListeners();
+    _scheduleSave(projectId);
   }
 
   String? get selectedProjectId => _selectedProjectId;
@@ -6952,6 +6966,7 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
       // Toggle de worktrees do rail (V37) — mora no mesmo doc do layout, então
       // sobrevive à sessão sem inventar outro store.
       kWorktreesExpandedKey: worktreesExpanded(projectId),
+      'workbench': workbenchLayout(projectId).toJson(),
     };
   }
 

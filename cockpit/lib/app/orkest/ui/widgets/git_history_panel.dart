@@ -1,4 +1,5 @@
 import 'package:orkest_code/app/orkest/domain/entities/git_history_commit.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/workbench_tool_host.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_history_file_change.dart';
 import 'package:orkest_code/app/orkest/domain/exceptions/git_history_error.dart';
 import 'package:orkest_code/app/orkest/domain/utils/coalescing_single_flight.dart';
@@ -96,7 +97,13 @@ class _GitHistoryPanelState extends State<GitHistoryPanel> {
     final activity =
         WindowActivityScope.maybeOf(context) ??
         (_fallbackActivity ??= WindowActivityController());
-    if (identical(activity, _activity)) return;
+    if (!WorkbenchToolVisibility.isActive(context)) {
+      _autoRefresh?.dispose();
+      _autoRefresh = null;
+      _activity = activity;
+      return;
+    }
+    if (identical(activity, _activity) && _autoRefresh != null) return;
     _autoRefresh?.dispose();
     _activity = activity;
     // `git log` e uma leitura local: atualiza commits feitos fora do Orkest

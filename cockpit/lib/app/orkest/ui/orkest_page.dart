@@ -1949,10 +1949,17 @@ class _TreePanel extends StatelessWidget {
         .watch<SettingsController>()
         .settings
         .automationHarnessId;
+    final workspaceId = vm.selectedProjectId;
     return Stack(
       children: [
         FileTreePanel(
-          workspaceId: vm.selectedProject?.id,
+          workspaceId: workspaceId,
+          workbenchLayout: workspaceId == null
+              ? null
+              : vm.workbenchLayout(workspaceId),
+          onWorkbenchLayoutChanged: workspaceId == null
+              ? null
+              : (layout) => vm.setWorkbenchLayout(workspaceId, layout),
           // Pasta do workspace; reseta ao trocar de workspace.
           key: ValueKey((vm.selectedProject?.id, vm.treeRootPath)),
           width: treeWidth,

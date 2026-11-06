@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:orkest_code/app/orkest/domain/entities/file_node.dart';
+import 'package:orkest_code/app/orkest/domain/entities/workbench_layout_state.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_commit.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_file_status.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/file_tree_panel.dart';
@@ -16,6 +17,63 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 void main() {
+  testWidgets('restores persisted Git section and reports tool changes', (
+    tester,
+  ) async {
+    WorkbenchLayoutState? saved;
+    await tester.pumpWidget(
+      TranslationProvider(
+        child: ShadcnApp(
+          theme: buildTheme(brightness: Brightness.dark),
+          home: Scaffold(
+            child: FileTreePanel(
+              workspaceId: 'local',
+              rootPath: '/repo',
+              revision: 0,
+              workbenchLayout: const WorkbenchLayoutState(
+                activeTool: WorkbenchToolId.sourceControl,
+                sourceControlSection: SourceControlSection.history,
+              ),
+              onWorkbenchLayoutChanged: (layout) => saved = layout,
+              listChildren: (_) async => const [],
+              gitStatusOf: (_) => null,
+              onOpenFile: (_) {},
+              onOpenDiff: (_) {},
+              isGitRepo: true,
+              changedPaths: const [],
+              onOpenWith: (_) {},
+              onCreateInFolder: (_, {command}) {},
+              onCreate: (_, _, _) async => const Success(null),
+              onRename: (_, _) async => const Success(null),
+              onDelete: (_) async => const Success(null),
+              onMove: (_, _) async => const Success(null),
+              onCopy: (_) {},
+              onCut: (_) {},
+              onPaste: (_) async => const Success(null),
+              canPaste: false,
+            ),
+          ),
+        ),
+      ),
+    );
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('source-control-history-tab')),
+      findsOneWidget,
+    );
+    await tester.tap(find.byKey(const ValueKey('source-control-changes-tab')));
+    await tester.pumpAndSettle();
+    expect(
+      saved,
+      const WorkbenchLayoutState(activeTool: WorkbenchToolId.sourceControl),
+    );
+    await tester.tap(find.byKey(const ValueKey('files-tab')));
+    await tester.pumpAndSettle();
+    expect(saved, const WorkbenchLayoutState());
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox.shrink());
+  });
+
   group('FileTreePanel selection', () {
     testWidgets('reveal returns to Files and scrolls the target into view', (
       tester,

@@ -20,12 +20,13 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
 ## Em andamento
 
 - [ ] E1 · Extrair host de ferramentas do explorador <!-- id: FE-E1 labels: estrutura -->
-      Implementado: WorkbenchToolHost separado com catálogo de ferramentas, montagem sob demanda, preservação de views visitadas, exclusão de foco e tickers nas ferramentas ocultas. Files/Search/Git/Database/Telemetry/Gallery migrados para o host. Ferramenta ativa restaurada por ID do workspace via PageStorage durante a sessão; tarefas/rodapé permanecem únicos fora das views.
-      Pendente: área inferior, maximizar/ocultar, persistência em disco e auditoria de timers das views ocultas. Estado não é preservado entre reinicializações do aplicativo. Validar restauração, foco e shell em build.
+      Implementado: WorkbenchToolHost separado com catálogo de ferramentas, montagem sob demanda, preservação de views visitadas, exclusão de foco e tickers nas ferramentas ocultas. Files/Search/Git/Database/Telemetry/Gallery migrados para o host. Ferramenta ativa e seção Git persistidas no documento JSON de layout de cada workspace; teste reabre o storage e verifica isolamento entre projetos e preservação das sessões. Visibilidade propagada por hosts aninhados suspende polling do histórico Git quando oculto; tarefas/rodapé permanecem únicos fora das views.
+      Pendente: área inferior, maximizar/ocultar e auditoria restante de I/O das views ocultas. Validar restauração e interação visual na aplicação; teste de storage não equivale à jornada de restart do app.
+      Validação deste incremento: análise estática limpa, 20 testes de persistência/host/painel/histórico aprovados e build macOS de debug compilada. Ainda sem inspeção visual da aplicação executando.
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 - [ ] E2 · Entregar ambiente integrado de revisão Git <!-- id: FE-E2 labels: git blockedBy: FE-E1 -->
-      Implementado: alternância diff unificado/lado a lado com tradução pt-BR/en/es; contexto exibido uma vez na visão unificada, removidos/adicionados na ordem original e ações de hunk preservadas.
-      Pendente: Source Control independente do explorador, navegação que revela hunks no documento completo, merge editável de três vias, histórico/grafo, integração de blame e semântica de Index/HEAD/Working Tree auditada.
+      Implementado: alternância diff unificado/lado a lado com tradução pt-BR/en/es; contexto exibido uma vez na visão unificada, removidos/adicionados na ordem original e ações de hunk preservadas. SourceControlPanel extraído com navegação própria Changes/History, preservação das views e composer; composição e callbacks continuam ligados ao FileTreePanel.
+      Pendente: retirar o restante da composição Git do explorador, navegação que revela hunks no documento completo, merge editável de três vias, histórico/grafo, integração de blame e semântica de Index/HEAD/Working Tree auditada.
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 ## Em revisão
