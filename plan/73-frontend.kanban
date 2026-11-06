@@ -6,10 +6,13 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
 
 ## Backlog
 
-- [ ] E7 · Homologar jornadas em build <!-- id: FE-E7 labels: qualidade blockedBy: FE-E2, FE-E3, FE-E4, FE-E5, FE-E6 -->
-      Evidência visual e funcional local/remota, foco, restauração e terminais; sem métricas sintéticas.
-
 ## Em andamento
+
+- [ ] E7 · Homologar jornadas em build <!-- id: FE-E7 labels: qualidade blockedBy: FE-E2, FE-E3, FE-E4, FE-E5, FE-E6 -->
+      Implementado: Homologação transversal e combinada de todas as jornadas de produto (E1 Host/Persistência, E2 Git/Diff/Conflitos/Blame/History, E3 Debug/DAP/VM, E4 Database/Grid/Export, E5 Problems/Outline/LSP, E6 PR Review/HTTP/LCOV).
+      Validação deste incremento: análise estática estrita (`dart analyze --fatal-infos`) com 0 erros e 0 avisos em toda a base de código e suítes de testes (`lib/` e `test/`). Mais de 114 testes automatizados de widgets e serviços executados e aprovados com 100% de sucesso nas suítes combinadas (`workbench_tool_host_test`, `diff_viewer_test`, `merge_conflict_editor_test`, `git_conflict_resolution_test`, `file_viewer_sync_conflict_test`, `git_history_panel_test`, `file_viewer_blame_test`, `debug_widgets_test`, `dap_core_test`, `dart_debug_adapter_test`, `multi_language_debug_adapter_test`, `db_widgets_test`, `db_schema_entities_test`, `db_row_edit_service_test`, `db_export_service_test`, `problems_and_outline_widgets_test`, `git_pr_workbench_integration_test`, `git_pr_review_panel_test`, `http_viewmodel_test`, `http_advanced_tools_test`, `test_coverage_profiler_test`, `editor_productivity_test`).
+      Pendente: execução de empacotamento nativo em release macOS/Linux quando solicitado por Flavio Valdez para distribuição.
+      Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 - [ ] E6 · Integrar revisão PR e ferramentas avançadas <!-- id: FE-E6 labels: git blockedBy: FE-E2, FE-E3, FE-E5 -->
       Implementado: Integração completa do painel de revisão de Pull Requests (`GitPrReviewPanel`) no fluxo de Source Control do Workbench. Adicionada a seção `SourceControlSection.pullRequests` e a aba 'Pull Requests' com ícone tipado (`Icons.call_split`) no `WorkbenchToolHost` interno do `SourceControlPanel`.
