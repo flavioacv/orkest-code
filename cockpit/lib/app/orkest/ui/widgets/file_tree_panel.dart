@@ -408,6 +408,8 @@ class _PendingCreate {
 
 class _FileTreePanelState extends State<FileTreePanel> {
   bool _toolSelectionRestored = false;
+  bool _isCollapsed = false;
+  bool _isMaximized = false;
   String get _toolStorageId =>
       'workbench-tool:${widget.workspaceId ?? widget.rootPath}';
 
@@ -419,6 +421,8 @@ class _FileTreePanelState extends State<FileTreePanel> {
       if (widget.workbenchLayout case final layout?) {
         _tab = layout.activeTool;
         _sourceControlView = layout.sourceControlSection;
+        _isCollapsed = layout.isToolWindowCollapsed;
+        _isMaximized = layout.isToolWindowMaximized;
         return;
       }
       final saved = PageStorage.maybeOf(
@@ -444,8 +448,20 @@ class _FileTreePanelState extends State<FileTreePanel> {
     WorkbenchLayoutState(
       activeTool: _tab,
       sourceControlSection: _sourceControlView,
+      isToolWindowCollapsed: _isCollapsed,
+      isToolWindowMaximized: _isMaximized,
     ),
   );
+
+  void _toggleMaximizeToolWindow() {
+    setState(() => _isMaximized = !_isMaximized);
+    _saveWorkbenchLayout();
+  }
+
+  void _toggleCollapseToolWindow() {
+    setState(() => _isCollapsed = !_isCollapsed);
+    _saveWorkbenchLayout();
+  }
 
   void _selectSourceControlSection(SourceControlSection section) {
     setState(() => _sourceControlView = section);
@@ -534,6 +550,8 @@ class _FileTreePanelState extends State<FileTreePanel> {
         widget.workbenchLayout != null) {
       _tab = widget.workbenchLayout!.activeTool;
       _sourceControlView = widget.workbenchLayout!.sourceControlSection;
+      _isCollapsed = widget.workbenchLayout!.isToolWindowCollapsed;
+      _isMaximized = widget.workbenchLayout!.isToolWindowMaximized;
     }
     if (oldWidget.searchFocusSignal != widget.searchFocusSignal) {
       oldWidget.searchFocusSignal?.removeListener(_onSearchFocusRequested);
@@ -1762,8 +1780,13 @@ class _FileTreePanelState extends State<FileTreePanel> {
       builder: (_) => buildTool(id),
     );
     final tr = context.t.orkest.fileTreePanel;
+    final panelWidth = _isCollapsed
+        ? 44.0
+        : _isMaximized
+            ? (widget.width < 650.0 ? 650.0 : widget.width)
+            : widget.width;
     return Container(
-      width: widget.width,
+      width: panelWidth,
       decoration: BoxDecoration(
         color: colors.bg,
         border: Border(left: BorderSide(color: colors.border)),
@@ -1772,14 +1795,24 @@ class _FileTreePanelState extends State<FileTreePanel> {
         children: [
           Expanded(
             child: WorkbenchToolHost(
+              isCollapsed: _isCollapsed,
+              isMaximized: _isMaximized,
+              onToggleCollapse: _toggleCollapseToolWindow,
+              onToggleMaximize: _toggleMaximizeToolWindow,
               selectedId: tab == WorkbenchToolId.sourceControl
                   ? 'source-control'
                   : tab.name,
-              onSelected: (id) => _activateTool(
-                id == 'source-control'
-                    ? WorkbenchToolId.sourceControl
-                    : WorkbenchToolId.values.byName(id),
-              ),
+              onSelected: (id) {
+                _activateTool(
+                  id == 'source-control'
+                      ? WorkbenchToolId.sourceControl
+                      : WorkbenchToolId.values.byName(id),
+                );
+                if (_isCollapsed) {
+                  setState(() => _isCollapsed = false);
+                  _saveWorkbenchLayout();
+                }
+              },
               tools: [
                 tool(
                   WorkbenchToolId.files,
@@ -1816,8 +1849,10 @@ class _FileTreePanelState extends State<FileTreePanel> {
               ],
             ),
           ),
-          if (tab != WorkbenchToolId.sourceControl) ?widget.tasksPanel,
-          ?widget.footer,
+          if (!_isCollapsed) ...[
+            if (tab != WorkbenchToolId.sourceControl) ?widget.tasksPanel,
+            ?widget.footer,
+          ],
         ],
       ),
     );

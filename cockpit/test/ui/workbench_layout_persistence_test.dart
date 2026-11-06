@@ -19,6 +19,27 @@ void main() {
     }
   });
 
+  test('persists and restores collapsed and maximized tool window state', () {
+    const layout = WorkbenchLayoutState(
+      activeTool: WorkbenchToolId.database,
+      sourceControlSection: SourceControlSection.changes,
+      isToolWindowCollapsed: true,
+      isToolWindowMaximized: true,
+    );
+    final json = layout.toJson();
+    expect(json['isToolWindowCollapsed'], isTrue);
+    expect(json['isToolWindowMaximized'], isTrue);
+
+    final restored = WorkbenchLayoutState.fromJson(json);
+    expect(restored.isToolWindowCollapsed, isTrue);
+    expect(restored.isToolWindowMaximized, isTrue);
+    expect(restored, layout);
+
+    final toggled = restored.copyWith(isToolWindowCollapsed: false);
+    expect(toggled.isToolWindowCollapsed, isFalse);
+    expect(toggled.isToolWindowMaximized, isTrue);
+  });
+
   test(
     'workspace tools survive store reopening without changing pane sessions',
     () async {

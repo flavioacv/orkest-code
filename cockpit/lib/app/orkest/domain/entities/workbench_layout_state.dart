@@ -17,9 +17,27 @@ class WorkbenchLayoutState {
   const WorkbenchLayoutState({
     this.activeTool = WorkbenchToolId.files,
     this.sourceControlSection = SourceControlSection.changes,
+    this.isToolWindowCollapsed = false,
+    this.isToolWindowMaximized = false,
   });
   final WorkbenchToolId activeTool;
   final SourceControlSection sourceControlSection;
+  final bool isToolWindowCollapsed;
+  final bool isToolWindowMaximized;
+
+  WorkbenchLayoutState copyWith({
+    WorkbenchToolId? activeTool,
+    SourceControlSection? sourceControlSection,
+    bool? isToolWindowCollapsed,
+    bool? isToolWindowMaximized,
+  }) => WorkbenchLayoutState(
+    activeTool: activeTool ?? this.activeTool,
+    sourceControlSection: sourceControlSection ?? this.sourceControlSection,
+    isToolWindowCollapsed:
+        isToolWindowCollapsed ?? this.isToolWindowCollapsed,
+    isToolWindowMaximized:
+        isToolWindowMaximized ?? this.isToolWindowMaximized,
+  );
 
   factory WorkbenchLayoutState.fromJson(Object? value) {
     if (value is! Map) return const WorkbenchLayoutState();
@@ -32,19 +50,30 @@ class WorkbenchLayoutState {
         (section) => section.name == value['sourceControlSection'],
         orElse: () => SourceControlSection.changes,
       ),
+      isToolWindowCollapsed: value['isToolWindowCollapsed'] == true,
+      isToolWindowMaximized: value['isToolWindowMaximized'] == true,
     );
   }
 
   Map<String, dynamic> toJson() => {
     'activeTool': activeTool.name,
     'sourceControlSection': sourceControlSection.name,
+    'isToolWindowCollapsed': isToolWindowCollapsed,
+    'isToolWindowMaximized': isToolWindowMaximized,
   };
 
   @override
   bool operator ==(Object other) =>
       other is WorkbenchLayoutState &&
       other.activeTool == activeTool &&
-      other.sourceControlSection == sourceControlSection;
+      other.sourceControlSection == sourceControlSection &&
+      other.isToolWindowCollapsed == isToolWindowCollapsed &&
+      other.isToolWindowMaximized == isToolWindowMaximized;
   @override
-  int get hashCode => Object.hash(activeTool, sourceControlSection);
+  int get hashCode => Object.hash(
+    activeTool,
+    sourceControlSection,
+    isToolWindowCollapsed,
+    isToolWindowMaximized,
+  );
 }
