@@ -58,6 +58,89 @@ void main() {
     );
   });
 
+  group('GitConflictService - Document Resolution & Unresolved Markers', () {
+    test('hasUnresolvedMarkers detects all git conflict marker patterns', () {
+      expect(service.hasUnresolvedMarkers('<<<<<<< HEAD\ncode\n======='), isTrue);
+      expect(service.hasUnresolvedMarkers('======='), isTrue);
+      expect(service.hasUnresolvedMarkers('>>>>>>> branch'), isTrue);
+      expect(service.hasUnresolvedMarkers('||||||| base'), isTrue);
+      expect(service.hasUnresolvedMarkers('final validCode = 123;'), isFalse);
+      expect(service.hasUnresolvedMarkers('if (a << 7 > 0) return;'), isFalse);
+    });
+
+    test('resolveDocument resolves multiple conflicts preserving outside text and CRLF', () {
+      const text =
+          'header\r\n'
+          '<<<<<<< HEAD\r\n'
+          'ours 1\r\n'
+          '=======\r\n'
+          'theirs 1\r\n'
+          '>>>>>>> incoming\r\n'
+          'middle text\r\n'
+          '<<<<<<< HEAD\r\n'
+          'ours 2\r\n'
+          '||||||| base\r\n'
+          'base 2\r\n'
+          '=======\r\n'
+          'theirs 2\r\n'
+          '>>>>>>> incoming\r\n'
+          'footer\r\n';
+
+      final resolved = service.resolveDocument(
+        text: text,
+        results: ['custom 1', 'custom 2'],
+      );
+
+      expect(
+        resolved,
+        'header\r\n'
+        'custom 1\r\n'
+        'middle text\r\n'
+        'custom 2\r\n'
+        'footer\r\n',
+      );
+    });
+
+    test('resolveDocument preserves EOF without newline', () {
+      const text =
+          'start\n'
+          '<<<<<<< HEAD\n'
+          'left\n'
+          '=======\n'
+          'right\n'
+          '>>>>>>> branch';
+
+      final resolved = service.resolveDocument(
+        text: text,
+        results: ['chosen'],
+      );
+
+      expect(resolved, 'start\nchosen');
+    });
+
+    test('resolveDocument rejects unresolved markers or mismatched result count', () {
+      const text =
+          '<<<<<<< HEAD\n'
+          'ours\n'
+          '=======\n'
+          'theirs\n'
+          '>>>>>>> branch\n';
+
+      expect(
+        () => service.resolveDocument(text: text, results: []),
+        throwsArgumentError,
+      );
+
+      expect(
+        () => service.resolveDocument(
+          text: text,
+          results: ['<<<<<<< HEAD\nnot resolved'],
+        ),
+        throwsArgumentError,
+      );
+    });
+  });
+
   group('GitConflictService - Parsing', () {
     test('detecta ausência de marcadores de conflito', () {
       const cleanText = '''

@@ -619,12 +619,14 @@ class _FileViewerState extends State<FileViewer> {
     final session = widget.session;
     final path = session.path;
     final snapshot = ctrl.text;
-    final block =
-        _conflictBlocks[_currentConflictIndex < 0 ? 0 : _currentConflictIndex];
-    final result = await showMergeConflictEditor(
+    final initialIndex =
+        _currentConflictIndex < 0 ? 0 : _currentConflictIndex;
+    final result = await showMergeDocumentEditor(
       context,
-      block: block,
+      text: snapshot,
+      initialConflictIndex: initialIndex,
       language: ctrl.language,
+      fileName: session.title,
     );
     if (!mounted || result == null) return;
     if (!identical(_ctrl, ctrl) ||
@@ -639,13 +641,7 @@ class _FileViewerState extends State<FileViewer> {
       );
       return;
     }
-    _applyToBuffer(
-      _conflictService.replaceBlock(
-        text: snapshot,
-        block: block,
-        replacement: result,
-      ),
-    );
+    _applyToBuffer(result);
   }
 
   Future<void> _continueGitOperation() async {

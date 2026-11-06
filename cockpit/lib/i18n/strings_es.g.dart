@@ -826,6 +826,18 @@ class _Translations$orkest$fileTreePanel$es extends Translations$orkest$fileTree
 	@override String get nextConflict => 'Siguiente';
 	@override String continueGitOp({required Object op}) => 'Continuar ${op}';
 	@override String abortGitOp({required Object op}) => 'Abortar ${op}';
+	@override String get reviewDocument => 'Revisar conflictos del documento';
+	@override String conflictProgress({required Object current, required Object total, required Object resolved}) => 'Conflicto ${current} de ${total} (${resolved} resuelto(s))';
+	@override String get markResolved => 'Marcar resuelto';
+	@override String get markUnresolved => 'Marcar pendiente';
+	@override String get resolvedBadge => 'Resuelto';
+	@override String get unresolvedBadge => 'Pendiente';
+	@override String get reviewFullDocument => 'Revisar documento completo';
+	@override String get backToBlocks => 'Volver a los bloques';
+	@override String pendingConflictsWarning({required Object count}) => 'Resuelva todos los ${count} conflicto(s) para revisar el documento completo.';
+	@override String get discardFinalEditsTitle => '¿Descartar ediciones del documento completo?';
+	@override String get discardFinalEditsMessage => 'Ha editado el documento completo manualmente. Volver a los bloques descartará estas modificaciones y recompondrá a partir de las resoluciones de cada bloque.';
+	@override String get discardEdits => 'Descartar ediciones';
 	@override String get galleryTooltip => 'Galería';
 	@override String get sectionGallery => 'GALERÍA';
 	@override String get openAsHtml => 'Abrir como HTML';
@@ -2617,6 +2629,20 @@ extension on TranslationsEs {
 			'orkest.fileTreePanel.nextConflict' => 'Siguiente',
 			'orkest.fileTreePanel.continueGitOp' => ({required Object op}) => 'Continuar ${op}',
 			'orkest.fileTreePanel.abortGitOp' => ({required Object op}) => 'Abortar ${op}',
+			'orkest.fileTreePanel.reviewDocument' => 'Revisar conflictos del documento',
+			'orkest.fileTreePanel.conflictProgress' => ({required Object current, required Object total, required Object resolved}) => 'Conflicto ${current} de ${total} (${resolved} resuelto(s))',
+			'orkest.fileTreePanel.markResolved' => 'Marcar resuelto',
+			'orkest.fileTreePanel.markUnresolved' => 'Marcar pendiente',
+			'orkest.fileTreePanel.resolvedBadge' => 'Resuelto',
+			'orkest.fileTreePanel.unresolvedBadge' => 'Pendiente',
+			'orkest.fileTreePanel.reviewFullDocument' => 'Revisar documento completo',
+			'orkest.fileTreePanel.backToBlocks' => 'Volver a los bloques',
+			'orkest.fileTreePanel.pendingConflictsWarning' => ({required Object count}) => 'Resuelva todos los ${count} conflicto(s) para revisar el documento completo.',
+			'orkest.fileTreePanel.discardFinalEditsTitle' => '¿Descartar ediciones del documento completo?',
+			'orkest.fileTreePanel.discardFinalEditsMessage' => 'Ha editado el documento completo manualmente. Volver a los bloques descartará estas modificaciones y recompondrá a partir de las resoluciones de cada bloque.',
+			_ => null,
+		} ?? switch (path) {
+			'orkest.fileTreePanel.discardEdits' => 'Descartar ediciones',
 			'orkest.fileTreePanel.galleryTooltip' => 'Galería',
 			'orkest.fileTreePanel.sectionGallery' => 'GALERÍA',
 			'orkest.fileTreePanel.openAsHtml' => 'Abrir como HTML',
@@ -2628,8 +2654,6 @@ extension on TranslationsEs {
 			'orkest.fileViewer.cantOpen' => 'No se puede abrir este archivo.',
 			'orkest.fileViewer.couldNotLoadImage' => 'No se pudo cargar la imagen.',
 			'orkest.fileViewer.preview' => 'Vista previa',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.fileViewer.source' => 'Código fuente',
 			'orkest.fileViewer.reload' => 'Recargar',
 			'orkest.workspaceSettingsDialog.choosePhotoTitle' => 'Elegir foto del workspace',
@@ -3130,6 +3154,8 @@ extension on TranslationsEs {
 			'settings.page.diagnostics.reportDesc' => 'Abre un issue prellenado con tu versión, SO y registro reciente. Nada se envía automáticamente — lo revisas antes.',
 			'settings.page.diagnostics.reportButton' => 'Reportar…',
 			'settings.page.diagnostics.reportDialogTitle' => 'Informe de problema',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.diagnostics.reportDialogError' => 'Reportado manualmente desde Configuración.',
 			'settings.page.diagnostics.reportDialogDescription' => 'Describe qué salió mal en el issue. El registro reciente está incluido abajo y en "Copiar detalles".',
 			'settings.page.storage.sectionTitle' => 'Almacenamiento',
@@ -3142,8 +3168,6 @@ extension on TranslationsEs {
 			'settings.page.storage.resetDesc' => 'Elimina todos los datos locales — proyectos, diseños, configuración e historial de terminal — y vuelve a la ubicación predeterminada.',
 			'settings.page.storage.resetButton' => 'Restablecer…',
 			'settings.page.storage.resetConfirm' => 'Restablecer',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.storage.resetDialogTitle' => '¿Restablecer Orkest Code?',
 			'settings.page.storage.resetDialogContent' => 'Esto elimina permanentemente todos los datos locales de Orkest Code — proyectos, diseños, configuración e historial de terminal. Esto no se puede deshacer. Orkest Code se cerrará para que puedas empezar de nuevo.',
 			'settings.page.storage.restartRequiredTitle' => 'Reinicio necesario',

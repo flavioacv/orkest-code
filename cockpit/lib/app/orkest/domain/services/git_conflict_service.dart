@@ -60,6 +60,12 @@ class GitConflictService {
   static const String baseMarker = '|||||||';
   static const String sepMarker = '=======';
   static const String endMarker = '>>>>>>>';
+  static final _markerLines = RegExp(
+    r'^(?:<{7}|={7}|>{7}|\|{7})(?:\s|$)',
+    multiLine: true,
+  );
+
+  bool hasUnresolvedMarkers(String text) => _markerLines.hasMatch(text);
 
   /// Verifica rapidamente se a string contém marcadores de conflito.
   bool hasConflictMarkers(String text) {
@@ -179,6 +185,31 @@ class GitConflictService {
     block.to,
     _formatReplacement(text, block, replacement),
   );
+
+  /// Composes independently reviewed blocks against one immutable document.
+  /// Text outside conflicts is copied verbatim and no unreviewed block defaults
+  /// silently to a side.
+  String resolveDocument({
+    required String text,
+    required List<String> results,
+  }) {
+    final blocks = parseConflicts(text);
+    if (results.length != blocks.length || results.any(hasUnresolvedMarkers)) {
+      throw ArgumentError(
+        'Every conflict requires a result without conflict markers.',
+      );
+    }
+    final buffer = StringBuffer();
+    var offset = 0;
+    for (var index = 0; index < blocks.length; index++) {
+      final block = blocks[index];
+      buffer.write(text.substring(offset, block.from));
+      buffer.write(_formatReplacement(text, block, results[index]));
+      offset = block.to;
+    }
+    buffer.write(text.substring(offset));
+    return buffer.toString();
+  }
 
   String _formatReplacement(
     String text,

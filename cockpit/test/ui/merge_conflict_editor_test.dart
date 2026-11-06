@@ -127,4 +127,155 @@ void main() {
     await tester.pumpAndSettle();
     expect(completed, isTrue);
   });
+
+  group('MergeDocumentEditor - Full Document Workflow', () {
+    setUp(() {
+      LocaleSettings.setLocale(AppLocale.en);
+    });
+
+    const multiConflictDoc =
+        'header\n'
+        '<<<<<<< HEAD\n'
+        'alpha\n'
+        '=======\n'
+        'beta\n'
+        '>>>>>>> branch-a\n'
+        'middle text\n'
+        '<<<<<<< HEAD\n'
+        'gamma\n'
+        '||||||| base\n'
+        'base-gamma\n'
+        '=======\n'
+        'delta\n'
+        '>>>>>>> branch-b\n'
+        'footer\n';
+
+    Future<void> openDoc(
+      WidgetTester tester, {
+      required String text,
+      required void Function(String?) completed,
+      int initialIndex = 0,
+    }) async {
+      await tester.pumpWidget(
+        TranslationProvider(
+          child: ShadcnApp(
+            theme: buildTheme(brightness: Brightness.dark),
+            home: Scaffold(
+              child: Builder(
+                builder: (context) => PrimaryButton(
+                  onPressed: () async => completed(
+                    await showMergeDocumentEditor(
+                      context,
+                      text: text,
+                      initialConflictIndex: initialIndex,
+                      fileName: 'example.dart',
+                    ),
+                  ),
+                  child: const Text('Review Document'),
+                ),
+              ),
+            ),
+          ),
+        ),
+      );
+      await tester.tap(find.text('Review Document'));
+      await tester.pumpAndSettle();
+    }
+
+    testWidgets('requires explicit resolution, preserves drafts and composes full document', (
+      tester,
+    ) async {
+      String? appliedResult;
+      await openDoc(
+        tester,
+        text: multiConflictDoc,
+        completed: (val) => appliedResult = val,
+      );
+
+      // Conflito 1 de 2: inicialmente não resolvido
+      expect(find.textContaining('1 of 2'), findsOneWidget);
+      expect(
+        tester
+            .widget<PrimaryButton>(find.byKey(const ValueKey('merge-open-full-doc')))
+            .onPressed,
+        isNull,
+      );
+
+      // Editar rascunho do primeiro conflito e marcar como resolvido
+      await tester.tap(find.byKey(const ValueKey('merge-use-both')));
+      await tester.pumpAndSettle();
+
+      // Navegar para o próximo bloco (bloco 2)
+      await tester.tap(find.byKey(const ValueKey('merge-next-block')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('2 of 2'), findsOneWidget);
+
+      // Voltar para o bloco 1 e verificar que o rascunho editado foi preservado
+      await tester.tap(find.byKey(const ValueKey('merge-prev-block')));
+      await tester.pumpAndSettle();
+      expect(find.textContaining('1 of 2'), findsOneWidget);
+      final firstResultEditor = tester.widget<material.TextField>(
+        find.byType(material.TextField),
+      );
+      expect(firstResultEditor.controller!.text, 'alpha\nbeta');
+
+      // Ir para o bloco 2 e aceitar Theirs
+      await tester.tap(find.byKey(const ValueKey('merge-next-block')));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('merge-use-theirs')));
+      await tester.pumpAndSettle();
+
+      // Ambos resolvidos: o botão de revisão do documento completo fica habilitado
+      final openFullDocBtn = tester.widget<PrimaryButton>(
+        find.byKey(const ValueKey('merge-open-full-doc')),
+      );
+      expect(openFullDocBtn.onPressed, isNotNull);
+
+      // Abrir revisão do documento completo
+      await tester.tap(find.byKey(const ValueKey('merge-open-full-doc')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(const ValueKey('merge-full-doc-editor')), findsOneWidget);
+
+      // Testar proteção ao voltar para os blocos após edição manual
+      await tester.enterText(
+        find.byKey(const ValueKey('merge-full-doc-editor')),
+        'manual edit in full doc',
+      );
+      await tester.pumpAndSettle();
+
+      // Clicar em voltar aos blocos
+      await tester.tap(find.byKey(const ValueKey('merge-back-to-blocks')));
+      await tester.pumpAndSettle();
+
+      // Diálogo de confirmação aparece
+      expect(find.byKey(const ValueKey('merge-cancel-discard')), findsOneWidget);
+      // Cancelar descarte mantém na visualização do documento completo
+      await tester.tap(find.byKey(const ValueKey('merge-cancel-discard')));
+      await tester.pumpAndSettle();
+      expect(find.byKey(const ValueKey('merge-full-doc-editor')), findsOneWidget);
+
+      // Aplicar o documento completo
+      await tester.tap(find.byKey(const ValueKey('merge-apply-document')));
+      await tester.pumpAndSettle();
+
+      expect(appliedResult, 'manual edit in full doc');
+    });
+
+    testWidgets('cancellation preserves buffer and discards review state', (
+      tester,
+    ) async {
+      String? appliedResult = 'initial';
+      await openDoc(
+        tester,
+        text: multiConflictDoc,
+        completed: (val) => appliedResult = val,
+      );
+
+      await tester.tap(find.text('Cancel'));
+      await tester.pumpAndSettle();
+
+      expect(appliedResult, isNull);
+    });
+  });
 }
