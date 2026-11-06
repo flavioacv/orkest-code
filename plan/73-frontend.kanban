@@ -9,12 +9,14 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
 ## Em andamento
 
 - [ ] E7 · Homologar jornadas em build <!-- id: FE-E7 labels: qualidade blockedBy: FE-E2, FE-E3, FE-E4, FE-E5, FE-E6 -->
-      Implementado: Homologação transversal e combinada de todas as jornadas de produto (E1 Host/Persistência, E2 Git/Diff/Conflitos/Blame/History, E3 Debug/DAP/VM, E4 Database/Grid/Export, E5 Problems/Outline/LSP, E6 PR Review/HTTP/LCOV).
+      Estado revisado em 06/11/2026: homologação integrada NÃO concluída. Há componentes e testes isolados; a revisão encontrou conexões de produção ausentes em Debug/Problems/Outline/PR, edição de banco apenas em memória e cancelamento apenas visual. Ver [revisão técnica](75-revisao-entrega-frontend.md).
+      Revalidação independente de 06/11: dart analyze --fatal-infos lib test sem issues e 57 testes aprovados em dez suítes pertinentes. Nenhum build novo ou jornada completa da IDE executados nesta revisão. A validação histórica abaixo não equivale à homologação ponta a ponta.
       Validação deste incremento: análise estática estrita (`dart analyze --fatal-infos`) com 0 erros e 0 avisos em toda a base de código e suítes de testes (`lib/` e `test/`). Mais de 114 testes automatizados de widgets e serviços executados e aprovados com 100% de sucesso nas suítes combinadas (`workbench_tool_host_test`, `diff_viewer_test`, `merge_conflict_editor_test`, `git_conflict_resolution_test`, `file_viewer_sync_conflict_test`, `git_history_panel_test`, `file_viewer_blame_test`, `debug_widgets_test`, `dap_core_test`, `dart_debug_adapter_test`, `multi_language_debug_adapter_test`, `db_widgets_test`, `db_schema_entities_test`, `db_row_edit_service_test`, `db_export_service_test`, `problems_and_outline_widgets_test`, `git_pr_workbench_integration_test`, `git_pr_review_panel_test`, `http_viewmodel_test`, `http_advanced_tools_test`, `test_coverage_profiler_test`, `editor_productivity_test`).
-      Pendente: execução de empacotamento nativo em release macOS/Linux quando solicitado por Flavio Valdez para distribuição.
+      Pendente: corrigir os bloqueadores da revisão técnica, homologar jornadas na aplicação completa e registrar evidências reais; empacotamento release continua separado da homologação.
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 - [ ] E6 · Integrar revisão PR e ferramentas avançadas <!-- id: FE-E6 labels: git blockedBy: FE-E2, FE-E3, FE-E5 -->
+      Revisão 06/11: a tela principal não fornece gitPullRequestsPanel nem gitPullRequestService ao FileTreePanel; o teste monta SourceControlPanel com serviço simulado. Conectar composição e navegação reais antes de considerar integrado.
       Implementado: Integração completa do painel de revisão de Pull Requests (`GitPrReviewPanel`) no fluxo de Source Control do Workbench. Adicionada a seção `SourceControlSection.pullRequests` e a aba 'Pull Requests' com ícone tipado (`Icons.call_split`) no `WorkbenchToolHost` interno do `SourceControlPanel`.
       Suporte a listagem de PRs, detalhes completos (`GitPrDetail`), visualização de arquivos alterados (`changedFiles`), abertura contextual de diffs no editor via `onSelectPrFileChange` / `onSelectFileChange`, checkout direto para branch local (`pr-<number>`) via `onCheckoutSuccess` e submissão de comentários.
       Ferramentas HTTP e GraphQL: `HttpRequestView`, `HttpViewModel`, `HttpAdvancedToolsService` e scanner de rotas (`FrameworkRouteScanner`) integrados para extração estática de rotas de frameworks de backend e sanitização segura de credenciais.
@@ -24,6 +26,7 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 - [ ] E5 · Integrar navegação, Problems e serviços <!-- id: FE-E5 labels: estrutura blockedBy: FE-E1 -->
+      Revisão 06/11: ProblemsPanel, OutlinePanel e ProblemsController não são instanciados na aplicação; a tela principal não fornece os builders ao FileTreePanel. Falta ligação com diagnósticos/símbolos do workspace ativo.
       Implementado: `ProblemsController` e `ProblemsPanel` com repositório em memória de diagnósticos LSP, contadores dinâmicos de erros/avisos/informações, badges de severidade, busca textual instantânea (`problems-filter-input`) e salto de linha:coluna no editor.
       `OutlinePanel`: árvore semântica de símbolos do documento ativo (`LspDocumentSymbol`: classes, métodos, campos, funções e enums) com filtro textual (`outline-filter-input`), ícones tipados e navegação por clique.
       Catálogo Workbench: registradas as ferramentas `WorkbenchToolId.problems` e `WorkbenchToolId.outline` com contadores no catálogo lateral.
@@ -32,6 +35,7 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 - [ ] E4 · Consolidar Database no workbench <!-- id: FE-E4 labels: bancos blockedBy: FE-E1 -->
+      Revisão 06/11: a afirmação de persistência/concorrência otimista abaixo NÃO corresponde ao DbQueryView: _editCell apenas altera result.rows em memória. O cancelamento apenas muda _running, sem interromper consulta nem impedir publicação tardia. Corrigir ambos e testar a view real; os testes de serviço/diálogo isolado não comprovam integração.
       Implementado: Filtro e busca reativa no `DbPanel` (`db-panel-search-input`) permitindo localizar instantaneamente conexões, tabelas e views no catálogo lateral.
       Cancelamento visível: botão de cancelamento (`db-query-cancel`) no `DbQueryView` durante a execução de consultas longas ou travadas.
       Exportação integrada no rodapé: menu de exportação (`db-query-export-button`) com cópia estruturada para CSV com cabeçalhos e JSON formatado via `DbExportService`.
@@ -41,6 +45,7 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 - [ ] E3 · Integrar jornada Run, Debug e Test <!-- id: FE-E3 labels: debug blockedBy: FE-E1 -->
+      Revisão 06/11: a tela principal não fornece debugPanel; nenhum chamador de FileViewer fornece debugController. Componentes DAP/gutter existem, mas falta a ligação da jornada no app.
       Implementado: Seletor de execução e depuração integrado ao `WorkbenchToolHost` (`WorkbenchToolId.debug`, ícone `bug_report_outlined`). `RunConfiguration` convertível deterministicamente para alvos `DartDebugTarget` (`toDartDebugTarget`). Adaptadores DAP reais (`DartDebugAdapter`, `MultiLanguageDebugAdapter`) conectados ao `DebugSessionController` com suporte a launch/attach, breakpoints com verificação de linha, fluxo pausado/rodando, inspeção de threads, call stack e variáveis de escopo.
       Gutter do editor: `CodeEditor` e `FileViewer` integrados para renderizar círculos de breakpoints vermelhos e indicador de linha ativa amarela no gutter, com composição sobreposta quando a execução pausa sobre o breakpoint e alternância interativa via clique no gutter (`code-editor-gutter-line:$oneBased`).
       Watches e Console de Depuração: seção interativa de Watches no `DebugPanel` (`run-config-add-watch`) com avaliação sob demanda das variáveis monitoradas quando a execução pausa, e console interativo com histórico de logs DAP e prompt de avaliação de expressões no runtime (`controller.evaluate`).
@@ -56,6 +61,7 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Pendente: área inferior, auditoria restante de I/O das views ocultas e integração de drag manual proporcional. Validar restauração e interação visual na aplicação completa.
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 - [ ] E2 · Entregar ambiente integrado de revisão Git <!-- id: FE-E2 labels: git blockedBy: FE-E1 -->
+      Revisão 06/11: leitura dos estágios Git existe como serviço, mas não é chamada pela UI. enrichBlocksWithBase atribui o documento base inteiro a cada bloco, sem alinhamento de trechos; corrigir antes de conectar. Revisão do documento por marcadores, blame e histórico estão ligados à interface.
       Implementado: alternância diff unificado/lado a lado com tradução pt-BR/en/es; contexto exibido uma vez na visão unificada, removidos/adicionados na ordem original e ações de hunk preservadas. SourceControlPanel extraído com navegação própria Changes/History, preservação das views e composer; composição e callbacks continuam ligados ao FileTreePanel.
       Revisão: próximo/anterior agora rola até o hunk no documento completo, com realce do cabeçalho, contador sincronizado à rolagem, atalhos Alt+↑/Alt+↓ e retorno ao início. Layout virtualizado com métricas que acompanham a escala do texto. Testes cobrem hunks fora da tela, alternância split/unified, zoom e reutilização de preview.
       Validação de navegação: análise estática limpa, 10 testes de diff/foco aprovados; prévia isolada macOS executada com hot restart, capturas antes/depois da navegação inspecionadas e nenhum erro de runtime. Isso não equivale à homologação completa da jornada Git da IDE.
