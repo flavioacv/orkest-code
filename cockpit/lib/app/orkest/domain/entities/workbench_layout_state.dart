@@ -14,7 +14,7 @@ enum WorkbenchToolId {
   outline,
 }
 
-enum SourceControlSection { changes, history }
+enum SourceControlSection { changes, history, pullRequests }
 
 class WorkbenchLayoutState {
   const WorkbenchLayoutState({

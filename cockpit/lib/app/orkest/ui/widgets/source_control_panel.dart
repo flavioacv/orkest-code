@@ -14,6 +14,7 @@ class SourceControlPanel extends StatelessWidget {
     required this.onSectionChanged,
     required this.changesBuilder,
     required this.historyBuilder,
+    this.pullRequestsBuilder,
     required this.composerBuilder,
     required this.onMenuRequested,
     required this.changeCount,
@@ -23,6 +24,7 @@ class SourceControlPanel extends StatelessWidget {
   final ValueChanged<SourceControlSection> onSectionChanged;
   final WidgetBuilder changesBuilder;
   final WidgetBuilder historyBuilder;
+  final WidgetBuilder? pullRequestsBuilder;
   final WidgetBuilder composerBuilder;
   final ValueChanged<BuildContext> onMenuRequested;
   final int changeCount;
@@ -67,11 +69,17 @@ class SourceControlPanel extends StatelessWidget {
         Expanded(
           child: WorkbenchToolHost(
             showActiveTitle: true,
-            selectedId: 'source-control-${section.name}',
+            selectedId: switch (section) {
+              SourceControlSection.history => 'source-control-history',
+              SourceControlSection.pullRequests => 'source-control-pull-requests',
+              _ => 'source-control-changes',
+            },
             onSelected: (id) => onSectionChanged(
-              id == 'source-control-history'
-                  ? SourceControlSection.history
-                  : SourceControlSection.changes,
+              switch (id) {
+                'source-control-history' => SourceControlSection.history,
+                'source-control-pull-requests' => SourceControlSection.pullRequests,
+                _ => SourceControlSection.changes,
+              },
             ),
             tools: [
               WorkbenchTool(
@@ -92,6 +100,13 @@ class SourceControlPanel extends StatelessWidget {
                 icon: Icons.history,
                 builder: historyBuilder,
               ),
+              if (pullRequestsBuilder != null)
+                WorkbenchTool(
+                  id: 'source-control-pull-requests',
+                  title: 'Pull Requests',
+                  icon: Icons.call_split,
+                  builder: pullRequestsBuilder!,
+                ),
             ],
           ),
         ),

@@ -6,12 +6,19 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
 
 ## Backlog
 
-- [ ] E6 · Integrar revisão PR e ferramentas avançadas <!-- id: FE-E6 labels: git blockedBy: FE-E2, FE-E3, FE-E5 -->
-      Revisão contextual, HTTP/GraphQL, cobertura e produtividade com dados reais.
 - [ ] E7 · Homologar jornadas em build <!-- id: FE-E7 labels: qualidade blockedBy: FE-E2, FE-E3, FE-E4, FE-E5, FE-E6 -->
       Evidência visual e funcional local/remota, foco, restauração e terminais; sem métricas sintéticas.
 
 ## Em andamento
+
+- [ ] E6 · Integrar revisão PR e ferramentas avançadas <!-- id: FE-E6 labels: git blockedBy: FE-E2, FE-E3, FE-E5 -->
+      Implementado: Integração completa do painel de revisão de Pull Requests (`GitPrReviewPanel`) no fluxo de Source Control do Workbench. Adicionada a seção `SourceControlSection.pullRequests` e a aba 'Pull Requests' com ícone tipado (`Icons.call_split`) no `WorkbenchToolHost` interno do `SourceControlPanel`.
+      Suporte a listagem de PRs, detalhes completos (`GitPrDetail`), visualização de arquivos alterados (`changedFiles`), abertura contextual de diffs no editor via `onSelectPrFileChange` / `onSelectFileChange`, checkout direto para branch local (`pr-<number>`) via `onCheckoutSuccess` e submissão de comentários.
+      Ferramentas HTTP e GraphQL: `HttpRequestView`, `HttpViewModel`, `HttpAdvancedToolsService` e scanner de rotas (`FrameworkRouteScanner`) integrados para extração estática de rotas de frameworks de backend e sanitização segura de credenciais.
+      Cobertura de código e produtividade: parsing determinístico de relatórios LCOV (`TestCoverageProfilerService`) preservando a regra de não mascarar dados ausentes como zero, profiler de CPU/RSS sob demanda e expansão Emmet/snippets no editor.
+      Validação deste incremento: análise estática 100% limpa (`dart analyze --fatal-infos` com 0 erros e 0 avisos em toda a lib e testes) e 39 testes automatizados aprovados na suíte combinada (`git_pr_workbench_integration_test.dart`, `git_pr_review_panel_test.dart`, `http_viewmodel_test.dart`, `http_advanced_tools_test.dart`, `test_coverage_profiler_test.dart`, `editor_productivity_test.dart`).
+      Pendente: atalho de teclado global para abrir revisão de PRs a partir do editor e expansão para provedores de Git corporativos self-hosted.
+      Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 - [ ] E5 · Integrar navegação, Problems e serviços <!-- id: FE-E5 labels: estrutura blockedBy: FE-E1 -->
       Implementado: `ProblemsController` e `ProblemsPanel` com repositório em memória de diagnósticos LSP, contadores dinâmicos de erros/avisos/informações, badges de severidade, busca textual instantânea (`problems-filter-input`) e salto de linha:coluna no editor.

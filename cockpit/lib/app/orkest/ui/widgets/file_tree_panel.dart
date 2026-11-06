@@ -15,6 +15,8 @@ import 'package:orkest_code/app/orkest/domain/entities/git_info.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/commit_message_dialog.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/confirm_dialog.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/git_history_panel.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/git_pr_review_panel.dart';
+import 'package:orkest_code/app/orkest/domain/services/git_pull_request_service.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/git_text_input_dialog.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/panel_resize_handle.dart';
 import 'package:orkest_code/app/core/domain/entities/app_settings.dart';
@@ -168,6 +170,10 @@ class FileTreePanel extends StatefulWidget {
     this.commitMessageGeneratorLabel,
     this.revealPath,
     this.revealGen = 0,
+    this.gitPullRequestsPanel,
+    this.gitPullRequestService,
+    this.onSelectPrFileChange,
+    this.onCheckoutPrSuccess,
   });
 
   /// "Revelar na árvore": arquivo-alvo + geração. Quando [revealGen] muda, a
@@ -240,6 +246,11 @@ class FileTreePanel extends StatefulWidget {
   /// `null` no retorno = sucesso; senão a mensagem de erro do git.
   final Future<String?> Function(String absPath)? onUnstageFile;
   final Future<String?> Function(List<String> absPaths)? onUnstageFiles;
+
+  final WidgetBuilder? gitPullRequestsPanel;
+  final GitPullRequestService? gitPullRequestService;
+  final void Function(GitHistoryFileChange fileChange)? onSelectPrFileChange;
+  final void Function(int prNumber)? onCheckoutPrSuccess;
 
   /// Source Control: descarta a mudança do working tree (destrutivo — o
   /// painel confirma antes). `null` = sucesso.
@@ -1644,6 +1655,15 @@ class _FileTreePanelState extends State<FileTreePanel> {
         compareRefs: widget.onCompareGitRefs,
         refreshToken: widget.gitHistoryRevision,
       ),
+      pullRequestsBuilder: widget.gitPullRequestsPanel ??
+          (widget.gitPullRequestService != null && widget.rootPath.isNotEmpty
+              ? (_) => GitPrReviewPanel(
+                    repoRoot: widget.rootPath,
+                    service: widget.gitPullRequestService!,
+                    onSelectFileChange: widget.onSelectPrFileChange,
+                    onCheckoutSuccess: widget.onCheckoutPrSuccess,
+                  )
+              : null),
       composerBuilder: (_) => _CommitComposer(
         controller: _commitMessage,
         height: _commitHeight,
