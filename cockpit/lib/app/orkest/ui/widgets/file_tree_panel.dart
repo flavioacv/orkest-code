@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/orkest/ui/widgets/workbench_tool_host.dart';
 import 'dart:io' show Platform;
 
 import 'package:orkest_code/app/orkest/domain/entities/file_node.dart';
@@ -89,6 +90,7 @@ class FileTreePanel extends StatefulWidget {
   const FileTreePanel({
     super.key,
     required this.rootPath,
+    this.workspaceId,
     required this.revision,
     this.selectedPath,
     required this.listChildren,
@@ -270,6 +272,7 @@ class FileTreePanel extends StatefulWidget {
   final Widget? searchPanel;
 
   final String rootPath;
+  final String? workspaceId;
 
   /// Token externo (VM) que sobe a cada mutação — força reler as pastas abertas.
   final int revision;
@@ -412,6 +415,33 @@ class _PendingCreate {
 }
 
 class _FileTreePanelState extends State<FileTreePanel> {
+  bool _toolSelectionRestored = false;
+  String get _toolStorageId =>
+      'workbench-tool:${widget.workspaceId ?? widget.rootPath}';
+
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    if (!_toolSelectionRestored) {
+      _toolSelectionRestored = true;
+      final saved = PageStorage.maybeOf(
+        context,
+      )?.readState(context, identifier: _toolStorageId);
+      if (saved is String) {
+        for (final value in _RightPaneTab.values) {
+          if (value.name == saved) _tab = value;
+        }
+      }
+    }
+  }
+
+  void _activateTool(_RightPaneTab tool) {
+    PageStorage.maybeOf(
+      context,
+    )?.writeState(context, tool.name, identifier: _toolStorageId);
+    setState(() => _tab = tool);
+  }
+
   int _localRefresh = 0;
 
   /// Geração do "Collapse all" (botão do cabeçalho, como no VS Code). Cada
@@ -1484,79 +1514,14 @@ class _FileTreePanelState extends State<FileTreePanel> {
     if (tab == _RightPaneTab.telemetry && !hasTelemetry) {
       tab = _RightPaneTab.files;
     }
-    final scMode = tab == _RightPaneTab.sourceControl;
-    final searchMode = tab == _RightPaneTab.search;
-    final dbMode = tab == _RightPaneTab.database;
-    final galleryMode = tab == _RightPaneTab.gallery;
-    final telemetryMode = tab == _RightPaneTab.telemetry;
-
-    return Container(
-      width: widget.width,
-      decoration: BoxDecoration(
-        color: colors.bg,
-        border: Border(left: BorderSide(color: colors.border)),
-      ),
-      child: Column(
+    Widget buildTool(_RightPaneTab tab) {
+      final scMode = tab == _RightPaneTab.sourceControl;
+      final searchMode = tab == _RightPaneTab.search;
+      final dbMode = tab == _RightPaneTab.database;
+      final galleryMode = tab == _RightPaneTab.gallery;
+      final telemetryMode = tab == _RightPaneTab.telemetry;
+      return Column(
         children: [
-          Container(
-            height: 40,
-            padding: const EdgeInsets.only(left: 14, right: 8),
-            decoration: BoxDecoration(
-              border: Border(bottom: BorderSide(color: colors.border)),
-            ),
-            child: Row(
-              children: [
-                _HeaderIcon(
-                  icon: Icons.folder_outlined,
-                  tooltip: context.t.orkest.fileTreePanel.filesTooltip,
-                  selected: tab == _RightPaneTab.files,
-                  onTap: () => setState(() => _tab = _RightPaneTab.files),
-                ),
-                if (hasSearch)
-                  _HeaderIcon(
-                    icon: Icons.search,
-                    tooltip: context.t.orkest.fileTreePanel.searchTooltip,
-                    selected: searchMode,
-                    onTap: () => setState(() => _tab = _RightPaneTab.search),
-                  ),
-                if (widget.isGitRepo)
-                  _HeaderIcon(
-                    key: const ValueKey('source-control-tab'),
-                    icon: Icons.account_tree_outlined,
-                    tooltip:
-                        context.t.orkest.fileTreePanel.sourceControlTooltip,
-                    selected: scMode,
-                    badgeCount: sourceControlChangeCount,
-                    onTap: () =>
-                        setState(() => _tab = _RightPaneTab.sourceControl),
-                  ),
-                if (hasDatabase)
-                  _HeaderIcon(
-                    key: const ValueKey('database-tab'),
-                    icon: Icons.storage,
-                    tooltip: context.t.orkest.fileTreePanel.databaseTooltip,
-                    selected: dbMode,
-                    onTap: () => setState(() => _tab = _RightPaneTab.database),
-                  ),
-                if (hasTelemetry)
-                  _HeaderIcon(
-                    key: const ValueKey('telemetry-tab'),
-                    icon: Icons.monitor_heart_outlined,
-                    tooltip: context.t.orkest.telemetry.tooltip,
-                    selected: telemetryMode,
-                    onTap: () => setState(() => _tab = _RightPaneTab.telemetry),
-                  ),
-                if (hasGallery)
-                  _HeaderIcon(
-                    key: const ValueKey('gallery-tab'),
-                    icon: Icons.auto_awesome_mosaic_outlined,
-                    tooltip: context.t.orkest.fileTreePanel.galleryTooltip,
-                    selected: galleryMode,
-                    onTap: () => setState(() => _tab = _RightPaneTab.gallery),
-                  ),
-              ],
-            ),
-          ),
           // Título da aba ativa + ações contextuais ao lado, no padrão do
           // painel Database (a barra de tabs acima fica só com as tabs).
           if (widget.rootPath.isNotEmpty && tab == _RightPaneTab.files)
@@ -1801,7 +1766,78 @@ class _FileTreePanelState extends State<FileTreePanel> {
               generatorLabel: widget.commitMessageGeneratorLabel,
               onCommit: _commitStaged,
             ),
-          if (!scMode) ?widget.tasksPanel,
+        ],
+      );
+    }
+
+    WorkbenchTool tool(
+      _RightPaneTab id,
+      String title,
+      IconData icon, {
+      int count = 0,
+    }) => WorkbenchTool(
+      id: id == _RightPaneTab.sourceControl ? 'source-control' : id.name,
+      title: title,
+      icon: icon,
+      badgeCount: count,
+      builder: (_) => buildTool(id),
+    );
+    final tr = context.t.orkest.fileTreePanel;
+    return Container(
+      width: widget.width,
+      decoration: BoxDecoration(
+        color: colors.bg,
+        border: Border(left: BorderSide(color: colors.border)),
+      ),
+      child: Column(
+        children: [
+          Expanded(
+            child: WorkbenchToolHost(
+              selectedId: tab == _RightPaneTab.sourceControl
+                  ? 'source-control'
+                  : tab.name,
+              onSelected: (id) => _activateTool(
+                id == 'source-control'
+                    ? _RightPaneTab.sourceControl
+                    : _RightPaneTab.values.byName(id),
+              ),
+              tools: [
+                tool(
+                  _RightPaneTab.files,
+                  tr.filesTooltip,
+                  Icons.folder_outlined,
+                ),
+                if (hasSearch)
+                  tool(_RightPaneTab.search, tr.searchTooltip, Icons.search),
+                if (widget.isGitRepo)
+                  tool(
+                    _RightPaneTab.sourceControl,
+                    tr.sourceControlTooltip,
+                    Icons.account_tree_outlined,
+                    count: sourceControlChangeCount,
+                  ),
+                if (hasDatabase)
+                  tool(
+                    _RightPaneTab.database,
+                    tr.databaseTooltip,
+                    Icons.storage,
+                  ),
+                if (hasTelemetry)
+                  tool(
+                    _RightPaneTab.telemetry,
+                    context.t.orkest.telemetry.tooltip,
+                    Icons.monitor_heart_outlined,
+                  ),
+                if (hasGallery)
+                  tool(
+                    _RightPaneTab.gallery,
+                    tr.galleryTooltip,
+                    Icons.auto_awesome_mosaic_outlined,
+                  ),
+              ],
+            ),
+          ),
+          if (tab != _RightPaneTab.sourceControl) ?widget.tasksPanel,
           ?widget.footer,
         ],
       ),
@@ -4053,79 +4089,6 @@ class _SourceControlViewButton extends StatelessWidget {
               ),
             ],
           ],
-        ),
-      ),
-    );
-  }
-}
-
-class _HeaderIcon extends StatelessWidget {
-  const _HeaderIcon({
-    super.key,
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-    this.selected = false,
-    this.badgeCount = 0,
-  });
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-
-  /// Toggle ativo → fundo realçado + ícone em cor primária.
-  final bool selected;
-  final int badgeCount;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    // AppTooltip (não o Tooltip do shadcn): posiciona certo sob o zoom do app.
-    return AppTooltip(
-      message: tooltip,
-      child: HoverTap(
-        color: selected ? colors.panel2 : Colors.transparent,
-        borderRadius: BorderRadius.circular(5),
-        onTap: onTap,
-        child: SizedBox(
-          width: 28,
-          height: 28,
-          child: Stack(
-            clipBehavior: Clip.none,
-            children: [
-              Center(
-                child: Icon(
-                  icon,
-                  size: 16,
-                  color: selected ? colors.text : colors.text3,
-                ),
-              ),
-              if (badgeCount > 0)
-                Positioned(
-                  top: 1,
-                  right: -2,
-                  child: Container(
-                    constraints: const BoxConstraints(minWidth: 12),
-                    height: 12,
-                    padding: const EdgeInsets.symmetric(horizontal: 3),
-                    decoration: BoxDecoration(
-                      color: colors.warn,
-                      borderRadius: BorderRadius.circular(7),
-                      border: Border.all(color: colors.bg, width: 1),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      badgeCount > 99 ? '99+' : '$badgeCount',
-                      style: context.typo.mono.copyWith(
-                        fontSize: 8,
-                        height: 1,
-                        color: colors.bg,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                  ),
-                ),
-            ],
-          ),
         ),
       ),
     );
