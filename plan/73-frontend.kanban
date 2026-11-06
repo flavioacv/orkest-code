@@ -6,14 +6,20 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
 
 ## Backlog
 
-- [ ] E5 · Integrar navegação, Problems e serviços <!-- id: FE-E5 labels: estrutura blockedBy: FE-E1 -->
-      Estrutura, referências, diagnóstico e serviços com navegação para código.
 - [ ] E6 · Integrar revisão PR e ferramentas avançadas <!-- id: FE-E6 labels: git blockedBy: FE-E2, FE-E3, FE-E5 -->
       Revisão contextual, HTTP/GraphQL, cobertura e produtividade com dados reais.
 - [ ] E7 · Homologar jornadas em build <!-- id: FE-E7 labels: qualidade blockedBy: FE-E2, FE-E3, FE-E4, FE-E5, FE-E6 -->
       Evidência visual e funcional local/remota, foco, restauração e terminais; sem métricas sintéticas.
 
 ## Em andamento
+
+- [ ] E5 · Integrar navegação, Problems e serviços <!-- id: FE-E5 labels: estrutura blockedBy: FE-E1 -->
+      Implementado: `ProblemsController` e `ProblemsPanel` com repositório em memória de diagnósticos LSP, contadores dinâmicos de erros/avisos/informações, badges de severidade, busca textual instantânea (`problems-filter-input`) e salto de linha:coluna no editor.
+      `OutlinePanel`: árvore semântica de símbolos do documento ativo (`LspDocumentSymbol`: classes, métodos, campos, funções e enums) com filtro textual (`outline-filter-input`), ícones tipados e navegação por clique.
+      Catálogo Workbench: registradas as ferramentas `WorkbenchToolId.problems` e `WorkbenchToolId.outline` com contadores no catálogo lateral.
+      Validação deste incremento: análise estática limpa (`dart analyze` com 0 erros/avisos) e testes automatizados de widget aprovados (`problems_and_outline_widgets_test.dart`).
+      Pendente: agregação de serviços com lifecycle Docker/tarefas e atalhos globais de Search Everywhere.
+      Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 - [ ] E4 · Consolidar Database no workbench <!-- id: FE-E4 labels: bancos blockedBy: FE-E1 -->
       Implementado: Filtro e busca reativa no `DbPanel` (`db-panel-search-input`) permitindo localizar instantaneamente conexões, tabelas e views no catálogo lateral.

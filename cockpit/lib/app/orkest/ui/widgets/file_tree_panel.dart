@@ -134,6 +134,9 @@ class FileTreePanel extends StatefulWidget {
     this.galleryPanel,
     this.telemetryPanel,
     this.debugPanel,
+    this.problemsPanel,
+    this.problemsCount = 0,
+    this.outlinePanel,
     this.searchFocusSignal,
     this.tasksPanel,
     this.roots = const <WorkspaceRoot>[],
@@ -282,6 +285,13 @@ class FileTreePanel extends StatefulWidget {
 
   /// Painel de depuração DAP (Run & Debug, breakpoints, call stack, console).
   final Widget? debugPanel;
+
+  /// Painel de diagnósticos LSP (Problems / Inspeções).
+  final Widget? problemsPanel;
+  final int problemsCount;
+
+  /// Painel de estrutura do documento ativo (Outline / Símbolos semânticos).
+  final Widget? outlinePanel;
 
   /// Painel de busca por conteúdo, fixado entre a árvore e o [footer]
   /// (Cmd+Shift+F). `null` quando não há projeto.
@@ -1563,6 +1573,14 @@ class _FileTreePanelState extends State<FileTreePanel> {
     if (tab == WorkbenchToolId.debug && !hasDebug) {
       tab = WorkbenchToolId.files;
     }
+    final hasProblems = widget.problemsPanel != null;
+    if (tab == WorkbenchToolId.problems && !hasProblems) {
+      tab = WorkbenchToolId.files;
+    }
+    final hasOutline = widget.outlinePanel != null;
+    if (tab == WorkbenchToolId.outline && !hasOutline) {
+      tab = WorkbenchToolId.files;
+    }
     Widget buildSourceControl() => SourceControlPanel(
       section: _sourceControlView,
       onSectionChanged: _selectSourceControlSection,
@@ -1665,6 +1683,8 @@ class _FileTreePanelState extends State<FileTreePanel> {
       final galleryMode = tab == WorkbenchToolId.gallery;
       final telemetryMode = tab == WorkbenchToolId.telemetry;
       final debugMode = tab == WorkbenchToolId.debug;
+      final problemsMode = tab == WorkbenchToolId.problems;
+      final outlineMode = tab == WorkbenchToolId.outline;
       return Column(
         children: [
           // Título da aba ativa + ações contextuais ao lado, no padrão do
@@ -1720,6 +1740,10 @@ class _FileTreePanelState extends State<FileTreePanel> {
                 ? (widget.telemetryPanel ?? const SizedBox.shrink())
                 : debugMode
                 ? (widget.debugPanel ?? const SizedBox.shrink())
+                : problemsMode
+                ? (widget.problemsPanel ?? const SizedBox.shrink())
+                : outlineMode
+                ? (widget.outlinePanel ?? const SizedBox.shrink())
                 : DropTarget(
                     // Drop NATIVO do SO (Finder/Explorer/GTK): a pasta sob o
                     // cursor recebe; o espaço vazio manda pra raiz.
@@ -1853,6 +1877,19 @@ class _FileTreePanelState extends State<FileTreePanel> {
                     WorkbenchToolId.debug,
                     'Run & Debug',
                     Icons.bug_report_outlined,
+                  ),
+                if (hasProblems)
+                  tool(
+                    WorkbenchToolId.problems,
+                    'Problems',
+                    Icons.warning_amber_rounded,
+                    count: widget.problemsCount,
+                  ),
+                if (hasOutline)
+                  tool(
+                    WorkbenchToolId.outline,
+                    'Outline',
+                    Icons.account_tree_outlined,
                   ),
                 if (hasDatabase)
                   tool(

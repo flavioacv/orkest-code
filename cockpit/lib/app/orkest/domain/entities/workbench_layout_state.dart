@@ -10,6 +10,8 @@ enum WorkbenchToolId {
   gallery,
   telemetry,
   debug,
+  problems,
+  outline,
 }
 
 enum SourceControlSection { changes, history }
