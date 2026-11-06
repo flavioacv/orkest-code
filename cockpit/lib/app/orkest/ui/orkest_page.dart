@@ -1993,6 +1993,7 @@ class _TreePanel extends StatelessWidget {
           onOpenGitHistoryDiff: vm.openCommitDiff,
           onRevertGitCommit: vm.revertGitCommit,
           onUndoLastGitCommit: vm.undoLastGitCommit,
+          onCompareGitRefs: vm.compareGitRefs,
           onCheckoutBranch: vm.selectedProject?.isRemoteTerminal == true
               ? null
               : (root) => showGitBranchPicker(context, root),

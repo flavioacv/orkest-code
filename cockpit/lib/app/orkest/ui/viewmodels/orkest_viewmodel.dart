@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/orkest/domain/entities/git_comparison.dart';
 import 'package:orkest_code/app/orkest/domain/entities/workbench_layout_state.dart';
 import 'package:orkest_code/app/core/domain/entities/lsp_completion.dart';
 import 'dart:async';
@@ -4153,6 +4154,15 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
         GitHistoryError(GitHistoryErrorKind.commandFailed, detail: '$e'),
       );
     }
+  }
+
+  /// Compara duas referências Git estruturadas ([baseRef] e [targetRef]).
+  Future<Result<GitComparison, GitHistoryError>> compareGitRefs(
+    String root,
+    String baseRef,
+    String targetRef,
+  ) async {
+    return _gitHistory.compareRefs(root, baseRef, targetRef);
   }
 
   /// Cria um commit que reverte [hash]. O histórico bloqueia merge commits,

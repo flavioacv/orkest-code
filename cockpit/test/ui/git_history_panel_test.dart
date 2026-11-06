@@ -1,5 +1,7 @@
 import 'dart:async';
 
+import 'package:flutter/gestures.dart';
+import 'package:orkest_code/app/orkest/domain/entities/git_comparison.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_history_commit.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_history_file_change.dart';
 import 'package:orkest_code/app/orkest/domain/exceptions/git_history_error.dart';
@@ -16,13 +18,17 @@ void main() {
     final tokens = buildTokens(brightness: Brightness.dark);
     return TranslationProvider(
       child: ShadcnApp(
-        theme: buildTheme(brightness: Brightness.dark),
-        home: OrkestTheme(
-          colors: tokens.colors,
-          typo: tokens.typo,
-          syntax: tokens.syntax,
-          terminal: tokens.terminal,
-          child: SizedBox(width: 400, height: 500, child: child),
+        theme: buildTheme(
+          brightness: Brightness.dark,
+        ).copyWith(platform: () => TargetPlatform.windows),
+        home: Scaffold(
+          child: OrkestTheme(
+            colors: tokens.colors,
+            typo: tokens.typo,
+            syntax: tokens.syntax,
+            terminal: tokens.terminal,
+            child: SizedBox(width: 400, height: 500, child: child),
+          ),
         ),
       ),
     );
@@ -331,5 +337,160 @@ void main() {
     await tester.pump();
 
     expect(find.textContaining('1d ago'), findsOneWidget);
+  });
+
+  testWidgets('filters commits reactively by subject, author, or hash', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      host(
+        GitHistoryPanel(
+          roots: const [
+            GitHistoryRoot(path: '/repo', name: 'repo', branch: 'main'),
+          ],
+          refreshToken: 0,
+          loadHistory: (_) async => const Success([
+            GitHistoryCommit(
+              hash: 'aaaa111122223333',
+              parents: [],
+              refs: [],
+              subject: 'Fix payment crash',
+              author: 'Ada Lovelace',
+              authoredAt: null,
+            ),
+            GitHistoryCommit(
+              hash: 'bbbb444455556666',
+              parents: [],
+              refs: [],
+              subject: 'Add profile screen',
+              author: 'Grace Hopper',
+              authoredAt: null,
+            ),
+          ]),
+          loadFiles: (_, _) async => const Success([]),
+          onOpenFileDiff: (_, _, _) async {},
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Fix payment crash'), findsOneWidget);
+    expect(find.text('Add profile screen'), findsOneWidget);
+
+    final searchField = find.byKey(const ValueKey('git-history-search-input'));
+    expect(searchField, findsOneWidget);
+
+    await tester.enterText(searchField, 'payment');
+    await tester.pump();
+    expect(find.text('Fix payment crash'), findsOneWidget);
+    expect(find.text('Add profile screen'), findsNothing);
+
+    await tester.enterText(searchField, 'grace');
+    await tester.pump();
+    expect(find.text('Fix payment crash'), findsNothing);
+    expect(find.text('Add profile screen'), findsOneWidget);
+
+    await tester.enterText(searchField, 'aaaa1111');
+    await tester.pump();
+    expect(find.text('Fix payment crash'), findsOneWidget);
+    expect(find.text('Add profile screen'), findsNothing);
+
+    await tester.enterText(searchField, 'inexistente');
+    await tester.pump();
+    expect(find.text('Fix payment crash'), findsNothing);
+    expect(find.text('Add profile screen'), findsNothing);
+  });
+
+  testWidgets('compares commit with head and navigates to file diff', (
+    tester,
+  ) async {
+    final commit1 = const GitHistoryCommit(
+      hash: 'aaaa111122223333',
+      parents: [],
+      refs: [],
+      subject: 'Base commit',
+      author: 'Ada',
+      authoredAt: null,
+    );
+    final commit2 = const GitHistoryCommit(
+      hash: 'bbbb222233334444',
+      parents: ['aaaa111122223333'],
+      refs: ['HEAD -> main'],
+      subject: 'Head commit',
+      author: 'Grace',
+      authoredAt: null,
+    );
+
+    String? diffRoot;
+    String? diffRef;
+    GitHistoryFileChange? diffChange;
+
+    await tester.pumpWidget(
+      host(
+        GitHistoryPanel(
+          roots: const [
+            GitHistoryRoot(path: '/repo', name: 'repo', branch: 'main'),
+          ],
+          refreshToken: 0,
+          loadHistory: (_) async => Success([commit1]),
+          loadFiles: (_, _) async => const Success([]),
+          compareRefs: (root, baseRef, targetRef) async {
+            return Success(
+              GitComparison(
+                baseRef: baseRef,
+                targetRef: targetRef,
+                commits: [commit2],
+                changedFiles: const [
+                  GitHistoryFileChange(status: 'M', path: 'lib/app.dart'),
+                ],
+              ),
+            );
+          },
+          onOpenFileDiff: (root, ref, change) async {
+            diffRoot = root;
+            diffRef = ref;
+            diffChange = change;
+          },
+        ),
+      ),
+    );
+    await tester.pump();
+
+    expect(find.text('Base commit'), findsOneWidget);
+
+    // Aciona o menu de contexto do commit com clique secundário
+    await tester.tap(find.text('Base commit'), buttons: kSecondaryMouseButton);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+
+    // Clica em "Comparar com HEAD"
+    final compareItem = find.text('Compare with HEAD');
+    expect(compareItem, findsOneWidget);
+    await tester.tap(compareItem);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+
+    // Valida exibição da tela de comparação
+    expect(find.text('Revision comparison'), findsOneWidget);
+    expect(find.text('Head commit'), findsOneWidget);
+    expect(find.text('app.dart - lib'), findsOneWidget);
+
+    // Clica no arquivo alterado
+    await tester.tap(find.text('app.dart - lib'));
+    await tester.pump();
+
+    expect(diffRoot, '/repo');
+    expect(diffRef, 'HEAD');
+    expect(diffChange?.path, 'lib/app.dart');
+
+    // Clica no botão voltar para retornar à timeline regular
+    final backButton = find.byIcon(Icons.arrow_back);
+    expect(backButton, findsOneWidget);
+    await tester.tap(backButton);
+    await tester.pump();
+    await tester.pump(const Duration(milliseconds: 350));
+
+    expect(find.text('Base commit'), findsOneWidget);
+    expect(find.text('Revision comparison'), findsNothing);
   });
 }

@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/orkest/domain/entities/git_comparison.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_history_commit.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/workbench_tool_host.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_history_file_change.dart';
@@ -26,6 +27,7 @@ class GitHistoryPanel extends StatefulWidget {
     required this.refreshToken,
     this.onRevertCommit,
     this.onUndoLastCommit,
+    this.compareRefs,
   });
 
   final List<GitHistoryRoot> roots;
@@ -54,6 +56,12 @@ class GitHistoryPanel extends StatefulWidget {
     String hash,
   )?
   onUndoLastCommit;
+  final Future<Result<GitComparison, GitHistoryError>> Function(
+    String root,
+    String baseRef,
+    String targetRef,
+  )?
+  compareRefs;
   final int refreshToken;
 
   @override
@@ -83,6 +91,13 @@ class _GitHistoryPanelState extends State<GitHistoryPanel> {
   var _historyLoadGeneration = 0;
   final CoalescingSingleFlight<void> _historyLoads =
       CoalescingSingleFlight<void>();
+
+  final _searchCtrl = TextEditingController();
+  String _filterQuery = '';
+  String? _comparisonBaseHash;
+  GitComparison? _activeComparison;
+  bool _loadingComparison = false;
+  String? _comparisonError;
 
   @override
   void initState() {
@@ -118,9 +133,54 @@ class _GitHistoryPanelState extends State<GitHistoryPanel> {
   @override
   void dispose() {
     _disposed = true;
+    _searchCtrl.dispose();
     _autoRefresh?.dispose();
     _fallbackActivity?.dispose();
     super.dispose();
+  }
+
+  Future<void> _startComparison(String baseRef, String targetRef) async {
+    final root = _root;
+    if (root == null) return;
+    setState(() {
+      _loadingComparison = true;
+      _comparisonError = null;
+    });
+
+    final compare = widget.compareRefs;
+    if (compare == null) {
+      setState(() {
+        _loadingComparison = false;
+        _comparisonError = 'Comparação não suportada nesta configuração.';
+      });
+      return;
+    }
+
+    final result = await compare(root, baseRef, targetRef);
+    if (!mounted || root != _root) return;
+    switch (result) {
+      case Success(:final value):
+        setState(() {
+          _activeComparison = value;
+          _loadingComparison = false;
+          _comparisonError = null;
+          _comparisonBaseHash = null;
+        });
+      case Failure(:final error):
+        setState(() {
+          _activeComparison = null;
+          _loadingComparison = false;
+          _comparisonError = error.detail ?? 'Falha ao comparar revisões.';
+        });
+    }
+  }
+
+  void _exitComparison() {
+    setState(() {
+      _activeComparison = null;
+      _comparisonBaseHash = null;
+      _comparisonError = null;
+    });
   }
 
   @override
@@ -206,6 +266,29 @@ class _GitHistoryPanelState extends State<GitHistoryPanel> {
           label: tr.historyCopyHash,
           icon: Icons.content_copy,
         ),
+        if (widget.compareRefs != null) ...[
+          AppMenuItem(
+            value: 'compare-head',
+            label: tr.historyCompareWithHead,
+            icon: Icons.compare_arrows,
+          ),
+          if (_comparisonBaseHash != null && _comparisonBaseHash != commit.hash)
+            AppMenuItem(
+              value: 'compare-marked',
+              label: tr.historyCompareWithMarked(
+                hash: _comparisonBaseHash!.length > 7
+                    ? _comparisonBaseHash!.substring(0, 7)
+                    : _comparisonBaseHash!,
+              ),
+              icon: Icons.compare,
+            )
+          else
+            AppMenuItem(
+              value: 'mark-compare',
+              label: tr.historyMarkForCompare,
+              icon: Icons.bookmark_border,
+            ),
+        ],
         if (widget.onRevertCommit != null && commit.parents.length <= 1)
           AppMenuItem(
             value: 'revert',
@@ -225,6 +308,18 @@ class _GitHistoryPanelState extends State<GitHistoryPanel> {
     if (!mounted || choice == null || root != _root) return;
     if (choice == 'copy') {
       await Clipboard.setData(ClipboardData(text: commit.hash));
+      return;
+    }
+    if (choice == 'compare-head') {
+      await _startComparison(commit.hash, 'HEAD');
+      return;
+    }
+    if (choice == 'mark-compare') {
+      setState(() => _comparisonBaseHash = commit.hash);
+      return;
+    }
+    if (choice == 'compare-marked') {
+      await _startComparison(_comparisonBaseHash!, commit.hash);
       return;
     }
     final confirmed = await showConfirmDialog(
@@ -313,6 +408,94 @@ class _GitHistoryPanelState extends State<GitHistoryPanel> {
               ],
             ),
           ),
+        if (_root != null && _activeComparison == null) ...[
+          Padding(
+            padding: const EdgeInsets.fromLTRB(10, 0, 10, 6),
+            child: Container(
+              height: 28,
+              padding: const EdgeInsets.symmetric(horizontal: 8),
+              decoration: BoxDecoration(
+                color: colors.panel2,
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: colors.border),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.search, size: 14, color: colors.text3),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: TextField(
+                      key: const ValueKey('git-history-search-input'),
+                      controller: _searchCtrl,
+                      onChanged: (val) =>
+                          setState(() => _filterQuery = val.trim()),
+                      style: context.typo.body.copyWith(
+                        fontSize: 12,
+                        color: colors.text,
+                      ),
+                      decoration: InputDecoration.collapsed(
+                        hintText: tr.historyFilterPlaceholder,
+                        hintStyle: context.typo.body.copyWith(
+                          fontSize: 12,
+                          color: colors.text3,
+                        ),
+                      ),
+                    ),
+                  ),
+                  if (_filterQuery.isNotEmpty)
+                    InkWell(
+                      onTap: () {
+                        _searchCtrl.clear();
+                        setState(() => _filterQuery = '');
+                      },
+                      child: Icon(Icons.close, size: 14, color: colors.text3),
+                    ),
+                ],
+              ),
+            ),
+          ),
+          if (_comparisonBaseHash != null)
+            Container(
+              margin: const EdgeInsets.fromLTRB(10, 0, 10, 6),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: colors.accent.withValues(alpha: 0.12),
+                borderRadius: BorderRadius.circular(4),
+                border: Border.all(color: colors.accent.withValues(alpha: 0.3)),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.bookmark, size: 14, color: colors.accent),
+                  const SizedBox(width: 6),
+                  Expanded(
+                    child: Text(
+                      tr.historyComparing(
+                        hash: _comparisonBaseHash!.length > 7
+                            ? _comparisonBaseHash!.substring(0, 7)
+                            : _comparisonBaseHash!,
+                      ),
+                      style: context.typo.label.copyWith(
+                        fontSize: 11,
+                        color: colors.accent,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                  InkWell(
+                    onTap: () => setState(() => _comparisonBaseHash = null),
+                    child: Text(
+                      tr.historyCancelCompare,
+                      style: context.typo.label.copyWith(
+                        fontSize: 11,
+                        color: colors.text3,
+                        decoration: TextDecoration.underline,
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+        ],
         Expanded(child: _body(context)),
       ],
     );
@@ -320,6 +503,36 @@ class _GitHistoryPanelState extends State<GitHistoryPanel> {
 
   Widget _body(BuildContext context) {
     final tr = context.t.orkest.fileTreePanel;
+    if (_loadingComparison) {
+      return const Center(child: CircularProgressIndicator());
+    }
+    if (_comparisonError != null) {
+      return Column(
+        children: [
+          Padding(
+            padding: const EdgeInsets.all(8),
+            child: Row(
+              children: [
+                IconButton(
+                  icon: const Icon(Icons.arrow_back, size: 16),
+                  onPressed: _exitComparison,
+                ),
+                Text(tr.historyBackToTimeline),
+              ],
+            ),
+          ),
+          Expanded(
+            child: _EmptyHistory(
+              message: tr.historyComparisonTitle,
+              detail: _comparisonError,
+            ),
+          ),
+        ],
+      );
+    }
+    if (_activeComparison != null) {
+      return _buildComparisonView(context, _activeComparison!);
+    }
     if (_loading && _commits == null) {
       return const Center(child: CircularProgressIndicator());
     }
@@ -333,16 +546,27 @@ class _GitHistoryPanelState extends State<GitHistoryPanel> {
     if (commits == null || commits.isEmpty) {
       return _EmptyHistory(message: tr.historyEmpty);
     }
+    final filteredCommits = commits.where((c) {
+      if (_filterQuery.isEmpty) return true;
+      final q = _filterQuery.toLowerCase();
+      return c.subject.toLowerCase().contains(q) ||
+          c.author.toLowerCase().contains(q) ||
+          c.hash.toLowerCase().contains(q) ||
+          c.shortHash.toLowerCase().contains(q);
+    }).toList();
+    if (filteredCommits.isEmpty) {
+      return _EmptyHistory(message: tr.historyEmpty);
+    }
     return ListView.builder(
       padding: const EdgeInsets.symmetric(vertical: 4),
-      itemCount: commits.length,
+      itemCount: filteredCommits.length,
       itemBuilder: (context, index) {
-        final commit = commits[index];
+        final commit = filteredCommits[index];
         final selected = _selectedCommit?.hash == commit.hash;
         return _TimelineCommit(
           commit: commit,
           first: index == 0,
-          last: index == commits.length - 1,
+          last: index == filteredCommits.length - 1,
           selected: selected,
           files: _filesByHash[commit.hash],
           error: _fileErrorsByHash[commit.hash],
@@ -353,6 +577,160 @@ class _GitHistoryPanelState extends State<GitHistoryPanel> {
               widget.onOpenFileDiff(_root!, commit.hash, change),
         );
       },
+    );
+  }
+
+  Widget _buildComparisonView(BuildContext context, GitComparison comparison) {
+    final tr = context.t.orkest.fileTreePanel;
+    final colors = context.colors;
+    final typo = context.typo;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Container(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+          decoration: BoxDecoration(
+            color: colors.panel2,
+            border: Border(bottom: BorderSide(color: colors.border)),
+          ),
+          child: Row(
+            children: [
+              InkWell(
+                onTap: _exitComparison,
+                borderRadius: BorderRadius.circular(4),
+                child: Padding(
+                  padding: const EdgeInsets.all(4),
+                  child: Icon(Icons.arrow_back, size: 16, color: colors.text2),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      tr.historyComparisonTitle,
+                      style: typo.label.copyWith(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w700,
+                        color: colors.text,
+                      ),
+                    ),
+                    Text(
+                      '${comparison.baseRef.length > 7 ? comparison.baseRef.substring(0, 7) : comparison.baseRef} ↔ ${comparison.targetRef.length > 7 ? comparison.targetRef.substring(0, 7) : comparison.targetRef}',
+                      style: typo.mono.copyWith(fontSize: 11, color: colors.text3),
+                    ),
+                  ],
+                ),
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                decoration: BoxDecoration(
+                  color: colors.accent.withValues(alpha: 0.15),
+                  borderRadius: BorderRadius.circular(4),
+                ),
+                child: Text(
+                  '${comparison.commitCount} commits · ${comparison.fileCount} files',
+                  style: typo.mono.copyWith(
+                    fontSize: 11,
+                    fontWeight: FontWeight.w600,
+                    color: colors.accent,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: ListView(
+            padding: const EdgeInsets.symmetric(vertical: 6),
+            children: [
+              if (comparison.commits.isNotEmpty) ...[
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(12, 6, 12, 4),
+                  child: Text(
+                    tr.historyComparisonCommits(count: comparison.commits.length),
+                    style: typo.label.copyWith(fontSize: 11, color: colors.text3),
+                  ),
+                ),
+                for (final commit in comparison.commits)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 2),
+                    child: Container(
+                      padding: const EdgeInsets.all(8),
+                      decoration: BoxDecoration(
+                        color: colors.panel,
+                        borderRadius: BorderRadius.circular(4),
+                        border: Border.all(color: colors.border),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Row(
+                            children: [
+                              Text(
+                                commit.shortHash,
+                                style: typo.mono.copyWith(
+                                  fontSize: 11,
+                                  color: colors.accent,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                              const SizedBox(width: 8),
+                              Expanded(
+                                child: Text(
+                                  commit.author,
+                                  style: typo.body.copyWith(
+                                    fontSize: 11,
+                                    color: colors.text2,
+                                  ),
+                                  overflow: TextOverflow.ellipsis,
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 3),
+                          Text(
+                            commit.subject,
+                            style: typo.body.copyWith(fontSize: 12, color: colors.text),
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ],
+                      ),
+                    ),
+                  ),
+              ],
+              Padding(
+                padding: const EdgeInsets.fromLTRB(12, 10, 12, 4),
+                child: Text(
+                  tr.historyComparisonFiles(count: comparison.fileCount),
+                  style: typo.label.copyWith(fontSize: 11, color: colors.text3),
+                ),
+              ),
+              if (comparison.changedFiles.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(12),
+                  child: Text(
+                    tr.historyFilesEmpty,
+                    style: typo.body.copyWith(fontSize: 12, color: colors.text3),
+                  ),
+                )
+              else
+                for (final change in comparison.changedFiles)
+                  _HistoryFileChangeRow(
+                    change: change,
+                    onTap: () => widget.onOpenFileDiff(
+                      _root!,
+                      comparison.targetRef,
+                      change,
+                    ),
+                  ),
+            ],
+          ),
+        ),
+      ],
     );
   }
 }

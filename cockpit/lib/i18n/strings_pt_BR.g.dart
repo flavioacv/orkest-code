@@ -777,6 +777,16 @@ class _Translations$orkest$fileTreePanel$pt_BR extends Translations$orkest$fileT
 	@override String historyRevertConfirm({required Object hash}) => 'Reverter o commit ${hash}? O Git criará um novo commit que desfaz suas alterações.';
 	@override String historyUndoConfirm({required Object hash}) => 'Desfazer o commit ${hash}? As alterações permanecerão no diretório de trabalho.';
 	@override String get historyGitActionFailed => 'Não foi possível concluir a operação Git.';
+	@override String get historyFilterPlaceholder => 'Filtrar por mensagem, autor ou hash…';
+	@override String get historyCompareWithHead => 'Comparar com HEAD';
+	@override String get historyMarkForCompare => 'Marcar para comparar…';
+	@override String historyCompareWithMarked({required Object hash}) => 'Comparar com ${hash}';
+	@override String historyComparing({required Object hash}) => 'Comparando com ${hash}';
+	@override String get historyCancelCompare => 'Cancelar';
+	@override String get historyBackToTimeline => 'Voltar à lista de commits';
+	@override String get historyComparisonTitle => 'Comparação de revisões';
+	@override String historyComparisonCommits({required Object count}) => '${count} commits diferentes';
+	@override String historyComparisonFiles({required Object count}) => '${count} arquivos divergentes';
 	@override String get pullPushMenu => 'Pull, Push';
 	@override String get branchMenu => 'Branch';
 	@override String get mergeBranch => 'Mesclar branch…';
@@ -2581,6 +2591,16 @@ extension on TranslationsPtBr {
 			'orkest.fileTreePanel.historyRevertConfirm' => ({required Object hash}) => 'Reverter o commit ${hash}? O Git criará um novo commit que desfaz suas alterações.',
 			'orkest.fileTreePanel.historyUndoConfirm' => ({required Object hash}) => 'Desfazer o commit ${hash}? As alterações permanecerão no diretório de trabalho.',
 			'orkest.fileTreePanel.historyGitActionFailed' => 'Não foi possível concluir a operação Git.',
+			'orkest.fileTreePanel.historyFilterPlaceholder' => 'Filtrar por mensagem, autor ou hash…',
+			'orkest.fileTreePanel.historyCompareWithHead' => 'Comparar com HEAD',
+			'orkest.fileTreePanel.historyMarkForCompare' => 'Marcar para comparar…',
+			'orkest.fileTreePanel.historyCompareWithMarked' => ({required Object hash}) => 'Comparar com ${hash}',
+			'orkest.fileTreePanel.historyComparing' => ({required Object hash}) => 'Comparando com ${hash}',
+			'orkest.fileTreePanel.historyCancelCompare' => 'Cancelar',
+			'orkest.fileTreePanel.historyBackToTimeline' => 'Voltar à lista de commits',
+			'orkest.fileTreePanel.historyComparisonTitle' => 'Comparação de revisões',
+			'orkest.fileTreePanel.historyComparisonCommits' => ({required Object count}) => '${count} commits diferentes',
+			'orkest.fileTreePanel.historyComparisonFiles' => ({required Object count}) => '${count} arquivos divergentes',
 			'orkest.fileTreePanel.pullPushMenu' => 'Pull, Push',
 			'orkest.fileTreePanel.branchMenu' => 'Branch',
 			'orkest.fileTreePanel.mergeBranch' => 'Mesclar branch…',
@@ -2631,6 +2651,8 @@ extension on TranslationsPtBr {
 			'orkest.fileTreePanel.continueGitOp' => ({required Object op}) => 'Continuar ${op}',
 			'orkest.fileTreePanel.abortGitOp' => ({required Object op}) => 'Abortar ${op}',
 			'orkest.fileTreePanel.reviewDocument' => 'Revisar conflitos do documento',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.fileTreePanel.conflictProgress' => ({required Object current, required Object total, required Object resolved}) => 'Conflito ${current} de ${total} (${resolved} resolvido(s))',
 			'orkest.fileTreePanel.markResolved' => 'Marcar resolvido',
 			'orkest.fileTreePanel.markUnresolved' => 'Marcar pendente',
@@ -2641,8 +2663,6 @@ extension on TranslationsPtBr {
 			'orkest.fileTreePanel.pendingConflictsWarning' => ({required Object count}) => 'Resolva todos os ${count} conflito(s) para revisar o documento completo.',
 			'orkest.fileTreePanel.discardFinalEditsTitle' => 'Descartar edições do documento completo?',
 			'orkest.fileTreePanel.discardFinalEditsMessage' => 'Você editou o documento completo manualmente. Voltar aos blocos descartará essas alterações e recomporá o texto a partir das resoluções de cada bloco.',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.fileTreePanel.discardEdits' => 'Descartar edições',
 			'orkest.fileTreePanel.galleryTooltip' => 'Galeria',
 			'orkest.fileTreePanel.sectionGallery' => 'GALERIA',
@@ -3145,6 +3165,8 @@ extension on TranslationsPtBr {
 			'settings.page.general.updateFrequency.weekly' => 'Semanalmente',
 			'settings.page.general.updateFrequency.monthly' => 'Mensalmente',
 			'settings.page.general.updateFrequency.never' => 'Nunca',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.general.developerModeTitle' => 'Modo desenvolvedor',
 			'settings.page.general.developerModeDesc' => 'Registra os erros e avisos do próprio Orkest Code numa base separada da Telemetria (chip “Orkest Code”) e liga as métricas de performance. Só serve a quem mantém o app.',
 			'settings.page.diagnostics.sectionTitle' => 'Diagnóstico',
@@ -3155,8 +3177,6 @@ extension on TranslationsPtBr {
 			'settings.page.diagnostics.reportTitle' => 'Reportar um problema',
 			'settings.page.diagnostics.reportDesc' => 'Abre uma issue pré-preenchida com sua versão, SO e log recente. Nada é enviado automaticamente — você revisa antes.',
 			'settings.page.diagnostics.reportButton' => 'Reportar…',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.diagnostics.reportDialogTitle' => 'Relatório de problema',
 			'settings.page.diagnostics.reportDialogError' => 'Reportado manualmente pelas Configurações.',
 			'settings.page.diagnostics.reportDialogDescription' => 'Descreva o que deu errado na issue. O log recente está incluído abaixo e em "Copiar detalhes".',

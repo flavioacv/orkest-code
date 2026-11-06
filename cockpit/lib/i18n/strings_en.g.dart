@@ -1684,6 +1684,36 @@ class Translations$orkest$fileTreePanel$en {
 	/// en: 'Could not complete the Git operation.'
 	String get historyGitActionFailed => 'Could not complete the Git operation.';
 
+	/// en: 'Filter by message, author, or hash…'
+	String get historyFilterPlaceholder => 'Filter by message, author, or hash…';
+
+	/// en: 'Compare with HEAD'
+	String get historyCompareWithHead => 'Compare with HEAD';
+
+	/// en: 'Mark for comparison…'
+	String get historyMarkForCompare => 'Mark for comparison…';
+
+	/// en: 'Compare with ${hash}'
+	String historyCompareWithMarked({required Object hash}) => 'Compare with ${hash}';
+
+	/// en: 'Comparing with ${hash}'
+	String historyComparing({required Object hash}) => 'Comparing with ${hash}';
+
+	/// en: 'Cancel'
+	String get historyCancelCompare => 'Cancel';
+
+	/// en: 'Back to commit list'
+	String get historyBackToTimeline => 'Back to commit list';
+
+	/// en: 'Revision comparison'
+	String get historyComparisonTitle => 'Revision comparison';
+
+	/// en: '${count} divergent commits'
+	String historyComparisonCommits({required Object count}) => '${count} divergent commits';
+
+	/// en: '${count} changed files'
+	String historyComparisonFiles({required Object count}) => '${count} changed files';
+
 	/// en: 'Pull, Push'
 	String get pullPushMenu => 'Pull, Push';
 
@@ -5054,6 +5084,16 @@ extension on Translations {
 			'orkest.fileTreePanel.historyRevertConfirm' => ({required Object hash}) => 'Revert commit ${hash}? Git will create a new commit that reverses its changes.',
 			'orkest.fileTreePanel.historyUndoConfirm' => ({required Object hash}) => 'Undo commit ${hash}? Its changes will remain in the working tree.',
 			'orkest.fileTreePanel.historyGitActionFailed' => 'Could not complete the Git operation.',
+			'orkest.fileTreePanel.historyFilterPlaceholder' => 'Filter by message, author, or hash…',
+			'orkest.fileTreePanel.historyCompareWithHead' => 'Compare with HEAD',
+			'orkest.fileTreePanel.historyMarkForCompare' => 'Mark for comparison…',
+			'orkest.fileTreePanel.historyCompareWithMarked' => ({required Object hash}) => 'Compare with ${hash}',
+			'orkest.fileTreePanel.historyComparing' => ({required Object hash}) => 'Comparing with ${hash}',
+			'orkest.fileTreePanel.historyCancelCompare' => 'Cancel',
+			'orkest.fileTreePanel.historyBackToTimeline' => 'Back to commit list',
+			'orkest.fileTreePanel.historyComparisonTitle' => 'Revision comparison',
+			'orkest.fileTreePanel.historyComparisonCommits' => ({required Object count}) => '${count} divergent commits',
+			'orkest.fileTreePanel.historyComparisonFiles' => ({required Object count}) => '${count} changed files',
 			'orkest.fileTreePanel.pullPushMenu' => 'Pull, Push',
 			'orkest.fileTreePanel.branchMenu' => 'Branch',
 			'orkest.fileTreePanel.mergeBranch' => 'Merge branch…',
@@ -5104,6 +5144,8 @@ extension on Translations {
 			'orkest.fileTreePanel.continueGitOp' => ({required Object op}) => 'Continue ${op}',
 			'orkest.fileTreePanel.abortGitOp' => ({required Object op}) => 'Abort ${op}',
 			'orkest.fileTreePanel.reviewDocument' => 'Review document conflicts',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.fileTreePanel.conflictProgress' => ({required Object current, required Object total, required Object resolved}) => 'Conflict ${current} of ${total} (${resolved} resolved)',
 			'orkest.fileTreePanel.markResolved' => 'Mark resolved',
 			'orkest.fileTreePanel.markUnresolved' => 'Mark pending',
@@ -5114,8 +5156,6 @@ extension on Translations {
 			'orkest.fileTreePanel.pendingConflictsWarning' => ({required Object count}) => 'Resolve all ${count} conflict(s) to review the full document.',
 			'orkest.fileTreePanel.discardFinalEditsTitle' => 'Discard full document edits?',
 			'orkest.fileTreePanel.discardFinalEditsMessage' => 'You edited the full document manually. Returning to blocks will discard these changes and recompose from each block\'s resolution.',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.fileTreePanel.discardEdits' => 'Discard edits',
 			'orkest.fileTreePanel.galleryTooltip' => 'Gallery',
 			'orkest.fileTreePanel.sectionGallery' => 'GALLERY',
@@ -5618,6 +5658,8 @@ extension on Translations {
 			'settings.page.general.updateFrequency.weekly' => 'Weekly',
 			'settings.page.general.updateFrequency.monthly' => 'Monthly',
 			'settings.page.general.updateFrequency.never' => 'Never',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.general.developerModeTitle' => 'Developer mode',
 			'settings.page.general.developerModeDesc' => 'Records Orkest Code’s own errors and warnings in a separate Telemetry store (the “Orkest Code” chip) and turns on performance metrics. Only useful to whoever maintains the app.',
 			'settings.page.diagnostics.sectionTitle' => 'Diagnostics',
@@ -5628,8 +5670,6 @@ extension on Translations {
 			'settings.page.diagnostics.reportTitle' => 'Report a problem',
 			'settings.page.diagnostics.reportDesc' => 'Opens a pre-filled issue with your version, OS and recent log. Nothing is sent automatically — you review it first.',
 			'settings.page.diagnostics.reportButton' => 'Report…',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.diagnostics.reportDialogTitle' => 'Problem report',
 			'settings.page.diagnostics.reportDialogError' => 'Reported manually from Settings.',
 			'settings.page.diagnostics.reportDialogDescription' => 'Describe what went wrong in the issue. The recent log is included below and in "Copy details".',

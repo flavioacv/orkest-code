@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/orkest/domain/entities/git_comparison.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/source_control_panel.dart';
 import 'package:orkest_code/app/orkest/domain/entities/workbench_layout_state.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/workbench_tool_host.dart';
@@ -147,6 +148,7 @@ class FileTreePanel extends StatefulWidget {
     this.onOpenGitHistoryDiff,
     this.onRevertGitCommit,
     this.onUndoLastGitCommit,
+    this.onCompareGitRefs,
     this.onGitAction,
     this.onCheckoutBranch,
     this.onGitCommand,
@@ -211,6 +213,12 @@ class FileTreePanel extends StatefulWidget {
     String hash,
   )?
   onUndoLastGitCommit;
+  final Future<Result<GitComparison, GitHistoryError>> Function(
+    String root,
+    String baseRef,
+    String targetRef,
+  )?
+  onCompareGitRefs;
   final Future<void> Function(String root, String action)? onGitAction;
   final Future<void> Function(String root)? onCheckoutBranch;
   final Future<void> Function(String root, List<String> args, String title)?
@@ -1607,6 +1615,7 @@ class _FileTreePanelState extends State<FileTreePanel> {
         onOpenFileDiff: widget.onOpenGitHistoryDiff ?? (_, _, _) async {},
         onRevertCommit: widget.onRevertGitCommit,
         onUndoLastCommit: widget.onUndoLastGitCommit,
+        compareRefs: widget.onCompareGitRefs,
         refreshToken: widget.gitHistoryRevision,
       ),
       composerBuilder: (_) => _CommitComposer(
