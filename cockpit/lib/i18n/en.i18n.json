@@ -569,7 +569,8 @@
       "couldNotLoadImage": "Could not load the image.",
       "preview": "Preview",
       "source": "Source",
-      "reload": "Reload"
+      "reload": "Reload",
+      "toggleBlame": "Git Blame"
     },
     "workspaceSettingsDialog": {
       "choosePhotoTitle": "Choose workspace photo",

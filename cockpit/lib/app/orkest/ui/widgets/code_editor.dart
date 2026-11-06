@@ -1142,13 +1142,22 @@ class _CodeEditorState extends State<CodeEditor> {
               ),
             ),
           ),
-        Row(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.end,
-          children: [
-            slot,
-            Text('$oneBased', style: numStyle),
-          ],
+        ClipRect(
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            mainAxisAlignment: MainAxisAlignment.end,
+            children: [
+              slot,
+              Flexible(
+                child: Text(
+                  '$oneBased',
+                  style: numStyle,
+                  maxLines: 1,
+                  overflow: TextOverflow.clip,
+                ),
+              ),
+            ],
+          ),
         ),
       ],
     );

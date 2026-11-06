@@ -1914,6 +1914,9 @@ class Translations$orkest$fileViewer$en {
 
 	/// en: 'Reload'
 	String get reload => 'Reload';
+
+	/// en: 'Git Blame'
+	String get toggleBlame => 'Git Blame';
 }
 
 // Path: orkest.workspaceSettingsDialog
@@ -5127,6 +5130,7 @@ extension on Translations {
 			'orkest.fileViewer.preview' => 'Preview',
 			'orkest.fileViewer.source' => 'Source',
 			'orkest.fileViewer.reload' => 'Reload',
+			'orkest.fileViewer.toggleBlame' => 'Git Blame',
 			'orkest.workspaceSettingsDialog.choosePhotoTitle' => 'Choose workspace photo',
 			'orkest.workspaceSettingsDialog.title' => 'Workspace settings',
 			'orkest.workspaceSettingsDialog.namePlaceholder' => 'Workspace name',
@@ -5624,9 +5628,9 @@ extension on Translations {
 			'settings.page.diagnostics.reportTitle' => 'Report a problem',
 			'settings.page.diagnostics.reportDesc' => 'Opens a pre-filled issue with your version, OS and recent log. Nothing is sent automatically — you review it first.',
 			'settings.page.diagnostics.reportButton' => 'Report…',
-			'settings.page.diagnostics.reportDialogTitle' => 'Problem report',
 			_ => null,
 		} ?? switch (path) {
+			'settings.page.diagnostics.reportDialogTitle' => 'Problem report',
 			'settings.page.diagnostics.reportDialogError' => 'Reported manually from Settings.',
 			'settings.page.diagnostics.reportDialogDescription' => 'Describe what went wrong in the issue. The recent log is included below and in "Copy details".',
 			'settings.page.storage.sectionTitle' => 'Storage',

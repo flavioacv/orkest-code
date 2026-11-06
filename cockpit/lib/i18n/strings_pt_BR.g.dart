@@ -860,6 +860,7 @@ class _Translations$orkest$fileViewer$pt_BR extends Translations$orkest$fileView
 	@override String get preview => 'Pré-visualização';
 	@override String get source => 'Código-fonte';
 	@override String get reload => 'Recarregar';
+	@override String get toggleBlame => 'Autoria (Git Blame)';
 }
 
 // Path: orkest.workspaceSettingsDialog
@@ -2656,6 +2657,7 @@ extension on TranslationsPtBr {
 			'orkest.fileViewer.preview' => 'Pré-visualização',
 			'orkest.fileViewer.source' => 'Código-fonte',
 			'orkest.fileViewer.reload' => 'Recarregar',
+			'orkest.fileViewer.toggleBlame' => 'Autoria (Git Blame)',
 			'orkest.workspaceSettingsDialog.choosePhotoTitle' => 'Escolher foto do workspace',
 			'orkest.workspaceSettingsDialog.title' => 'Configurações do workspace',
 			'orkest.workspaceSettingsDialog.namePlaceholder' => 'Nome do workspace',
@@ -3153,9 +3155,9 @@ extension on TranslationsPtBr {
 			'settings.page.diagnostics.reportTitle' => 'Reportar um problema',
 			'settings.page.diagnostics.reportDesc' => 'Abre uma issue pré-preenchida com sua versão, SO e log recente. Nada é enviado automaticamente — você revisa antes.',
 			'settings.page.diagnostics.reportButton' => 'Reportar…',
-			'settings.page.diagnostics.reportDialogTitle' => 'Relatório de problema',
 			_ => null,
 		} ?? switch (path) {
+			'settings.page.diagnostics.reportDialogTitle' => 'Relatório de problema',
 			'settings.page.diagnostics.reportDialogError' => 'Reportado manualmente pelas Configurações.',
 			'settings.page.diagnostics.reportDialogDescription' => 'Descreva o que deu errado na issue. O log recente está incluído abaixo e em "Copiar detalhes".',
 			'settings.page.storage.sectionTitle' => 'Armazenamento',

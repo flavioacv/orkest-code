@@ -31,8 +31,14 @@ import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
 import 'package:orkest_code/app/core/ui/widgets/app_tooltip.dart';
 import 'package:orkest_code/app/core/ui/widgets/hover_tap.dart';
+import 'package:orkest_code/app/orkest/data/filesystem/git_binary.dart';
+import 'package:orkest_code/app/orkest/data/filesystem/git_history_reader_impl.dart';
+import 'package:orkest_code/app/orkest/domain/contracts/git_history_reader.dart';
+import 'package:orkest_code/app/orkest/domain/entities/git_blame_hunk.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/git_blame_view.dart';
 import 'package:orkest_code/i18n/strings.g.dart';
 import 'package:flutter_modular/flutter_modular.dart';
+import 'package:path/path.dart' as p;
 // SelectionArea (Material) fica SEMPRE dentro do scroll (markdown via
 // SelectableScroll, código em volta do Text) — em volta do scroll a seleção
 // escorrega ao rolar com Interface size != 14; ver [SelectableScroll].
@@ -56,6 +62,7 @@ class FileViewer extends StatefulWidget {
     required this.onSave,
     this.active = true,
     this.focused = true,
+    this.gitHistoryReader,
   });
 
   final FileViewerSession session;
@@ -71,11 +78,82 @@ class FileViewer extends StatefulWidget {
   /// o foco do teclado automaticamente (digitar direto ao selecionar a aba).
   final bool focused;
 
+  /// Leitor estruturado opcional para Git Blame (injetável para testes).
+  final GitHistoryReader? gitHistoryReader;
+
   @override
   State<FileViewer> createState() => _FileViewerState();
 }
 
 class _FileViewerState extends State<FileViewer> {
+  /// Autoria Git (Blame): estado aberto, carregando, erro e blocos lidos.
+  bool _blameOpen = false;
+  bool _blameLoading = false;
+  String? _blameError;
+  List<GitBlameHunk> _blameHunks = const <GitBlameHunk>[];
+
+  GitHistoryReader get _effectiveHistoryReader {
+    if (widget.gitHistoryReader != null) return widget.gitHistoryReader!;
+    try {
+      return context.read<GitHistoryReader>();
+    } catch (_) {
+      return GitHistoryReaderImpl(GitBinary());
+    }
+  }
+
+  void _toggleBlame() {
+    if (_blameOpen) {
+      setState(() => _blameOpen = false);
+    } else {
+      setState(() => _blameOpen = true);
+      _loadBlame();
+    }
+  }
+
+  Future<void> _loadBlame() async {
+    final repoRoot = _findRepoRoot();
+    if (repoRoot == null) {
+      setState(() {
+        _blameLoading = false;
+        _blameError = 'Repositório Git não identificado para este arquivo.';
+        _blameHunks = const <GitBlameHunk>[];
+      });
+      return;
+    }
+
+    setState(() {
+      _blameLoading = true;
+      _blameError = null;
+    });
+
+    try {
+      final relativePath = p.relative(widget.session.path, from: repoRoot);
+      final result = await _effectiveHistoryReader.readBlame(repoRoot, relativePath);
+      if (!mounted) return;
+      switch (result) {
+        case Success(:final value):
+          setState(() {
+            _blameHunks = value;
+            _blameLoading = false;
+            _blameError = null;
+          });
+        case Failure(:final error):
+          setState(() {
+            _blameHunks = const <GitBlameHunk>[];
+            _blameLoading = false;
+            _blameError = error.detail ?? 'Não foi possível carregar a autoria (blame).';
+          });
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _blameHunks = const <GitBlameHunk>[];
+        _blameLoading = false;
+        _blameError = e.toString();
+      });
+    }
+  }
+
   /// Modo de edição ligado (texto) / fonte exibida (markdown). Desligado = ver.
   bool _editing = false;
   bool _dirty = false;
@@ -452,7 +530,11 @@ class _FileViewerState extends State<FileViewer> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _menuBridge = context.read<EditorMenuBridge>();
+    try {
+      _menuBridge = context.read<EditorMenuBridge>();
+    } catch (_) {
+      _menuBridge = null;
+    }
   }
 
   /// Publica (ou limpa) o estado do menu File conforme esta aba. Só publica se
@@ -1081,6 +1163,8 @@ class _FileViewerState extends State<FileViewer> {
             crlf: _crlf,
             saving: _saving,
             onToggle: _toggleEditing,
+            onToggleBlame: editingNow ? _toggleBlame : null,
+            blameActive: _blameOpen,
             // Só o preview de HTML: é o único viewer que renderiza a partir do
             // disco (webview) em vez do conteúdo que a sessão já releu.
             onReload: _isHtml && _webPreview && !editingNow
@@ -1116,6 +1200,7 @@ class _FileViewerState extends State<FileViewer> {
           shift: true,
         ): () =>
             _format(),
+        const SingleActivator(LogicalKeyboardKey.keyB, alt: true): _toggleBlame,
         // Clonar linha(s): Option+Shift+↓/↑ (macOS) = Alt+Shift+↓/↑ (Win/Linux).
         // `alt` é a mesma tecla lógica (Option) → um binding serve as 3 plataformas.
         const SingleActivator(
@@ -1140,7 +1225,7 @@ class _FileViewerState extends State<FileViewer> {
     if (ctrl == null) return const SizedBox.shrink();
     final documentPath = widget.session.path;
     final host = _vm;
-    return Stack(
+    final editorStack = Stack(
       children: [
         Positioned.fill(
           child: CodeEditor(
@@ -1311,6 +1396,52 @@ class _FileViewerState extends State<FileViewer> {
           ),
       ],
     );
+
+    if (!_blameOpen) return editorStack;
+
+    final colors = context.colors;
+    final typo = context.typo;
+
+    return Row(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        Expanded(child: editorStack),
+        if (_blameLoading)
+          Container(
+            width: 380,
+            decoration: BoxDecoration(
+              color: colors.panel,
+              border: Border(left: BorderSide(color: colors.border)),
+            ),
+            child: const Center(child: CircularProgressIndicator()),
+          )
+        else if (_blameError != null)
+          Container(
+            width: 380,
+            padding: const EdgeInsets.all(16),
+            decoration: BoxDecoration(
+              color: colors.panel,
+              border: Border(left: BorderSide(color: colors.border)),
+            ),
+            child: Center(
+              child: Text(
+                _blameError!,
+                style: typo.body.copyWith(color: colors.text3, fontSize: 12),
+                textAlign: TextAlign.center,
+              ),
+            ),
+          )
+        else
+          GitBlameView(
+            filePath: widget.session.path,
+            hunks: _blameHunks,
+            onNavigateToLine: (line) {
+              widget.session.reveal(line, select: true);
+            },
+            onClose: () => setState(() => _blameOpen = false),
+          ),
+      ],
+    );
   }
 }
 
@@ -1329,6 +1460,8 @@ class _Toolbar extends StatelessWidget {
     required this.onToggle,
     this.crlf = false,
     this.onReload,
+    this.onToggleBlame,
+    this.blameActive = false,
   });
 
   /// Conteúdo à esquerda da barra (o breadcrumb do caminho).
@@ -1346,6 +1479,12 @@ class _Toolbar extends StatelessWidget {
   final bool saving;
   final bool crlf;
   final VoidCallback onToggle;
+
+  /// Alterna o painel lateral de autoria Git (`git blame`).
+  final VoidCallback? onToggleBlame;
+
+  /// `true` quando o painel lateral de blame está atualmente visível.
+  final bool blameActive;
 
   /// Recarrega o render a partir do disco (preview de `.html`). `null` esconde
   /// o botão.
@@ -1402,6 +1541,51 @@ class _Toolbar extends StatelessWidget {
                 ),
               ),
             ),
+          if (editing && onToggleBlame != null) ...[
+            const SizedBox(width: 4),
+            AppTooltip(
+              message: context.t.orkest.fileViewer.toggleBlame,
+              child: HoverTap(
+                borderRadius: BorderRadius.circular(5),
+                onTap: onToggleBlame,
+                child: Container(
+                  height: 24,
+                  padding: const EdgeInsets.symmetric(horizontal: 6),
+                  decoration: BoxDecoration(
+                    color: blameActive
+                        ? colors.accent.withValues(alpha: 0.15)
+                        : Colors.transparent,
+                    borderRadius: BorderRadius.circular(5),
+                    border: blameActive
+                        ? Border.all(
+                            color: colors.accent.withValues(alpha: 0.4),
+                          )
+                        : null,
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Icon(
+                        LucideIcons.gitBranch,
+                        size: 13,
+                        color: blameActive ? colors.accent : colors.text2,
+                      ),
+                      const SizedBox(width: 4),
+                      Text(
+                        'Blame',
+                        style: context.typo.tab.copyWith(
+                          color: blameActive ? colors.accent : colors.text2,
+                          fontSize: 11,
+                          fontWeight:
+                              blameActive ? FontWeight.w600 : FontWeight.w400,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ],
           if (hasPreview) ...[
             const SizedBox(width: 4),
             _Segmented(

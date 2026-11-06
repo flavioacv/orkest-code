@@ -569,7 +569,8 @@
       "couldNotLoadImage": "No se pudo cargar la imagen.",
       "preview": "Vista previa",
       "source": "Código fuente",
-      "reload": "Recargar"
+      "reload": "Recargar",
+      "toggleBlame": "Autoría (Git Blame)"
     },
     "workspaceSettingsDialog": {
       "choosePhotoTitle": "Elegir foto del workspace",

@@ -860,6 +860,7 @@ class _Translations$orkest$fileViewer$es extends Translations$orkest$fileViewer$
 	@override String get preview => 'Vista previa';
 	@override String get source => 'Código fuente';
 	@override String get reload => 'Recargar';
+	@override String get toggleBlame => 'Autoría (Git Blame)';
 }
 
 // Path: orkest.workspaceSettingsDialog
@@ -2656,6 +2657,7 @@ extension on TranslationsEs {
 			'orkest.fileViewer.preview' => 'Vista previa',
 			'orkest.fileViewer.source' => 'Código fuente',
 			'orkest.fileViewer.reload' => 'Recargar',
+			'orkest.fileViewer.toggleBlame' => 'Autoría (Git Blame)',
 			'orkest.workspaceSettingsDialog.choosePhotoTitle' => 'Elegir foto del workspace',
 			'orkest.workspaceSettingsDialog.title' => 'Configuración del workspace',
 			'orkest.workspaceSettingsDialog.namePlaceholder' => 'Nombre del workspace',
@@ -3153,9 +3155,9 @@ extension on TranslationsEs {
 			'settings.page.diagnostics.reportTitle' => 'Reportar un problema',
 			'settings.page.diagnostics.reportDesc' => 'Abre un issue prellenado con tu versión, SO y registro reciente. Nada se envía automáticamente — lo revisas antes.',
 			'settings.page.diagnostics.reportButton' => 'Reportar…',
-			'settings.page.diagnostics.reportDialogTitle' => 'Informe de problema',
 			_ => null,
 		} ?? switch (path) {
+			'settings.page.diagnostics.reportDialogTitle' => 'Informe de problema',
 			'settings.page.diagnostics.reportDialogError' => 'Reportado manualmente desde Configuración.',
 			'settings.page.diagnostics.reportDialogDescription' => 'Describe qué salió mal en el issue. El registro reciente está incluido abajo y en "Copiar detalles".',
 			'settings.page.storage.sectionTitle' => 'Almacenamiento',
