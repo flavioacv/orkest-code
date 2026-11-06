@@ -1747,6 +1747,15 @@ class Translations$orkest$fileTreePanel$en {
 	/// en: 'Working tree'
 	String get diffWorkingTree => 'Working tree';
 
+	/// en: 'Next change (Alt+↓)'
+	String get diffNextChange => 'Next change (Alt+↓)';
+
+	/// en: 'Previous change (Alt+↑)'
+	String get diffPreviousChange => 'Previous change (Alt+↑)';
+
+	/// en: 'Go to start of diff'
+	String get diffOverview => 'Go to start of diff';
+
 	/// en: 'Unified diff'
 	String get diffUnified => 'Unified diff';
 
@@ -5000,6 +5009,9 @@ extension on Translations {
 			'orkest.fileTreePanel.diffOriginal' => ({required Object ref}) => 'Original ${ref}',
 			'orkest.fileTreePanel.diffModified' => ({required Object ref}) => 'Modified ${ref}',
 			'orkest.fileTreePanel.diffWorkingTree' => 'Working tree',
+			'orkest.fileTreePanel.diffNextChange' => 'Next change (Alt+↓)',
+			'orkest.fileTreePanel.diffPreviousChange' => 'Previous change (Alt+↑)',
+			'orkest.fileTreePanel.diffOverview' => 'Go to start of diff',
 			'orkest.fileTreePanel.diffUnified' => 'Unified diff',
 			'orkest.fileTreePanel.diffSplit' => 'Side-by-side diff',
 			'orkest.fileTreePanel.diffBinaryFile' => 'Binary file - no text diff.',
@@ -5036,11 +5048,11 @@ extension on Translations {
 			'orkest.workspaceSettingsDialog.changePhoto' => 'Change photo',
 			'orkest.workspaceSettingsDialog.remove' => 'Remove',
 			'orkest.workspaceSettingsDialog.color' => 'Color',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.workspaceSettingsDialog.host' => 'Host',
 			'orkest.workspaceSettingsDialog.folder' => 'Folder',
 			'orkest.realmDialogs.namePlaceholder' => 'Realm name',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.realmDialogs.duplicateName' => 'A realm with this name already exists.',
 			'orkest.realmDialogs.newRealmTitle' => 'New realm',
 			'orkest.realmDialogs.renameRealmTitle' => 'Rename realm',
@@ -5550,11 +5562,11 @@ extension on Translations {
 			'settings.page.storage.later' => 'Later',
 			'settings.page.storage.quitOrkest' => 'Quit Orkest Code',
 			'settings.page.storage.chooseFolderDialogTitle' => 'Choose a folder for Orkest Code data',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.terminal.sectionDefaultTerminal' => 'Default terminal',
 			'settings.page.terminal.engineTitle' => 'Engine',
 			'settings.page.terminal.engineDesc' => 'Used by new terminal tabs and task output buffers. Open tabs keep their current engine.',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.terminal.shellTitle' => 'Shell',
 			'settings.page.terminal.shellDesc' => 'Which shell new terminal tabs open. The arrow next to + still opens any other one, just for that tab.',
 			'settings.page.terminal.noWslMessage' => 'No WSL distros found. Install one (wsl.exe --install) and restart Orkest Code to see it listed here.',

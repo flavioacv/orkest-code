@@ -26,7 +26,9 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 - [ ] E2 · Entregar ambiente integrado de revisão Git <!-- id: FE-E2 labels: git blockedBy: FE-E1 -->
       Implementado: alternância diff unificado/lado a lado com tradução pt-BR/en/es; contexto exibido uma vez na visão unificada, removidos/adicionados na ordem original e ações de hunk preservadas. SourceControlPanel extraído com navegação própria Changes/History, preservação das views e composer; composição e callbacks continuam ligados ao FileTreePanel.
-      Pendente: retirar o restante da composição Git do explorador, navegação que revela hunks no documento completo, merge editável de três vias, histórico/grafo, integração de blame e semântica de Index/HEAD/Working Tree auditada.
+      Revisão: próximo/anterior agora rola até o hunk no documento completo, com realce do cabeçalho, contador sincronizado à rolagem, atalhos Alt+↑/Alt+↓ e retorno ao início. Layout virtualizado com métricas que acompanham a escala do texto. Testes cobrem hunks fora da tela, alternância split/unified, zoom e reutilização de preview.
+      Validação de navegação: análise estática limpa, 10 testes de diff/foco aprovados; prévia isolada macOS executada com hot restart, capturas antes/depois da navegação inspecionadas e nenhum erro de runtime. Isso não equivale à homologação completa da jornada Git da IDE.
+      Pendente: retirar o restante da composição Git do explorador, merge editável de três vias, histórico/grafo, integração de blame e semântica de Index/HEAD/Working Tree auditada.
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 ## Em revisão

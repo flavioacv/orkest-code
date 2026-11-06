@@ -4,6 +4,7 @@ import 'package:orkest_code/app/orkest/ui/widgets/diff_viewer.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
 import 'package:orkest_code/i18n/strings.g.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:flutter/services.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 void main() {
@@ -14,19 +15,156 @@ void main() {
     diff: diff,
   );
 
-  Widget host(FileDiff diff) => TranslationProvider(
-    child: ShadcnApp(
-      theme: buildTheme(brightness: Brightness.dark),
-      home: Scaffold(
-        // Box limitado (como um pane) — pega regressão de largura infinita.
-        child: SizedBox(
-          width: 400,
-          height: 300,
-          child: DiffViewer(session: sessionWith(diff)),
+  Widget host(FileDiff diff, {double scale = 1, DiffViewerSession? session}) =>
+      TranslationProvider(
+        child: ShadcnApp(
+          theme: buildTheme(brightness: Brightness.dark),
+          home: Scaffold(
+            // Box limitado (como um pane) — pega regressão de largura infinita.
+            child: SizedBox(
+              width: 400,
+              height: 300,
+              child: Builder(
+                builder: (context) => MediaQuery(
+                  data: MediaQuery.of(
+                    context,
+                  ).copyWith(textScaler: TextScaler.linear(scale)),
+                  child: DiffViewer(session: session ?? sessionWith(diff)),
+                ),
+              ),
+            ),
+          ),
         ),
-      ),
-    ),
-  );
+      );
+
+  for (final scale in [1.0, 1.8]) {
+    testWidgets(
+      'navigation reveals offscreen hunks without filtering at scale $scale',
+      (tester) async {
+        final diff = FileDiff(
+          path: '/repo/a.txt',
+          kind: FileDiffKind.modified,
+          hunks: [
+            for (var hunk = 0; hunk < 3; hunk++)
+              DiffHunk(
+                header: '@@ -${hunk * 80 + 1},35 +${hunk * 80 + 1},35 @@',
+                lines: [
+                  for (var line = 0; line < (hunk == 2 ? 2 : 70); line++)
+                    DiffLine(
+                      kind: line < 35
+                          ? DiffLineKind.removed
+                          : DiffLineKind.added,
+                      text: 'hunk $hunk line $line',
+                      oldLine: line < 35 ? hunk * 80 + line + 1 : null,
+                      newLine: line >= 35 ? hunk * 80 + line - 34 : null,
+                    ),
+                ],
+              ),
+          ],
+        );
+        await tester.pumpWidget(host(diff, scale: scale));
+        await tester.pumpAndSettle();
+        final count = tester
+            .widget<ListView>(find.byType(ListView))
+            .childrenDelegate
+            .estimatedChildCount;
+        expect(find.byKey(const ValueKey('diff-hunk-2')), findsNothing);
+        for (var i = 0; i < 3; i++) {
+          if (i == 1) {
+            await tester.sendKeyDownEvent(LogicalKeyboardKey.altLeft);
+            await tester.sendKeyEvent(LogicalKeyboardKey.arrowDown);
+            await tester.sendKeyUpEvent(LogicalKeyboardKey.altLeft);
+          } else {
+            await tester.tap(find.byKey(const ValueKey('diff-next-hunk')));
+          }
+          await tester.pumpAndSettle();
+          expect(
+            find.byKey(ValueKey('diff-hunk-$i')).hitTestable(),
+            findsOneWidget,
+          );
+          expect(find.text('${i + 1} / 3'), findsOneWidget);
+          expect(
+            tester
+                .widget<ListView>(find.byType(ListView))
+                .childrenDelegate
+                .estimatedChildCount,
+            count,
+          );
+        }
+        await tester.tap(find.byKey(const ValueKey('diff-previous-hunk')));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const ValueKey('diff-hunk-1')).hitTestable(),
+          findsOneWidget,
+        );
+        await tester.tap(find.byKey(const ValueKey('diff-layout-toggle')));
+        await tester.pumpAndSettle();
+        expect(
+          tester
+              .widget<ListView>(find.byType(ListView))
+              .childrenDelegate
+              .estimatedChildCount,
+          greaterThan(count!),
+        );
+        expect(
+          find.byKey(const ValueKey('diff-hunk-1')).hitTestable(),
+          findsOneWidget,
+        );
+        await tester.tap(find.byKey(const ValueKey('diff-overview')));
+        await tester.pumpAndSettle();
+        expect(
+          find.byKey(const ValueKey('diff-hunk-0')).hitTestable(),
+          findsOneWidget,
+        );
+        expect(tester.takeException(), isNull);
+      },
+    );
+  }
+
+  testWidgets('reused preview session resets navigation after a shorter diff', (
+    tester,
+  ) async {
+    final large = FileDiff(
+      path: '/repo/a.txt',
+      kind: FileDiffKind.modified,
+      hunks: [
+        for (var i = 0; i < 3; i++)
+          DiffHunk(
+            header: '@@ -$i,0 +$i,30 @@',
+            lines: [
+              for (var line = 0; line < 30; line++)
+                DiffLine(
+                  kind: DiffLineKind.added,
+                  text: 'line $i/$line',
+                  newLine: line + 1,
+                ),
+            ],
+          ),
+      ],
+    );
+    final session = sessionWith(large);
+    await tester.pumpWidget(host(large, session: session));
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('diff-previous-hunk')));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('diff-hunk-2')).hitTestable(),
+      findsOneWidget,
+    );
+    final small = FileDiff(
+      path: '/repo/b.txt',
+      kind: FileDiffKind.modified,
+      hunks: [large.hunks.first],
+    );
+    session.diff = small;
+    await tester.pumpWidget(host(small, session: session));
+    await tester.pumpAndSettle();
+    expect(
+      find.byKey(const ValueKey('diff-hunk-0')).hitTestable(),
+      findsOneWidget,
+    );
+    expect(tester.takeException(), isNull);
+  });
 
   testWidgets(
     'unified diff preserves removal/addition order and context once',

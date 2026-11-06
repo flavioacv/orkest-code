@@ -798,6 +798,9 @@ class _Translations$orkest$fileTreePanel$es extends Translations$orkest$fileTree
 	@override String diffOriginal({required Object ref}) => 'Original ${ref}';
 	@override String diffModified({required Object ref}) => 'Modificado ${ref}';
 	@override String get diffWorkingTree => 'Directorio de trabajo';
+	@override String get diffNextChange => 'Siguiente cambio (Alt+↓)';
+	@override String get diffPreviousChange => 'Cambio anterior (Alt+↑)';
+	@override String get diffOverview => 'Ir al inicio del diff';
 	@override String get diffUnified => 'Diff unificado';
 	@override String get diffSplit => 'Diff lado a lado';
 	@override String get diffBinaryFile => 'Archivo binario - sin diff de texto.';
@@ -2577,6 +2580,9 @@ extension on TranslationsEs {
 			'orkest.fileTreePanel.diffOriginal' => ({required Object ref}) => 'Original ${ref}',
 			'orkest.fileTreePanel.diffModified' => ({required Object ref}) => 'Modificado ${ref}',
 			'orkest.fileTreePanel.diffWorkingTree' => 'Directorio de trabajo',
+			'orkest.fileTreePanel.diffNextChange' => 'Siguiente cambio (Alt+↓)',
+			'orkest.fileTreePanel.diffPreviousChange' => 'Cambio anterior (Alt+↑)',
+			'orkest.fileTreePanel.diffOverview' => 'Ir al inicio del diff',
 			'orkest.fileTreePanel.diffUnified' => 'Diff unificado',
 			'orkest.fileTreePanel.diffSplit' => 'Diff lado a lado',
 			'orkest.fileTreePanel.diffBinaryFile' => 'Archivo binario - sin diff de texto.',
@@ -2613,11 +2619,11 @@ extension on TranslationsEs {
 			'orkest.workspaceSettingsDialog.changePhoto' => 'Cambiar foto',
 			'orkest.workspaceSettingsDialog.remove' => 'Quitar',
 			'orkest.workspaceSettingsDialog.color' => 'Color',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.workspaceSettingsDialog.host' => 'Host',
 			'orkest.workspaceSettingsDialog.folder' => 'Carpeta',
 			'orkest.realmDialogs.namePlaceholder' => 'Nombre del realm',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.realmDialogs.duplicateName' => 'Ya existe un realm con ese nombre.',
 			'orkest.realmDialogs.newRealmTitle' => 'Nuevo realm',
 			'orkest.realmDialogs.renameRealmTitle' => 'Renombrar realm',
@@ -3127,11 +3133,11 @@ extension on TranslationsEs {
 			'settings.page.storage.later' => 'Más tarde',
 			'settings.page.storage.quitOrkest' => 'Salir de Orkest Code',
 			'settings.page.storage.chooseFolderDialogTitle' => 'Elige una carpeta para los datos de Orkest Code',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.terminal.sectionDefaultTerminal' => 'Terminal predeterminado',
 			'settings.page.terminal.engineTitle' => 'Motor',
 			'settings.page.terminal.engineDesc' => 'Usado por nuevas pestañas de terminal y buffers de salida de tasks. Las pestañas abiertas mantienen su motor actual.',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.terminal.shellTitle' => 'Shell',
 			'settings.page.terminal.shellDesc' => 'Qué shell abren las nuevas pestañas de terminal. La flecha junto al + sigue abriendo cualquier otro, solo para esa pestaña.',
 			'settings.page.terminal.noWslMessage' => 'No se encontraron distros de WSL. Instala una (wsl.exe --install) y reinicia Orkest Code para verla listada aquí.',

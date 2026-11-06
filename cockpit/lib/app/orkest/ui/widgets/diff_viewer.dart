@@ -7,6 +7,7 @@ import 'package:orkest_code/i18n/strings.g.dart';
 import 'package:orkest_code/app/core/ui/widgets/hover_tap.dart';
 import 'package:orkest_code/app/core/ui/widgets/app_tooltip.dart';
 import 'package:flutter/material.dart' show SelectionArea;
+import 'package:flutter/services.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 /// Extensão (minúscula) de [path] para alimentar o syntax highlight, ou `null`
@@ -91,8 +92,9 @@ class _Row {
 sealed class _Item {}
 
 final class _HunkHeaderItem extends _Item {
-  _HunkHeaderItem(this.hunk);
+  _HunkHeaderItem(this.hunk, this.index);
   final DiffHunk hunk;
+  final int index;
 }
 
 final class _RowItem extends _Item {
@@ -105,8 +107,9 @@ final class _RowItem extends _Item {
 /// não a cada `build()`.
 List<_Item> _buildDiffItems(List<DiffHunk> hunks, {bool unified = false}) {
   final items = <_Item>[];
-  for (final hunk in hunks) {
-    items.add(_HunkHeaderItem(hunk));
+  for (var index = 0; index < hunks.length; index++) {
+    final hunk = hunks[index];
+    items.add(_HunkHeaderItem(hunk, index));
     for (final row
         in unified
             ? hunk.lines.map((line) => _Row(left: line))
@@ -177,15 +180,80 @@ class _DiffBodyState extends State<_DiffBody> {
   FileDiff? _renderedDiff;
   int? _selectedHunk;
   bool _unified = false;
+  final ScrollController _scroll = ScrollController();
+  final FocusNode _reviewFocus = FocusNode(debugLabel: 'diff-review');
+  List<double> _hunkOffsets = const [];
+  List<_Item>? _geometryItems;
+  (double, double, double)? _geometry;
 
   void _selectHunk(int? index) {
-    setState(() {
-      _selectedHunk = index;
-      _items = _buildDiffItems(
-        index == null ? widget.diff.hunks : [widget.diff.hunks[index]],
-        unified: _unified,
-      );
-    });
+    setState(() => _selectedHunk = index);
+    if (!_scroll.hasClients) return;
+    final offset = index == null ? 0.0 : _hunkOffsets[index];
+    _scroll.animateTo(
+      offset.clamp(0.0, _scroll.position.maxScrollExtent),
+      duration: const Duration(milliseconds: 160),
+      curve: Curves.easeOut,
+    );
+  }
+
+  void _moveHunk(int delta) => _selectHunk(
+    ((_selectedHunk ?? (delta < 0 ? 0 : -1)) + delta) %
+        widget.diff.hunks.length,
+  );
+
+  void _onScroll() {
+    var low = 0;
+    var high = _hunkOffsets.length;
+    while (low < high) {
+      final middle = (low + high) ~/ 2;
+      if (_hunkOffsets[middle] <= _scroll.offset + 1) {
+        low = middle + 1;
+      } else {
+        high = middle;
+      }
+    }
+    // A short final hunk cannot reach the viewport top. Reaching the bottom
+    // still selects it instead of leaving the previous hunk in the counter.
+    final current =
+        _scroll.offset > 0 &&
+            _scroll.position.extentAfter < 1 &&
+            _hunkOffsets.isNotEmpty
+        ? _hunkOffsets.length - 1
+        : low == 0
+        ? null
+        : low - 1;
+    if (current != _selectedHunk) setState(() => _selectedHunk = current);
+  }
+
+  double _lineHeight(BuildContext context, TextStyle style) {
+    final painter = TextPainter(
+      text: TextSpan(text: 'M', style: style),
+      strutStyle: StrutStyle.fromTextStyle(style, forceStrutHeight: true),
+      textDirection: Directionality.of(context),
+      textScaler: MediaQuery.textScalerOf(context),
+    )..layout();
+    final height = painter.height;
+    painter.dispose();
+    return height;
+  }
+
+  void _updateGeometry(double row, double hunk, double revision) {
+    final metrics = (row, hunk, revision);
+    if (identical(_geometryItems, _items) && _geometry == metrics) return;
+    _geometryItems = _items;
+    _geometry = metrics;
+    final offsets = <double>[];
+    var offset = revision;
+    for (final item in _items) {
+      if (item is _HunkHeaderItem) {
+        offsets.add(offset);
+        offset += hunk;
+      } else {
+        offset += row;
+      }
+    }
+    _hunkOffsets = offsets;
   }
 
   @override
@@ -193,6 +261,14 @@ class _DiffBodyState extends State<_DiffBody> {
     super.initState();
     _items = _buildDiffItems(widget.diff.hunks);
     _renderedDiff = widget.diff;
+    _scroll.addListener(_onScroll);
+  }
+
+  @override
+  void dispose() {
+    _reviewFocus.dispose();
+    _scroll.dispose();
+    super.dispose();
   }
 
   @override
@@ -202,6 +278,9 @@ class _DiffBodyState extends State<_DiffBody> {
       _renderedDiff = widget.diff;
       _selectedHunk = null;
       _items = _buildDiffItems(widget.diff.hunks, unified: _unified);
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted && _scroll.hasClients) _scroll.jumpTo(0);
+      });
     }
   }
 
@@ -210,6 +289,22 @@ class _DiffBodyState extends State<_DiffBody> {
     final diff = widget.diff;
     final language = widget.language;
     final colors = context.colors;
+    final rowHeight =
+        _lineHeight(context, context.typo.mono.copyWith(fontSize: 12.5)) + 2;
+    final monoHeader = _lineHeight(
+      context,
+      context.typo.mono.copyWith(fontSize: 11.5),
+    );
+    final actionHeight =
+        _lineHeight(context, context.typo.label.copyWith(fontSize: 10.5)) + 6;
+    final hunkHeight =
+        (monoHeader > actionHeight ? monoHeader : actionHeight) + 6;
+    final revisionText = _lineHeight(
+      context,
+      context.typo.mono.copyWith(fontSize: 10.5),
+    );
+    final revisionHeight = (revisionText > 18 ? revisionText : 18.0) + 8;
+    _updateGeometry(rowHeight, hunkHeight, revisionHeight);
 
     if (diff.kind == FileDiffKind.binary) {
       return _messageBody(
@@ -235,168 +330,227 @@ class _DiffBodyState extends State<_DiffBody> {
       );
     }
 
-    return Column(
-      children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-          decoration: BoxDecoration(
-            border: Border(bottom: BorderSide(color: colors.border)),
-          ),
-          child: Row(
+    return CallbackShortcuts(
+      bindings: {
+        const SingleActivator(LogicalKeyboardKey.arrowDown, alt: true): () =>
+            _moveHunk(1),
+        const SingleActivator(LogicalKeyboardKey.arrowUp, alt: true): () =>
+            _moveHunk(-1),
+      },
+      child: Focus(
+        focusNode: _reviewFocus,
+        child: Listener(
+          onPointerDown: (_) => WidgetsBinding.instance.addPostFrameCallback((
+            _,
+          ) {
+            if (mounted && !_reviewFocus.hasFocus) _reviewFocus.requestFocus();
+          }),
+          child: Column(
             children: [
-              Text(
-                context.t.orkest.fileTreePanel.changes,
-                style: context.typo.label.copyWith(color: colors.text2),
-              ),
-              const Spacer(),
-              AppTooltip(
-                message: _unified
-                    ? context.t.orkest.fileTreePanel.diffSplit
-                    : context.t.orkest.fileTreePanel.diffUnified,
-                child: HoverTap(
-                  key: const ValueKey('diff-layout-toggle'),
-                  onTap: () {
-                    _unified = !_unified;
-                    _selectHunk(_selectedHunk);
-                  },
-                  padding: const EdgeInsets.all(5),
-                  child: Icon(
-                    _unified ? LucideIcons.columns2 : LucideIcons.rows2,
-                    size: 14,
-                    color: colors.text2,
-                  ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                decoration: BoxDecoration(
+                  border: Border(bottom: BorderSide(color: colors.border)),
                 ),
-              ),
-              Text(
-                _selectedHunk == null
-                    ? '${diff.hunks.length}'
-                    : '${_selectedHunk! + 1} / ${diff.hunks.length}',
-                style: context.typo.mono.copyWith(
-                  fontSize: 11,
-                  color: colors.text3,
-                ),
-              ),
-              const SizedBox(width: 8),
-              for (final delta in [-1, 1])
-                AppTooltip(
-                  message: diff
-                      .hunks[((_selectedHunk ?? (delta < 0 ? 0 : -1)) + delta) %
-                          diff.hunks.length]
-                      .header,
-                  child: HoverTap(
-                    onTap: () => _selectHunk(
-                      ((_selectedHunk ?? (delta < 0 ? 0 : -1)) + delta) %
-                          diff.hunks.length,
+                child: Row(
+                  children: [
+                    Text(
+                      context.t.orkest.fileTreePanel.changes,
+                      style: context.typo.label.copyWith(color: colors.text2),
                     ),
-                    padding: const EdgeInsets.all(5),
-                    child: Icon(
-                      delta < 0 ? LucideIcons.arrowUp : LucideIcons.arrowDown,
-                      size: 14,
-                      color: colors.text2,
+                    const Spacer(),
+                    AppTooltip(
+                      message: _unified
+                          ? context.t.orkest.fileTreePanel.diffSplit
+                          : context.t.orkest.fileTreePanel.diffUnified,
+                      child: HoverTap(
+                        key: const ValueKey('diff-layout-toggle'),
+                        onTap: () {
+                          final selected = _selectedHunk;
+                          setState(() {
+                            _unified = !_unified;
+                            _items = _buildDiffItems(
+                              widget.diff.hunks,
+                              unified: _unified,
+                            );
+                          });
+                          WidgetsBinding.instance.addPostFrameCallback((_) {
+                            if (mounted) _selectHunk(selected);
+                          });
+                        },
+                        padding: const EdgeInsets.all(5),
+                        child: Icon(
+                          _unified ? LucideIcons.columns2 : LucideIcons.rows2,
+                          size: 14,
+                          color: colors.text2,
+                        ),
+                      ),
                     ),
-                  ),
+                    Text(
+                      _selectedHunk == null
+                          ? '${diff.hunks.length}'
+                          : '${_selectedHunk! + 1} / ${diff.hunks.length}',
+                      style: context.typo.mono.copyWith(
+                        fontSize: 11,
+                        color: colors.text3,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    for (final delta in [-1, 1])
+                      AppTooltip(
+                        message: delta < 0
+                            ? context.t.orkest.fileTreePanel.diffPreviousChange
+                            : context.t.orkest.fileTreePanel.diffNextChange,
+                        child: HoverTap(
+                          key: ValueKey(
+                            delta < 0 ? 'diff-previous-hunk' : 'diff-next-hunk',
+                          ),
+                          onTap: () => _moveHunk(delta),
+                          padding: const EdgeInsets.all(5),
+                          child: Icon(
+                            delta < 0
+                                ? LucideIcons.arrowUp
+                                : LucideIcons.arrowDown,
+                            size: 14,
+                            color: colors.text2,
+                          ),
+                        ),
+                      ),
+                    AppTooltip(
+                      message: context.t.orkest.fileTreePanel.diffOverview,
+                      child: HoverTap(
+                        key: const ValueKey('diff-overview'),
+                        onTap: () => _selectHunk(null),
+                        padding: const EdgeInsets.all(5),
+                        child: Icon(
+                          LucideIcons.list,
+                          size: 14,
+                          color: _selectedHunk == null
+                              ? colors.text
+                              : colors.text3,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
-              AppTooltip(
-                message: context.t.orkest.fileTreePanel.changes,
-                child: HoverTap(
-                  onTap: () => _selectHunk(null),
-                  padding: const EdgeInsets.all(5),
-                  child: Icon(
-                    LucideIcons.list,
-                    size: 14,
-                    color: _selectedHunk == null ? colors.text : colors.text3,
+              ),
+              Expanded(
+                child: ColoredBox(
+                  color: colors.bg,
+                  child: LayoutBuilder(
+                    builder: (context, constraints) {
+                      // Cada coluna preenche metade da largura disponível, respeitando um
+                      // mínimo (abaixo do qual rola na horizontal).
+                      final avail = constraints.maxWidth;
+                      final side =
+                          (_unified
+                                  ? (avail.clamp(
+                                              _minSideWidth,
+                                              double.infinity,
+                                            ) -
+                                            1) /
+                                        2
+                                  : (avail - 1) / 2)
+                              .clamp(
+                                _unified ? 0.0 : _minSideWidth,
+                                double.infinity,
+                              );
+                      final total = side * 2 + 1;
+
+                      // Seleção contínua entre linhas (copiar blocos de código do diff).
+                      // Os números de linha ficam fora da seleção (SelectionContainer.disabled
+                      // em _Side). A SelectionArea fica DENTRO do scroll horizontal de
+                      // propósito: em volta dele a seleção escorrega ao rolar com Interface
+                      // size != 14 — ver [SelectableScroll].
+                      //
+                      // O scroll vertical é feito pelo ListView.builder, que virtualiza:
+                      // só os widgets visíveis (~30) são construídos, em vez de todos os N
+                      // do diff. Isso elimina a lentidão na abertura de diffs grandes.
+                      return SingleChildScrollView(
+                        scrollDirection: Axis.horizontal,
+                        child: SizedBox(
+                          width: total,
+                          child: SelectionArea(
+                            child: ListView.builder(
+                              controller: _scroll,
+                              padding: EdgeInsets.zero,
+                              itemExtentBuilder: (index, _) => index == 0
+                                  ? revisionHeight
+                                  : _items[index - 1] is _HunkHeaderItem
+                                  ? hunkHeight
+                                  : rowHeight,
+                              // item 0 = revision header; restantes = _items
+                              itemCount: _items.length + 1,
+                              itemBuilder: (context, i) {
+                                if (i == 0) {
+                                  return _revisionHeader(context, diff, side);
+                                }
+                                final item = _items[i - 1];
+                                return switch (item) {
+                                  _HunkHeaderItem(:final hunk, :final index) =>
+                                    _HunkHeader(
+                                      key: ValueKey('diff-hunk-$index'),
+                                      selected: _selectedHunk == index,
+                                      hunk: hunk,
+                                      width: total,
+                                      isStaged: widget.session.isStaged,
+                                      isHistorical:
+                                          widget.session.commitHash != null,
+                                      onStage:
+                                          widget.session.onStageHunk != null
+                                          ? () => widget.session.onStageHunk!(
+                                              hunk,
+                                            )
+                                          : null,
+                                      onUnstage:
+                                          widget.session.onUnstageHunk != null
+                                          ? () => widget.session.onUnstageHunk!(
+                                              hunk,
+                                            )
+                                          : null,
+                                      onDiscard:
+                                          widget.session.onDiscardHunk != null
+                                          ? () => widget.session.onDiscardHunk!(
+                                              hunk,
+                                            )
+                                          : null,
+                                    ),
+                                  _RowItem(:final row) =>
+                                    _unified
+                                        ? _Side(
+                                            line: row.left,
+                                            side:
+                                                row.left?.kind ==
+                                                    DiffLineKind.removed
+                                                ? _SideKind.old
+                                                : _SideKind.newSide,
+                                            lineNo:
+                                                row.left?.kind ==
+                                                    DiffLineKind.removed
+                                                ? row.left?.oldLine
+                                                : row.left?.newLine,
+                                            width: total,
+                                            language: language,
+                                          )
+                                        : _DiffRow(
+                                            row: row,
+                                            sideWidth: side,
+                                            language: language,
+                                          ),
+                                };
+                              },
+                            ),
+                          ),
+                        ),
+                      );
+                    },
                   ),
                 ),
               ),
             ],
           ),
         ),
-        Expanded(
-          child: ColoredBox(
-            color: colors.bg,
-            child: LayoutBuilder(
-              builder: (context, constraints) {
-                // Cada coluna preenche metade da largura disponível, respeitando um
-                // mínimo (abaixo do qual rola na horizontal).
-                final avail = constraints.maxWidth;
-                final side =
-                    (_unified
-                            ? (avail.clamp(_minSideWidth, double.infinity) -
-                                      1) /
-                                  2
-                            : (avail - 1) / 2)
-                        .clamp(_unified ? 0.0 : _minSideWidth, double.infinity);
-                final total = side * 2 + 1;
-
-                // Seleção contínua entre linhas (copiar blocos de código do diff).
-                // Os números de linha ficam fora da seleção (SelectionContainer.disabled
-                // em _Side). A SelectionArea fica DENTRO do scroll horizontal de
-                // propósito: em volta dele a seleção escorrega ao rolar com Interface
-                // size != 14 — ver [SelectableScroll].
-                //
-                // O scroll vertical é feito pelo ListView.builder, que virtualiza:
-                // só os widgets visíveis (~30) são construídos, em vez de todos os N
-                // do diff. Isso elimina a lentidão na abertura de diffs grandes.
-                return SingleChildScrollView(
-                  scrollDirection: Axis.horizontal,
-                  child: SizedBox(
-                    width: total,
-                    child: SelectionArea(
-                      child: ListView.builder(
-                        // item 0 = revision header; restantes = _items
-                        itemCount: _items.length + 1,
-                        itemBuilder: (context, i) {
-                          if (i == 0) {
-                            return _revisionHeader(context, diff, side);
-                          }
-                          final item = _items[i - 1];
-                          return switch (item) {
-                            _HunkHeaderItem(:final hunk) => _HunkHeader(
-                              hunk: hunk,
-                              width: total,
-                              isStaged: widget.session.isStaged,
-                              isHistorical: widget.session.commitHash != null,
-                              onStage: widget.session.onStageHunk != null
-                                  ? () => widget.session.onStageHunk!(hunk)
-                                  : null,
-                              onUnstage: widget.session.onUnstageHunk != null
-                                  ? () => widget.session.onUnstageHunk!(hunk)
-                                  : null,
-                              onDiscard: widget.session.onDiscardHunk != null
-                                  ? () => widget.session.onDiscardHunk!(hunk)
-                                  : null,
-                            ),
-                            _RowItem(:final row) =>
-                              _unified
-                                  ? _Side(
-                                      line: row.left,
-                                      side:
-                                          row.left?.kind == DiffLineKind.removed
-                                          ? _SideKind.old
-                                          : _SideKind.newSide,
-                                      lineNo:
-                                          row.left?.kind == DiffLineKind.removed
-                                          ? row.left?.oldLine
-                                          : row.left?.newLine,
-                                      width: total,
-                                      language: language,
-                                    )
-                                  : _DiffRow(
-                                      row: row,
-                                      sideWidth: side,
-                                      language: language,
-                                    ),
-                          };
-                        },
-                      ),
-                    ),
-                  ),
-                );
-              },
-            ),
-          ),
-        ),
-      ],
+      ),
     );
   }
 
@@ -510,6 +664,7 @@ class _RevisionHeader extends StatelessWidget {
 
 class _HunkHeader extends StatelessWidget {
   const _HunkHeader({
+    super.key,
     required this.hunk,
     required this.width,
     this.isStaged = false,
@@ -517,6 +672,7 @@ class _HunkHeader extends StatelessWidget {
     this.onStage,
     this.onUnstage,
     this.onDiscard,
+    this.selected = false,
   });
 
   final DiffHunk hunk;
@@ -526,6 +682,7 @@ class _HunkHeader extends StatelessWidget {
   final VoidCallback? onStage;
   final VoidCallback? onUnstage;
   final VoidCallback? onDiscard;
+  final bool selected;
 
   @override
   Widget build(BuildContext context) {
@@ -535,7 +692,12 @@ class _HunkHeader extends StatelessWidget {
     return Container(
       width: width,
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 3),
-      color: colors.panel3,
+      decoration: BoxDecoration(
+        color: colors.panel3,
+        border: selected
+            ? Border(left: BorderSide(color: colors.accent, width: 2))
+            : null,
+      ),
       child: Row(
         children: [
           Expanded(
@@ -700,6 +862,7 @@ class _Side extends StatelessWidget {
     }
 
     final baseStyle = typo.mono.copyWith(fontSize: 12.5, color: colors.text);
+    final strut = StrutStyle.fromTextStyle(baseStyle, forceStrutHeight: true);
     final text = l?.text ?? '';
     // Syntax highlight por linha (o highlight.js reseta estado a cada linha —
     // aceitável para diff). `null` → renderiza texto puro.
@@ -740,12 +903,14 @@ class _Side extends StatelessWidget {
                 child: span == null
                     ? Text(
                         text,
+                        strutStyle: strut,
                         softWrap: false,
                         overflow: TextOverflow.clip,
                         style: baseStyle,
                       )
                     : Text.rich(
                         span,
+                        strutStyle: strut,
                         softWrap: false,
                         overflow: TextOverflow.clip,
                       ),
