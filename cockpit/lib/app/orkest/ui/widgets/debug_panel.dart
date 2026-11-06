@@ -2,32 +2,96 @@ import 'package:flutter/material.dart';
 import 'package:orkest_code/app/core/data/dap/dap_models.dart';
 import 'package:orkest_code/app/core/data/dap/debug_session_controller.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/app/core/ui/widgets/app_tooltip.dart';
+import 'package:orkest_code/app/core/ui/widgets/hover_tap.dart';
+import 'package:orkest_code/app/orkest/domain/entities/run_configuration.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as sc;
 
-/// Painel de inspeção de depuração exibindo Call Stack, Variáveis e Breakpoints.
-class DebugPanel extends StatelessWidget {
+/// Painel de inspeção de depuração exibindo Launcher de Configurações,
+/// Watches, Call Stack, Variáveis, Breakpoints e Console DAP.
+class DebugPanel extends StatefulWidget {
   const DebugPanel({
     super.key,
     required this.controller,
+    this.configurations = const [],
+    this.selectedConfiguration,
+    this.onSelectConfiguration,
+    this.onStartConfiguration,
     this.onNavigateToSource,
   });
 
   final DebugSessionController controller;
+  final List<RunConfiguration> configurations;
+  final RunConfiguration? selectedConfiguration;
+  final ValueChanged<RunConfiguration>? onSelectConfiguration;
+  final ValueChanged<RunConfiguration>? onStartConfiguration;
   final void Function(String filePath, int line, int column)? onNavigateToSource;
+
+  @override
+  State<DebugPanel> createState() => _DebugPanelState();
+}
+
+class _DebugPanelState extends State<DebugPanel> {
+  final TextEditingController _watchInputCtrl = TextEditingController();
+  final TextEditingController _evalInputCtrl = TextEditingController();
+  bool _addingWatch = false;
+  final Map<String, String> _watchValues = {};
+
+  @override
+  void dispose() {
+    _watchInputCtrl.dispose();
+    _evalInputCtrl.dispose();
+    super.dispose();
+  }
+
+  Future<void> _refreshWatches() async {
+    if (!widget.controller.isStopped) return;
+    for (final expr in widget.controller.watchExpressions) {
+      final res = await widget.controller.evaluate(expr);
+      if (mounted) {
+        setState(() {
+          _watchValues[expr] = res ?? 'undefined';
+        });
+      }
+    }
+  }
+
+  void _submitWatch() {
+    final text = _watchInputCtrl.text.trim();
+    if (text.isNotEmpty) {
+      widget.controller.addWatch(text);
+      _watchInputCtrl.clear();
+      setState(() => _addingWatch = false);
+      _refreshWatches();
+    }
+  }
+
+  Future<void> _submitEvaluate() async {
+    final text = _evalInputCtrl.text.trim();
+    if (text.isNotEmpty && widget.controller.isStopped) {
+      _evalInputCtrl.clear();
+      await widget.controller.evaluate(text);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: controller,
+      listenable: widget.controller,
       builder: (context, _) {
         final colors = context.colors;
+        final isStopped = widget.controller.isStopped;
+        final isRunning = widget.controller.isRunning;
+
+        final currentConfig = widget.selectedConfiguration ??
+            (widget.configurations.isNotEmpty ? widget.configurations.first : null);
 
         return Container(
           color: colors.panel,
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: [
-              // Cabeçalho
+              // Cabeçalho Principal
               Container(
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: BoxDecoration(
@@ -39,7 +103,7 @@ class DebugPanel extends StatelessWidget {
                     Icon(sc.LucideIcons.bug, size: 14, color: colors.warn),
                     const SizedBox(width: 8),
                     Text(
-                      'DEPURAÇÃO',
+                      'RUN & DEBUG',
                       style: context.typo.label.copyWith(
                         fontSize: 11,
                         fontWeight: FontWeight.w700,
@@ -49,54 +113,201 @@ class DebugPanel extends StatelessWidget {
                     ),
                     const Spacer(),
                     Text(
-                      controller.isStopped
-                          ? 'PAUSADO (${controller.lastStopReason?.name ?? 'stop'})'
-                          : controller.isRunning
+                      isStopped
+                          ? 'PAUSADO (${widget.controller.lastStopReason?.name ?? 'stop'})'
+                          : isRunning
                               ? 'EXECUTANDO'
                               : 'OCIOSO',
                       style: context.typo.mono.copyWith(
                         fontSize: 10,
-                        color: controller.isStopped ? colors.warn : colors.text3,
+                        color: isStopped ? colors.warn : colors.text3,
                       ),
                     ),
                   ],
                 ),
               ),
 
-              // Conteúdo: Dividido em Call Stack e Variáveis
+              // Seletor de Configuração e Launcher
+              Container(
+                padding: const EdgeInsets.all(8),
+                decoration: BoxDecoration(
+                  color: colors.panel,
+                  border: Border(bottom: BorderSide(color: colors.border)),
+                ),
+                child: Row(
+                  children: [
+                    // Botão Iniciar (Play)
+                    AppTooltip(
+                      message: currentConfig != null
+                          ? 'Iniciar ${currentConfig.name} (F5)'
+                          : 'Selecione uma configuração',
+                      child: HoverTap(
+                        key: const ValueKey('run-config-start'),
+                        onTap: currentConfig != null
+                            ? () {
+                                if (widget.onStartConfiguration != null) {
+                                  widget.onStartConfiguration!(currentConfig);
+                                } else {
+                                  widget.controller.startFromRunConfiguration(config: currentConfig);
+                                }
+                              }
+                            : null,
+                        padding: const EdgeInsets.all(6),
+                        borderRadius: BorderRadius.circular(4),
+                        color: colors.gitStaged.withValues(alpha: 0.15),
+                        child: Icon(sc.LucideIcons.play, size: 14, color: colors.gitStaged),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+
+                    // Dropdown ou Nome da Configuração
+                    Expanded(
+                      child: widget.configurations.isEmpty
+                          ? Text(
+                              'Nenhum alvo detectado',
+                              style: context.typo.body.copyWith(
+                                fontSize: 11,
+                                color: colors.text4,
+                              ),
+                            )
+                          : Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              decoration: BoxDecoration(
+                                color: colors.panel2,
+                                border: Border.all(color: colors.border),
+                                borderRadius: BorderRadius.circular(4),
+                              ),
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    currentConfig?.isTest == true
+                                        ? Icons.check_box_outlined
+                                        : sc.LucideIcons.cpu,
+                                    size: 12,
+                                    color: colors.accent,
+                                  ),
+                                  const SizedBox(width: 6),
+                                  Expanded(
+                                    child: Text(
+                                      currentConfig?.name ?? 'Configuração',
+                                      maxLines: 1,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: context.typo.body.copyWith(
+                                        fontSize: 11,
+                                        fontWeight: FontWeight.w600,
+                                        color: colors.text,
+                                      ),
+                                    ),
+                                  ),
+                                  if (widget.configurations.length > 1) ...[
+                                    const SizedBox(width: 4),
+                                    Icon(sc.LucideIcons.chevronDown, size: 12, color: colors.text3),
+                                  ],
+                                ],
+                              ),
+                            ),
+                    ),
+                  ],
+                ),
+              ),
+
+              // Conteúdo Rolável: Watches, Call Stack, Variáveis, Breakpoints, Console
               Expanded(
                 child: ListView(
                   padding: const EdgeInsets.all(8),
                   children: [
-                    // Seção Call Stack
-                    _SectionHeader(title: 'CALL STACK (${controller.stackFrames.length})'),
-                    if (controller.stackFrames.isEmpty)
+                    // Seção Watches
+                    _SectionHeader(
+                      title: 'WATCHES (${widget.controller.watchExpressions.length})',
+                      action: AppTooltip(
+                        message: 'Adicionar expressão',
+                        child: HoverTap(
+                          key: const ValueKey('run-config-add-watch'),
+                          onTap: () => setState(() => _addingWatch = !_addingWatch),
+                          padding: const EdgeInsets.all(2),
+                          borderRadius: BorderRadius.circular(3),
+                          child: Icon(sc.LucideIcons.plus, size: 12, color: colors.text3),
+                        ),
+                      ),
+                    ),
+                    if (_addingWatch)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                        child: Row(
+                          children: [
+                            Expanded(
+                              child: TextField(
+                                key: const ValueKey('run-config-watch-input'),
+                                controller: _watchInputCtrl,
+                                style: context.typo.mono.copyWith(fontSize: 11),
+                                decoration: InputDecoration(
+                                  hintText: 'Expressão para vigiar...',
+                                  hintStyle: context.typo.mono.copyWith(fontSize: 11, color: colors.text4),
+                                  isDense: true,
+                                  contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
+                                ),
+                                onSubmitted: (_) => _submitWatch(),
+                              ),
+                            ),
+                            const SizedBox(width: 4),
+                            HoverTap(
+                              key: const ValueKey('run-config-watch-confirm'),
+                              onTap: _submitWatch,
+                              padding: const EdgeInsets.all(4),
+                              borderRadius: BorderRadius.circular(3),
+                              child: Icon(sc.LucideIcons.check, size: 12, color: colors.gitStaged),
+                            ),
+                          ],
+                        ),
+                      ),
+                    if (widget.controller.watchExpressions.isEmpty && !_addingWatch)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                         child: Text(
-                          controller.isRunning
+                          'Nenhuma expressão observada',
+                          style: context.typo.mono.copyWith(fontSize: 11, color: colors.text4),
+                        ),
+                      )
+                    else
+                      for (final expr in widget.controller.watchExpressions)
+                        _WatchRow(
+                          expression: expr,
+                          value: _watchValues[expr] ?? (isStopped ? '...' : 'não disponível'),
+                          onRemove: () => widget.controller.removeWatch(expr),
+                        ),
+
+                    const SizedBox(height: 12),
+
+                    // Seção Call Stack
+                    _SectionHeader(title: 'CALL STACK (${widget.controller.stackFrames.length})'),
+                    if (widget.controller.stackFrames.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                        child: Text(
+                          isRunning
                               ? 'Aplicação em execução...'
                               : 'Nenhuma pilha disponível',
                           style: context.typo.mono.copyWith(fontSize: 11, color: colors.text4),
                         ),
                       )
                     else
-                      for (final frame in controller.stackFrames)
+                      for (final frame in widget.controller.stackFrames)
                         _FrameRow(
                           frame: frame,
                           onTap: () {
-                            if (frame.sourcePath != null && onNavigateToSource != null) {
-                              onNavigateToSource!(frame.sourcePath!, frame.line, frame.column);
+                            if (frame.sourcePath != null && widget.onNavigateToSource != null) {
+                              widget.onNavigateToSource!(frame.sourcePath!, frame.line, frame.column);
                             }
-                            controller.selectFrame(frame.id);
+                            widget.controller.selectFrame(frame.id);
                           },
                         ),
 
                     const SizedBox(height: 12),
 
                     // Seção Variáveis
-                    _SectionHeader(title: 'VARIÁVEIS (${controller.variables.length})'),
-                    if (controller.variables.isEmpty)
+                    _SectionHeader(title: 'VARIÁVEIS (${widget.controller.variables.length})'),
+                    if (widget.controller.variables.isEmpty)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                         child: Text(
@@ -105,16 +316,16 @@ class DebugPanel extends StatelessWidget {
                         ),
                       )
                     else
-                      for (final variable in controller.variables)
+                      for (final variable in widget.controller.variables)
                         _VariableRow(variable: variable),
 
                     const SizedBox(height: 12),
 
                     // Seção Breakpoints
                     _SectionHeader(
-                      title: 'BREAKPOINTS (${controller.breakpointsByPath.values.fold(0, (acc, list) => acc + list.length)})',
+                      title: 'BREAKPOINTS (${widget.controller.breakpointsByPath.values.fold(0, (acc, list) => acc + list.length)})',
                     ),
-                    if (controller.breakpointsByPath.isEmpty)
+                    if (widget.controller.breakpointsByPath.isEmpty)
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
                         child: Text(
@@ -123,18 +334,80 @@ class DebugPanel extends StatelessWidget {
                         ),
                       )
                     else
-                      for (final entry in controller.breakpointsByPath.entries)
+                      for (final entry in widget.controller.breakpointsByPath.entries)
                         for (final bp in entry.value)
                           _BreakpointRow(
                             filePath: entry.key,
                             line: bp.line,
-                            onRemove: () => controller.toggleBreakpoint(entry.key, bp.line),
+                            onRemove: () => widget.controller.toggleBreakpoint(entry.key, bp.line),
                             onTap: () {
-                              if (onNavigateToSource != null) {
-                                onNavigateToSource!(entry.key, bp.line, 1);
+                              if (widget.onNavigateToSource != null) {
+                                widget.onNavigateToSource!(entry.key, bp.line, 1);
                               }
                             },
                           ),
+
+                    const SizedBox(height: 12),
+
+                    // Seção Console de Depuração
+                    _SectionHeader(title: 'CONSOLE DE DEPURAÇÃO (${widget.controller.consoleLogs.length})'),
+                    Container(
+                      height: 120,
+                      decoration: BoxDecoration(
+                        color: colors.panel2,
+                        border: Border.all(color: colors.border),
+                        borderRadius: BorderRadius.circular(4),
+                      ),
+                      child: Column(
+                        children: [
+                          Expanded(
+                            child: widget.controller.consoleLogs.isEmpty
+                                ? Center(
+                                    child: Text(
+                                      'Saída de logs DAP vazia',
+                                      style: context.typo.mono.copyWith(fontSize: 10, color: colors.text4),
+                                    ),
+                                  )
+                                : ListView.builder(
+                                    padding: const EdgeInsets.all(4),
+                                    itemCount: widget.controller.consoleLogs.length,
+                                    itemBuilder: (context, i) => Text(
+                                      widget.controller.consoleLogs[i],
+                                      style: context.typo.mono.copyWith(fontSize: 10, color: colors.text2),
+                                    ),
+                                  ),
+                          ),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: colors.panel,
+                              border: Border(top: BorderSide(color: colors.border)),
+                            ),
+                            child: Row(
+                              children: [
+                                Text('>', style: context.typo.mono.copyWith(fontSize: 11, color: colors.accent)),
+                                const SizedBox(width: 4),
+                                Expanded(
+                                  child: TextField(
+                                    controller: _evalInputCtrl,
+                                    enabled: isStopped,
+                                    style: context.typo.mono.copyWith(fontSize: 11),
+                                    decoration: InputDecoration(
+                                      hintText: isStopped ? 'Avaliar expressão (Enter)...' : 'Pausado para avaliar',
+                                      hintStyle: context.typo.mono.copyWith(fontSize: 10, color: colors.text4),
+                                      isDense: true,
+                                      border: InputBorder.none,
+                                      contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                                    ),
+                                    onSubmitted: (_) => _submitEvaluate(),
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -147,22 +420,81 @@ class DebugPanel extends StatelessWidget {
 }
 
 class _SectionHeader extends StatelessWidget {
-  const _SectionHeader({required this.title});
+  const _SectionHeader({required this.title, this.action});
   final String title;
+  final Widget? action;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
     return Padding(
-      padding: const EdgeInsets.only(top: 4, bottom: 4, left: 4),
-      child: Text(
-        title,
-        style: context.typo.label.copyWith(
-          fontSize: 10,
-          fontWeight: FontWeight.w600,
-          color: colors.text3,
-          letterSpacing: 0.5,
-        ),
+      padding: const EdgeInsets.only(top: 4, bottom: 4, left: 4, right: 4),
+      child: Row(
+        children: [
+          Text(
+            title,
+            style: context.typo.label.copyWith(
+              fontSize: 10,
+              fontWeight: FontWeight.w600,
+              color: colors.text3,
+              letterSpacing: 0.5,
+            ),
+          ),
+          if (action != null) ...[
+            const Spacer(),
+            action!,
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _WatchRow extends StatelessWidget {
+  const _WatchRow({
+    required this.expression,
+    required this.value,
+    required this.onRemove,
+  });
+
+  final String expression;
+  final String value;
+  final VoidCallback onRemove;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      child: Row(
+        children: [
+          Icon(sc.LucideIcons.eye, size: 11, color: colors.accent),
+          const SizedBox(width: 4),
+          Text(
+            expression,
+            style: context.typo.mono.copyWith(
+              fontSize: 11,
+              fontWeight: FontWeight.w600,
+              color: colors.text,
+            ),
+          ),
+          const SizedBox(width: 6),
+          Text(':', style: context.typo.mono.copyWith(fontSize: 11, color: colors.text3)),
+          const SizedBox(width: 6),
+          Expanded(
+            child: Text(
+              value,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: context.typo.mono.copyWith(fontSize: 11, color: colors.gitStaged),
+            ),
+          ),
+          GestureDetector(
+            onTap: onRemove,
+            child: Icon(sc.LucideIcons.x, size: 12, color: colors.text3),
+          ),
+        ],
       ),
     );
   }

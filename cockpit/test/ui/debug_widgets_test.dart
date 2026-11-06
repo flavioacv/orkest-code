@@ -6,6 +6,9 @@ import 'package:orkest_code/app/core/data/dap/dap_codec.dart';
 import 'package:orkest_code/app/core/data/dap/dap_models.dart';
 import 'package:orkest_code/app/core/data/dap/debug_session_controller.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/app/core/ui/widgets/code_editing_controller.dart';
+import 'package:orkest_code/app/orkest/domain/entities/run_configuration.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/code_editor.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/debug_panel.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/debug_toolbar.dart';
 import 'package:orkest_code/i18n/strings.g.dart';
@@ -209,6 +212,82 @@ void main() {
       expect(find.text('VARIÁVEIS (1)'), findsOneWidget);
       expect(find.text('status'), findsOneWidget);
       expect(find.text('"ok"'), findsOneWidget);
+    });
+
+    testWidgets('DebugPanel renderiza launcher de RunConfiguration e gerencia Watches', (tester) async {
+      RunConfiguration? startedConfig;
+      const testConfig = RunConfiguration(
+        id: 'cfg-1',
+        name: 'Executar Servidor',
+        type: 'dart',
+        program: 'bin/server.dart',
+        cwd: '.',
+      );
+
+      await tester.pumpWidget(
+        _wrapWithTheme(
+          DebugPanel(
+            controller: controller,
+            configurations: const [testConfig],
+            onStartConfiguration: (cfg) => startedConfig = cfg,
+          ),
+        ),
+      );
+
+      // Launcher visível
+      expect(find.text('Executar Servidor'), findsOneWidget);
+      expect(find.byKey(const ValueKey('run-config-start')), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('run-config-start')));
+      await tester.pump();
+      expect(startedConfig?.name, equals('Executar Servidor'));
+
+      // Watches
+      expect(find.text('WATCHES (0)'), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('run-config-add-watch')));
+      await tester.pump();
+
+      expect(find.byKey(const ValueKey('run-config-watch-input')), findsOneWidget);
+      await tester.enterText(find.byKey(const ValueKey('run-config-watch-input')), 'myCounter');
+      await tester.tap(find.byKey(const ValueKey('run-config-watch-confirm')));
+      await tester.pump();
+
+      expect(controller.watchExpressions, contains('myCounter'));
+      expect(find.text('WATCHES (1)'), findsOneWidget);
+      expect(find.text('myCounter'), findsOneWidget);
+    });
+
+    testWidgets('CodeEditor renderiza breakpoints e activeDebugLine no gutter', (tester) async {
+      int? toggledLine;
+      const code = 'void main() {\n  final x = 1;\n  print(x);\n}\n';
+      final editCtrl = CodeEditingController(text: code, language: 'dart');
+      final focusNode = FocusNode();
+
+      await tester.pumpWidget(
+        _wrapWithTheme(
+          CodeEditor(
+            controller: editCtrl,
+            focusNode: focusNode,
+            filePath: '/project/lib/main.dart',
+            breakpoints: const {2},
+            activeDebugLine: 2,
+            onToggleBreakpoint: (line) => toggledLine = line,
+          ),
+        ),
+      );
+
+      // Breakpoint na linha 2 desenhado no gutter
+      expect(find.byKey(const ValueKey('debug-breakpoint-gutter:2')), findsOneWidget);
+      // Indicador de linha ativa (seta amarela) desenhado no gutter
+      expect(find.byKey(const ValueKey('debug-active-line:2')), findsOneWidget);
+
+      // Clica no gutter da linha 1 para alternar breakpoint
+      await tester.tap(find.byKey(const ValueKey('code-editor-gutter-line:1')));
+      await tester.pump();
+      expect(toggledLine, equals(1));
+
+      editCtrl.dispose();
+      focusNode.dispose();
     });
   });
 }

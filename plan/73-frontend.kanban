@@ -6,8 +6,6 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
 
 ## Backlog
 
-- [ ] E3 · Integrar jornada Run, Debug e Test <!-- id: FE-E3 labels: debug blockedBy: FE-E1 -->
-      Configurações, sessões DAP reais, gutter, pilha, variáveis e console acessíveis pela interface.
 - [ ] E4 · Consolidar Database no workbench <!-- id: FE-E4 labels: bancos blockedBy: FE-E1 -->
       Conexão → schema → console → resultado → edição suportada; capacidades por driver.
 - [ ] E5 · Integrar navegação, Problems e serviços <!-- id: FE-E5 labels: estrutura blockedBy: FE-E1 -->
@@ -18,6 +16,15 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Evidência visual e funcional local/remota, foco, restauração e terminais; sem métricas sintéticas.
 
 ## Em andamento
+
+- [ ] E3 · Integrar jornada Run, Debug e Test <!-- id: FE-E3 labels: debug blockedBy: FE-E1 -->
+      Implementado: Seletor de execução e depuração integrado ao `WorkbenchToolHost` (`WorkbenchToolId.debug`, ícone `bug_report_outlined`). `RunConfiguration` convertível deterministicamente para alvos `DartDebugTarget` (`toDartDebugTarget`). Adaptadores DAP reais (`DartDebugAdapter`, `MultiLanguageDebugAdapter`) conectados ao `DebugSessionController` com suporte a launch/attach, breakpoints com verificação de linha, fluxo pausado/rodando, inspeção de threads, call stack e variáveis de escopo.
+      Gutter do editor: `CodeEditor` e `FileViewer` integrados para renderizar círculos de breakpoints vermelhos e indicador de linha ativa amarela no gutter, com composição sobreposta quando a execução pausa sobre o breakpoint e alternância interativa via clique no gutter (`code-editor-gutter-line:$oneBased`).
+      Watches e Console de Depuração: seção interativa de Watches no `DebugPanel` (`run-config-add-watch`) com avaliação sob demanda das variáveis monitoradas quando a execução pausa, e console interativo com histórico de logs DAP e prompt de avaliação de expressões no runtime (`controller.evaluate`).
+      Barra de ferramentas de depuração (`DebugToolbar`): botões de pausar, continuar, step-over, step-in, step-out, stop, e ações de Hot Reload e Hot Restart para sessões Flutter.
+      Validação deste incremento: análise estática limpa (`dart analyze` com 0 erros/avisos em todo o escopo de debug e editor) e 30 testes automatizados aprovados na suíte completa de DAP (`dap_core_test.dart`, `dart_debug_adapter_test.dart`, `multi_language_debug_adapter_test.dart`, `debug_widgets_test.dart`).
+      Pendente: conexão dos seletores de launch configuration com `.vscode/launch.json` em workspaces com múltiplos arquivos de configuração e auditoria dos runners PTY em tarefas sem depurador ativo.
+      Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 - [ ] E1 · Extrair host de ferramentas do explorador <!-- id: FE-E1 labels: estrutura -->
       Implementado: WorkbenchToolHost separado com catálogo de ferramentas, montagem sob demanda, preservação de views visitadas, exclusão de foco e tickers nas ferramentas ocultas. Files/Search/Git/Database/Telemetry/Gallery migrados para o host. Controles uniformes de cabeçalho adicionados ao host: maximizar/restaurar largura do painel (`workbench-tool-maximize`) e recolher/ocultar (`workbench-tool-collapse`). Quando colapsado, preserva todos os filhos visitados em `Offstage(offstage: true)` sem destruir `State`, exibindo barra compacta de 44px com ícones e botão de expansão (`workbench-tool-expand`), reabrindo automaticamente ao clicar em qualquer ferramenta.

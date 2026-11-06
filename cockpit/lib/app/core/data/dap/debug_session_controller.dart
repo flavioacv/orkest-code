@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:orkest_code/app/core/data/dap/dap_client.dart';
 import 'package:orkest_code/app/core/data/dap/dap_models.dart';
 import 'package:orkest_code/app/core/data/dap/dart_debug_adapter.dart';
+import 'package:orkest_code/app/orkest/domain/entities/run_configuration.dart';
 
 /// Controlador central e reativo de uma sessão de depuração DAP no Orkest Code.
 ///
@@ -37,11 +38,33 @@ class DebugSessionController extends ChangeNotifier {
   List<DapStackFrame> _stackFrames = const [];
   List<DapStackFrame> get stackFrames => _stackFrames;
 
+  /// Retorna o frame superior da pilha de execução quando pausado, ou `null`.
+  DapStackFrame? get currentFrame => _stackFrames.isNotEmpty ? _stackFrames.first : null;
+
   List<DapScope> _scopes = const [];
   List<DapScope> get scopes => _scopes;
 
   List<DapVariable> _variables = const [];
   List<DapVariable> get variables => _variables;
+
+  final List<String> _watchExpressions = [];
+  List<String> get watchExpressions => List.unmodifiable(_watchExpressions);
+
+  /// Adiciona uma expressão para observação contínua.
+  void addWatch(String expression) {
+    final clean = expression.trim();
+    if (clean.isNotEmpty && !_watchExpressions.contains(clean)) {
+      _watchExpressions.add(clean);
+      notifyListeners();
+    }
+  }
+
+  /// Remove uma expressão observada.
+  void removeWatch(String expression) {
+    if (_watchExpressions.remove(expression)) {
+      notifyListeners();
+    }
+  }
 
   final Map<String, List<SourceBreakpoint>> _breakpointsByPath = {};
   Map<String, List<SourceBreakpoint>> get breakpointsByPath =>
@@ -122,6 +145,19 @@ class DebugSessionController extends ChangeNotifier {
       args: (launchArgs['args'] as List?)?.cast<String>() ?? const [],
       cwd: target.cwd,
       noDebug: target.noDebug,
+    );
+  }
+
+  /// Inicia uma nova sessão de depuração a partir de uma [RunConfiguration].
+  Future<void> startFromRunConfiguration({
+    required RunConfiguration config,
+    DapClient? clientOverride,
+  }) async {
+    final target = config.toDartDebugTarget();
+    await startDartSession(
+      target: target,
+      sdkPath: config.sdkPath,
+      clientOverride: clientOverride,
     );
   }
 

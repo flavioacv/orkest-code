@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/core/data/dap/dart_debug_adapter.dart';
 import 'package:orkest_code/app/orkest/domain/entities/task_definition.dart';
 
 /// Tipo da configuração de execução.
@@ -136,5 +137,21 @@ class RunConfiguration {
         // Custom / shell
         return (program.isNotEmpty ? program : 'sh', [...args]);
     }
+  }
+
+  /// Converte esta configuração para um [DartDebugTarget] compatível com o [DartDebugAdapter].
+  DartDebugTarget toDartDebugTarget({bool noDebug = false}) {
+    final isFlutterType = type.toLowerCase() == 'flutter';
+    final isTestTarget = isTest || kind == RunConfigurationKind.test;
+    final dartType = isFlutterType
+        ? (isTestTarget ? DartDebugType.flutterTest : DartDebugType.flutterApp)
+        : (isTestTarget ? DartDebugType.dartTest : DartDebugType.dartCli);
+    return DartDebugTarget(
+      kind: dartType,
+      program: program,
+      cwd: cwd.isNotEmpty ? cwd : '.',
+      args: args,
+      noDebug: noDebug,
+    );
   }
 }

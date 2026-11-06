@@ -67,6 +67,9 @@ class CodeEditor extends StatefulWidget {
     this.onResolveCompletion,
     this.onCancelLspRequest,
     this.filePath,
+    this.breakpoints,
+    this.activeDebugLine,
+    this.onToggleBreakpoint,
   });
 
   final CodeEditingController controller;
@@ -110,6 +113,15 @@ class CodeEditor extends StatefulWidget {
 
   /// Sobe a cada navegação de match → re-dispara mesmo pro mesmo offset.
   final int revealMatchTick;
+
+  /// Linhas (base 1) com breakpoints de depuração registrados.
+  final Set<int>? breakpoints;
+
+  /// Linha (base 1) ativa onde a execução está pausada no depurador, ou `null`.
+  final int? activeDebugLine;
+
+  /// Callback acionado ao clicar no gutter de uma linha para alternar breakpoint.
+  final void Function(int line)? onToggleBreakpoint;
 
   @override
   State<CodeEditor> createState() => _CodeEditorState();
@@ -1073,17 +1085,69 @@ class _CodeEditorState extends State<CodeEditor> {
   /// empurre o código quando um erro aparece/some.
   static const double _iconSlot = 16;
 
-  /// Uma linha do gutter: um slot fixo (ícone de severity quando há diagnostic,
-  /// senão vazio) + o número. O ícone (12px) cabe na altura da linha de texto,
-  /// mantendo o alinhamento 1:1 com o código.
+  /// Uma linha do gutter: um slot fixo (ícone de breakpoint/execução quando ativo,
+  /// ou severity quando há diagnostic, senão vazio) + o número. O ícone (12px)
+  /// cabe na altura da linha de texto, mantendo o alinhamento 1:1 com o código.
   Widget _gutterLine(int oneBased, TextStyle numStyle) {
     final severity = widget.controller.severityForLine(oneBased - 1);
-    final Widget slot;
-    if (severity == null) {
-      slot = const SizedBox(width: _iconSlot);
+    final hasBreakpoint = widget.breakpoints?.contains(oneBased) ?? false;
+    final isActiveDebug = widget.activeDebugLine == oneBased;
+
+    final Widget rawSlot;
+    if (isActiveDebug && hasBreakpoint) {
+      rawSlot = SizedBox(
+        width: _iconSlot,
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            Container(
+              key: ValueKey('debug-breakpoint-gutter:$oneBased'),
+              width: 10,
+              height: 10,
+              decoration: BoxDecoration(
+                color: context.colors.error,
+                shape: BoxShape.circle,
+              ),
+            ),
+            Icon(
+              Icons.arrow_right_alt,
+              key: ValueKey('debug-active-line:$oneBased'),
+              size: 14,
+              color: context.colors.warn,
+            ),
+          ],
+        ),
+      );
+    } else if (isActiveDebug) {
+      rawSlot = SizedBox(
+        width: _iconSlot,
+        child: Icon(
+          Icons.arrow_right_alt,
+          key: ValueKey('debug-active-line:$oneBased'),
+          size: 14,
+          color: context.colors.warn,
+        ),
+      );
+    } else if (hasBreakpoint) {
+      rawSlot = SizedBox(
+        width: _iconSlot,
+        child: Center(
+          child: Container(
+            key: ValueKey('debug-breakpoint-gutter:$oneBased'),
+            width: 10,
+            height: 10,
+            decoration: BoxDecoration(
+              color: context.colors.error,
+              shape: BoxShape.circle,
+            ),
+          ),
+        ),
+      );
+    } else if (severity == null) {
+      rawSlot = const SizedBox(width: _iconSlot);
     } else {
       final messages = widget.controller.messagesForLine(oneBased - 1);
-      slot = SizedBox(
+      rawSlot = SizedBox(
         width: _iconSlot,
         child: AppTooltip(
           message: messages.join('\n'),
@@ -1095,6 +1159,8 @@ class _CodeEditorState extends State<CodeEditor> {
         ),
       );
     }
+
+    final slot = rawSlot;
     final scm = widget.scmDecorations;
     final marker = scm.addedLines.contains(oneBased)
         ? context.colors.online
@@ -1106,60 +1172,65 @@ class _CodeEditorState extends State<CodeEditor> {
         oneBased == _lineCount && scm.removalBoundaries.contains(_lineCount);
     final hasScm = marker != null || removalBefore || removalAfter;
     final deleted = context.colors.gitDeleted;
-    return Stack(
-      key: hasScm ? ValueKey('git-change-line:$oneBased') : null,
-      children: [
-        if (marker != null)
-          Positioned(
-            top: 0,
-            bottom: 0,
-            left: 0,
-            child: IgnorePointer(child: Container(width: 2, color: marker)),
-          ),
-        if (removalBefore)
-          Positioned(
-            top: 0,
-            left: 0,
-            child: IgnorePointer(
-              child: Container(
-                key: ValueKey('git-removal-boundary:${oneBased - 1}'),
-                width: 6,
-                height: 2,
-                color: deleted,
-              ),
+    return GestureDetector(
+      key: ValueKey('code-editor-gutter-line:$oneBased'),
+      behavior: HitTestBehavior.opaque,
+      onTap: widget.onToggleBreakpoint != null ? () => widget.onToggleBreakpoint!(oneBased) : null,
+      child: Stack(
+        key: hasScm ? ValueKey('git-change-line:$oneBased') : null,
+        children: [
+          if (marker != null)
+            Positioned(
+              top: 0,
+              bottom: 0,
+              left: 0,
+              child: IgnorePointer(child: Container(width: 2, color: marker)),
             ),
-          ),
-        if (removalAfter)
-          Positioned(
-            bottom: 0,
-            left: 0,
-            child: IgnorePointer(
-              child: Container(
-                key: ValueKey('git-removal-boundary:$_lineCount'),
-                width: 6,
-                height: 2,
-                color: deleted,
-              ),
-            ),
-          ),
-        ClipRect(
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            mainAxisAlignment: MainAxisAlignment.end,
-            children: [
-              slot,
-              Flexible(
-                child: Text(
-                  '$oneBased',
-                  style: numStyle,
-                  maxLines: 1,
-                  overflow: TextOverflow.clip,
+          if (removalBefore)
+            Positioned(
+              top: 0,
+              left: 0,
+              child: IgnorePointer(
+                child: Container(
+                  key: ValueKey('git-removal-boundary:${oneBased - 1}'),
+                  width: 6,
+                  height: 2,
+                  color: deleted,
                 ),
               ),
-            ],
+            ),
+          if (removalAfter)
+            Positioned(
+              bottom: 0,
+              left: 0,
+              child: IgnorePointer(
+                child: Container(
+                  key: ValueKey('git-removal-boundary:$_lineCount'),
+                  width: 6,
+                  height: 2,
+                  color: deleted,
+                ),
+              ),
+            ),
+          ClipRect(
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              mainAxisAlignment: MainAxisAlignment.end,
+              children: [
+                slot,
+                Flexible(
+                  child: Text(
+                    '$oneBased',
+                    style: numStyle,
+                    maxLines: 1,
+                    overflow: TextOverflow.clip,
+                  ),
+                ),
+              ],
+            ),
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 

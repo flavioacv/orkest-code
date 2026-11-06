@@ -3,6 +3,7 @@ import 'dart:convert';
 import 'dart:io';
 
 import 'package:orkest_code/app/orkest/domain/entities/browser_capability.dart';
+import 'package:orkest_code/app/core/data/dap/debug_session_controller.dart';
 import 'package:orkest_code/app/core/data/diagnostics/diagnostics_log.dart';
 import 'package:orkest_code/app/orkest/domain/entities/file_view.dart';
 import 'package:orkest_code/app/orkest/domain/entities/scm_line_decorations.dart';
@@ -63,6 +64,7 @@ class FileViewer extends StatefulWidget {
     this.active = true,
     this.focused = true,
     this.gitHistoryReader,
+    this.debugController,
   });
 
   final FileViewerSession session;
@@ -80,6 +82,9 @@ class FileViewer extends StatefulWidget {
 
   /// Leitor estruturado opcional para Git Blame (injetável para testes).
   final GitHistoryReader? gitHistoryReader;
+
+  /// Controlador central opcional de depuração DAP (breakpoints no gutter e frame ativo).
+  final DebugSessionController? debugController;
 
   @override
   State<FileViewer> createState() => _FileViewerState();
@@ -1236,6 +1241,16 @@ class _FileViewerState extends State<FileViewer> {
             revealSelect: widget.session.revealSelect,
             revealTick: widget.session.revealTick,
             scmDecorations: widget.session.scmDecorations,
+            breakpoints: widget.debugController?.breakpointsByPath[widget.session.path]
+                ?.map((b) => b.line)
+                .toSet(),
+            activeDebugLine: (widget.debugController?.isStopped == true &&
+                    widget.debugController?.currentFrame?.sourcePath == widget.session.path)
+                ? widget.debugController?.currentFrame?.line
+                : null,
+            onToggleBreakpoint: widget.debugController != null
+                ? (line) => widget.debugController!.toggleBreakpoint(widget.session.path, line)
+                : null,
             revealMatchStart:
                 _findIndex >= 0 && _findIndex < _findMatches.length
                 ? _findMatches[_findIndex].start

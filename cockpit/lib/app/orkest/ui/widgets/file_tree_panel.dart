@@ -133,6 +133,7 @@ class FileTreePanel extends StatefulWidget {
     this.databasePanel,
     this.galleryPanel,
     this.telemetryPanel,
+    this.debugPanel,
     this.searchFocusSignal,
     this.tasksPanel,
     this.roots = const <WorkspaceRoot>[],
@@ -278,6 +279,9 @@ class FileTreePanel extends StatefulWidget {
   /// Modo Telemetry (plano 66): casos agrupados do workspace. `null` = sem
   /// workspace selecionado (ícone some).
   final Widget? telemetryPanel;
+
+  /// Painel de depuração DAP (Run & Debug, breakpoints, call stack, console).
+  final Widget? debugPanel;
 
   /// Painel de busca por conteúdo, fixado entre a árvore e o [footer]
   /// (Cmd+Shift+F). `null` quando não há projeto.
@@ -1555,6 +1559,10 @@ class _FileTreePanelState extends State<FileTreePanel> {
     if (tab == WorkbenchToolId.telemetry && !hasTelemetry) {
       tab = WorkbenchToolId.files;
     }
+    final hasDebug = widget.debugPanel != null;
+    if (tab == WorkbenchToolId.debug && !hasDebug) {
+      tab = WorkbenchToolId.files;
+    }
     Widget buildSourceControl() => SourceControlPanel(
       section: _sourceControlView,
       onSectionChanged: _selectSourceControlSection,
@@ -1656,6 +1664,7 @@ class _FileTreePanelState extends State<FileTreePanel> {
       final dbMode = tab == WorkbenchToolId.database;
       final galleryMode = tab == WorkbenchToolId.gallery;
       final telemetryMode = tab == WorkbenchToolId.telemetry;
+      final debugMode = tab == WorkbenchToolId.debug;
       return Column(
         children: [
           // Título da aba ativa + ações contextuais ao lado, no padrão do
@@ -1709,6 +1718,8 @@ class _FileTreePanelState extends State<FileTreePanel> {
                 ? (widget.galleryPanel ?? const SizedBox.shrink())
                 : telemetryMode
                 ? (widget.telemetryPanel ?? const SizedBox.shrink())
+                : debugMode
+                ? (widget.debugPanel ?? const SizedBox.shrink())
                 : DropTarget(
                     // Drop NATIVO do SO (Finder/Explorer/GTK): a pasta sob o
                     // cursor recebe; o espaço vazio manda pra raiz.
@@ -1836,6 +1847,12 @@ class _FileTreePanelState extends State<FileTreePanel> {
                     tr.sourceControlTooltip,
                     Icons.account_tree_outlined,
                     count: sourceControlChangeCount,
+                  ),
+                if (hasDebug)
+                  tool(
+                    WorkbenchToolId.debug,
+                    'Run & Debug',
+                    Icons.bug_report_outlined,
                   ),
                 if (hasDatabase)
                   tool(
