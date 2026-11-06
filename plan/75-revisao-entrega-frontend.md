@@ -1,5 +1,7 @@
 # Revisão da entrega frontend — 06/11/2026
 
+Atualização posterior: os bloqueadores abaixo foram tratados na [integração para teste completo](76-integracao-frontend-teste-completo.md). Este relatório preserva os achados do HEAD auditado; não representa o estado final após a correção.
+
 Referência auditada: `18956841`, branch `fix/harness-state-detection`. Checkout limpo no início; 20 commits locais à frente do remoto. Após o repasse `65ff1f1c`, houve 10 commits, abrangendo 37 arquivos. Não houve nova implementação nesta revisão.
 
 ## Parecer
