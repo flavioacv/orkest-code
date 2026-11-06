@@ -1420,6 +1420,10 @@ class _FileTreePanelState extends State<FileTreePanel> {
         : legacyChanges
               .where((path) => widget.gitStatusOf(path) != GitFileStatus.staged)
               .toList();
+    final sourceControlChangeCount = {
+      ...effectiveStaged,
+      ...effectiveUnstaged,
+    }.length;
 
     final edit = _TreeEdit(
       pending: _pending,
@@ -1522,6 +1526,7 @@ class _FileTreePanelState extends State<FileTreePanel> {
                     tooltip:
                         context.t.orkest.fileTreePanel.sourceControlTooltip,
                     selected: scMode,
+                    badgeCount: sourceControlChangeCount,
                     onTap: () =>
                         setState(() => _tab = _RightPaneTab.sourceControl),
                   ),
@@ -1599,19 +1604,21 @@ class _FileTreePanelState extends State<FileTreePanel> {
                     onTap: () => _showSourceControlMenu(menuContext),
                   ),
                 ),
-                _PanelHeaderAction(
+                _SourceControlViewButton(
                   key: const ValueKey('source-control-changes-tab'),
                   icon: Icons.edit_note_outlined,
-                  tooltip: context.t.orkest.fileTreePanel.changes,
+                  label: context.t.orkest.fileTreePanel.changes,
                   selected: _sourceControlView == _SourceControlView.changes,
+                  badgeCount: sourceControlChangeCount,
+                  showBadge: true,
                   onTap: () => setState(
                     () => _sourceControlView = _SourceControlView.changes,
                   ),
                 ),
-                _PanelHeaderAction(
+                _SourceControlViewButton(
                   key: const ValueKey('source-control-history-tab'),
                   icon: Icons.history,
-                  tooltip: context.t.orkest.fileTreePanel.history,
+                  label: context.t.orkest.fileTreePanel.history,
                   selected: _sourceControlView == _SourceControlView.history,
                   onTap: () => setState(
                     () => _sourceControlView = _SourceControlView.history,
@@ -3237,6 +3244,12 @@ class _ChangedTree extends StatelessWidget {
           padding: const EdgeInsets.only(left: 4, right: 2, top: 4, bottom: 4),
           child: Row(
             children: [
+              Icon(
+                staged ? Icons.check_circle_outline : Icons.edit_outlined,
+                size: 13,
+                color: staged ? context.colors.gitStaged : context.colors.warn,
+              ),
+              const SizedBox(width: 5),
               Text(
                 staged
                     ? context.t.orkest.fileTreePanel.stagedChangesHeader(
@@ -3940,12 +3953,10 @@ class _PanelHeaderAction extends StatelessWidget {
     required this.icon,
     required this.tooltip,
     required this.onTap,
-    this.selected = false,
   });
   final IconData icon;
   final String tooltip;
   final VoidCallback onTap;
-  final bool selected;
 
   @override
   Widget build(BuildContext context) {
@@ -3955,10 +3966,70 @@ class _PanelHeaderAction extends StatelessWidget {
       child: HoverTap(
         onTap: onTap,
         padding: const EdgeInsets.all(3),
-        child: Icon(
-          icon,
-          size: 14,
-          color: selected ? colors.text : colors.text3,
+        child: Icon(icon, size: 14, color: colors.text3),
+      ),
+    );
+  }
+}
+
+/// Alternador compacto de Changes/History, con estado ativo legível e badge
+/// de alterações no fluxo principal do Source Control.
+class _SourceControlViewButton extends StatelessWidget {
+  const _SourceControlViewButton({
+    super.key,
+    required this.icon,
+    required this.label,
+    required this.selected,
+    required this.onTap,
+    this.badgeCount = 0,
+    this.showBadge = false,
+  });
+
+  final IconData icon;
+  final String label;
+  final bool selected;
+  final int badgeCount;
+  final bool showBadge;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return AppTooltip(
+      message: label,
+      child: HoverTap(
+        key: ValueKey('source-control-mode-${label.toLowerCase()}'),
+        color: selected ? colors.panel2 : Colors.transparent,
+        hoverColor: colors.panel2,
+        borderRadius: BorderRadius.circular(5),
+        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+        onTap: onTap,
+        child: Row(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Icon(icon, size: 14, color: selected ? colors.text : colors.text3),
+            if (selected) ...[
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: context.typo.label.copyWith(
+                  fontSize: 10,
+                  color: colors.text,
+                ),
+              ),
+            ],
+            if (showBadge && badgeCount > 0) ...[
+              const SizedBox(width: 4),
+              Text(
+                badgeCount > 99 ? '99+' : '$badgeCount',
+                style: context.typo.mono.copyWith(
+                  fontSize: 9,
+                  color: colors.warn,
+                  fontWeight: FontWeight.w700,
+                ),
+              ),
+            ],
+          ],
         ),
       ),
     );
@@ -3972,6 +4043,7 @@ class _HeaderIcon extends StatelessWidget {
     required this.tooltip,
     required this.onTap,
     this.selected = false,
+    this.badgeCount = 0,
   });
   final IconData icon;
   final String tooltip;
@@ -3979,6 +4051,7 @@ class _HeaderIcon extends StatelessWidget {
 
   /// Toggle ativo → fundo realçado + ícone em cor primária.
   final bool selected;
+  final int badgeCount;
 
   @override
   Widget build(BuildContext context) {
@@ -3993,10 +4066,42 @@ class _HeaderIcon extends StatelessWidget {
         child: SizedBox(
           width: 28,
           height: 28,
-          child: Icon(
-            icon,
-            size: 16,
-            color: selected ? colors.text : colors.text3,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Center(
+                child: Icon(
+                  icon,
+                  size: 16,
+                  color: selected ? colors.text : colors.text3,
+                ),
+              ),
+              if (badgeCount > 0)
+                Positioned(
+                  top: 1,
+                  right: -2,
+                  child: Container(
+                    constraints: const BoxConstraints(minWidth: 12),
+                    height: 12,
+                    padding: const EdgeInsets.symmetric(horizontal: 3),
+                    decoration: BoxDecoration(
+                      color: colors.warn,
+                      borderRadius: BorderRadius.circular(7),
+                      border: Border.all(color: colors.bg, width: 1),
+                    ),
+                    alignment: Alignment.center,
+                    child: Text(
+                      badgeCount > 99 ? '99+' : '$badgeCount',
+                      style: context.typo.mono.copyWith(
+                        fontSize: 8,
+                        height: 1,
+                        color: colors.bg,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
