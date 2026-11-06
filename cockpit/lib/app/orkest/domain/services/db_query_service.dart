@@ -268,6 +268,7 @@ class DbQueryService {
     required String connName,
     required List<String> statements,
     int? limit,
+    bool Function()? isCancelled,
   }) async {
     if (statements.isEmpty) {
       throw const DbQueryException('query_failed', 'Nothing to run.');
@@ -280,6 +281,9 @@ class DbQueryService {
       return _withRemoteHostKeyRecovery(workspaceId, () async {
         DbResult? last;
         for (final sql in statements) {
+          if (isCancelled?.call() == true) {
+            throw const DbQueryException('cancelled', 'Operação descartada.');
+          }
           last = await remote(
             conn,
             sql,
@@ -302,6 +306,9 @@ class DbQueryService {
       () async {
         DbResult? last;
         for (final sql in statements) {
+          if (isCancelled?.call() == true) {
+            throw const DbQueryException('cancelled', 'Operação descartada.');
+          }
           last = await driver.query(
             resolved,
             sql,

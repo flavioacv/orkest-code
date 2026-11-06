@@ -43,6 +43,12 @@ class DbTabViewState {
   List<double>? manualWidths;
   int? selectedRow;
 
+  /// Proveniência do [result]: SQL e conexão que o originaram.
+  /// Essencial para garantir integridade em edições otimistas após re-mount
+  /// ou caso o usuário altere o texto/conexão no editor sem rodar novamente.
+  String? lastExecutedSql;
+  String? executedConnName;
+
   /// Resultado exibido como JSON (selecionável/copiável) em vez de tabela.
   /// Só estado de view — não vai pro frontmatter do `.dbq`.
   bool asJson = false;

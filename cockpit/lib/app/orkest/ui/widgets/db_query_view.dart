@@ -8,6 +8,7 @@ import 'package:orkest_code/app/orkest/domain/entities/dbq_document.dart';
 import 'package:orkest_code/app/orkest/domain/entities/file_view.dart';
 import 'package:orkest_code/app/orkest/domain/entities/sql_statements.dart';
 import 'package:orkest_code/app/orkest/domain/services/db_export_service.dart';
+import 'package:orkest_code/app/orkest/domain/services/db_row_edit_service.dart';
 import 'package:orkest_code/app/orkest/ui/session/file_viewer_session.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/db_engine_icon.dart';
 import 'package:orkest_code/app/orkest/ui/viewmodels/orkest_viewmodel.dart';
@@ -38,6 +39,8 @@ class DbQueryView extends StatefulWidget {
     required this.focused,
     required this.workspaceRoot,
     required this.onSave,
+    this.databaseViewModel,
+    this.menuBridge,
   });
 
   final FileViewerSession session;
@@ -49,6 +52,10 @@ class DbQueryView extends StatefulWidget {
 
   /// Grava o conteúdo completo (frontmatter + SQL) no disco.
   final Future<bool> Function(String content) onSave;
+
+  /// ViewModel explícito (útil para testes de widgets sem modular routing).
+  final DatabaseViewModel? databaseViewModel;
+  final EditorMenuBridge? menuBridge;
 
   @override
   State<DbQueryView> createState() => _DbQueryViewState();
@@ -65,6 +72,9 @@ class _DbQueryViewState extends State<DbQueryView> {
   int? _limit;
 
   bool _running = false;
+  bool _discardRequested = false;
+  bool _updating = false;
+  int _executionGeneration = 0;
 
   /// Último `session.loading` visto. A aba nasce em `loading` com a `view`
   /// vazia e o conteúdo chega depois (async, local ou remoto) — sem este
@@ -81,7 +91,8 @@ class _DbQueryViewState extends State<DbQueryView> {
   @override
   void initState() {
     super.initState();
-    _view = context.read<DatabaseViewModel>().tabStateFor(widget.session.id);
+    final vm = widget.databaseViewModel ?? context.read<DatabaseViewModel>();
+    _view = vm.tabStateFor(widget.session.id);
     _lastLoading = widget.session.loading;
     _baseline = _diskText();
     final doc = DbqDocument.parse(_baseline);
@@ -98,7 +109,6 @@ class _DbQueryViewState extends State<DbQueryView> {
       });
     }
     // Garante o registro de conexões carregado mesmo sem o painel aberto.
-    final vm = context.read<DatabaseViewModel>();
     Future.microtask(
       () => vm.setWorkspace(widget.session.projectId, widget.workspaceRoot),
     );
@@ -107,7 +117,7 @@ class _DbQueryViewState extends State<DbQueryView> {
   @override
   void didChangeDependencies() {
     super.didChangeDependencies();
-    _menuBridge = context.read<EditorMenuBridge>();
+    _menuBridge = widget.menuBridge ?? context.read<EditorMenuBridge>();
   }
 
   @override
@@ -296,8 +306,8 @@ class _DbQueryViewState extends State<DbQueryView> {
   }
 
   Future<void> _run({bool auto = false}) async {
-    if (_running) return;
-    final vm = context.read<DatabaseViewModel>();
+    if (_running || _updating) return;
+    final vm = widget.databaseViewModel ?? context.read<DatabaseViewModel>();
     final connName = _connName;
     if (connName == null) return; // topbar mostra "Select database"
 
@@ -327,8 +337,10 @@ class _DbQueryViewState extends State<DbQueryView> {
     }
     if (toRun.isEmpty) return;
 
+    final gen = ++_executionGeneration;
     setState(() {
       _running = true;
+      _discardRequested = false;
       _view.error = null;
     });
     try {
@@ -338,9 +350,16 @@ class _DbQueryViewState extends State<DbQueryView> {
         connName: connName,
         statements: [for (final s in toRun) s.text],
         limit: _limit,
+        isCancelled: () => _discardRequested || gen != _executionGeneration,
       );
       if (!mounted) return;
+      if (_discardRequested || gen != _executionGeneration) {
+        // Descarte explícito: rejeita resultado tardio
+        return;
+      }
       setState(() {
+        _view.lastExecutedSql = toRun.last.text;
+        _view.executedConnName = connName;
         _view.result = result;
         _view.baseWidths = _computeWidths(result);
         _view.manualWidths = null;
@@ -348,14 +367,29 @@ class _DbQueryViewState extends State<DbQueryView> {
       });
     } on DbQueryException catch (e) {
       if (!mounted) return;
+      if (_discardRequested || gen != _executionGeneration) {
+        // Erro tardio de operação descartada rejeitado
+        return;
+      }
       setState(() => _view.error = e);
     } finally {
-      if (mounted) setState(() => _running = false);
+      if (gen == _executionGeneration) {
+        if (mounted) {
+          setState(() {
+            _running = false;
+            _discardRequested = false;
+          });
+        } else {
+          _running = false;
+          _discardRequested = false;
+        }
+      }
     }
   }
 
   Future<void> _pickConnection(BuildContext anchor) async {
-    final vm = context.read<DatabaseViewModel>();
+    if (_running || _updating) return;
+    final vm = widget.databaseViewModel ?? context.read<DatabaseViewModel>();
     // Só engines SQL — a tab `.dbq` executa SQL; Redis/Mongo têm views
     // próprias (browse). Conexões com `agents: false` aparecem normalmente:
     // o gate é só do caminho da CLI, a GUI vê tudo.
@@ -406,7 +440,8 @@ class _DbQueryViewState extends State<DbQueryView> {
   }
 
   DbConnection? get _conn {
-    for (final c in context.read<DatabaseViewModel>().connections) {
+    final vm = widget.databaseViewModel ?? context.read<DatabaseViewModel>();
+    for (final c in vm.connections) {
       if (c.name == _connName) return c;
     }
     return null;
@@ -415,7 +450,9 @@ class _DbQueryViewState extends State<DbQueryView> {
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    context.watch<DatabaseViewModel>(); // conexões (chip/picker) ao vivo
+    if (widget.databaseViewModel == null) {
+      context.watch<DatabaseViewModel>(); // conexões (chip/picker) ao vivo
+    }
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (mounted) _syncMenuBridge();
     });
@@ -502,7 +539,7 @@ class _DbQueryViewState extends State<DbQueryView> {
           const SizedBox(width: 8),
           Builder(
             builder: (anchor) => HoverTap(
-              onTap: () => _pickConnection(anchor),
+              onTap: _running || _updating ? null : () => _pickConnection(anchor),
               color: colors.panel3,
               borderRadius: const BorderRadius.all(Radius.circular(4)),
               padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
@@ -542,7 +579,7 @@ class _DbQueryViewState extends State<DbQueryView> {
           ],
           const Spacer(),
           HoverTap(
-            onTap: _running || _connName == null ? null : _run,
+            onTap: _running || _updating || _connName == null ? null : _run,
             color: runBg,
             hoverColor: colors.accent.withValues(alpha: 0.85),
             borderRadius: const BorderRadius.all(Radius.circular(5)),
@@ -564,7 +601,9 @@ class _DbQueryViewState extends State<DbQueryView> {
                     final tr = context.t.orkest.dbQueryView;
                     return Text(
                       _running
-                          ? tr.running
+                          ? (_discardRequested ? 'Descartando...' : tr.running)
+                          : _updating
+                          ? 'Atualizando...'
                           : hasSel
                           ? tr.runSelection
                           : tr.run,
@@ -587,7 +626,11 @@ class _DbQueryViewState extends State<DbQueryView> {
             const SizedBox(width: 6),
             HoverTap(
               key: const ValueKey('db-query-cancel'),
-              onTap: () => setState(() => _running = false),
+              onTap: _discardRequested
+                  ? null
+                  : () {
+                      setState(() => _discardRequested = true);
+                    },
               color: colors.panel3,
               borderRadius: const BorderRadius.all(Radius.circular(5)),
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
@@ -597,8 +640,11 @@ class _DbQueryViewState extends State<DbQueryView> {
                   Icon(Icons.stop, size: 13, color: colors.error),
                   const SizedBox(width: 4),
                   Text(
-                    'Cancelar',
-                    style: typo.label.copyWith(fontSize: 11, color: colors.error),
+                    _discardRequested ? 'Descartando...' : 'Descartar resultado',
+                    style: typo.label.copyWith(
+                      fontSize: 11,
+                      color: _discardRequested ? colors.text4 : colors.error,
+                    ),
                   ),
                 ],
               ),
@@ -669,9 +715,10 @@ class _DbQueryViewState extends State<DbQueryView> {
       );
     }
     if (_view.asJson) return _JsonView(result: result);
+    final baseWidths = _view.baseWidths.isEmpty ? _computeWidths(result) : _view.baseWidths;
     return _DbGrid(
       result: result,
-      baseWidths: _view.baseWidths,
+      baseWidths: baseWidths,
       manualWidths: _view.manualWidths,
       selectedRow: _view.selectedRow,
       onSelectRow: (i) => setState(() => _view.selectedRow = i),
@@ -688,43 +735,280 @@ class _DbQueryViewState extends State<DbQueryView> {
   }
 
   Future<void> _editCell(int rowIndex, int colIndex, Object? currentValue) async {
-    final result = _view.result;
-    if (result == null || rowIndex >= result.rows.length || colIndex >= result.columns.length) return;
-    final col = result.columns[colIndex];
-    final ctrl = TextEditingController(text: currentValue?.toString() ?? '');
-    final newVal = await showDialog<String>(
+    if (_running || _updating) return;
+
+    final initialResult = _view.result;
+    final initialConnName = _connName;
+    final initialSessionId = widget.session.id;
+    final initialWorkspaceRoot = widget.workspaceRoot;
+    final initialSql = _view.lastExecutedSql;
+    final executedConnName = _view.executedConnName;
+
+    if (initialResult == null) return;
+
+    if (initialSql == null || initialSql.trim().isEmpty || executedConnName == null) {
+      _showEditError(
+        'Edição indisponível: resultado sem registro de proveniência (SQL ou conexão). Execute a consulta para habilitar a edição.',
+      );
+      return;
+    }
+
+    if (initialConnName != executedConnName) {
+      _showEditError(
+        'Edição recusada: a conexão selecionada ("$initialConnName") diverge da conexão utilizada na consulta ("$executedConnName"). Recarregue a consulta para editar.',
+      );
+      return;
+    }
+
+    bool isSnapshotValid() {
+      if (!mounted) return false;
+      if (_view.result != initialResult) return false;
+      if (_view.lastExecutedSql != initialSql) return false;
+      if (_view.executedConnName != executedConnName) return false;
+      if (_connName != initialConnName) return false;
+      if (widget.session.id != initialSessionId) return false;
+      if (widget.workspaceRoot != initialWorkspaceRoot) return false;
+      return true;
+    }
+
+    setState(() => _updating = true);
+    try {
+      final result = _view.result;
+      if (result == null || rowIndex >= result.rows.length || colIndex >= result.columns.length) return;
+      final col = result.columns[colIndex];
+      final conn = _conn;
+      if (conn == null) {
+        _showEditError('Nenhuma conexão de banco ativa.');
+        return;
+      }
+
+      final querySql = initialSql;
+
+      const editService = DbRowEditService();
+      final target = editService.extractEditableTable(querySql);
+      if (target == null) {
+        _showEditError(
+          'Edição restrita a consultas SELECT diretas de uma única tabela sem aliases, expressões ou subconsultas.',
+        );
+        return;
+      }
+
+      final vm = widget.databaseViewModel ?? context.read<DatabaseViewModel>();
+      final tableCols = await vm.columns(conn, target.table, schema: target.schema);
+      if (!isSnapshotValid() || !mounted) return;
+
+      final pkCols = [for (final c in tableCols) if (c.primaryKey) c.name];
+      if (pkCols.isEmpty) {
+        _showEditError(
+          'Edição recusada: a tabela "${target.table}" precisa ter chave primária (PK) definida para atualização segura.',
+        );
+        return;
+      }
+
+      final missingPks = [
+        for (final pk in pkCols)
+          if (!result.columns.any((c) => c.name.toLowerCase() == pk.toLowerCase())) pk
+      ];
+      if (missingPks.isNotEmpty) {
+        _showEditError(
+          'Edição recusada: a consulta precisa incluir a(s) coluna(s) de chave primária (${missingPks.join(", ")}) no SELECT para permitir atualização.',
+        );
+        return;
+      }
+
+      final matchingTableCol = tableCols.cast<SchemaColumn?>().firstWhere(
+        (c) => c?.name.toLowerCase() == col.name.toLowerCase(),
+        orElse: () => null,
+      );
+      if (matchingTableCol == null) {
+        _showEditError(
+          'Edição recusada: a coluna "${col.name}" é uma expressão calculada ou não pertence à tabela "${target.table}".',
+        );
+        return;
+      }
+
+      final ctrl = TextEditingController(text: currentValue?.toString() ?? '');
+      ({String text, bool isNull})? inputData;
+      try {
+        var isNullSelected = currentValue == null;
+        inputData = await showDialog<({String text, bool isNull})>(
+          context: context,
+          builder: (context) => StatefulBuilder(
+            builder: (context, setDialogState) {
+              final colors = context.colors;
+              return AlertDialog(
+                title: Text(
+                  'Editar valor de ${col.name}',
+                  style: context.typo.title.copyWith(fontSize: 14),
+                ),
+                content: SizedBox(
+                  width: 320,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      TextField(
+                        key: const ValueKey('db-grid-cell-edit-input'),
+                        controller: ctrl,
+                        enabled: !isNullSelected,
+                        autofocus: !isNullSelected,
+                        border: Border.all(color: colors.border),
+                        borderRadius: BorderRadius.circular(4),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                        onSubmitted: (v) => Navigator.of(context).pop((text: v, isNull: isNullSelected)),
+                      ),
+                      const SizedBox(height: 10),
+                      Row(
+                        children: [
+                          Checkbox(
+                            key: const ValueKey('db-grid-cell-edit-null'),
+                            state: isNullSelected
+                                ? CheckboxState.checked
+                                : CheckboxState.unchecked,
+                            onChanged: (v) {
+                              setDialogState(() {
+                                isNullSelected = v == CheckboxState.checked;
+                              });
+                            },
+                          ),
+                          const SizedBox(width: 6),
+                          GestureDetector(
+                            onTap: () {
+                              setDialogState(() {
+                                isNullSelected = !isNullSelected;
+                              });
+                            },
+                            child: Text(
+                              'Definir como NULL',
+                              style: context.typo.label.copyWith(fontSize: 12, color: colors.text2),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
+                  ),
+                ),
+                actions: [
+                  GhostButton(
+                    onPressed: () => Navigator.of(context).pop(),
+                    child: Text(context.t.common.cancel),
+                  ),
+                  PrimaryButton(
+                    key: const ValueKey('db-grid-cell-edit-save'),
+                    onPressed: () => Navigator.of(context).pop((text: ctrl.text, isNull: isNullSelected)),
+                    child: Text(context.t.common.save),
+                  ),
+                ],
+              );
+            },
+          ),
+        );
+      } finally {
+        ctrl.dispose();
+      }
+
+      if (inputData == null || !isSnapshotValid()) return;
+
+      final typedNewVal = editService.parseValueForColumn(
+        rawInput: inputData.text,
+        columnType: matchingTableCol.type,
+        isNull: inputData.isNull,
+        currentValue: currentValue,
+      );
+
+      if (typedNewVal == currentValue) return;
+
+      final pkValues = <Object?>[];
+      for (final pk in pkCols) {
+        final pkIdx = result.columns.indexWhere((c) => c.name.toLowerCase() == pk.toLowerCase());
+        pkValues.add(result.rows[rowIndex][pkIdx]);
+      }
+
+      final updateSql = editService.generateOptimisticUpdateSql(
+        engine: conn.engine,
+        table: target.table,
+        schema: target.schema,
+        pkColumns: pkCols,
+        pkValues: pkValues,
+        modifiedColumn: matchingTableCol.name,
+        oldValue: currentValue,
+        newValue: typedNewVal,
+      );
+
+      final res = await vm.service.query(
+        workspaceRoot: widget.workspaceRoot,
+        workspaceId: widget.session.projectId,
+        connName: conn.name,
+        sql: updateSql,
+        dml: true,
+      );
+
+      if (!isSnapshotValid()) return;
+
+      if (res.affectedRows == 0) {
+        _showEditError(
+          'Falha na concorrência: nenhum registro atualizado (0 linhas afetadas). O dado pode ter sido alterado ou excluído por outro processo.',
+        );
+        return;
+      }
+
+      if (res.affectedRows == null) {
+        _showEditError(
+          'Resultado indeterminado: o driver não confirmou o número de linhas afetadas. A mudança pode ter sido aplicada no banco de dados; recarregue a consulta antes de tentar novamente.',
+        );
+        return;
+      }
+
+      if (res.affectedRows! > 1) {
+        _showEditError(
+          'Atenção: o driver reportou mais de uma linha alterada (${res.affectedRows}). Verifique o banco de dados e recarregue a consulta.',
+        );
+        return;
+      }
+
+      // res.affectedRows == 1 estritamente garantido
+      setState(() {
+        result.rows[rowIndex][colIndex] = typedNewVal;
+      });
+    } on DbEditException catch (e) {
+      if (mounted) _showEditError(e.message);
+    } on DbQueryException catch (e) {
+      if (mounted) _showEditError(e.message);
+    } catch (e) {
+      if (mounted) _showEditError('Erro ao persistir alteração: $e');
+    } finally {
+      if (mounted) {
+        setState(() => _updating = false);
+      } else {
+        _updating = false;
+      }
+    }
+  }
+
+  void _showEditError(String message) {
+    if (!mounted) return;
+    showDialog<void>(
       context: context,
       builder: (context) => AlertDialog(
-        title: Text('Editar valor de ${col.name}', style: context.typo.title.copyWith(fontSize: 14)),
-        content: SizedBox(
-          width: 320,
-          child: TextField(
-            key: const ValueKey('db-grid-cell-edit-input'),
-            controller: ctrl,
-            autofocus: true,
-            border: Border.all(color: context.colors.border),
-            borderRadius: BorderRadius.circular(4),
-            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
-            onSubmitted: (v) => Navigator.of(context).pop(v),
+        title: Text(
+          'Não foi possível editar',
+          style: context.typo.title.copyWith(fontSize: 14, color: context.colors.error),
+        ),
+        content: ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 380),
+          child: Text(
+            message,
+            style: context.typo.body.copyWith(fontSize: 12.5, color: context.colors.text2),
           ),
         ),
         actions: [
-          GhostButton(
-            onPressed: () => Navigator.of(context).pop(),
-            child: Text(context.t.common.cancel),
-          ),
           PrimaryButton(
-            key: const ValueKey('db-grid-cell-edit-save'),
-            onPressed: () => Navigator.of(context).pop(ctrl.text),
-            child: Text(context.t.common.save),
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(context.t.common.ok),
           ),
         ],
       ),
     );
-    if (newVal == null || !mounted) return;
-    setState(() {
-      result.rows[rowIndex][colIndex] = newVal;
-    });
   }
 
   Future<void> _showExportMenu(BuildContext anchor, DbResult result) async {
