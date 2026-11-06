@@ -13,9 +13,12 @@ class GitPrReviewPanel extends StatefulWidget {
     required this.repoRoot,
     required this.service,
     this.onSelectFileChange,
+    this.onSelectReviewFile,
     this.onCheckoutSuccess,
   });
 
+  final Future<void> Function(int number, GitHistoryFileChange change)?
+  onSelectReviewFile;
   final String repoRoot;
   final GitPullRequestService service;
   final void Function(GitHistoryFileChange fileChange)? onSelectFileChange;
@@ -87,7 +90,10 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
       _selectedPrDetail = null;
     });
 
-    final res = await widget.service.getPullRequestDetail(widget.repoRoot, pr.number);
+    final res = await widget.service.getPullRequestDetail(
+      widget.repoRoot,
+      pr.number,
+    );
     if (!mounted) return;
 
     switch (res) {
@@ -113,14 +119,18 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
       _actionMessage = 'Criando branch local pr-${pr.number}...';
     });
 
-    final res = await widget.service.checkoutPullRequest(widget.repoRoot, pr.number);
+    final res = await widget.service.checkoutPullRequest(
+      widget.repoRoot,
+      pr.number,
+    );
     if (!mounted) return;
 
     switch (res) {
       case Success():
         setState(() {
           _isCheckingOut = false;
-          _actionMessage = 'Checkout para pr-${pr.number} realizado com sucesso!';
+          _actionMessage =
+              'Checkout para pr-${pr.number} realizado com sucesso!';
         });
         widget.onCheckoutSuccess?.call(pr.number);
       case Failure(:final error):
@@ -128,6 +138,20 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
           _isCheckingOut = false;
           _actionMessage = 'Erro no checkout: $error';
         });
+    }
+  }
+
+  Future<void> _openFile(GitHistoryFileChange change) async {
+    final pr = _selectedPr;
+    if (pr == null) return;
+    try {
+      if (widget.onSelectReviewFile != null) {
+        await widget.onSelectReviewFile!(pr.number, change);
+      } else {
+        widget.onSelectFileChange?.call(change);
+      }
+    } catch (error) {
+      if (mounted) setState(() => _actionMessage = '$error');
     }
   }
 
@@ -205,7 +229,10 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
                 ? Center(
                     child: Text(
                       'Selecione um Pull Request para revisar',
-                      style: typo.body.copyWith(color: colors.text3, fontSize: 13),
+                      style: typo.body.copyWith(
+                        color: colors.text3,
+                        fontSize: 13,
+                      ),
                     ),
                   )
                 : _buildDetailPanel(colors, typo),
@@ -285,7 +312,8 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
 
     return ListView.separated(
       itemCount: _prs.length,
-      separatorBuilder: (context, index) => Divider(height: 1, color: colors.border),
+      separatorBuilder: (context, index) =>
+          Divider(height: 1, color: colors.border),
       itemBuilder: (context, index) {
         final pr = _prs[index];
         final isSelected = pr.number == _selectedPr?.number;
@@ -304,8 +332,8 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
                       pr.isOpen
                           ? sc.LucideIcons.gitPullRequest
                           : (pr.isMerged
-                              ? sc.LucideIcons.gitMerge
-                              : sc.LucideIcons.circleSlash),
+                                ? sc.LucideIcons.gitMerge
+                                : sc.LucideIcons.circleSlash),
                       size: 13,
                       color: pr.isOpen
                           ? colors.accent
@@ -323,7 +351,10 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
                     const Spacer(),
                     if (pr.isDraft)
                       Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 1,
+                        ),
                         decoration: BoxDecoration(
                           color: colors.panel2,
                           borderRadius: BorderRadius.circular(3),
@@ -341,7 +372,9 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
                   maxLines: 2,
                   overflow: TextOverflow.ellipsis,
                   style: typo.body.copyWith(
-                    fontWeight: isSelected ? FontWeight.w600 : FontWeight.normal,
+                    fontWeight: isSelected
+                        ? FontWeight.w600
+                        : FontWeight.normal,
                     color: colors.text,
                     fontSize: 12,
                   ),
@@ -349,10 +382,7 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
                 const SizedBox(height: 4),
                 Text(
                   'por ${pr.author} · ${pr.headRef} ➔ ${pr.baseRef}',
-                  style: typo.mono.copyWith(
-                    fontSize: 10,
-                    color: colors.text2,
-                  ),
+                  style: typo.mono.copyWith(fontSize: 10, color: colors.text2),
                 ),
               ],
             ),
@@ -383,7 +413,10 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
                   Expanded(
                     child: Text(
                       '#${pr.number} - ${pr.title}',
-                      style: typo.title.copyWith(fontWeight: FontWeight.bold, fontSize: 16),
+                      style: typo.title.copyWith(
+                        fontWeight: FontWeight.bold,
+                        fontSize: 16,
+                      ),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -395,7 +428,9 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
                             child: CircularProgressIndicator(strokeWidth: 2),
                           )
                         : const Icon(sc.LucideIcons.gitBranch, size: 14),
-                    label: Text(_isCheckingOut ? 'Checkout...' : 'Checkout Local'),
+                    label: Text(
+                      _isCheckingOut ? 'Checkout...' : 'Checkout Local',
+                    ),
                     onPressed: _isCheckingOut ? null : _checkoutSelectedPr,
                   ),
                 ],
@@ -421,13 +456,16 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
           child: _isLoadingDetail
               ? const Center(child: CircularProgressIndicator())
               : _detailError != null
-                  ? Center(
-                      child: Text(
-                        'Erro ao carregar detalhes: $_detailError',
-                        style: typo.body.copyWith(color: colors.error, fontSize: 12),
-                      ),
-                    )
-                  : _buildDetailContent(colors, typo),
+              ? Center(
+                  child: Text(
+                    'Erro ao carregar detalhes: $_detailError',
+                    style: typo.body.copyWith(
+                      color: colors.error,
+                      fontSize: 12,
+                    ),
+                  ),
+                )
+              : _buildDetailContent(colors, typo),
         ),
       ],
     );
@@ -472,7 +510,10 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
                     ? Center(
                         child: Text(
                           'Nenhum arquivo listado.',
-                          style: typo.body.copyWith(color: colors.text3, fontSize: 13),
+                          style: typo.body.copyWith(
+                            color: colors.text3,
+                            fontSize: 13,
+                          ),
                         ),
                       )
                     : ListView.builder(
@@ -480,13 +521,19 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
                         itemBuilder: (context, idx) {
                           final f = detail.changedFiles[idx];
                           return InkWell(
-                            onTap: () => widget.onSelectFileChange?.call(f),
+                            onTap: () => _openFile(f),
                             child: Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 16,
+                                vertical: 8,
+                              ),
                               child: Row(
                                 children: [
                                   Container(
-                                    padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
+                                    padding: const EdgeInsets.symmetric(
+                                      horizontal: 5,
+                                      vertical: 2,
+                                    ),
                                     decoration: BoxDecoration(
                                       color: colors.panel2,
                                       borderRadius: BorderRadius.circular(3),
@@ -498,20 +545,31 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
                                         fontSize: 11,
                                         color: f.status == 'A'
                                             ? Colors.green
-                                            : (f.status == 'D' ? colors.error : colors.accent),
+                                            : (f.status == 'D'
+                                                  ? colors.error
+                                                  : colors.accent),
                                       ),
                                     ),
                                   ),
                                   const SizedBox(width: 10),
                                   Expanded(
                                     child: Column(
-                                      crossAxisAlignment: CrossAxisAlignment.start,
+                                      crossAxisAlignment:
+                                          CrossAxisAlignment.start,
                                       children: [
-                                        Text(f.path, style: typo.mono.copyWith(fontSize: 12)),
+                                        Text(
+                                          f.path,
+                                          style: typo.mono.copyWith(
+                                            fontSize: 12,
+                                          ),
+                                        ),
                                         if (f.previousPath != null)
                                           Text(
                                             'De: ${f.previousPath}',
-                                            style: typo.mono.copyWith(fontSize: 11, color: colors.text2),
+                                            style: typo.mono.copyWith(
+                                              fontSize: 11,
+                                              color: colors.text2,
+                                            ),
                                           ),
                                       ],
                                     ),
@@ -531,13 +589,17 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
                           ? Center(
                               child: Text(
                                 'Nenhum comentário na revisão.',
-                                style: typo.body.copyWith(color: colors.text3, fontSize: 13),
+                                style: typo.body.copyWith(
+                                  color: colors.text3,
+                                  fontSize: 13,
+                                ),
                               ),
                             )
                           : ListView.separated(
                               padding: const EdgeInsets.all(12),
                               itemCount: detail.comments.length,
-                              separatorBuilder: (context, index) => const SizedBox(height: 8),
+                              separatorBuilder: (context, index) =>
+                                  const SizedBox(height: 8),
                               itemBuilder: (context, idx) {
                                 final c = detail.comments[idx];
                                 return Container(
@@ -548,7 +610,8 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
                                     border: Border.all(color: colors.border),
                                   ),
                                   child: Column(
-                                    crossAxisAlignment: CrossAxisAlignment.start,
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
                                     children: [
                                       Row(
                                         children: [
@@ -576,7 +639,10 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
                                       const SizedBox(height: 6),
                                       SelectableText(
                                         c.body,
-                                        style: typo.body.copyWith(color: colors.text, fontSize: 12),
+                                        style: typo.body.copyWith(
+                                          color: colors.text,
+                                          fontSize: 12,
+                                        ),
                                       ),
                                     ],
                                   ),
@@ -602,12 +668,16 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
                           ),
                           const SizedBox(width: 8),
                           ElevatedButton(
-                            onPressed: _isSubmittingComment ? null : _submitComment,
+                            onPressed: _isSubmittingComment
+                                ? null
+                                : _submitComment,
                             child: _isSubmittingComment
                                 ? const SizedBox(
                                     width: 14,
                                     height: 14,
-                                    child: CircularProgressIndicator(strokeWidth: 2),
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
                                   )
                                 : const Text('Comentar'),
                           ),

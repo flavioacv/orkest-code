@@ -1732,6 +1732,9 @@ class _PaneBodyState extends State<_PaneBody> {
           if (item.rawSource) {
             return FileViewer(
               session: item,
+              debugController: context
+                  .read<OrkestViewModel>()
+                  .debugForWorkspace(item.projectId),
               active: widget.active,
               focused: widget.focused,
               onSave: (content) => vm.saveFile(item.id, content),
@@ -1762,6 +1765,9 @@ class _PaneBodyState extends State<_PaneBody> {
         builder: (context, _) => item.rawSource
             ? FileViewer(
                 session: item,
+                debugController: context
+                    .read<OrkestViewModel>()
+                    .debugForWorkspace(item.projectId),
                 active: widget.active,
                 focused: widget.focused,
                 onSave: (content) => vm.saveFile(item.id, content),
@@ -1781,6 +1787,9 @@ class _PaneBodyState extends State<_PaneBody> {
         builder: (context, _) => item.rawSource
             ? FileViewer(
                 session: item,
+                debugController: context
+                    .read<OrkestViewModel>()
+                    .debugForWorkspace(item.projectId),
                 active: widget.active,
                 focused: widget.focused,
                 onSave: (content) => vm.saveFile(item.id, content),
@@ -1817,6 +1826,9 @@ class _PaneBodyState extends State<_PaneBody> {
     if (item is FileViewerSession) {
       return FileViewer(
         session: item,
+        debugController: context.read<OrkestViewModel>().debugForWorkspace(
+          item.projectId,
+        ),
         active: widget.active,
         focused: widget.focused,
         onSave: (content) =>

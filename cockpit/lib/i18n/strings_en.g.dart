@@ -1834,6 +1834,9 @@ class Translations$orkest$fileTreePanel$en {
 	/// en: 'Remove conflict markers before applying the result.'
 	String get mergeMarkers => 'Remove conflict markers before applying the result.';
 
+	/// en: 'Run / Test (terminal)'
+	String get workbenchRunTerminal => 'Run / Test (terminal)';
+
 	/// en: 'Save the file after applying the result.'
 	String get mergePendingSave => 'Save the file after applying the result.';
 
@@ -5134,6 +5137,7 @@ extension on Translations {
 			'orkest.fileTreePanel.mergeApply' => 'Apply to editor',
 			'orkest.fileTreePanel.mergeStale' => 'The file changed during review. Open the conflict again to review its current contents.',
 			'orkest.fileTreePanel.mergeMarkers' => 'Remove conflict markers before applying the result.',
+			'orkest.fileTreePanel.workbenchRunTerminal' => 'Run / Test (terminal)',
 			'orkest.fileTreePanel.mergePendingSave' => 'Save the file after applying the result.',
 			'orkest.fileTreePanel.conflictsBanner' => ({required Object count}) => '${count} unresolved merge conflict(s)',
 			'orkest.fileTreePanel.acceptAllOurs' => 'Accept Current',
@@ -5143,9 +5147,9 @@ extension on Translations {
 			'orkest.fileTreePanel.nextConflict' => 'Next',
 			'orkest.fileTreePanel.continueGitOp' => ({required Object op}) => 'Continue ${op}',
 			'orkest.fileTreePanel.abortGitOp' => ({required Object op}) => 'Abort ${op}',
-			'orkest.fileTreePanel.reviewDocument' => 'Review document conflicts',
 			_ => null,
 		} ?? switch (path) {
+			'orkest.fileTreePanel.reviewDocument' => 'Review document conflicts',
 			'orkest.fileTreePanel.conflictProgress' => ({required Object current, required Object total, required Object resolved}) => 'Conflict ${current} of ${total} (${resolved} resolved)',
 			'orkest.fileTreePanel.markResolved' => 'Mark resolved',
 			'orkest.fileTreePanel.markUnresolved' => 'Mark pending',
@@ -5657,9 +5661,9 @@ extension on Translations {
 			'settings.page.general.updateFrequency.daily' => 'Daily',
 			'settings.page.general.updateFrequency.weekly' => 'Weekly',
 			'settings.page.general.updateFrequency.monthly' => 'Monthly',
-			'settings.page.general.updateFrequency.never' => 'Never',
 			_ => null,
 		} ?? switch (path) {
+			'settings.page.general.updateFrequency.never' => 'Never',
 			'settings.page.general.developerModeTitle' => 'Developer mode',
 			'settings.page.general.developerModeDesc' => 'Records Orkest Code’s own errors and warnings in a separate Telemetry store (the “Orkest Code” chip) and turns on performance metrics. Only useful to whoever maintains the app.',
 			'settings.page.diagnostics.sectionTitle' => 'Diagnostics',

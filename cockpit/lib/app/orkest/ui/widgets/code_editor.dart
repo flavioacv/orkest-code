@@ -55,6 +55,7 @@ class CodeEditor extends StatefulWidget {
     required this.controller,
     required this.focusNode,
     this.revealLine,
+    this.revealColumn,
     this.revealSelect = true,
     this.revealTick = 0,
     this.scmDecorations = ScmLineDecorations.empty,
@@ -96,6 +97,7 @@ class CodeEditor extends StatefulWidget {
   /// Linha (base 1) a revelar (rolar + selecionar) — vem de um resultado de
   /// busca. `null` = nenhum pedido.
   final int? revealLine;
+  final int? revealColumn;
 
   /// Seleciona a linha revelada (busca) ou so posiciona o cursor (Git).
   final bool revealSelect;
@@ -298,7 +300,12 @@ class _CodeEditorState extends State<CodeEditor> {
     // Extent no INÍCIO da linha (base no fim): a seleção cobre a linha inteira
     // igual, mas o `bringIntoView` do campo segue o extent → rola a horizontal
     // pra esquerda (início), em vez de empurrar pro fim da linha.
-    widget.controller.selection = doSelect
+    final column = widget.revealColumn;
+    widget.controller.selection = column != null
+        ? TextSelection.collapsed(
+            offset: start + (column - 1).clamp(0, lines[idx].length),
+          )
+        : doSelect
         ? TextSelection(baseOffset: end, extentOffset: start)
         : TextSelection.collapsed(offset: start);
     widget.focusNode.requestFocus();
@@ -1175,7 +1182,9 @@ class _CodeEditorState extends State<CodeEditor> {
     return GestureDetector(
       key: ValueKey('code-editor-gutter-line:$oneBased'),
       behavior: HitTestBehavior.opaque,
-      onTap: widget.onToggleBreakpoint != null ? () => widget.onToggleBreakpoint!(oneBased) : null,
+      onTap: widget.onToggleBreakpoint != null
+          ? () => widget.onToggleBreakpoint!(oneBased)
+          : null,
       child: Stack(
         key: hasScm ? ValueKey('git-change-line:$oneBased') : null,
         children: [

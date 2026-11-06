@@ -157,6 +157,7 @@ class FileViewerSession extends PaneItem {
   /// Linha (base 1) a revelar no viewer — rolar até ela e destacá-la. `null`
   /// quando não há pedido pendente. Setado por [reveal] (resultado de busca).
   int? revealLine;
+  int? revealColumn;
 
   /// Se a revelacao seleciona a linha inteira (busca) ou apenas posiciona o
   /// cursor nela (mudancas Git).
@@ -193,8 +194,9 @@ class FileViewerSession extends PaneItem {
   }
 
   /// Pede ao viewer pra revelar [line]. Busca seleciona; Git so posiciona.
-  void reveal(int line, {bool select = true}) {
+  void reveal(int line, {bool select = true, int? column}) {
     revealLine = line;
+    revealColumn = column;
     revealSelect = select;
     revealTick++;
     notifyListeners();

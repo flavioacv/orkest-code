@@ -25,7 +25,8 @@ class DebugPanel extends StatefulWidget {
   final RunConfiguration? selectedConfiguration;
   final ValueChanged<RunConfiguration>? onSelectConfiguration;
   final ValueChanged<RunConfiguration>? onStartConfiguration;
-  final void Function(String filePath, int line, int column)? onNavigateToSource;
+  final void Function(String filePath, int line, int column)?
+  onNavigateToSource;
 
   @override
   State<DebugPanel> createState() => _DebugPanelState();
@@ -37,8 +38,35 @@ class _DebugPanelState extends State<DebugPanel> {
   bool _addingWatch = false;
   final Map<String, String> _watchValues = {};
 
+  Object? _watchFrame;
+  @override
+  void initState() {
+    super.initState();
+    widget.controller.addListener(_onDebugChanged);
+  }
+
+  @override
+  void didUpdateWidget(DebugPanel oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (oldWidget.controller != widget.controller) {
+      oldWidget.controller.removeListener(_onDebugChanged);
+      widget.controller.addListener(_onDebugChanged);
+      _watchFrame = null;
+    }
+  }
+
+  void _onDebugChanged() {
+    final frame = widget.controller.isStopped
+        ? widget.controller.currentFrame
+        : null;
+    if (frame == _watchFrame) return;
+    _watchFrame = frame;
+    if (frame != null) _refreshWatches();
+  }
+
   @override
   void dispose() {
+    widget.controller.removeListener(_onDebugChanged);
     _watchInputCtrl.dispose();
     _evalInputCtrl.dispose();
     super.dispose();
@@ -46,9 +74,12 @@ class _DebugPanelState extends State<DebugPanel> {
 
   Future<void> _refreshWatches() async {
     if (!widget.controller.isStopped) return;
+    final frame = widget.controller.currentFrame;
     for (final expr in widget.controller.watchExpressions) {
       final res = await widget.controller.evaluate(expr);
-      if (mounted) {
+      if (mounted &&
+          widget.controller.isStopped &&
+          widget.controller.currentFrame == frame) {
         setState(() {
           _watchValues[expr] = res ?? 'undefined';
         });
@@ -83,8 +114,11 @@ class _DebugPanelState extends State<DebugPanel> {
         final isStopped = widget.controller.isStopped;
         final isRunning = widget.controller.isRunning;
 
-        final currentConfig = widget.selectedConfiguration ??
-            (widget.configurations.isNotEmpty ? widget.configurations.first : null);
+        final currentConfig =
+            widget.selectedConfiguration ??
+            (widget.configurations.isNotEmpty
+                ? widget.configurations.first
+                : null);
 
         return Container(
           color: colors.panel,
@@ -93,7 +127,10 @@ class _DebugPanelState extends State<DebugPanel> {
             children: [
               // Cabeçalho Principal
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 8,
+                ),
                 decoration: BoxDecoration(
                   color: colors.panel2,
                   border: Border(bottom: BorderSide(color: colors.border)),
@@ -116,8 +153,8 @@ class _DebugPanelState extends State<DebugPanel> {
                       isStopped
                           ? 'PAUSADO (${widget.controller.lastStopReason?.name ?? 'stop'})'
                           : isRunning
-                              ? 'EXECUTANDO'
-                              : 'OCIOSO',
+                          ? 'EXECUTANDO'
+                          : 'OCIOSO',
                       style: context.typo.mono.copyWith(
                         fontSize: 10,
                         color: isStopped ? colors.warn : colors.text3,
@@ -148,14 +185,20 @@ class _DebugPanelState extends State<DebugPanel> {
                                 if (widget.onStartConfiguration != null) {
                                   widget.onStartConfiguration!(currentConfig);
                                 } else {
-                                  widget.controller.startFromRunConfiguration(config: currentConfig);
+                                  widget.controller.startFromRunConfiguration(
+                                    config: currentConfig,
+                                  );
                                 }
                               }
                             : null,
                         padding: const EdgeInsets.all(6),
                         borderRadius: BorderRadius.circular(4),
                         color: colors.gitStaged.withValues(alpha: 0.15),
-                        child: Icon(sc.LucideIcons.play, size: 14, color: colors.gitStaged),
+                        child: Icon(
+                          sc.LucideIcons.play,
+                          size: 14,
+                          color: colors.gitStaged,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -171,7 +214,10 @@ class _DebugPanelState extends State<DebugPanel> {
                               ),
                             )
                           : Container(
-                              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 8,
+                                vertical: 4,
+                              ),
                               decoration: BoxDecoration(
                                 color: colors.panel2,
                                 border: Border.all(color: colors.border),
@@ -201,7 +247,11 @@ class _DebugPanelState extends State<DebugPanel> {
                                   ),
                                   if (widget.configurations.length > 1) ...[
                                     const SizedBox(width: 4),
-                                    Icon(sc.LucideIcons.chevronDown, size: 12, color: colors.text3),
+                                    Icon(
+                                      sc.LucideIcons.chevronDown,
+                                      size: 12,
+                                      color: colors.text3,
+                                    ),
                                   ],
                                 ],
                               ),
@@ -218,21 +268,30 @@ class _DebugPanelState extends State<DebugPanel> {
                   children: [
                     // Seção Watches
                     _SectionHeader(
-                      title: 'WATCHES (${widget.controller.watchExpressions.length})',
+                      title:
+                          'WATCHES (${widget.controller.watchExpressions.length})',
                       action: AppTooltip(
                         message: 'Adicionar expressão',
                         child: HoverTap(
                           key: const ValueKey('run-config-add-watch'),
-                          onTap: () => setState(() => _addingWatch = !_addingWatch),
+                          onTap: () =>
+                              setState(() => _addingWatch = !_addingWatch),
                           padding: const EdgeInsets.all(2),
                           borderRadius: BorderRadius.circular(3),
-                          child: Icon(sc.LucideIcons.plus, size: 12, color: colors.text3),
+                          child: Icon(
+                            sc.LucideIcons.plus,
+                            size: 12,
+                            color: colors.text3,
+                          ),
                         ),
                       ),
                     ),
                     if (_addingWatch)
                       Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 4),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 4,
+                          horizontal: 4,
+                        ),
                         child: Row(
                           children: [
                             Expanded(
@@ -242,10 +301,18 @@ class _DebugPanelState extends State<DebugPanel> {
                                 style: context.typo.mono.copyWith(fontSize: 11),
                                 decoration: InputDecoration(
                                   hintText: 'Expressão para vigiar...',
-                                  hintStyle: context.typo.mono.copyWith(fontSize: 11, color: colors.text4),
+                                  hintStyle: context.typo.mono.copyWith(
+                                    fontSize: 11,
+                                    color: colors.text4,
+                                  ),
                                   isDense: true,
-                                  contentPadding: const EdgeInsets.symmetric(horizontal: 6, vertical: 4),
-                                  border: OutlineInputBorder(borderRadius: BorderRadius.circular(4)),
+                                  contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 6,
+                                    vertical: 4,
+                                  ),
+                                  border: OutlineInputBorder(
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
                                 ),
                                 onSubmitted: (_) => _submitWatch(),
                               ),
@@ -256,39 +323,61 @@ class _DebugPanelState extends State<DebugPanel> {
                               onTap: _submitWatch,
                               padding: const EdgeInsets.all(4),
                               borderRadius: BorderRadius.circular(3),
-                              child: Icon(sc.LucideIcons.check, size: 12, color: colors.gitStaged),
+                              child: Icon(
+                                sc.LucideIcons.check,
+                                size: 12,
+                                color: colors.gitStaged,
+                              ),
                             ),
                           ],
                         ),
                       ),
-                    if (widget.controller.watchExpressions.isEmpty && !_addingWatch)
+                    if (widget.controller.watchExpressions.isEmpty &&
+                        !_addingWatch)
                       Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 4,
+                          horizontal: 8,
+                        ),
                         child: Text(
                           'Nenhuma expressão observada',
-                          style: context.typo.mono.copyWith(fontSize: 11, color: colors.text4),
+                          style: context.typo.mono.copyWith(
+                            fontSize: 11,
+                            color: colors.text4,
+                          ),
                         ),
                       )
                     else
                       for (final expr in widget.controller.watchExpressions)
                         _WatchRow(
                           expression: expr,
-                          value: _watchValues[expr] ?? (isStopped ? '...' : 'não disponível'),
+                          value:
+                              _watchValues[expr] ??
+                              (isStopped ? '...' : 'não disponível'),
                           onRemove: () => widget.controller.removeWatch(expr),
                         ),
 
                     const SizedBox(height: 12),
 
                     // Seção Call Stack
-                    _SectionHeader(title: 'CALL STACK (${widget.controller.stackFrames.length})'),
+                    _SectionHeader(
+                      title:
+                          'CALL STACK (${widget.controller.stackFrames.length})',
+                    ),
                     if (widget.controller.stackFrames.isEmpty)
                       Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 4,
+                          horizontal: 8,
+                        ),
                         child: Text(
                           isRunning
                               ? 'Aplicação em execução...'
                               : 'Nenhuma pilha disponível',
-                          style: context.typo.mono.copyWith(fontSize: 11, color: colors.text4),
+                          style: context.typo.mono.copyWith(
+                            fontSize: 11,
+                            color: colors.text4,
+                          ),
                         ),
                       )
                     else
@@ -296,8 +385,13 @@ class _DebugPanelState extends State<DebugPanel> {
                         _FrameRow(
                           frame: frame,
                           onTap: () {
-                            if (frame.sourcePath != null && widget.onNavigateToSource != null) {
-                              widget.onNavigateToSource!(frame.sourcePath!, frame.line, frame.column);
+                            if (frame.sourcePath != null &&
+                                widget.onNavigateToSource != null) {
+                              widget.onNavigateToSource!(
+                                frame.sourcePath!,
+                                frame.line,
+                                frame.column,
+                              );
                             }
                             widget.controller.selectFrame(frame.id);
                           },
@@ -306,13 +400,22 @@ class _DebugPanelState extends State<DebugPanel> {
                     const SizedBox(height: 12),
 
                     // Seção Variáveis
-                    _SectionHeader(title: 'VARIÁVEIS (${widget.controller.variables.length})'),
+                    _SectionHeader(
+                      title:
+                          'VARIÁVEIS (${widget.controller.variables.length})',
+                    ),
                     if (widget.controller.variables.isEmpty)
                       Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 4,
+                          horizontal: 8,
+                        ),
                         child: Text(
                           'Nenhuma variável no escopo atual',
-                          style: context.typo.mono.copyWith(fontSize: 11, color: colors.text4),
+                          style: context.typo.mono.copyWith(
+                            fontSize: 11,
+                            color: colors.text4,
+                          ),
                         ),
                       )
                     else
@@ -323,26 +426,41 @@ class _DebugPanelState extends State<DebugPanel> {
 
                     // Seção Breakpoints
                     _SectionHeader(
-                      title: 'BREAKPOINTS (${widget.controller.breakpointsByPath.values.fold(0, (acc, list) => acc + list.length)})',
+                      title:
+                          'BREAKPOINTS (${widget.controller.breakpointsByPath.values.fold(0, (acc, list) => acc + list.length)})',
                     ),
                     if (widget.controller.breakpointsByPath.isEmpty)
                       Padding(
-                        padding: const EdgeInsets.symmetric(vertical: 4, horizontal: 8),
+                        padding: const EdgeInsets.symmetric(
+                          vertical: 4,
+                          horizontal: 8,
+                        ),
                         child: Text(
                           'Nenhum breakpoint registrado',
-                          style: context.typo.mono.copyWith(fontSize: 11, color: colors.text4),
+                          style: context.typo.mono.copyWith(
+                            fontSize: 11,
+                            color: colors.text4,
+                          ),
                         ),
                       )
                     else
-                      for (final entry in widget.controller.breakpointsByPath.entries)
+                      for (final entry
+                          in widget.controller.breakpointsByPath.entries)
                         for (final bp in entry.value)
                           _BreakpointRow(
                             filePath: entry.key,
                             line: bp.line,
-                            onRemove: () => widget.controller.toggleBreakpoint(entry.key, bp.line),
+                            onRemove: () => widget.controller.toggleBreakpoint(
+                              entry.key,
+                              bp.line,
+                            ),
                             onTap: () {
                               if (widget.onNavigateToSource != null) {
-                                widget.onNavigateToSource!(entry.key, bp.line, 1);
+                                widget.onNavigateToSource!(
+                                  entry.key,
+                                  bp.line,
+                                  1,
+                                );
                               }
                             },
                           ),
@@ -350,7 +468,10 @@ class _DebugPanelState extends State<DebugPanel> {
                     const SizedBox(height: 12),
 
                     // Seção Console de Depuração
-                    _SectionHeader(title: 'CONSOLE DE DEPURAÇÃO (${widget.controller.consoleLogs.length})'),
+                    _SectionHeader(
+                      title:
+                          'CONSOLE DE DEPURAÇÃO (${widget.controller.consoleLogs.length})',
+                    ),
                     Container(
                       height: 120,
                       decoration: BoxDecoration(
@@ -365,39 +486,67 @@ class _DebugPanelState extends State<DebugPanel> {
                                 ? Center(
                                     child: Text(
                                       'Saída de logs DAP vazia',
-                                      style: context.typo.mono.copyWith(fontSize: 10, color: colors.text4),
+                                      style: context.typo.mono.copyWith(
+                                        fontSize: 10,
+                                        color: colors.text4,
+                                      ),
                                     ),
                                   )
                                 : ListView.builder(
                                     padding: const EdgeInsets.all(4),
-                                    itemCount: widget.controller.consoleLogs.length,
+                                    itemCount:
+                                        widget.controller.consoleLogs.length,
                                     itemBuilder: (context, i) => Text(
                                       widget.controller.consoleLogs[i],
-                                      style: context.typo.mono.copyWith(fontSize: 10, color: colors.text2),
+                                      style: context.typo.mono.copyWith(
+                                        fontSize: 10,
+                                        color: colors.text2,
+                                      ),
                                     ),
                                   ),
                           ),
                           Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 6,
+                              vertical: 2,
+                            ),
                             decoration: BoxDecoration(
                               color: colors.panel,
-                              border: Border(top: BorderSide(color: colors.border)),
+                              border: Border(
+                                top: BorderSide(color: colors.border),
+                              ),
                             ),
                             child: Row(
                               children: [
-                                Text('>', style: context.typo.mono.copyWith(fontSize: 11, color: colors.accent)),
+                                Text(
+                                  '>',
+                                  style: context.typo.mono.copyWith(
+                                    fontSize: 11,
+                                    color: colors.accent,
+                                  ),
+                                ),
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: TextField(
                                     controller: _evalInputCtrl,
                                     enabled: isStopped,
-                                    style: context.typo.mono.copyWith(fontSize: 11),
+                                    style: context.typo.mono.copyWith(
+                                      fontSize: 11,
+                                    ),
                                     decoration: InputDecoration(
-                                      hintText: isStopped ? 'Avaliar expressão (Enter)...' : 'Pausado para avaliar',
-                                      hintStyle: context.typo.mono.copyWith(fontSize: 10, color: colors.text4),
+                                      hintText: isStopped
+                                          ? 'Avaliar expressão (Enter)...'
+                                          : 'Pausado para avaliar',
+                                      hintStyle: context.typo.mono.copyWith(
+                                        fontSize: 10,
+                                        color: colors.text4,
+                                      ),
                                       isDense: true,
                                       border: InputBorder.none,
-                                      contentPadding: const EdgeInsets.symmetric(vertical: 4),
+                                      contentPadding:
+                                          const EdgeInsets.symmetric(
+                                            vertical: 4,
+                                          ),
                                     ),
                                     onSubmitted: (_) => _submitEvaluate(),
                                   ),
@@ -440,10 +589,7 @@ class _SectionHeader extends StatelessWidget {
               letterSpacing: 0.5,
             ),
           ),
-          if (action != null) ...[
-            const Spacer(),
-            action!,
-          ],
+          if (action != null) ...[const Spacer(), action!],
         ],
       ),
     );
@@ -480,14 +626,23 @@ class _WatchRow extends StatelessWidget {
             ),
           ),
           const SizedBox(width: 6),
-          Text(':', style: context.typo.mono.copyWith(fontSize: 11, color: colors.text3)),
+          Text(
+            ':',
+            style: context.typo.mono.copyWith(
+              fontSize: 11,
+              color: colors.text3,
+            ),
+          ),
           const SizedBox(width: 6),
           Expanded(
             child: Text(
               value,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: context.typo.mono.copyWith(fontSize: 11, color: colors.gitStaged),
+              style: context.typo.mono.copyWith(
+                fontSize: 11,
+                color: colors.gitStaged,
+              ),
             ),
           ),
           GestureDetector(
@@ -523,7 +678,10 @@ class _FrameRow extends StatelessWidget {
                 '${frame.name} (${frame.sourcePath ?? 'unknown'}:${frame.line})',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: context.typo.mono.copyWith(fontSize: 11, color: colors.text),
+                style: context.typo.mono.copyWith(
+                  fontSize: 11,
+                  color: colors.text,
+                ),
               ),
             ),
           ],
@@ -556,7 +714,10 @@ class _VariableRow extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             '=',
-            style: context.typo.mono.copyWith(fontSize: 11, color: colors.text3),
+            style: context.typo.mono.copyWith(
+              fontSize: 11,
+              color: colors.text3,
+            ),
           ),
           const SizedBox(width: 6),
           Expanded(
@@ -564,14 +725,20 @@ class _VariableRow extends StatelessWidget {
               variable.value,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: context.typo.mono.copyWith(fontSize: 11, color: colors.text),
+              style: context.typo.mono.copyWith(
+                fontSize: 11,
+                color: colors.text,
+              ),
             ),
           ),
           if (variable.type != null) ...[
             const SizedBox(width: 4),
             Text(
               '(${variable.type})',
-              style: context.typo.mono.copyWith(fontSize: 10, color: colors.text4),
+              style: context.typo.mono.copyWith(
+                fontSize: 10,
+                color: colors.text4,
+              ),
             ),
           ],
         ],
@@ -618,7 +785,10 @@ class _BreakpointRow extends StatelessWidget {
                 '$filePath:$line',
                 maxLines: 1,
                 overflow: TextOverflow.ellipsis,
-                style: context.typo.mono.copyWith(fontSize: 11, color: colors.text),
+                style: context.typo.mono.copyWith(
+                  fontSize: 11,
+                  color: colors.text,
+                ),
               ),
             ),
             GestureDetector(

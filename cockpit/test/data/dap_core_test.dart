@@ -27,6 +27,11 @@ class MockDapAdapterServer {
   void _handleRequest(Map<String, dynamic> req) {
     final command = req['command'] as String;
     final seq = req['seq'] as int;
+    if (command == 'launch' || command == 'attach') {
+      _output.add(
+        DapCodec.encode({'seq': 998, 'type': 'event', 'event': 'initialized'}),
+      );
+    }
 
     final body = <String, dynamic>{};
     switch (command) {
@@ -40,11 +45,7 @@ class MockDapAdapterServer {
         final rawBps = rawArgs?['breakpoints'] as List? ?? [];
         body['breakpoints'] = [
           for (var i = 0; i < rawBps.length; i++)
-            {
-              'id': i + 1,
-              'verified': true,
-              'line': rawBps[i]['line'],
-            },
+            {'id': i + 1, 'verified': true, 'line': rawBps[i]['line']},
         ];
         break;
       case 'threads':
@@ -70,7 +71,12 @@ class MockDapAdapterServer {
         break;
       case 'variables':
         body['variables'] = [
-          {'name': 'counter', 'value': '42', 'type': 'int', 'variablesReference': 0},
+          {
+            'name': 'counter',
+            'value': '42',
+            'type': 'int',
+            'variablesReference': 0,
+          },
         ];
         break;
       case 'evaluate':
@@ -104,7 +110,8 @@ void main() {
       final text = ascii.decode(bytes);
 
       final jsonPart = jsonEncode(msg);
-      final expectedHeader = 'Content-Length: ${utf8.encode(jsonPart).length}\r\n\r\n';
+      final expectedHeader =
+          'Content-Length: ${utf8.encode(jsonPart).length}\r\n\r\n';
       expect(text.startsWith(expectedHeader), isTrue);
       expect(text.endsWith(jsonPart), isTrue);
     });
@@ -113,8 +120,18 @@ void main() {
       const codec = DapCodec();
       final controller = StreamController<List<int>>();
 
-      final msg1 = {'seq': 1, 'type': 'response', 'command': 'initialize', 'success': true};
-      final msg2 = {'seq': 2, 'type': 'event', 'event': 'stopped', 'body': {'reason': 'breakpoint'}};
+      final msg1 = {
+        'seq': 1,
+        'type': 'response',
+        'command': 'initialize',
+        'success': true,
+      };
+      final msg2 = {
+        'seq': 2,
+        'type': 'event',
+        'event': 'stopped',
+        'body': {'reason': 'breakpoint'},
+      };
 
       final encoded1 = DapCodec.encode(msg1);
       final encoded2 = DapCodec.encode(msg2);
@@ -173,7 +190,10 @@ void main() {
     test('configura breakpoints e recebe verificação', () async {
       final bps = await client.setBreakpoints(
         sourcePath: '/project/lib/main.dart',
-        breakpoints: const [SourceBreakpoint(line: 10), SourceBreakpoint(line: 25)],
+        breakpoints: const [
+          SourceBreakpoint(line: 10),
+          SourceBreakpoint(line: 25),
+        ],
       );
 
       expect(bps.length, equals(2));
@@ -183,36 +203,42 @@ void main() {
       expect(bps[1].line, equals(25));
     });
 
-    test('executa comandos de controle de fluxo: pause, continue, next, stepIn, stepOut', () async {
-      expect((await client.pause(1)).success, isTrue);
-      expect((await client.resume(1)).success, isTrue);
-      expect((await client.stepOver(1)).success, isTrue);
-      expect((await client.stepIn(1)).success, isTrue);
-      expect((await client.stepOut(1)).success, isTrue);
-    });
+    test(
+      'executa comandos de controle de fluxo: pause, continue, next, stepIn, stepOut',
+      () async {
+        expect((await client.pause(1)).success, isTrue);
+        expect((await client.resume(1)).success, isTrue);
+        expect((await client.stepOver(1)).success, isTrue);
+        expect((await client.stepIn(1)).success, isTrue);
+        expect((await client.stepOut(1)).success, isTrue);
+      },
+    );
 
-    test('consulta inspeção: threads, stackTrace, scopes, variables e evaluate', () async {
-      final threads = await client.threads();
-      expect(threads.length, equals(1));
-      expect(threads.first.name, equals('main.dart'));
+    test(
+      'consulta inspeção: threads, stackTrace, scopes, variables e evaluate',
+      () async {
+        final threads = await client.threads();
+        expect(threads.length, equals(1));
+        expect(threads.first.name, equals('main.dart'));
 
-      final frames = await client.stackTrace(1);
-      expect(frames.length, equals(1));
-      expect(frames.first.name, equals('calculate'));
-      expect(frames.first.line, equals(42));
+        final frames = await client.stackTrace(1);
+        expect(frames.length, equals(1));
+        expect(frames.first.name, equals('calculate'));
+        expect(frames.first.line, equals(42));
 
-      final scopes = await client.scopes(10);
-      expect(scopes.length, equals(1));
-      expect(scopes.first.variablesReference, equals(200));
+        final scopes = await client.scopes(10);
+        expect(scopes.length, equals(1));
+        expect(scopes.first.variablesReference, equals(200));
 
-      final vars = await client.variables(200);
-      expect(vars.length, equals(1));
-      expect(vars.first.name, equals('counter'));
-      expect(vars.first.value, equals('42'));
+        final vars = await client.variables(200);
+        expect(vars.length, equals(1));
+        expect(vars.first.name, equals('counter'));
+        expect(vars.first.value, equals('42'));
 
-      final evalRes = await client.evaluate('counter * 2', frameId: 10);
-      expect(evalRes?.result, equals('84'));
-    });
+        final evalRes = await client.evaluate('counter * 2', frameId: 10);
+        expect(evalRes?.result, equals('84'));
+      },
+    );
 
     test('recebe eventos assíncronos stopped e output', () async {
       final stoppedEvents = <DapStoppedEvent>[];
@@ -264,37 +290,43 @@ void main() {
       await server.close();
     });
 
-    test('inicia sessão, sincroniza breakpoints, faz launch e transiciona para running', () async {
-      expect(controller.state, equals(DapSessionState.idle));
+    test(
+      'inicia sessão, sincroniza breakpoints, faz launch e transiciona para running',
+      () async {
+        expect(controller.state, equals(DapSessionState.idle));
 
-      await controller.toggleBreakpoint('/project/lib/main.dart', 15);
-      expect(controller.breakpointsByPath['/project/lib/main.dart']?.first.line, equals(15));
+        await controller.toggleBreakpoint('/project/lib/main.dart', 15);
+        expect(
+          controller.breakpointsByPath['/project/lib/main.dart']?.first.line,
+          equals(15),
+        );
 
-      await controller.startSession(
-        client: client,
-        program: '/project/lib/main.dart',
-        cwd: '/project',
-      );
+        await controller.startSession(
+          client: client,
+          program: '/project/lib/main.dart',
+          cwd: '/project',
+        );
 
-      expect(controller.state, equals(DapSessionState.running));
-      expect(controller.isRunning, isTrue);
+        expect(controller.state, equals(DapSessionState.running));
+        expect(controller.isRunning, isTrue);
 
-      // Simula interrupção em breakpoint
-      server.emitEvent('stopped', {'reason': 'breakpoint', 'threadId': 1});
-      await Future<void>.delayed(const Duration(milliseconds: 20));
+        // Simula interrupção em breakpoint
+        server.emitEvent('stopped', {'reason': 'breakpoint', 'threadId': 1});
+        await Future<void>.delayed(const Duration(milliseconds: 20));
 
-      expect(controller.state, equals(DapSessionState.stopped));
-      expect(controller.isStopped, isTrue);
-      expect(controller.lastStopReason, equals(DapStopReason.breakpoint));
-      expect(controller.stackFrames.length, equals(1));
-      expect(controller.variables.first.name, equals('counter'));
+        expect(controller.state, equals(DapSessionState.stopped));
+        expect(controller.isStopped, isTrue);
+        expect(controller.lastStopReason, equals(DapStopReason.breakpoint));
+        expect(controller.stackFrames.length, equals(1));
+        expect(controller.variables.first.name, equals('counter'));
 
-      // Finaliza sessão
-      await controller.stop();
+        // Finaliza sessão
+        await controller.stop();
 
-      expect(controller.state, equals(DapSessionState.idle));
-      expect(controller.stackFrames, isEmpty);
-      expect(controller.variables, isEmpty);
-    });
+        expect(controller.state, equals(DapSessionState.idle));
+        expect(controller.stackFrames, isEmpty);
+        expect(controller.variables, isEmpty);
+      },
+    );
   });
 }

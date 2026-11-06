@@ -1,3 +1,7 @@
+import 'package:path/path.dart' as p;
+import 'package:orkest_code/app/core/data/dap/debug_session_controller.dart';
+import 'package:orkest_code/app/core/domain/services/problems_controller.dart';
+import 'package:orkest_code/app/core/domain/entities/lsp_symbol.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_comparison.dart';
 import 'package:orkest_code/app/orkest/domain/entities/workbench_layout_state.dart';
 import 'package:orkest_code/app/core/domain/entities/lsp_completion.dart';
@@ -192,6 +196,21 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
       }),
     );
     _worktreeReconciler = WorktreeReconciler(_worktreeMgr);
+    _problemsSubscription = _lsp.diagnostics.listen((batch) {
+      final uri = Uri.tryParse(batch.uri);
+      if (uri == null || uri.scheme != 'file') return;
+      final path = p.fromUri(uri);
+      for (final project in _projectList) {
+        if (!project.isRemoteTerminal &&
+            project.path.isNotEmpty &&
+            (p.equals(project.path, path) || p.isWithin(project.path, path))) {
+          problemsForWorkspace(
+            project.id,
+          ).setDiagnostics(path, batch.diagnostics);
+        }
+      }
+    });
+
     // Contexto do shell que o GitController precisa (page-scoped, mesma vida).
     git
       ..resolvePath = ((id) => _projectById(id)?.path)
@@ -324,6 +343,52 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
   final AppLauncherGateway _launcher;
   final WorktreeManager _worktreeMgr;
   final LspServerPool _lsp;
+  StreamSubscription<LspDiagnosticsBatch>? _problemsSubscription;
+  final Map<String, DebugSessionController> _debugSessions = {};
+  final Map<String, ProblemsController> _workspaceProblems = {};
+
+  DebugSessionController debugForWorkspace(String workspaceId) =>
+      _debugSessions.putIfAbsent(workspaceId, () {
+        final controller = DebugSessionController();
+        Object? lastFrame;
+        controller.addListener(() {
+          final frame = controller.isStopped ? controller.currentFrame : null;
+          if (frame == null) {
+            lastFrame = null;
+            return;
+          }
+          if (frame == lastFrame) return;
+          lastFrame = frame;
+          final path = frame.sourcePath;
+          if (path != null && selectedProjectId == workspaceId) {
+            unawaited(navigateToSource(path, frame.line, frame.column));
+          }
+        });
+        return controller;
+      });
+
+  ProblemsController problemsForWorkspace(String workspaceId) =>
+      _workspaceProblems.putIfAbsent(workspaceId, () {
+        final controller = ProblemsController();
+        controller.addListener(notifyListeners);
+        return controller;
+      });
+
+  final StreamController<String> _documentChanges =
+      StreamController.broadcast();
+  Stream<String> get documentChanges => _documentChanges.stream;
+
+  Future<List<LspDocumentSymbol>> documentSymbols(String path) =>
+      _lsp.documentSymbols(path);
+
+  Future<void> navigateToSource(String path, int line, int column) async {
+    await openFile(path, isPreview: false, revealLine: line);
+    final session = focusedAgent;
+    if (session is FileViewerSession && session.path == path) {
+      session.reveal(line, column: column);
+    }
+  }
+
   final TerminalStatusServer _statusServer;
   final ContentSearcher _contentSearcher;
   final TaskTerminalStore _taskTerminals;
@@ -2632,21 +2697,34 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
   /// isso pra rotear o arquivo externo ao servidor que já existe, em vez de
   /// subir um novo com raiz no SDK. Ver `LspServerPool._rootFor`.
   @override
-  Future<void> lspOpenDocument(String path, String text, String projectId) =>
-      _lsp.openDocument(
-        path: path,
-        text: text,
-        fallbackRoot: _projectById(projectId)?.path,
-      );
+  Future<void> lspOpenDocument(
+    String path,
+    String text,
+    String projectId,
+  ) async {
+    await _lsp.openDocument(
+      path: path,
+      text: text,
+      fallbackRoot: _projectById(projectId)?.path,
+    );
+    if (!_documentChanges.isClosed) _documentChanges.add(path);
+  }
 
   /// Notifica edição (didChange, full sync).
   @override
-  Future<void> lspChangeDocument(String path, String text) =>
-      _lsp.changeDocument(path: path, text: text);
+  Future<void> lspChangeDocument(String path, String text) async {
+    await _lsp.changeDocument(path: path, text: text);
+    if (!_documentChanges.isClosed) _documentChanges.add(path);
+  }
 
   /// Fecha o documento no LSP (didClose + refcount).
   @override
-  Future<void> lspCloseDocument(String path) => _lsp.closeDocument(path);
+  Future<void> lspCloseDocument(String path) async {
+    await _lsp.closeDocument(path);
+    for (final controller in _workspaceProblems.values) {
+      controller.clearFile(path);
+    }
+  }
 
   /// Aplica os overrides de comando do LSP (da tela "Language") no pool. Vale
   /// para os próximos servidores spawnados; os já vivos seguem com o comando
@@ -7395,6 +7473,14 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
 
   @override
   void dispose() {
+    unawaited(_documentChanges.close());
+    unawaited(_problemsSubscription?.cancel());
+    for (final controller in _debugSessions.values) {
+      controller.dispose();
+    }
+    for (final controller in _workspaceProblems.values) {
+      controller.dispose();
+    }
     _remoteHosts.removeListener(_onRemoteHostsChanged);
     unawaited(_statusServer.stop());
     unawaited(_previewSub?.cancel());

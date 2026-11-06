@@ -827,6 +827,7 @@ class _Translations$orkest$fileTreePanel$pt_BR extends Translations$orkest$fileT
 	@override String get mergeApply => 'Aplicar no editor';
 	@override String get mergeStale => 'O arquivo mudou durante a revisão. Abra o conflito novamente para revisar o conteúdo atual.';
 	@override String get mergeMarkers => 'Remova os marcadores de conflito antes de aplicar o resultado.';
+	@override String get workbenchRunTerminal => 'Executar / Testar (terminal)';
 	@override String get mergePendingSave => 'Salve o arquivo após aplicar o resultado.';
 	@override String conflictsBanner({required Object count}) => '${count} conflito(s) de merge não resolvido(s)';
 	@override String get acceptAllOurs => 'Aceitar Atual';
@@ -2641,6 +2642,7 @@ extension on TranslationsPtBr {
 			'orkest.fileTreePanel.mergeApply' => 'Aplicar no editor',
 			'orkest.fileTreePanel.mergeStale' => 'O arquivo mudou durante a revisão. Abra o conflito novamente para revisar o conteúdo atual.',
 			'orkest.fileTreePanel.mergeMarkers' => 'Remova os marcadores de conflito antes de aplicar o resultado.',
+			'orkest.fileTreePanel.workbenchRunTerminal' => 'Executar / Testar (terminal)',
 			'orkest.fileTreePanel.mergePendingSave' => 'Salve o arquivo após aplicar o resultado.',
 			'orkest.fileTreePanel.conflictsBanner' => ({required Object count}) => '${count} conflito(s) de merge não resolvido(s)',
 			'orkest.fileTreePanel.acceptAllOurs' => 'Aceitar Atual',
@@ -2650,9 +2652,9 @@ extension on TranslationsPtBr {
 			'orkest.fileTreePanel.nextConflict' => 'Próximo',
 			'orkest.fileTreePanel.continueGitOp' => ({required Object op}) => 'Continuar ${op}',
 			'orkest.fileTreePanel.abortGitOp' => ({required Object op}) => 'Abortar ${op}',
-			'orkest.fileTreePanel.reviewDocument' => 'Revisar conflitos do documento',
 			_ => null,
 		} ?? switch (path) {
+			'orkest.fileTreePanel.reviewDocument' => 'Revisar conflitos do documento',
 			'orkest.fileTreePanel.conflictProgress' => ({required Object current, required Object total, required Object resolved}) => 'Conflito ${current} de ${total} (${resolved} resolvido(s))',
 			'orkest.fileTreePanel.markResolved' => 'Marcar resolvido',
 			'orkest.fileTreePanel.markUnresolved' => 'Marcar pendente',
@@ -3164,9 +3166,9 @@ extension on TranslationsPtBr {
 			'settings.page.general.updateFrequency.daily' => 'Diariamente',
 			'settings.page.general.updateFrequency.weekly' => 'Semanalmente',
 			'settings.page.general.updateFrequency.monthly' => 'Mensalmente',
-			'settings.page.general.updateFrequency.never' => 'Nunca',
 			_ => null,
 		} ?? switch (path) {
+			'settings.page.general.updateFrequency.never' => 'Nunca',
 			'settings.page.general.developerModeTitle' => 'Modo desenvolvedor',
 			'settings.page.general.developerModeDesc' => 'Registra os erros e avisos do próprio Orkest Code numa base separada da Telemetria (chip “Orkest Code”) e liga as métricas de performance. Só serve a quem mantém o app.',
 			'settings.page.diagnostics.sectionTitle' => 'Diagnóstico',

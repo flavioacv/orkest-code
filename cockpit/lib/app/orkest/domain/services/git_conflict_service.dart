@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:path/path.dart' as p;
 
 import 'package:orkest_code/app/core/domain/result.dart';
 
@@ -77,11 +78,7 @@ class ConflictBlock {
 /// Conteúdos das versões em conflito de um arquivo recuperadas diretamente
 /// dos estágios do índice do Git (stage 1: base comum, stage 2: ours, stage 3: theirs).
 class GitConflictStages {
-  const GitConflictStages({
-    this.base,
-    this.ours,
-    this.theirs,
-  });
+  const GitConflictStages({this.base, this.ours, this.theirs});
 
   /// Versão do ancestral comum (Stage 1: `:1:<path>`).
   final String? base;
@@ -434,11 +431,10 @@ class GitConflictService {
 
     Future<String?> readStage(int stage) async {
       try {
-        final res = await Process.run(
-          gitExecutable,
-          ['show', ':$stage:$cleanPath'],
-          workingDirectory: repoRoot,
-        );
+        final res = await Process.run(gitExecutable, [
+          'show',
+          ':$stage:$cleanPath',
+        ], workingDirectory: repoRoot);
         if (res.exitCode == 0) {
           return res.stdout as String;
         }
@@ -452,13 +448,67 @@ class GitConflictService {
     final ours = await readStage(2);
     final theirs = await readStage(3);
 
-    return Success(
-      GitConflictStages(
-        base: base,
-        ours: ours,
-        theirs: theirs,
-      ),
+    return Success(GitConflictStages(base: base, ours: ours, theirs: theirs));
+  }
+
+  Future<List<ConflictBlock>> reviewBlocks({
+    required String text,
+    required String repoRoot,
+    required String relativePath,
+    String gitExecutable = 'git',
+  }) async {
+    final blocks = parseConflicts(text);
+    if (blocks.every((block) => block.base != null)) return blocks;
+    final result = await readConflictStages(
+      repoRoot: repoRoot,
+      relativePath: relativePath,
+      gitExecutable: gitExecutable,
     );
+    final stages = result.fold((value) => value, (_) => null);
+    if (stages == null ||
+        stages.base == null ||
+        stages.ours == null ||
+        stages.theirs == null) {
+      return blocks;
+    }
+    final temp = await Directory.systemTemp.createTemp('orkest-merge-base-');
+    try {
+      final ours = File(p.join(temp.path, 'ours'));
+      final base = File(p.join(temp.path, 'base'));
+      final theirs = File(p.join(temp.path, 'theirs'));
+      await Future.wait([
+        ours.writeAsString(stages.ours!),
+        base.writeAsString(stages.base!),
+        theirs.writeAsString(stages.theirs!),
+      ]);
+      final merge = await Process.run(gitExecutable, [
+        'merge-file',
+        '-p',
+        '--diff3',
+        ours.path,
+        base.path,
+        theirs.path,
+      ]);
+      if (merge.exitCode < 0 || merge.exitCode > 127) return blocks;
+      final generated = parseConflicts(merge.stdout as String);
+      // A whole-file base is never a block base. Match exact side pairs only;
+      // repeated ambiguous pairs remain unavailable rather than guessing spans.
+      return blocks.map((block) {
+        if (block.base != null) return block;
+        final matches = generated
+            .where(
+              (candidate) =>
+                  candidate.ours == block.ours &&
+                  candidate.theirs == block.theirs,
+            )
+            .toList();
+        return matches.length == 1
+            ? block.copyWith(base: matches.single.base)
+            : block;
+      }).toList();
+    } finally {
+      await temp.delete(recursive: true);
+    }
   }
 
   /// Enriquece blocos de conflito com o ancestral comum obtido dos estágios do índice,
@@ -467,10 +517,14 @@ class GitConflictService {
     required List<ConflictBlock> blocks,
     required GitConflictStages stages,
   }) {
-    if (!stages.hasBase) return blocks;
-    return blocks.map((block) {
-      if (block.base != null) return block;
-      return block.copyWith(base: stages.base);
-    }).toList();
+    if (!stages.hasBase || blocks.length != 1) return blocks;
+    final block = blocks.single;
+    // Only safe without a diff3 reconstruction if the entire sides are this block.
+    if (block.base != null ||
+        stages.ours?.trimRight() != block.ours ||
+        stages.theirs?.trimRight() != block.theirs) {
+      return blocks;
+    }
+    return [block.copyWith(base: stages.base)];
   }
 }

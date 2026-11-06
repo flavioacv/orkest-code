@@ -34,6 +34,8 @@ class RunConfiguration {
     this.env = const {},
     this.sdkPath,
     this.isTest = false,
+    this.request = 'launch',
+    this.launchArguments = const {},
   });
 
   /// Identificador único estável da configuração.
@@ -65,6 +67,8 @@ class RunConfiguration {
 
   /// Indica se esta configuração executa testes automatizados.
   final bool isTest;
+  final String request;
+  final Map<String, dynamic> launchArguments;
 
   /// Converte esta configuração em uma [TaskDefinition] executável pelo runner PTY.
   TaskDefinition toTaskDefinition() {
@@ -79,13 +83,7 @@ class RunConfiguration {
       kind: isTest ? TaskKind.oneShot : TaskKind.watch,
       source: TaskSource.manual,
       profiles: env.isNotEmpty
-          ? [
-              TaskProfile(
-                name: 'custom-env',
-                args: const [],
-                env: env,
-              ),
-            ]
+          ? [TaskProfile(name: 'custom-env', args: const [], env: env)]
           : const [],
     );
   }
@@ -96,9 +94,20 @@ class RunConfiguration {
     switch (cleanType) {
       case 'flutter':
         if (isTest || kind == RunConfigurationKind.test) {
-          return ('flutter', ['test', if (program.isNotEmpty) program, ...args]);
+          return (
+            'flutter',
+            ['test', if (program.isNotEmpty) program, ...args],
+          );
         }
-        return ('flutter', ['run', if (program.isNotEmpty) '-t', if (program.isNotEmpty) program, ...args]);
+        return (
+          'flutter',
+          [
+            'run',
+            if (program.isNotEmpty) '-t',
+            if (program.isNotEmpty) program,
+            ...args,
+          ],
+        );
 
       case 'dart':
         if (isTest || kind == RunConfigurationKind.test) {
@@ -110,13 +119,19 @@ class RunConfiguration {
       case 'pwa-node':
       case 'javascript':
         if (isTest || kind == RunConfigurationKind.test) {
-          return ('npm', ['test', '--', if (program.isNotEmpty) program, ...args]);
+          return (
+            'npm',
+            ['test', '--', if (program.isNotEmpty) program, ...args],
+          );
         }
         return ('node', [if (program.isNotEmpty) program, ...args]);
 
       case 'typescript':
         if (isTest || kind == RunConfigurationKind.test) {
-          return ('npx', ['vitest', 'run', if (program.isNotEmpty) program, ...args]);
+          return (
+            'npx',
+            ['vitest', 'run', if (program.isNotEmpty) program, ...args],
+          );
         }
         return ('npx', ['tsx', if (program.isNotEmpty) program, ...args]);
 

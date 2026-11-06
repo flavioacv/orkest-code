@@ -1,3 +1,7 @@
+import 'package:orkest_code/app/orkest/ui/widgets/developer_workbench_panels.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/problems_panel.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/git_pr_review_panel.dart';
+import 'package:orkest_code/app/orkest/domain/services/git_pull_request_service.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/office_workspace_window.dart';
 import 'package:orkest_core/orkest_core.dart';
 
@@ -800,11 +804,7 @@ class _OrkestPageState extends State<OrkestPage> {
       ),
     ];
 
-    showCommandPalette(
-      context,
-      commands: commands,
-      initialQuery: initialQuery,
-    );
+    showCommandPalette(context, commands: commands, initialQuery: initialQuery);
   }
 
   /// Cmd+Shift+F / Ctrl+Shift+F: revela o painel de arquivos e foca a busca por
@@ -1954,6 +1954,55 @@ class _TreePanel extends StatelessWidget {
       children: [
         FileTreePanel(
           workspaceId: workspaceId,
+          debugPanel:
+              workspaceId != null &&
+                  vm.selectedProject?.isRemoteTerminal == false
+              ? WorkspaceDebugPanel(
+                  key: ValueKey(workspaceId),
+                  vm: vm,
+                  workspaceId: workspaceId,
+                  root: vm.treeRootPath,
+                  path: vm.focusedFilePath,
+                )
+              : null,
+          problemsPanel:
+              workspaceId != null &&
+                  vm.selectedProject?.isRemoteTerminal == false
+              ? ProblemsPanel(
+                  controller: vm.problemsForWorkspace(workspaceId),
+                  onNavigateToSource: vm.navigateToSource,
+                )
+              : null,
+          problemsCount: workspaceId == null
+              ? 0
+              : vm.problemsForWorkspace(workspaceId).totalCount,
+          outlinePanel:
+              workspaceId != null &&
+                  vm.selectedProject?.isRemoteTerminal == false
+              ? WorkspaceOutlinePanel(vm: vm, path: vm.focusedFilePath)
+              : null,
+          gitPullRequestsPanel:
+              workspaceId != null &&
+                  vm.selectedProject?.isRemoteTerminal == false
+              ? (_) => GitPrReviewPanel(
+                  repoRoot: vm.treeRootPath,
+                  service: GitPullRequestService(),
+                  onSelectReviewFile: (number, change) async {
+                    final root = vm.treeRootPath;
+                    final service = GitPullRequestService();
+                    final ref = await service.fetchReviewRef(root, number);
+                    if (vm.selectedProjectId != workspaceId || vm.treeRootPath != root) return;
+                    await vm.openCommitDiff(
+                      root,
+                      ref,
+                      change,
+                      isPreview: false,
+                    );
+                  },
+                  onCheckoutSuccess: (_) => vm.git.refresh(workspaceId),
+                )
+              : null,
+
           workbenchLayout: workspaceId == null
               ? null
               : vm.workbenchLayout(workspaceId),

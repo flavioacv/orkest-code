@@ -21,6 +21,11 @@ class _MockDartDapServer {
   void _handleRequest(Map<String, dynamic> req) {
     final command = req['command'] as String;
     final seq = req['seq'] as int;
+    if (command == 'launch' || command == 'attach') {
+      output.add(
+        DapCodec.encode({'seq': 998, 'type': 'event', 'event': 'initialized'}),
+      );
+    }
     receivedCommands.add(command);
     receivedRequests.add(req);
 
@@ -78,7 +83,7 @@ void main() {
         sdkPath: '/opt/dart-sdk',
       );
       expect(exeTest, equals('/opt/dart-sdk/bin/dart'));
-      expect(argsTest, equals(['debug_adapter']));
+      expect(argsTest, equals(['debug_adapter', '--test']));
     });
 
     test('resolve comando oficial para Flutter App e Flutter Test', () {
@@ -88,13 +93,15 @@ void main() {
       expect(exeApp, equals('flutter'));
       expect(argsApp, equals(['debug_adapter']));
 
-      final (exeFlutterTest, argsFlutterTest) =
-          DartDebugAdapter.resolveAdapterCommand(
+      final (
+        exeFlutterTest,
+        argsFlutterTest,
+      ) = DartDebugAdapter.resolveAdapterCommand(
         kind: DartDebugType.flutterTest,
         sdkPath: '/opt/flutter',
       );
       expect(exeFlutterTest, equals('/opt/flutter/bin/flutter'));
-      expect(argsFlutterTest, equals(['debug_adapter']));
+      expect(argsFlutterTest, equals(['debug_adapter', '--test']));
     });
 
     test('formata argumentos DAP launch para Dart CLI', () {
@@ -115,22 +122,25 @@ void main() {
       expect(launchArgs.containsKey('toolArgs'), isFalse);
     });
 
-    test('formata argumentos DAP launch para Flutter com device selecionado', () {
-      const target = DartDebugTarget(
-        kind: DartDebugType.flutterApp,
-        program: 'lib/main.dart',
-        cwd: '/project/flutter_app',
-        deviceId: 'macos',
-        noDebug: true,
-      );
+    test(
+      'formata argumentos DAP launch para Flutter com device selecionado',
+      () {
+        const target = DartDebugTarget(
+          kind: DartDebugType.flutterApp,
+          program: 'lib/main.dart',
+          cwd: '/project/flutter_app',
+          deviceId: 'macos',
+          noDebug: true,
+        );
 
-      final launchArgs = target.toDapLaunchArgs();
-      expect(launchArgs['program'], equals('lib/main.dart'));
-      expect(launchArgs['cwd'], equals('/project/flutter_app'));
-      expect(launchArgs['toolArgs'], equals(['-d', 'macos']));
-      expect(launchArgs['noDebug'], isTrue);
-      expect(target.isFlutter, isTrue);
-    });
+        final launchArgs = target.toDapLaunchArgs();
+        expect(launchArgs['program'], equals('lib/main.dart'));
+        expect(launchArgs['cwd'], equals('/project/flutter_app'));
+        expect(launchArgs['toolArgs'], equals(['-d', 'macos']));
+        expect(launchArgs['noDebug'], isTrue);
+        expect(target.isFlutter, isTrue);
+      },
+    );
 
     test('formata argumentos DAP attach para VM Service', () {
       final attachArgs = DartDebugTarget.toDapAttachArgs(
@@ -172,10 +182,7 @@ void main() {
         cwd: '/project/cli',
       );
 
-      await controller.startDartSession(
-        target: target,
-        clientOverride: client,
-      );
+      await controller.startDartSession(target: target, clientOverride: client);
 
       expect(controller.isActive, isTrue);
       expect(controller.isFlutter, isFalse);
@@ -192,10 +199,7 @@ void main() {
         deviceId: 'chrome',
       );
 
-      await controller.startDartSession(
-        target: target,
-        clientOverride: client,
-      );
+      await controller.startDartSession(target: target, clientOverride: client);
 
       expect(controller.isActive, isTrue);
       expect(controller.isFlutter, isTrue);
@@ -216,10 +220,7 @@ void main() {
         cwd: '/project/mobile',
       );
 
-      await controller.startDartSession(
-        target: target,
-        clientOverride: client,
-      );
+      await controller.startDartSession(target: target, clientOverride: client);
 
       final restartOk = await controller.hotRestart();
       expect(restartOk, isTrue);
@@ -237,10 +238,7 @@ void main() {
         cwd: '/project/cli',
       );
 
-      await controller.startDartSession(
-        target: target,
-        clientOverride: client,
-      );
+      await controller.startDartSession(target: target, clientOverride: client);
 
       expect(controller.exceptionMode, equals('Unhandled'));
 
@@ -255,24 +253,27 @@ void main() {
       expect(rawArgs['filters'], equals(['All']));
     });
 
-    test('distingue encerramento limpo da sessão e desativação de controles Flutter', () async {
-      const target = DartDebugTarget(
-        kind: DartDebugType.flutterApp,
-        program: 'lib/main.dart',
-        cwd: '/project/mobile',
-      );
+    test(
+      'distingue encerramento limpo da sessão e desativação de controles Flutter',
+      () async {
+        const target = DartDebugTarget(
+          kind: DartDebugType.flutterApp,
+          program: 'lib/main.dart',
+          cwd: '/project/mobile',
+        );
 
-      await controller.startDartSession(
-        target: target,
-        clientOverride: client,
-      );
-      expect(controller.isActive, isTrue);
-      expect(controller.isFlutter, isTrue);
+        await controller.startDartSession(
+          target: target,
+          clientOverride: client,
+        );
+        expect(controller.isActive, isTrue);
+        expect(controller.isFlutter, isTrue);
 
-      await controller.stop();
-      expect(controller.isActive, isFalse);
-      expect(controller.isFlutter, isFalse);
-      expect(controller.activeTarget, isNull);
-    });
+        await controller.stop();
+        expect(controller.isActive, isFalse);
+        expect(controller.isFlutter, isFalse);
+        expect(controller.activeTarget, isNull);
+      },
+    );
   });
 }

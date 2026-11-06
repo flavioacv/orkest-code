@@ -133,7 +133,10 @@ class _FileViewerState extends State<FileViewer> {
 
     try {
       final relativePath = p.relative(widget.session.path, from: repoRoot);
-      final result = await _effectiveHistoryReader.readBlame(repoRoot, relativePath);
+      final result = await _effectiveHistoryReader.readBlame(
+        repoRoot,
+        relativePath,
+      );
       if (!mounted) return;
       switch (result) {
         case Success(:final value):
@@ -146,7 +149,8 @@ class _FileViewerState extends State<FileViewer> {
           setState(() {
             _blameHunks = const <GitBlameHunk>[];
             _blameLoading = false;
-            _blameError = error.detail ?? 'Não foi possível carregar a autoria (blame).';
+            _blameError =
+                error.detail ?? 'Não foi possível carregar a autoria (blame).';
           });
       }
     } catch (e) {
@@ -271,9 +275,14 @@ class _FileViewerState extends State<FileViewer> {
       widget.session.view is FileViewSvg ||
       (_isHtml && _webPreview && widget.session.view is FileViewText);
 
+  void _onDebugChanged() {
+    if (mounted) setState(() {});
+  }
+
   @override
   void initState() {
     super.initState();
+    widget.debugController?.addListener(_onDebugChanged);
     _lastObservedPath = widget.session.path;
     _lastRevealTick = widget.session.revealTick;
     _lastScmDecorations = widget.session.scmDecorations;
@@ -391,6 +400,10 @@ class _FileViewerState extends State<FileViewer> {
   @override
   void didUpdateWidget(FileViewer old) {
     super.didUpdateWidget(old);
+    if (old.debugController != widget.debugController) {
+      old.debugController?.removeListener(_onDebugChanged);
+      widget.debugController?.addListener(_onDebugChanged);
+    }
 
     // Se o path mudou (preview reutilizado), força rebuild total.
     if (widget.session.path != _lastObservedPath) {
@@ -584,6 +597,7 @@ class _FileViewerState extends State<FileViewer> {
     _focus.dispose();
     _findCtrl.dispose();
     _findFocus.dispose();
+    widget.debugController?.removeListener(_onDebugChanged);
     super.dispose();
   }
 
@@ -653,7 +667,7 @@ class _FileViewerState extends State<FileViewer> {
     try {
       var dir = Directory(widget.session.path).parent;
       while (dir.path != dir.parent.path) {
-        if (Directory('${dir.path}/.git').existsSync()) {
+        if (FileSystemEntity.typeSync(p.join(dir.path, '.git')) != FileSystemEntityType.notFound) {
           return dir.path;
         }
         dir = dir.parent;
@@ -706,11 +720,15 @@ class _FileViewerState extends State<FileViewer> {
     final session = widget.session;
     final path = session.path;
     final snapshot = ctrl.text;
-    final initialIndex =
-        _currentConflictIndex < 0 ? 0 : _currentConflictIndex;
+    final initialIndex = _currentConflictIndex < 0 ? 0 : _currentConflictIndex;
+    final repoRoot = _findRepoRoot();
+    final blocks = repoRoot == null ? _conflictBlocks : await _conflictService.reviewBlocks(
+      text: snapshot, repoRoot: repoRoot, relativePath: p.relative(path, from: repoRoot));
+    if (!mounted || !identical(_ctrl, ctrl) || ctrl.text != snapshot || widget.session != session) return;
     final result = await showMergeDocumentEditor(
       context,
       text: snapshot,
+      blocks: blocks,
       initialConflictIndex: initialIndex,
       language: ctrl.language,
       fileName: session.title,
@@ -1238,18 +1256,26 @@ class _FileViewerState extends State<FileViewer> {
             focusNode: _focus,
             filePath: widget.session.path,
             revealLine: widget.session.revealLine,
+            revealColumn: widget.session.revealColumn,
             revealSelect: widget.session.revealSelect,
             revealTick: widget.session.revealTick,
             scmDecorations: widget.session.scmDecorations,
-            breakpoints: widget.debugController?.breakpointsByPath[widget.session.path]
+            breakpoints: widget
+                .debugController
+                ?.breakpointsByPath[widget.session.path]
                 ?.map((b) => b.line)
                 .toSet(),
-            activeDebugLine: (widget.debugController?.isStopped == true &&
-                    widget.debugController?.currentFrame?.sourcePath == widget.session.path)
+            activeDebugLine:
+                (widget.debugController?.isStopped == true &&
+                    widget.debugController?.currentFrame?.sourcePath ==
+                        widget.session.path)
                 ? widget.debugController?.currentFrame?.line
                 : null,
             onToggleBreakpoint: widget.debugController != null
-                ? (line) => widget.debugController!.toggleBreakpoint(widget.session.path, line)
+                ? (line) => widget.debugController!.toggleBreakpoint(
+                    widget.session.path,
+                    line,
+                  )
                 : null,
             revealMatchStart:
                 _findIndex >= 0 && _findIndex < _findMatches.length
@@ -1591,8 +1617,9 @@ class _Toolbar extends StatelessWidget {
                         style: context.typo.tab.copyWith(
                           color: blameActive ? colors.accent : colors.text2,
                           fontSize: 11,
-                          fontWeight:
-                              blameActive ? FontWeight.w600 : FontWeight.w400,
+                          fontWeight: blameActive
+                              ? FontWeight.w600
+                              : FontWeight.w400,
                         ),
                       ),
                     ],

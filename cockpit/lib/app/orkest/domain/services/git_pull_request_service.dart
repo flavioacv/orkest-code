@@ -7,12 +7,13 @@ import 'package:orkest_code/app/orkest/domain/entities/git_history_file_change.d
 import 'package:orkest_code/app/orkest/domain/entities/git_pull_request.dart';
 
 /// Tipo de função para requisições HTTP customizadas (injetável em testes).
-typedef HttpRequester = Future<(int statusCode, String body)> Function(
-  String method,
-  Uri uri,
-  Map<String, String> headers,
-  String? body,
-);
+typedef HttpRequester =
+    Future<(int statusCode, String body)> Function(
+      String method,
+      Uri uri,
+      Map<String, String> headers,
+      String? body,
+    );
 
 /// Serviço de integração e revisão de Pull Requests no contexto do código (G05).
 class GitPullRequestService {
@@ -21,13 +22,34 @@ class GitPullRequestService {
     HttpRequester? httpRequester,
     this.tokenOverride,
     this.originUrlOverride,
-  })  : _gitBinary = gitBinary ?? GitBinary(),
-        _httpRequester = httpRequester ?? _defaultHttpRequester;
+  }) : _gitBinary = gitBinary ?? GitBinary(),
+       _httpRequester = httpRequester ?? _defaultHttpRequester;
 
   final GitBinary _gitBinary;
   final HttpRequester _httpRequester;
   final String? tokenOverride;
   final String? originUrlOverride;
+
+  Future<String> fetchReviewRef(String repoRoot, int number) async {
+    if (number <= 0) throw ArgumentError.value(number);
+    final git = await _gitBinary.resolve();
+    // GitHub's synthetic merge compares the complete PR against its base,
+    // including all commits, without checking out or changing the worktree.
+    final ref = 'refs/orkest/reviews/$number/merge';
+    final result = await Process.run(git, [
+      '-C',
+      repoRoot,
+      'fetch',
+      'origin',
+      '+refs/pull/$number/merge:$ref',
+    ]);
+    if (result.exitCode != 0) {
+      throw StateError(
+        'Cannot fetch PR merge revision (conflicted PRs may not have one): (Git exit ${result.exitCode})',
+      );
+    }
+    return ref;
+  }
 
   /// Extrai `owner` e `repo` a partir da URL do remote Git.
   static (String owner, String repo)? parseOwnerRepo(String remoteUrl) {
@@ -35,13 +57,17 @@ class GitPullRequestService {
     if (clean.isEmpty) return null;
 
     // Formato SSH: git@github.com:owner/repo.git
-    final sshMatch = RegExp(r'git@[^:]+:([^/]+)/(.+?)(?:\.git)?$').firstMatch(clean);
+    final sshMatch = RegExp(
+      r'git@[^:]+:([^/]+)/(.+?)(?:\.git)?$',
+    ).firstMatch(clean);
     if (sshMatch != null) {
       return (sshMatch.group(1)!, sshMatch.group(2)!);
     }
 
     // Formato HTTPS: https://github.com/owner/repo.git
-    final httpMatch = RegExp(r'https?://[^/]+/([^/]+)/(.+?)(?:\.git)?$').firstMatch(clean);
+    final httpMatch = RegExp(
+      r'https?://[^/]+/([^/]+)/(.+?)(?:\.git)?$',
+    ).firstMatch(clean);
     if (httpMatch != null) {
       return (httpMatch.group(1)!, httpMatch.group(2)!);
     }
@@ -61,10 +87,13 @@ class GitPullRequestService {
     if (originUrlOverride != null) return originUrlOverride;
     final gitExe = await _gitBinary.resolve();
     try {
-      final res = await Process.run(
-        gitExe,
-        ['-C', repoRoot, 'remote', 'get-url', 'origin'],
-      );
+      final res = await Process.run(gitExe, [
+        '-C',
+        repoRoot,
+        'remote',
+        'get-url',
+        'origin',
+      ]);
       if (res.exitCode == 0) return res.stdout.toString().trim();
     } catch (_) {}
     return null;
@@ -82,7 +111,9 @@ class GitPullRequestService {
   }) async {
     final origin = await _getOriginUrl(repoRoot);
     if (origin == null) {
-      return const Failure('Nenhum remote "origin" configurado no repositório.');
+      return const Failure(
+        'Nenhum remote "origin" configurado no repositório.',
+      );
     }
 
     final parsed = parseOwnerRepo(origin);
@@ -138,7 +169,9 @@ class GitPullRequestService {
   ) async {
     final origin = await _getOriginUrl(repoRoot);
     if (origin == null) {
-      return const Failure('Nenhum remote "origin" configurado no repositório.');
+      return const Failure(
+        'Nenhum remote "origin" configurado no repositório.',
+      );
     }
 
     final parsed = parseOwnerRepo(origin);
@@ -157,24 +190,40 @@ class GitPullRequestService {
 
     try {
       // 1. Busca PR
-      final prUri = Uri.parse('https://api.github.com/repos/$owner/$repo/pulls/$number');
-      final (prCode, prBody) = await _httpRequester('GET', prUri, headers, null);
+      final prUri = Uri.parse(
+        'https://api.github.com/repos/$owner/$repo/pulls/$number',
+      );
+      final (prCode, prBody) = await _httpRequester(
+        'GET',
+        prUri,
+        headers,
+        null,
+      );
       if (prCode != 200) {
         return Failure('Falha ao obter PR #$number (HTTP $prCode)');
       }
-      final pr = GitPullRequest.fromJson(jsonDecode(prBody) as Map<String, dynamic>);
+      final pr = GitPullRequest.fromJson(
+        jsonDecode(prBody) as Map<String, dynamic>,
+      );
 
       // 2. Busca comentários
       final commentsUri = Uri.parse(
         'https://api.github.com/repos/$owner/$repo/pulls/$number/comments',
       );
-      final (cCode, cBody) = await _httpRequester('GET', commentsUri, headers, null);
+      final (cCode, cBody) = await _httpRequester(
+        'GET',
+        commentsUri,
+        headers,
+        null,
+      );
       final comments = <GitPrComment>[];
       if (cCode == 200) {
         final dynamic rawComments = jsonDecode(cBody);
         if (rawComments is List) {
           comments.addAll(
-            rawComments.map((c) => GitPrComment.fromJson(c as Map<String, dynamic>)),
+            rawComments.map(
+              (c) => GitPrComment.fromJson(c as Map<String, dynamic>),
+            ),
           );
         }
       }
@@ -183,7 +232,12 @@ class GitPullRequestService {
       final filesUri = Uri.parse(
         'https://api.github.com/repos/$owner/$repo/pulls/$number/files',
       );
-      final (fCode, fBody) = await _httpRequester('GET', filesUri, headers, null);
+      final (fCode, fBody) = await _httpRequester(
+        'GET',
+        filesUri,
+        headers,
+        null,
+      );
       final changedFiles = <GitHistoryFileChange>[];
       if (fCode == 200) {
         final dynamic rawFiles = jsonDecode(fBody);
@@ -195,8 +249,8 @@ class GitPullRequestService {
               final shortStatus = status.startsWith('added')
                   ? 'A'
                   : (status.startsWith('removed')
-                      ? 'D'
-                      : (status.startsWith('renamed') ? 'R' : 'M'));
+                        ? 'D'
+                        : (status.startsWith('renamed') ? 'R' : 'M'));
               changedFiles.add(
                 GitHistoryFileChange(
                   status: shortStatus,
@@ -214,7 +268,12 @@ class GitPullRequestService {
         ...headers,
         'Accept': 'application/vnd.github.v3.diff',
       };
-      final (diffCode, diffBody) = await _httpRequester('GET', prUri, diffHeaders, null);
+      final (diffCode, diffBody) = await _httpRequester(
+        'GET',
+        prUri,
+        diffHeaders,
+        null,
+      );
       final diff = diffCode == 200 ? diffBody : '';
 
       return Success(
@@ -245,7 +304,9 @@ class GitPullRequestService {
   }) async {
     final origin = await _getOriginUrl(repoRoot);
     if (origin == null) {
-      return const Failure('Nenhum remote "origin" configurado no repositório.');
+      return const Failure(
+        'Nenhum remote "origin" configurado no repositório.',
+      );
     }
 
     final parsed = parseOwnerRepo(origin);
@@ -278,9 +339,16 @@ class GitPullRequestService {
     });
 
     try {
-      final (code, respBody) = await _httpRequester('POST', uri, headers, payload);
+      final (code, respBody) = await _httpRequester(
+        'POST',
+        uri,
+        headers,
+        payload,
+      );
       if (code == 201) {
-        final pr = GitPullRequest.fromJson(jsonDecode(respBody) as Map<String, dynamic>);
+        final pr = GitPullRequest.fromJson(
+          jsonDecode(respBody) as Map<String, dynamic>,
+        );
         return Success(pr);
       }
       return Failure('Falha ao criar PR (HTTP $code): $respBody');
@@ -303,10 +371,14 @@ class GitPullRequestService {
 
     try {
       // 1. Fetch da ref do PR
-      final fetchRes = await Process.run(
-        gitExe,
-        ['-C', repoRoot, 'fetch', 'origin', 'pull/$number/head:$localBranch', '--force'],
-      );
+      final fetchRes = await Process.run(gitExe, [
+        '-C',
+        repoRoot,
+        'fetch',
+        'origin',
+        'pull/$number/head:$localBranch',
+        '--force',
+      ]);
 
       if (fetchRes.exitCode != 0) {
         return Failure(
@@ -315,10 +387,12 @@ class GitPullRequestService {
       }
 
       // 2. Checkout da branch local
-      final checkoutRes = await Process.run(
-        gitExe,
-        ['-C', repoRoot, 'checkout', localBranch],
-      );
+      final checkoutRes = await Process.run(gitExe, [
+        '-C',
+        repoRoot,
+        'checkout',
+        localBranch,
+      ]);
 
       if (checkoutRes.exitCode != 0) {
         return Failure(
@@ -347,7 +421,9 @@ class GitPullRequestService {
   }) async {
     final origin = await _getOriginUrl(repoRoot);
     if (origin == null) {
-      return const Failure('Nenhum remote "origin" configurado no repositório.');
+      return const Failure(
+        'Nenhum remote "origin" configurado no repositório.',
+      );
     }
 
     final parsed = parseOwnerRepo(origin);
@@ -358,7 +434,9 @@ class GitPullRequestService {
     final (owner, repo) = parsed;
     final token = _resolveToken();
     if (token == null) {
-      return const Failure('Autenticação necessária para comentar: configure GITHUB_TOKEN.');
+      return const Failure(
+        'Autenticação necessária para comentar: configure GITHUB_TOKEN.',
+      );
     }
 
     final isInline = path != null && line != null && commitId != null;

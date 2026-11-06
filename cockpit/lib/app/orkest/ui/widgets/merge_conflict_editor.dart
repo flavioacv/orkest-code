@@ -17,12 +17,14 @@ Future<String?> showMergeDocumentEditor(
   int initialConflictIndex = 0,
   String? language,
   String? fileName,
+  List<ConflictBlock>? blocks,
 }) => showDialog<String>(
   context: context,
   barrierDismissible: false,
   barrierColor: context.colors.scrim,
   builder: (_) => MergeDocumentEditor(
     text: text,
+    blocks: blocks,
     initialConflictIndex: initialConflictIndex,
     language: language,
     fileName: fileName,
@@ -33,12 +35,14 @@ class MergeDocumentEditor extends StatefulWidget {
   const MergeDocumentEditor({
     super.key,
     required this.text,
+    this.blocks,
     this.initialConflictIndex = 0,
     this.language,
     this.fileName,
   });
 
   final String text;
+  final List<ConflictBlock>? blocks;
   final int initialConflictIndex;
   final String? language;
   final String? fileName;
@@ -63,13 +67,12 @@ class _MergeDocumentEditorState extends State<MergeDocumentEditor> {
   @override
   void initState() {
     super.initState();
-    _blocks = _conflictService.parseConflicts(widget.text);
+    _blocks = widget.blocks ?? _conflictService.parseConflicts(widget.text);
     _drafts = _blocks
         .map(
-          (b) => CodeEditingController(
-            text: b.ours,
-            language: widget.language,
-          )..addListener(_onDraftChanged),
+          (b) =>
+              CodeEditingController(text: b.ours, language: widget.language)
+                ..addListener(_onDraftChanged),
         )
         .toList();
     _focusNodes = _blocks.map((_) => FocusNode()).toList();
@@ -113,14 +116,12 @@ class _MergeDocumentEditorState extends State<MergeDocumentEditor> {
     setState(() {});
   }
 
-  bool get _allResolved =>
-      _blocks.isNotEmpty && _resolved.every((r) => r);
+  bool get _allResolved => _blocks.isNotEmpty && _resolved.every((r) => r);
 
   bool get _hasAnyUnresolvedMarkers =>
       _drafts.any((d) => _conflictService.hasUnresolvedMarkers(d.text));
 
-  bool get _canOpenFullDocument =>
-      _allResolved && !_hasAnyUnresolvedMarkers;
+  bool get _canOpenFullDocument => _allResolved && !_hasAnyUnresolvedMarkers;
 
   void _openFullDocument() {
     if (!_canOpenFullDocument) return;

@@ -4,6 +4,7 @@ import 'package:flutter/foundation.dart';
 import 'package:orkest_code/app/core/data/dap/dap_client.dart';
 import 'package:orkest_code/app/core/data/dap/dap_models.dart';
 import 'package:orkest_code/app/core/data/dap/dart_debug_adapter.dart';
+import 'package:orkest_code/app/core/data/dap/multi_language_debug_adapter.dart';
 import 'package:orkest_code/app/orkest/domain/entities/run_configuration.dart';
 
 /// Controlador central e reativo de uma sessão de depuração DAP no Orkest Code.
@@ -13,6 +14,8 @@ import 'package:orkest_code/app/orkest/domain/entities/run_configuration.dart';
 /// rejeita respostas/eventos obsoletos de sessões antigas.
 class DebugSessionController extends ChangeNotifier {
   DebugSessionController();
+  bool _disposed = false;
+  StreamSubscription<DapEvent>? _eventsSub;
 
   DapClient? _client;
   String _activeSessionId = '';
@@ -39,7 +42,10 @@ class DebugSessionController extends ChangeNotifier {
   List<DapStackFrame> get stackFrames => _stackFrames;
 
   /// Retorna o frame superior da pilha de execução quando pausado, ou `null`.
-  DapStackFrame? get currentFrame => _stackFrames.isNotEmpty ? _stackFrames.first : null;
+  int? _selectedFrameId;
+  DapStackFrame? get currentFrame =>
+      _stackFrames.where((frame) => frame.id == _selectedFrameId).firstOrNull ??
+      _stackFrames.firstOrNull;
 
   List<DapScope> _scopes = const [];
   List<DapScope> get scopes => _scopes;
@@ -103,7 +109,9 @@ class DebugSessionController extends ChangeNotifier {
       _logConsole('[DAP Flutter]: Hot Reload concluído com sucesso.');
       return true;
     } else {
-      _logConsole('[DAP Flutter Erro]: Falha no Hot Reload: ${res.message ?? 'Desconhecida'}');
+      _logConsole(
+        '[DAP Flutter Erro]: Falha no Hot Reload: ${res.message ?? 'Desconhecida'}',
+      );
       return false;
     }
   }
@@ -119,7 +127,9 @@ class DebugSessionController extends ChangeNotifier {
       _logConsole('[DAP Flutter]: Hot Restart concluído com sucesso.');
       return true;
     } else {
-      _logConsole('[DAP Flutter Erro]: Falha no Hot Restart: ${res.message ?? 'Desconhecida'}');
+      _logConsole(
+        '[DAP Flutter Erro]: Falha no Hot Restart: ${res.message ?? 'Desconhecida'}',
+      );
       return false;
     }
   }
@@ -130,11 +140,9 @@ class DebugSessionController extends ChangeNotifier {
     String? sdkPath,
     DapClient? clientOverride,
   }) async {
-    final client = clientOverride ??
-        await DartDebugAdapter.spawnClient(
-          target: target,
-          sdkPath: sdkPath,
-        );
+    final client =
+        clientOverride ??
+        await DartDebugAdapter.spawnClient(target: target, sdkPath: sdkPath);
 
     _activeTarget = target;
     final launchArgs = target.toDapLaunchArgs();
@@ -145,6 +153,8 @@ class DebugSessionController extends ChangeNotifier {
       args: (launchArgs['args'] as List?)?.cast<String>() ?? const [],
       cwd: target.cwd,
       noDebug: target.noDebug,
+      launchArguments: launchArgs,
+      target: target,
     );
   }
 
@@ -153,11 +163,47 @@ class DebugSessionController extends ChangeNotifier {
     required RunConfiguration config,
     DapClient? clientOverride,
   }) async {
-    final target = config.toDartDebugTarget();
-    await startDartSession(
+    final dart = ['dart', 'flutter'].contains(config.type);
+    final language = switch (config.type) {
+      'node' || 'pwa-node' || 'node-terminal' => 'javascript',
+      'debugpy' => 'python',
+      'coreclr' => 'csharp',
+      'cargo' || 'lldb' => 'rust',
+      _ => config.type,
+    };
+
+    final target = dart ? config.toDartDebugTarget() : null;
+    final client =
+        clientOverride ??
+        (dart
+            ? await DartDebugAdapter.spawnClient(
+                target: target!,
+                sdkPath: config.sdkPath,
+              )
+            : await MultiLanguageDebugAdapter.spawnClient(
+                languageId: language,
+                cwd: config.cwd,
+              ));
+    if (client == null) throw StateError('No DAP adapter for ${config.type}');
+    await startSession(
+      client: client,
+      program: config.program,
+      cwd: config.cwd,
+      args: config.args,
+      env: config.env,
       target: target,
-      sdkPath: config.sdkPath,
-      clientOverride: clientOverride,
+      request: config.request,
+      launchArguments: {
+        if (target != null) ...target.toDapLaunchArgs(),
+        if (!dart)
+          ...MultiLanguageDebugAdapter.buildLaunchArgs(
+            languageId: language,
+            program: config.program,
+            cwd: config.cwd,
+            args: config.args,
+          ),
+        ...config.launchArguments,
+      },
     );
   }
 
@@ -169,9 +215,17 @@ class DebugSessionController extends ChangeNotifier {
     String? cwd,
     Map<String, dynamic>? env,
     bool noDebug = false,
+    String request = 'launch',
+    Map<String, dynamic> launchArguments = const {},
+    DartDebugTarget? target,
   }) async {
     await stop();
 
+    if (_disposed) {
+      await client.close();
+      return;
+    }
+    _activeTarget = target;
     _client = client;
     _activeSessionId = client.sessionId;
     _setState(DapSessionState.initializing);
@@ -179,40 +233,67 @@ class DebugSessionController extends ChangeNotifier {
 
     _stoppedSub = client.stoppedEvents.listen(_handleStopped);
     _outputSub = client.outputEvents.listen(_handleOutput);
+    final initialized = Completer<void>();
+    _eventsSub = client.events.listen(
+      (event) {
+        if (_client != client) return;
+        if (event.event == 'initialized' && !initialized.isCompleted) {
+          initialized.complete();
+        }
+        if (event.event == 'continued') {
+          _stackFrames = const [];
+          _scopes = const [];
+          _variables = const [];
+          _setState(DapSessionState.running);
+        }
+        if (event.event == 'terminated' || event.event == 'exited') {
+          unawaited(stop());
+        }
+      },
+      onDone: () {
+        if (_client == client) unawaited(stop());
+      },
+    );
 
     try {
       // 1. Initialize
       await client.initialize();
 
-      // 2. Sincroniza breakpoints já registrados
+      final launch = client.sendRequest(request, {
+        'program': program,
+        'args': args,
+        'cwd': ?cwd,
+        'env': ?env,
+        'noDebug': noDebug,
+        ...launchArguments,
+      });
+      // Observe early failures while waiting for the initialized event.
+      final ready = launch.then<void>((response) {
+        if (!response.success) {
+          throw StateError(response.message ?? 'DAP launch failed');
+        }
+        return initialized.future;
+      });
+      await Future.any([
+        initialized.future,
+        ready,
+      ]).timeout(const Duration(seconds: 20));
       for (final entry in _breakpointsByPath.entries) {
         await client.setBreakpoints(
           sourcePath: entry.key,
           breakpoints: entry.value,
         );
       }
-
-      // 3. Launch
-      final launchRes = await client.launch(
-        program: program,
-        args: args,
-        cwd: cwd,
-        env: env,
-        noDebug: noDebug,
-      );
-
-      if (!launchRes.success) {
-        _logConsole('[DAP Erro no Launch]: ${launchRes.message ?? 'Falha desconhecida'}');
-        await stop();
-        return;
-      }
-
-      // 4. ConfigurationDone
       if (client.capabilities.supportsConfigurationDoneRequest) {
         await client.configurationDone();
       }
-
-      _setState(DapSessionState.running);
+      final response = await launch.timeout(const Duration(seconds: 30));
+      if (!response.success) {
+        throw StateError(response.message ?? 'DAP launch failed');
+      }
+      if (_client == client && _state == DapSessionState.initializing) {
+        _setState(DapSessionState.running);
+      }
     } catch (e) {
       _logConsole('[DAP Exceção]: $e');
       await stop();
@@ -302,7 +383,8 @@ class DebugSessionController extends ChangeNotifier {
   Future<String?> evaluate(String expression, {int? frameId}) async {
     final client = _client;
     if (client == null || !isStopped) return null;
-    final targetFrame = frameId ?? (_stackFrames.isNotEmpty ? _stackFrames.first.id : null);
+    final targetFrame =
+        frameId ?? (_stackFrames.isNotEmpty ? _stackFrames.first.id : null);
     final res = await client.evaluate(expression, frameId: targetFrame);
     return res?.result;
   }
@@ -312,12 +394,18 @@ class DebugSessionController extends ChangeNotifier {
     final client = _client;
     if (client == null || !isStopped) return;
 
+    _selectedFrameId = frameId;
     final scopesList = await client.scopes(frameId);
+    if (_client != client || !isStopped || _selectedFrameId != frameId) return;
     _scopes = scopesList;
 
     if (scopesList.isNotEmpty) {
       final firstScope = scopesList.first;
-      _variables = await client.variables(firstScope.variablesReference);
+      final values = await client.variables(firstScope.variablesReference);
+      if (_client != client || !isStopped || _selectedFrameId != frameId) {
+        return;
+      }
+      _variables = values;
     } else {
       _variables = const [];
     }
@@ -326,9 +414,14 @@ class DebugSessionController extends ChangeNotifier {
 
   /// Encerra a sessão ativa de depuração e limpa processos.
   Future<void> stop() async {
-    if (_state == DapSessionState.idle) return;
+    if (_state == DapSessionState.idle ||
+        _state == DapSessionState.terminating) {
+      return;
+    }
     _setState(DapSessionState.terminating);
 
+    await _eventsSub?.cancel();
+    _eventsSub = null;
     await _stoppedSub?.cancel();
     await _outputSub?.cancel();
     _stoppedSub = null;
@@ -342,6 +435,7 @@ class DebugSessionController extends ChangeNotifier {
       await client.disconnect();
     }
 
+    _selectedFrameId = null;
     _activeThreadId = null;
     _lastStopReason = null;
     _activeTarget = null;
@@ -362,8 +456,13 @@ class DebugSessionController extends ChangeNotifier {
 
     final client = _client;
     if (client != null) {
-      _threads = await client.threads();
-      _stackFrames = await client.stackTrace(_activeThreadId!);
+      final thread = _activeThreadId!;
+      final threads = await client.threads();
+      if (_client != client || !isStopped) return;
+      final frames = await client.stackTrace(thread);
+      if (_client != client || !isStopped) return;
+      _threads = threads;
+      _stackFrames = frames;
       if (_stackFrames.isNotEmpty) {
         await selectFrame(_stackFrames.first.id);
       }
@@ -383,6 +482,11 @@ class DebugSessionController extends ChangeNotifier {
     }
   }
 
+  @override
+  void notifyListeners() {
+    if (!_disposed) super.notifyListeners();
+  }
+
   void _setState(DapSessionState newState) {
     if (_state != newState) {
       _state = newState;
@@ -392,6 +496,7 @@ class DebugSessionController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     unawaited(stop());
     super.dispose();
   }

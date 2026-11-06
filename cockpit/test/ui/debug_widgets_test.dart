@@ -30,6 +30,11 @@ class _MockServer {
   void _handleRequest(Map<String, dynamic> req) {
     final command = req['command'] as String;
     final seq = req['seq'] as int;
+    if (command == 'launch' || command == 'attach') {
+      output.add(
+        DapCodec.encode({'seq': 998, 'type': 'event', 'event': 'initialized'}),
+      );
+    }
 
     final body = <String, dynamic>{};
     switch (command) {
@@ -43,11 +48,7 @@ class _MockServer {
         final rawBps = rawArgs?['breakpoints'] as List? ?? [];
         body['breakpoints'] = [
           for (var i = 0; i < rawBps.length; i++)
-            {
-              'id': i + 1,
-              'verified': true,
-              'line': rawBps[i]['line'],
-            },
+            {'id': i + 1, 'verified': true, 'line': rawBps[i]['line']},
         ];
         break;
       case 'threads':
@@ -138,39 +139,45 @@ void main() {
       await server.close();
     });
 
-    testWidgets('DebugToolbar renderiza botões e reflete estado pausado/rodando', (tester) async {
-      await tester.pumpWidget(
-        _wrapWithTheme(
-          DebugToolbar(controller: controller),
-        ),
-      );
+    testWidgets(
+      'DebugToolbar renderiza botões e reflete estado pausado/rodando',
+      (tester) async {
+        await tester.pumpWidget(
+          _wrapWithTheme(DebugToolbar(controller: controller)),
+        );
 
-      // Inativo: nada exibido
-      expect(find.byType(DebugToolbar), findsOneWidget);
-      expect(find.text('PAUSADO'), findsNothing);
-      expect(find.text('RODANDO'), findsNothing);
+        // Inativo: nada exibido
+        expect(find.byType(DebugToolbar), findsOneWidget);
+        expect(find.text('PAUSADO'), findsNothing);
+        expect(find.text('RODANDO'), findsNothing);
 
-      // Inicia sessão sob runAsync
-      await tester.runAsync(() async {
-        await controller.startSession(client: client, program: '/project/lib/main.dart');
-        await Future<void>.delayed(const Duration(milliseconds: 20));
-      });
-      await tester.pump();
+        // Inicia sessão sob runAsync
+        await tester.runAsync(() async {
+          await controller.startSession(
+            client: client,
+            program: '/project/lib/main.dart',
+          );
+          await Future<void>.delayed(const Duration(milliseconds: 20));
+        });
+        await tester.pump();
 
-      expect(find.text('RODANDO'), findsOneWidget);
-      expect(find.byIcon(Icons.pause), findsNothing);
+        expect(find.text('RODANDO'), findsOneWidget);
+        expect(find.byIcon(Icons.pause), findsNothing);
 
-      // Simula interrupção em breakpoint
-      await tester.runAsync(() async {
-        server.emitEvent('stopped', {'reason': 'breakpoint', 'threadId': 1});
-        await Future<void>.delayed(const Duration(milliseconds: 30));
-      });
-      await tester.pump();
+        // Simula interrupção em breakpoint
+        await tester.runAsync(() async {
+          server.emitEvent('stopped', {'reason': 'breakpoint', 'threadId': 1});
+          await Future<void>.delayed(const Duration(milliseconds: 30));
+        });
+        await tester.pump();
 
-      expect(find.text('PAUSADO'), findsOneWidget);
-    });
+        expect(find.text('PAUSADO'), findsOneWidget);
+      },
+    );
 
-    testWidgets('DebugPanel exibe Call Stack, Variáveis e Breakpoints', (tester) async {
+    testWidgets('DebugPanel exibe Call Stack, Variáveis e Breakpoints', (
+      tester,
+    ) async {
       String? navigatedPath;
       int? navigatedLine;
 
@@ -200,7 +207,10 @@ void main() {
 
       // Inicia sessão e para no frame
       await tester.runAsync(() async {
-        await controller.startSession(client: client, program: '/project/lib/main.dart');
+        await controller.startSession(
+          client: client,
+          program: '/project/lib/main.dart',
+        );
         server.emitEvent('stopped', {'reason': 'breakpoint', 'threadId': 1});
         await Future<void>.delayed(const Duration(milliseconds: 40));
       });
@@ -214,80 +224,102 @@ void main() {
       expect(find.text('"ok"'), findsOneWidget);
     });
 
-    testWidgets('DebugPanel renderiza launcher de RunConfiguration e gerencia Watches', (tester) async {
-      RunConfiguration? startedConfig;
-      const testConfig = RunConfiguration(
-        id: 'cfg-1',
-        name: 'Executar Servidor',
-        type: 'dart',
-        program: 'bin/server.dart',
-        cwd: '.',
-      );
+    testWidgets(
+      'DebugPanel renderiza launcher de RunConfiguration e gerencia Watches',
+      (tester) async {
+        RunConfiguration? startedConfig;
+        const testConfig = RunConfiguration(
+          id: 'cfg-1',
+          name: 'Executar Servidor',
+          type: 'dart',
+          program: 'bin/server.dart',
+          cwd: '.',
+        );
 
-      await tester.pumpWidget(
-        _wrapWithTheme(
-          DebugPanel(
-            controller: controller,
-            configurations: const [testConfig],
-            onStartConfiguration: (cfg) => startedConfig = cfg,
+        await tester.pumpWidget(
+          _wrapWithTheme(
+            DebugPanel(
+              controller: controller,
+              configurations: const [testConfig],
+              onStartConfiguration: (cfg) => startedConfig = cfg,
+            ),
           ),
-        ),
-      );
+        );
 
-      // Launcher visível
-      expect(find.text('Executar Servidor'), findsOneWidget);
-      expect(find.byKey(const ValueKey('run-config-start')), findsOneWidget);
+        // Launcher visível
+        expect(find.text('Executar Servidor'), findsOneWidget);
+        expect(find.byKey(const ValueKey('run-config-start')), findsOneWidget);
 
-      await tester.tap(find.byKey(const ValueKey('run-config-start')));
-      await tester.pump();
-      expect(startedConfig?.name, equals('Executar Servidor'));
+        await tester.tap(find.byKey(const ValueKey('run-config-start')));
+        await tester.pump();
+        expect(startedConfig?.name, equals('Executar Servidor'));
 
-      // Watches
-      expect(find.text('WATCHES (0)'), findsOneWidget);
-      await tester.tap(find.byKey(const ValueKey('run-config-add-watch')));
-      await tester.pump();
+        // Watches
+        expect(find.text('WATCHES (0)'), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('run-config-add-watch')));
+        await tester.pump();
 
-      expect(find.byKey(const ValueKey('run-config-watch-input')), findsOneWidget);
-      await tester.enterText(find.byKey(const ValueKey('run-config-watch-input')), 'myCounter');
-      await tester.tap(find.byKey(const ValueKey('run-config-watch-confirm')));
-      await tester.pump();
+        expect(
+          find.byKey(const ValueKey('run-config-watch-input')),
+          findsOneWidget,
+        );
+        await tester.enterText(
+          find.byKey(const ValueKey('run-config-watch-input')),
+          'myCounter',
+        );
+        await tester.tap(
+          find.byKey(const ValueKey('run-config-watch-confirm')),
+        );
+        await tester.pump();
 
-      expect(controller.watchExpressions, contains('myCounter'));
-      expect(find.text('WATCHES (1)'), findsOneWidget);
-      expect(find.text('myCounter'), findsOneWidget);
-    });
+        expect(controller.watchExpressions, contains('myCounter'));
+        expect(find.text('WATCHES (1)'), findsOneWidget);
+        expect(find.text('myCounter'), findsOneWidget);
+      },
+    );
 
-    testWidgets('CodeEditor renderiza breakpoints e activeDebugLine no gutter', (tester) async {
-      int? toggledLine;
-      const code = 'void main() {\n  final x = 1;\n  print(x);\n}\n';
-      final editCtrl = CodeEditingController(text: code, language: 'dart');
-      final focusNode = FocusNode();
+    testWidgets(
+      'CodeEditor renderiza breakpoints e activeDebugLine no gutter',
+      (tester) async {
+        int? toggledLine;
+        const code = 'void main() {\n  final x = 1;\n  print(x);\n}\n';
+        final editCtrl = CodeEditingController(text: code, language: 'dart');
+        final focusNode = FocusNode();
 
-      await tester.pumpWidget(
-        _wrapWithTheme(
-          CodeEditor(
-            controller: editCtrl,
-            focusNode: focusNode,
-            filePath: '/project/lib/main.dart',
-            breakpoints: const {2},
-            activeDebugLine: 2,
-            onToggleBreakpoint: (line) => toggledLine = line,
+        await tester.pumpWidget(
+          _wrapWithTheme(
+            CodeEditor(
+              controller: editCtrl,
+              focusNode: focusNode,
+              filePath: '/project/lib/main.dart',
+              breakpoints: const {2},
+              activeDebugLine: 2,
+              onToggleBreakpoint: (line) => toggledLine = line,
+            ),
           ),
-        ),
-      );
+        );
 
-      // Breakpoint na linha 2 desenhado no gutter
-      expect(find.byKey(const ValueKey('debug-breakpoint-gutter:2')), findsOneWidget);
-      // Indicador de linha ativa (seta amarela) desenhado no gutter
-      expect(find.byKey(const ValueKey('debug-active-line:2')), findsOneWidget);
+        // Breakpoint na linha 2 desenhado no gutter
+        expect(
+          find.byKey(const ValueKey('debug-breakpoint-gutter:2')),
+          findsOneWidget,
+        );
+        // Indicador de linha ativa (seta amarela) desenhado no gutter
+        expect(
+          find.byKey(const ValueKey('debug-active-line:2')),
+          findsOneWidget,
+        );
 
-      // Clica no gutter da linha 1 para alternar breakpoint
-      await tester.tap(find.byKey(const ValueKey('code-editor-gutter-line:1')));
-      await tester.pump();
-      expect(toggledLine, equals(1));
+        // Clica no gutter da linha 1 para alternar breakpoint
+        await tester.tap(
+          find.byKey(const ValueKey('code-editor-gutter-line:1')),
+        );
+        await tester.pump();
+        expect(toggledLine, equals(1));
 
-      editCtrl.dispose();
-      focusNode.dispose();
-    });
+        editCtrl.dispose();
+        focusNode.dispose();
+      },
+    );
   });
 }

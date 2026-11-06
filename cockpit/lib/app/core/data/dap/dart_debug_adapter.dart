@@ -83,10 +83,7 @@ class DartDebugTarget {
     required String vmServiceUri,
     required String cwd,
   }) {
-    return {
-      'vmServiceUri': vmServiceUri,
-      'cwd': cwd,
-    };
+    return {'vmServiceUri': vmServiceUri, 'cwd': cwd};
   }
 }
 
@@ -106,14 +103,22 @@ class DartDebugAdapter {
         kind == DartDebugType.flutterApp || kind == DartDebugType.flutterTest;
 
     if (isFlutter) {
-      final flutterExe =
-          sdkPath != null && sdkPath.isNotEmpty ? '$sdkPath/bin/flutter' : 'flutter';
-      return (flutterExe, const ['debug_adapter']);
+      final flutterExe = sdkPath != null && sdkPath.isNotEmpty
+          ? '$sdkPath/bin/flutter'
+          : 'flutter';
+      return (
+        flutterExe,
+        ['debug_adapter', if (kind == DartDebugType.flutterTest) '--test'],
+      );
     }
 
-    final dartExe =
-        sdkPath != null && sdkPath.isNotEmpty ? '$sdkPath/bin/dart' : 'dart';
-    return (dartExe, const ['debug_adapter']);
+    final dartExe = sdkPath != null && sdkPath.isNotEmpty
+        ? '$sdkPath/bin/dart'
+        : 'dart';
+    return (
+      dartExe,
+      ['debug_adapter', if (kind == DartDebugType.dartTest) '--test'],
+    );
   }
 
   /// Inicia o subprocesso do adaptador DAP do SDK e retorna um [DapClient] conectado.
@@ -136,7 +141,8 @@ class DartDebugAdapter {
 
     return DapClient.fromProcess(
       process: process,
-      sessionId: sessionId ?? 'dart-debug-${DateTime.now().millisecondsSinceEpoch}',
+      sessionId:
+          sessionId ?? 'dart-debug-${DateTime.now().millisecondsSinceEpoch}',
     );
   }
 }

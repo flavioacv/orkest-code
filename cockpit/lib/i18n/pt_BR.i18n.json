@@ -544,6 +544,7 @@
       "mergeApply": "Aplicar no editor",
       "mergeStale": "O arquivo mudou durante a revisão. Abra o conflito novamente para revisar o conteúdo atual.",
       "mergeMarkers": "Remova os marcadores de conflito antes de aplicar o resultado.",
+      "workbenchRunTerminal": "Executar / Testar (terminal)",
       "mergePendingSave": "Salve o arquivo após aplicar o resultado.",
       "conflictsBanner": "${count} conflito(s) de merge não resolvido(s)",
       "acceptAllOurs": "Aceitar Atual",
