@@ -35,10 +35,19 @@ class DbPanel extends StatefulWidget {
 }
 
 class _DbPanelState extends State<DbPanel> {
+  final TextEditingController _searchController = TextEditingController();
+  String _filterQuery = '';
+
   @override
   void initState() {
     super.initState();
     _syncWorkspace();
+  }
+
+  @override
+  void dispose() {
+    _searchController.dispose();
+    super.dispose();
   }
 
   @override
@@ -244,30 +253,83 @@ class _DbPanelState extends State<DbPanel> {
             ],
           ),
         ),
-        Expanded(
-          child: conns.isEmpty
-              ? Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Text(
-                    context.t.orkest.dbPanel.noConnections,
-                    style: typo.label.copyWith(
-                      fontSize: 11.5,
-                      color: colors.text3,
-                      height: 1.5,
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+          child: Container(
+            height: 26,
+            decoration: BoxDecoration(
+              color: colors.panel2,
+              borderRadius: BorderRadius.circular(4),
+              border: Border.all(color: colors.border),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 6),
+            child: Row(
+              children: [
+                Icon(Icons.search, size: 13, color: colors.text4),
+                const SizedBox(width: 4),
+                Expanded(
+                  child: TextField(
+                    key: const ValueKey('db-panel-search-input'),
+                    controller: _searchController,
+                    style: typo.mono.copyWith(fontSize: 11),
+                    placeholder: Text(
+                      'Filtrar conexões e tabelas...',
+                      style: typo.mono.copyWith(fontSize: 11, color: colors.text4),
                     ),
-                  ),
-                )
-              : ListView.builder(
-                  padding: const EdgeInsets.symmetric(horizontal: 6),
-                  itemCount: conns.length,
-                  itemBuilder: (context, i) => _ConnectionTile(
-                    conn: conns[i],
-                    expanded: _expanded.contains(conns[i].name),
-                    onToggle: () => _toggle(conns[i].name),
-                    onContextMenu: _contextMenu,
-                    onNewQuery: (table) => _newDbq(conns[i], table: table),
+                    padding: EdgeInsets.zero,
+                    onChanged: (val) => setState(() => _filterQuery = val.trim().toLowerCase()),
                   ),
                 ),
+                if (_filterQuery.isNotEmpty)
+                  GestureDetector(
+                    onTap: () {
+                      _searchController.clear();
+                      setState(() => _filterQuery = '');
+                    },
+                    child: Icon(Icons.close, size: 12, color: colors.text3),
+                  ),
+              ],
+            ),
+          ),
+        ),
+        Expanded(
+          child: () {
+            final filtered = _filterQuery.isEmpty
+                ? conns
+                : conns.where((c) {
+                    final q = _filterQuery;
+                    return c.name.toLowerCase().contains(q) ||
+                        c.displayTarget.toLowerCase().contains(q) ||
+                        c.engine.label.toLowerCase().contains(q);
+                  }).toList();
+            if (filtered.isEmpty) {
+              return Padding(
+                padding: const EdgeInsets.all(16),
+                child: Text(
+                  _filterQuery.isEmpty
+                      ? context.t.orkest.dbPanel.noConnections
+                      : 'Nenhuma conexão encontrada para "$_filterQuery"',
+                  style: typo.label.copyWith(
+                    fontSize: 11.5,
+                    color: colors.text3,
+                    height: 1.5,
+                  ),
+                ),
+              );
+            }
+            return ListView.builder(
+              padding: const EdgeInsets.symmetric(horizontal: 6),
+              itemCount: filtered.length,
+              itemBuilder: (context, i) => _ConnectionTile(
+                conn: filtered[i],
+                expanded: _filterQuery.isNotEmpty || _expanded.contains(filtered[i].name),
+                filterQuery: _filterQuery,
+                onToggle: () => _toggle(filtered[i].name),
+                onContextMenu: _contextMenu,
+                onNewQuery: (table) => _newDbq(filtered[i], table: table),
+              ),
+            );
+          }(),
         ),
         Container(
           width: double.infinity,
@@ -294,6 +356,7 @@ class _ConnectionTile extends StatelessWidget {
   const _ConnectionTile({
     required this.conn,
     required this.expanded,
+    this.filterQuery = '',
     required this.onToggle,
     required this.onContextMenu,
     required this.onNewQuery,
@@ -301,6 +364,7 @@ class _ConnectionTile extends StatelessWidget {
 
   final DbConnection conn;
   final bool expanded;
+  final String filterQuery;
   final VoidCallback onToggle;
   final Future<void> Function(BuildContext anchor, DbConnection conn)
   onContextMenu;
@@ -407,7 +471,7 @@ class _ConnectionTile extends StatelessWidget {
           ),
         ),
         if (expanded && browsable)
-          _SchemaTree(conn: conn, onNewQuery: onNewQuery),
+          _SchemaTree(conn: conn, filterQuery: filterQuery, onNewQuery: onNewQuery),
         if (expanded && isMongo) _MongoCollections(conn: conn),
       ],
     );
@@ -416,8 +480,13 @@ class _ConnectionTile extends StatelessWidget {
 
 /// Árvore de tabelas → colunas de uma conexão, carregada sob demanda.
 class _SchemaTree extends StatefulWidget {
-  const _SchemaTree({required this.conn, required this.onNewQuery});
+  const _SchemaTree({
+    required this.conn,
+    this.filterQuery = '',
+    required this.onNewQuery,
+  });
   final DbConnection conn;
+  final String filterQuery;
   final void Function(SchemaTable table) onNewQuery;
 
   @override
@@ -455,8 +524,13 @@ class _SchemaTreeState extends State<_SchemaTree> {
           if (snap.hasError) {
             return _hint(_errorMessage(context, snap.error), error: true);
           }
-          final tables = snap.data ?? const [];
-          if (tables.isEmpty) return _hint('No tables.');
+          var tables = snap.data ?? const [];
+          if (widget.filterQuery.isNotEmpty) {
+            tables = tables
+                .where((t) => t.name.toLowerCase().contains(widget.filterQuery))
+                .toList();
+          }
+          if (tables.isEmpty) return _hint(widget.filterQuery.isNotEmpty ? 'Nenhuma tabela correspondente.' : 'No tables.');
 
           // Agrupa por schema só quando há mais de um distinto — caso comum
           // (public/dbo/database único, ou SQLite) segue lista plana como antes.

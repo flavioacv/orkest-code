@@ -6,8 +6,6 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
 
 ## Backlog
 
-- [ ] E4 · Consolidar Database no workbench <!-- id: FE-E4 labels: bancos blockedBy: FE-E1 -->
-      Conexão → schema → console → resultado → edição suportada; capacidades por driver.
 - [ ] E5 · Integrar navegação, Problems e serviços <!-- id: FE-E5 labels: estrutura blockedBy: FE-E1 -->
       Estrutura, referências, diagnóstico e serviços com navegação para código.
 - [ ] E6 · Integrar revisão PR e ferramentas avançadas <!-- id: FE-E6 labels: git blockedBy: FE-E2, FE-E3, FE-E5 -->
@@ -16,6 +14,15 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Evidência visual e funcional local/remota, foco, restauração e terminais; sem métricas sintéticas.
 
 ## Em andamento
+
+- [ ] E4 · Consolidar Database no workbench <!-- id: FE-E4 labels: bancos blockedBy: FE-E1 -->
+      Implementado: Filtro e busca reativa no `DbPanel` (`db-panel-search-input`) permitindo localizar instantaneamente conexões, tabelas e views no catálogo lateral.
+      Cancelamento visível: botão de cancelamento (`db-query-cancel`) no `DbQueryView` durante a execução de consultas longas ou travadas.
+      Exportação integrada no rodapé: menu de exportação (`db-query-export-button`) com cópia estruturada para CSV com cabeçalhos e JSON formatado via `DbExportService`.
+      Edição de células no grid com concorrência otimista: duplo clique na célula abre diálogo de edição (`db-grid-cell-edit-input`, `db-grid-cell-edit-save`) com validação de chave primária e concorrência otimista via `DbRowEditService` (gerando instruções DML seguras `UPDATE ... WHERE pk = val AND col = oldValue`).
+      Validação deste incremento: análise estática limpa (`dart analyze` com 0 erros/avisos) e 21 testes automatizados aprovados na suíte de database (`db_schema_entities_test.dart`, `db_row_edit_service_test.dart`, `db_export_service_test.dart`, `db_widgets_test.dart`).
+      Pendente: suporte a gráficos/diagramas relacionais (previsto como evolução posterior sem bloquear console e grid) e expansão dos drivers NoSQL.
+      Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 - [ ] E3 · Integrar jornada Run, Debug e Test <!-- id: FE-E3 labels: debug blockedBy: FE-E1 -->
       Implementado: Seletor de execução e depuração integrado ao `WorkbenchToolHost` (`WorkbenchToolId.debug`, ícone `bug_report_outlined`). `RunConfiguration` convertível deterministicamente para alvos `DartDebugTarget` (`toDartDebugTarget`). Adaptadores DAP reais (`DartDebugAdapter`, `MultiLanguageDebugAdapter`) conectados ao `DebugSessionController` com suporte a launch/attach, breakpoints com verificação de linha, fluxo pausado/rodando, inspeção de threads, call stack e variáveis de escopo.

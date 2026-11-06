@@ -7,6 +7,7 @@ import 'package:orkest_code/app/core/ui/file_operation_error_message.dart';
 import 'package:orkest_code/app/orkest/domain/entities/dbq_document.dart';
 import 'package:orkest_code/app/orkest/domain/entities/file_view.dart';
 import 'package:orkest_code/app/orkest/domain/entities/sql_statements.dart';
+import 'package:orkest_code/app/orkest/domain/services/db_export_service.dart';
 import 'package:orkest_code/app/orkest/ui/session/file_viewer_session.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/db_engine_icon.dart';
 import 'package:orkest_code/app/orkest/ui/viewmodels/orkest_viewmodel.dart';
@@ -582,6 +583,27 @@ class _DbQueryViewState extends State<DbQueryView> {
               ],
             ),
           ),
+          if (_running) ...[
+            const SizedBox(width: 6),
+            HoverTap(
+              key: const ValueKey('db-query-cancel'),
+              onTap: () => setState(() => _running = false),
+              color: colors.panel3,
+              borderRadius: const BorderRadius.all(Radius.circular(5)),
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(Icons.stop, size: 13, color: colors.error),
+                  const SizedBox(width: 4),
+                  Text(
+                    'Cancelar',
+                    style: typo.label.copyWith(fontSize: 11, color: colors.error),
+                  ),
+                ],
+              ),
+            ),
+          ],
         ],
       ),
     );
@@ -653,6 +675,7 @@ class _DbQueryViewState extends State<DbQueryView> {
       manualWidths: _view.manualWidths,
       selectedRow: _view.selectedRow,
       onSelectRow: (i) => setState(() => _view.selectedRow = i),
+      onEditCell: (row, col, val) => _editCell(row, col, val),
       // Primeiro drag congela as larguras visuais atuais → o arrasto vira
       // 1:1 com o mouse (sem a re-escala proporcional "correndo" na frente).
       onResizeStart: (effective) => _view.manualWidths ??= [...effective],
@@ -662,6 +685,73 @@ class _DbQueryViewState extends State<DbQueryView> {
         w[col] = (w[col] + delta).clamp(60.0, 2000.0);
       }),
     );
+  }
+
+  Future<void> _editCell(int rowIndex, int colIndex, Object? currentValue) async {
+    final result = _view.result;
+    if (result == null || rowIndex >= result.rows.length || colIndex >= result.columns.length) return;
+    final col = result.columns[colIndex];
+    final ctrl = TextEditingController(text: currentValue?.toString() ?? '');
+    final newVal = await showDialog<String>(
+      context: context,
+      builder: (context) => AlertDialog(
+        title: Text('Editar valor de ${col.name}', style: context.typo.title.copyWith(fontSize: 14)),
+        content: SizedBox(
+          width: 320,
+          child: TextField(
+            key: const ValueKey('db-grid-cell-edit-input'),
+            controller: ctrl,
+            autofocus: true,
+            border: Border.all(color: context.colors.border),
+            borderRadius: BorderRadius.circular(4),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+            onSubmitted: (v) => Navigator.of(context).pop(v),
+          ),
+        ),
+        actions: [
+          GhostButton(
+            onPressed: () => Navigator.of(context).pop(),
+            child: Text(context.t.common.cancel),
+          ),
+          PrimaryButton(
+            key: const ValueKey('db-grid-cell-edit-save'),
+            onPressed: () => Navigator.of(context).pop(ctrl.text),
+            child: Text(context.t.common.save),
+          ),
+        ],
+      ),
+    );
+    if (newVal == null || !mounted) return;
+    setState(() {
+      result.rows[rowIndex][colIndex] = newVal;
+    });
+  }
+
+  Future<void> _showExportMenu(BuildContext anchor, DbResult result) async {
+    final action = await showAppMenu<String>(
+      anchor,
+      items: const [
+        AppMenuItem(
+          value: 'csv',
+          label: 'Copiar como CSV (com cabeçalhos)',
+          icon: Icons.table_view,
+        ),
+        AppMenuItem(
+          value: 'json',
+          label: 'Copiar como JSON formatado',
+          icon: Icons.code,
+        ),
+      ],
+    );
+    if (action == null || !mounted) return;
+    const exportService = DbExportService();
+    if (action == 'csv') {
+      final csv = exportService.exportCsv(result);
+      await Clipboard.setData(ClipboardData(text: csv));
+    } else if (action == 'json') {
+      final json = exportService.exportJson(result, pretty: true);
+      await Clipboard.setData(ClipboardData(text: json));
+    }
   }
 
   Widget _footer(BuildContext context) {
@@ -691,6 +781,27 @@ class _DbQueryViewState extends State<DbQueryView> {
           // Toggle Table / JSON (JSON é selecionável/copiável). Estado por tab,
           // fora do frontmatter.
           if (result != null && result.affectedRows == null) ...[
+            Builder(
+              builder: (anchor) => HoverTap(
+                key: const ValueKey('db-query-export-button'),
+                onTap: () => _showExportMenu(anchor, result),
+                color: colors.panel3,
+                borderRadius: const BorderRadius.all(Radius.circular(4)),
+                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.file_download_outlined, size: 12, color: colors.text3),
+                    const SizedBox(width: 4),
+                    Text(
+                      'Exportar',
+                      style: typo.label.copyWith(fontSize: 10.5, color: colors.text2),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
             _ViewToggle(
               label: tr.table,
               active: !_view.asJson,
@@ -925,6 +1036,7 @@ class _DbGrid extends StatefulWidget {
     required this.manualWidths,
     required this.selectedRow,
     required this.onSelectRow,
+    this.onEditCell,
     required this.onResizeStart,
     required this.onResize,
   });
@@ -936,6 +1048,7 @@ class _DbGrid extends StatefulWidget {
   final List<double>? manualWidths;
   final int? selectedRow;
   final ValueChanged<int> onSelectRow;
+  final void Function(int rowIndex, int colIndex, Object? currentValue)? onEditCell;
 
   /// Chamado no início do drag com as larguras VISUAIS atuais (pro parent
   /// congelar).
@@ -1011,6 +1124,7 @@ class _DbGridState extends State<_DbGrid> {
                     widths: widths,
                     selected: i == widget.selectedRow,
                     onTap: () => widget.onSelectRow(i),
+                    onEditCell: (col, val) => widget.onEditCell?.call(i, col, val),
                   ),
                 ),
               ),
@@ -1130,6 +1244,7 @@ class _GridRow extends StatelessWidget {
     required this.widths,
     required this.selected,
     required this.onTap,
+    this.onEditCell,
   });
 
   final int number;
@@ -1137,6 +1252,7 @@ class _GridRow extends StatelessWidget {
   final List<double> widths;
   final bool selected;
   final VoidCallback onTap;
+  final void Function(int colIndex, Object? currentValue)? onEditCell;
 
   @override
   Widget build(BuildContext context) {
@@ -1167,9 +1283,12 @@ class _GridRow extends StatelessWidget {
             for (var c = 0; c < cells.length; c++)
               SizedBox(
                 width: widths[c],
-                child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 8),
-                  child: _CellValue(value: cells[c]),
+                child: GestureDetector(
+                  onDoubleTap: onEditCell != null ? () => onEditCell!(c, cells[c]) : null,
+                  child: Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    child: _CellValue(value: cells[c]),
+                  ),
                 ),
               ),
           ],
