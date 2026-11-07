@@ -97,8 +97,12 @@ class ProjectsRail extends StatefulWidget {
     required this.onSelectRemote,
     required this.remoteGitInfoOf,
     required this.onRemoteWorkspaceAction,
+    this.bottomTools,
     this.width = 252,
   });
+
+  /// Widget opcional de ferramentas no rodapé do rail (ex: controles do Bottom Dock).
+  final Widget? bottomTools;
 
   /// Largura do painel (arrastável pela página — não persistida).
   final double width;
@@ -486,6 +490,7 @@ class _ProjectsRailState extends State<ProjectsRail> {
           ),
           // Aviso de atualização in-app — acima do nome da máquina (passo 7).
           const UpdateCard(),
+          if (widget.bottomTools != null) widget.bottomTools!,
           Container(
             // Mesma altura do footer do file viewer (34) pra alinhar a base.
             height: 34,

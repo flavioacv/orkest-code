@@ -347,3 +347,91 @@ class BottomStripeBar extends StatelessWidget {
     );
   }
 }
+
+/// Botões de ferramentas do Bottom Dock posicionados no canto inferior esquerdo (Open IDEA style).
+class RailBottomDockTools extends StatelessWidget {
+  const RailBottomDockTools({
+    super.key,
+    required this.isOpen,
+    required this.selectedTab,
+    required this.onToggleTab,
+    this.problemsCount = 0,
+    this.isDebugging = false,
+  });
+
+  final bool isOpen;
+  final BottomDockTab selectedTab;
+  final ValueChanged<BottomDockTab> onToggleTab;
+  final int problemsCount;
+  final bool isDebugging;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Container(
+      height: 28,
+      padding: const EdgeInsets.symmetric(horizontal: 6),
+      decoration: BoxDecoration(
+        color: colors.panel2,
+        border: Border(
+          top: BorderSide(color: colors.border),
+        ),
+      ),
+      child: Row(
+        children: [
+          for (final tab in BottomDockTab.values) ...[
+            HoverTap(
+              key: ValueKey('rail-tool-btn-${tab.name}'),
+              onTap: () => onToggleTab(tab),
+              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
+              borderRadius: BorderRadius.circular(3),
+              color: isOpen && selectedTab == tab
+                  ? colors.accent.withValues(alpha: 0.18)
+                  : Colors.transparent,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    tab.icon,
+                    size: 12,
+                    color: isOpen && selectedTab == tab
+                        ? (tab == BottomDockTab.debug && isDebugging
+                            ? colors.warn
+                            : colors.accent)
+                        : colors.text3,
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    tab.label,
+                    style: context.typo.label.copyWith(
+                      fontSize: 10,
+                      fontWeight: isOpen && selectedTab == tab
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                      color: isOpen && selectedTab == tab
+                          ? colors.text
+                          : colors.text3,
+                    ),
+                  ),
+                  if (tab == BottomDockTab.problems && problemsCount > 0) ...[
+                    const SizedBox(width: 4),
+                    Text(
+                      '$problemsCount',
+                      style: context.typo.mono.copyWith(
+                        fontSize: 9,
+                        color: colors.warn,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ],
+              ),
+            ),
+            const SizedBox(width: 3),
+          ],
+        ],
+      ),
+    );
+  }
+}

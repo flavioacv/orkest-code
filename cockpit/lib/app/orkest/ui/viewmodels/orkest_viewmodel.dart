@@ -4,6 +4,7 @@ import 'package:orkest_code/app/core/domain/services/problems_controller.dart';
 import 'package:orkest_code/app/core/domain/entities/lsp_symbol.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_comparison.dart';
 import 'package:orkest_code/app/orkest/domain/entities/workbench_layout_state.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/bottom_dock_host.dart';
 import 'package:orkest_code/app/core/domain/entities/lsp_completion.dart';
 import 'dart:async';
 import 'dart:convert';
@@ -347,6 +348,40 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
   final Map<String, DebugSessionController> _debugSessions = {};
   final Map<String, ProblemsController> _workspaceProblems = {};
 
+  bool _bottomDockOpen = false;
+  BottomDockTab _bottomDockTab = BottomDockTab.debug;
+  double _bottomDockHeight = 280.0;
+
+  bool get bottomDockOpen => _bottomDockOpen;
+  BottomDockTab get bottomDockTab => _bottomDockTab;
+  double get bottomDockHeight => _bottomDockHeight;
+
+  void toggleBottomDock(BottomDockTab tab) {
+    if (_bottomDockOpen && _bottomDockTab == tab) {
+      _bottomDockOpen = false;
+    } else {
+      _bottomDockOpen = true;
+      _bottomDockTab = tab;
+    }
+    notifyListeners();
+  }
+
+  void openBottomDock([BottomDockTab tab = BottomDockTab.debug]) {
+    _bottomDockOpen = true;
+    _bottomDockTab = tab;
+    notifyListeners();
+  }
+
+  void closeBottomDock() {
+    _bottomDockOpen = false;
+    notifyListeners();
+  }
+
+  void setBottomDockHeight(double height) {
+    _bottomDockHeight = height.clamp(140.0, 600.0);
+    notifyListeners();
+  }
+
   DebugSessionController debugForWorkspace(String workspaceId) =>
       _debugSessions.putIfAbsent(workspaceId, () {
         final controller = DebugSessionController();
@@ -362,6 +397,9 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
           final path = frame.sourcePath;
           if (path != null && selectedProjectId == workspaceId) {
             unawaited(navigateToSource(path, frame.line, frame.column));
+            if (!_bottomDockOpen) {
+              openBottomDock(BottomDockTab.debug);
+            }
           }
         });
         return controller;

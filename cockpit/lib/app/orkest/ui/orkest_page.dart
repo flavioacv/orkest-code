@@ -1148,6 +1148,18 @@ class _RailPanel extends StatelessWidget {
           remoteGitInfoOf: vm.remoteGitInfoOf,
           onRemoteWorkspaceAction: (wsId, action) =>
               handleRemoteWorkspaceAction(context, wsId, action),
+          bottomTools: RailBottomDockTools(
+            isOpen: vm.bottomDockOpen,
+            selectedTab: vm.bottomDockTab,
+            onToggleTab: vm.toggleBottomDock,
+            isDebugging: vm.selectedProjectId != null &&
+                (vm.debugForWorkspace(vm.selectedProjectId!).isRunning ||
+                    vm.debugForWorkspace(vm.selectedProjectId!).isStopped),
+            problemsCount: vm.selectedProjectId != null
+                ? (vm.problemsForWorkspace(vm.selectedProjectId!).errorCount +
+                    vm.problemsForWorkspace(vm.selectedProjectId!).warningCount)
+                : 0,
+          ),
         ),
         // Alça de arraste na borda VOLTADA PARA O CENTRO: borda direita quando o
         // painel está à esquerda, e vice-versa com "Inverter panes" — do outro
@@ -1191,9 +1203,6 @@ class _CenterPanelState extends State<_CenterPanel> {
   final Set<TerminalSession> _observedTerminalSessions = <TerminalSession>{};
   bool _officeInitialized = false;
   bool _terminalSessionRebuildQueued = false;
-  bool _bottomDockOpen = false;
-  BottomDockTab _bottomDockTab = BottomDockTab.debug;
-  double _bottomDockHeight = 280.0;
 
   @override
   void initState() {
@@ -1383,14 +1392,12 @@ class _CenterPanelState extends State<_CenterPanel> {
                   Expanded(child: terminalWorkspace),
                   if (projectId != null)
                     BottomDockHost(
-                      isOpen: _bottomDockOpen,
-                      selectedTab: _bottomDockTab,
-                      onTabSelected: (tab) =>
-                          setState(() => _bottomDockTab = tab),
-                      onClose: () => setState(() => _bottomDockOpen = false),
-                      height: _bottomDockHeight,
-                      onHeightChanged: (h) =>
-                          setState(() => _bottomDockHeight = h),
+                      isOpen: vm.bottomDockOpen,
+                      selectedTab: vm.bottomDockTab,
+                      onTabSelected: vm.openBottomDock,
+                      onClose: vm.closeBottomDock,
+                      height: vm.bottomDockHeight,
+                      onHeightChanged: vm.setBottomDockHeight,
                       isDebugging: vm.debugForWorkspace(projectId).isRunning ||
                           vm.debugForWorkspace(projectId).isStopped,
                       debugContent: WorkspaceDebugPanel(
@@ -1411,18 +1418,9 @@ class _CenterPanelState extends State<_CenterPanel> {
                               vm.problemsForWorkspace(projectId).warningCount,
                     ),
                   BottomStripeBar(
-                    isOpen: _bottomDockOpen,
-                    selectedTab: _bottomDockTab,
-                    onToggleTab: (tab) {
-                      setState(() {
-                        if (_bottomDockOpen && _bottomDockTab == tab) {
-                          _bottomDockOpen = false;
-                        } else {
-                          _bottomDockOpen = true;
-                          _bottomDockTab = tab;
-                        }
-                      });
-                    },
+                    isOpen: vm.bottomDockOpen,
+                    selectedTab: vm.bottomDockTab,
+                    onToggleTab: vm.toggleBottomDock,
                     isDebugging: projectId != null &&
                         (vm.debugForWorkspace(projectId).isRunning ||
                             vm.debugForWorkspace(projectId).isStopped),

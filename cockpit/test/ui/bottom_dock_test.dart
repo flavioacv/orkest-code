@@ -42,6 +42,34 @@ void main() {
       expect(toggledTab, equals(BottomDockTab.problems));
     });
 
+    testWidgets('RailBottomDockTools renderiza no canto esquerdo e responde aos cliques', (tester) async {
+      BottomDockTab? clickedTab;
+
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData.dark(),
+          home: Scaffold(
+            body: RailBottomDockTools(
+              isOpen: false,
+              selectedTab: BottomDockTab.debug,
+              onToggleTab: (tab) => clickedTab = tab,
+              problemsCount: 2,
+              isDebugging: true,
+            ),
+          ),
+        ),
+      );
+
+      expect(find.byKey(const ValueKey('rail-tool-btn-debug')), findsOneWidget);
+      expect(find.byKey(const ValueKey('rail-tool-btn-terminal')), findsOneWidget);
+      expect(find.byKey(const ValueKey('rail-tool-btn-problems')), findsOneWidget);
+      expect(find.text('2'), findsOneWidget);
+
+      await tester.tap(find.byKey(const ValueKey('rail-tool-btn-debug')));
+      await tester.pump();
+      expect(clickedTab, equals(BottomDockTab.debug));
+    });
+
     testWidgets('BottomDockHost exibe conteúdo correto conforme selectedTab e permite fechar', (tester) async {
       bool closed = false;
       BottomDockTab currentTab = BottomDockTab.debug;
