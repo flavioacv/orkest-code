@@ -608,6 +608,33 @@ void main() {
       expect(onColor(const Color(0xFFFFE066)), const Color(0xFF1A1A1F));
     });
 
+    test('a exceção de texto branco fica restrita a ações destrutivas', () {
+      const error = Color(0xFFE5484D);
+      const white = Color(0xFFFFFFFF);
+      const dark = Color(0xFF1A1A1F);
+      expect(onColor(error, destructive: true), white);
+      expect(onColor(error), dark);
+      expect(
+        contrastRatio(onColor(error), error),
+        greaterThan(contrastRatio(white, error)),
+      );
+      expect(onColor(const Color(0xFFFFE066), destructive: true), dark);
+    });
+
+    test(
+      'contraste considera candidatos personalizados, não um limiar fixo',
+      () {
+        const background = Color(0xFF0A84FF);
+        const light = Color(0xFFEEEEEE);
+        const dark = Color(0xFF111111);
+        expect(onColor(background, light: light, dark: dark), dark);
+        expect(
+          contrastRatio(dark, background),
+          greaterThan(contrastRatio(light, background)),
+        );
+      },
+    );
+
     test('sobre a marca de todo built-in, escolhe o lado mais legível', () {
       // O ponto da função: em vez de branco fixo, medir. Um accent claro (o
       // roxo do Violet) tem de receber texto escuro.
@@ -621,7 +648,7 @@ void main() {
           expect(
             contrastRatio(chosen, accent),
             greaterThanOrEqualTo(contrastRatio(other, accent)),
-            reason: 'escolha pior sobre o accent de \${theme.id} ($b)',
+            reason: 'escolha pior sobre o accent de ${theme.id} ($b)',
           );
           // E o resultado tem de ser utilizável, não só "o melhor dos dois".
           expect(contrastRatio(chosen, accent), greaterThan(4.0));

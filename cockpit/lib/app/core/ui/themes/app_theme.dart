@@ -108,7 +108,7 @@ ColorScheme _schemeFrom(AppColors c, Brightness brightness) {
     accent: c.panel3,
     accentForeground: c.text,
     destructive: c.error,
-    destructiveForeground: onColor(c.error),
+    destructiveForeground: onColor(c.error, destructive: true),
     border: c.border,
     input: c.border,
     // Anel de foco usa a marca.
