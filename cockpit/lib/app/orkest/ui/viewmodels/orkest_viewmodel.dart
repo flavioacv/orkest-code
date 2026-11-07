@@ -1030,12 +1030,20 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
   /// Diff de um arquivo do workspace remoto (working tree, e index se não
   /// houver mudança no working tree), parseado com o mesmo parser do local.
   /// Untracked (index 'A' vindo do status) → `--cached` mostra o conteúdo novo.
-  Future<FileDiff> _remoteFileDiff(String root, String absPath) async {
+  Future<FileDiff> _remoteFileDiff(
+    String root,
+    String absPath, {
+    GitDiffTarget target = GitDiffTarget.head,
+  }) async {
     final rel = relativeUnder(absPath, root);
     try {
       final service = await _activeRemoteGit();
-      var raw = await service.diff(root, rel);
-      if (raw.trim().isEmpty) {
+      var raw = await service.diff(
+        root,
+        rel,
+        staged: target == GitDiffTarget.staged,
+      );
+      if (target == GitDiffTarget.head && raw.trim().isEmpty) {
         // Sem mudança no working tree → tenta o staged (arquivo novo/add).
         raw = await service.diff(root, rel, staged: true);
       }
@@ -2343,6 +2351,7 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
   Future<void> openDiff(
     String path, {
     bool isPreview = true,
+    GitDiffTarget target = GitDiffTarget.head,
     String? commitHash,
     String? repoRoot,
     String? previousRelativePath,
@@ -2350,6 +2359,7 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
     await _openDiff(
       path,
       isPreview: isPreview,
+      target: commitHash == null ? target : GitDiffTarget.head,
       commitHash: commitHash,
       repoRoot: repoRoot,
       previousRelativePath: previousRelativePath,
@@ -2361,11 +2371,13 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
   Future<void> _openDiff(
     String path, {
     bool isPreview = true,
+    GitDiffTarget target = GitDiffTarget.head,
     String? commitHash,
     String? repoRoot,
     String? previousRelativePath,
   }) async {
     final projectId = _selectedProjectId;
+    final selectionGeneration = _projectSelectionGeneration;
     final tree = _activeTree;
     // Mesmo fallback do [openFile]: sem pane focada (mobile, onde ninguém
     // clica numa pane antes de tocar no Source Control) cai na primeira.
@@ -2390,7 +2402,10 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
     for (final tabId in leaf.tabs) {
       final s = _sessions[tabId];
       if (s is DiffViewerSession) {
-        if (s.path == path && s.commitHash == commitHash) {
+        if (s.path == path &&
+            s.commitHash == commitHash &&
+            s.target == target &&
+            (s.repoRoot == null || s.repoRoot == root)) {
           if (!isPreview && s.isPreview) s.pin();
           _trees[projectId] = updateLeaf(
             tree,
@@ -2407,9 +2422,9 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
     }
 
     final diff = remoteDiff
-        ? await _remoteFileDiff(root, path)
+        ? await _remoteFileDiff(root, path, target: target)
         : commitHash == null
-        ? await _gitDiff.read(root, path)
+        ? await _gitDiff.read(root, path, target: target)
         : await _gitDiff.readCommit(
             root,
             commitHash,
@@ -2417,19 +2432,30 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
             previousRelativePath: previousRelativePath,
           );
 
+    final currentTree = _trees[projectId];
+    if (_selectedProjectId != projectId ||
+        _projectSelectionGeneration != selectionGeneration ||
+        currentTree == null ||
+        findLeaf(currentTree, paneId) == null) {
+      return;
+    }
+
     // Reutiliza a aba de preview de diff, se houver.
-    if (isPreview && previewCandidate != null) {
+    if (isPreview &&
+        previewCandidate != null &&
+        identical(_sessions[previewCandidate.id], previewCandidate)) {
       previewCandidate
         ..path = path
         ..diff = diff
+        ..target = target
         ..commitHash = commitHash
-        ..repoRoot = commitHash == null ? null : root
+        ..repoRoot = root
         ..previousRelativePath = commitHash == null
             ? null
             : previousRelativePath
         ..notifyListeners();
       _trees[projectId] = updateLeaf(
-        tree,
+        currentTree,
         paneId,
         (p) => p.copyWith(active: previewCandidate!.id),
       );
@@ -2442,8 +2468,9 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
       projectId: projectId,
       path: path,
       diff: diff,
+      target: target,
       commitHash: commitHash,
-      repoRoot: commitHash == null ? null : root,
+      repoRoot: root,
       previousRelativePath: commitHash == null ? null : previousRelativePath,
       isPreview: isPreview,
     );
@@ -6863,11 +6890,16 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
         final commitHash = desc['commitHash'] as String?;
         final repoRoot = desc['repoRoot'] as String?;
         final previousRelativePath = desc['previousPath'] as String?;
+        final target = commitHash == null
+            ? GitDiffTarget.fromName(desc['diffTarget'])
+            : GitDiffTarget.head;
+        final root =
+            repoRoot ?? rootContaining(project.id, path) ?? project.path;
         if (commitHash != null && (repoRoot == null || repoRoot.isEmpty)) {
           return false;
         }
         final diff = commitHash == null
-            ? await _gitDiff.read(project.path, path)
+            ? await _gitDiff.read(root, path, target: target)
             : await _gitDiff.readCommit(
                 repoRoot!,
                 commitHash,
@@ -6879,8 +6911,9 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
           projectId: project.id,
           path: path,
           diff: diff,
+          target: target,
           commitHash: commitHash,
-          repoRoot: repoRoot,
+          repoRoot: root,
           previousRelativePath: previousRelativePath,
         );
         return true;
@@ -7224,6 +7257,7 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
       return <String, dynamic>{
         'type': 'diff',
         'path': s.path,
+        'diffTarget': s.target.name,
         if (s.commitHash != null) 'commitHash': s.commitHash,
         if (s.repoRoot != null) 'repoRoot': s.repoRoot,
         if (s.previousRelativePath != null)

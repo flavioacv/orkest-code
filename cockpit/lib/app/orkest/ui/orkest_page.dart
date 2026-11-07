@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/orkest/domain/contracts/git_diff_reader.dart';
 import 'package:orkest_code/app/orkest/ui/actions/pull_request_review_actions.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/developer_workbench_panels.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/problems_panel.dart';
@@ -2125,11 +2126,26 @@ class _TreePanel extends StatelessWidget {
           revealPath: vm.treeRevealPath,
           revealGen: vm.treeRevealGen,
           onOpenDiff: (path) {
-            vm.openDiff(path, isPreview: false);
+            vm.openDiff(
+              path,
+              isPreview: false,
+              target: GitDiffTarget.workingTree,
+            );
             onDismiss(); // fecha o drawer no mobile, como o onOpenFile
           },
+          onOpenStagedDiff: (path) {
+            vm.openDiff(path, isPreview: false, target: GitDiffTarget.staged);
+            onDismiss();
+          },
+          onTapStagedDiff: (path) {
+            vm.openDiff(path, target: GitDiffTarget.staged);
+            onDismiss();
+          },
           onTapDiff: (path) {
-            vm.openDiff(path); // clique único = preview
+            vm.openDiff(
+              path,
+              target: GitDiffTarget.workingTree,
+            ); // clique único = preview
             onDismiss();
           },
           isGitRepo:

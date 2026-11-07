@@ -1,12 +1,26 @@
 import 'package:orkest_code/app/orkest/domain/entities/file_diff.dart';
 
-/// Lê o diff de um arquivo contra o HEAD do repo. Só leitura — alimenta o
-/// `DiffViewer`. A impl (roda `git diff HEAD`) mora em `data/`.
+enum GitDiffTarget {
+  head,
+  workingTree,
+  staged;
+
+  static GitDiffTarget fromName(Object? name) =>
+      values.firstWhere((target) => target.name == name, orElse: () => head);
+}
+
+/// Lê comparações de HEAD, Index e Working Tree para o viewer de diffs.
+///
+/// A implementação que executa Git mora em `data/`.
 abstract class GitDiffReader {
-  /// Diff de [absPath] (caminho absoluto) contra o HEAD do repo em [repoPath].
+  /// Diff de [absPath] em [repoPath], conforme a comparação [target].
   /// Trata novo (tudo adicionado), deletado (tudo removido), binário e sem
-  /// mudança. Nunca lança — em erro devolve [FileDiffKind.unchanged].
-  Future<FileDiff> read(String repoPath, String absPath);
+  /// mudança. Nunca lança — falhas do Git devolvem [FileDiffKind.error].
+  Future<FileDiff> read(
+    String repoPath,
+    String absPath, {
+    GitDiffTarget target = GitDiffTarget.head,
+  });
 
   /// Diff de [relativePath] introduzido por [commitHash].
   Future<FileDiff> readCommit(

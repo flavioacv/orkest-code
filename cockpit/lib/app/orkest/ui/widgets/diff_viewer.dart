@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/orkest/domain/contracts/git_diff_reader.dart';
 import 'package:orkest_code/app/orkest/domain/entities/file_diff.dart';
 import 'package:orkest_code/app/orkest/ui/session/diff_viewer_session.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/file_path_breadcrumb.dart';
@@ -581,7 +582,7 @@ class _DiffBodyState extends State<_DiffBody> {
     );
   }
 
-  static Widget _revisionHeader(
+  Widget _revisionHeader(
     BuildContext context,
     FileDiff diff,
     double sideWidth,
@@ -593,9 +594,13 @@ class _DiffBodyState extends State<_DiffBody> {
           ? diff.beforeRevision == null
                 ? tr.diffEmptyTree
                 : tr.diffOriginal(ref: _shortRef(diff.beforeRevision!))
+          : widget.session.target == GitDiffTarget.workingTree
+          ? 'Index'
           : 'HEAD',
       afterRef: historical
           ? tr.diffModified(ref: _shortRef(diff.afterRevision!))
+          : widget.session.target == GitDiffTarget.staged
+          ? 'Index'
           : tr.diffWorkingTree,
       sideWidth: sideWidth,
     );

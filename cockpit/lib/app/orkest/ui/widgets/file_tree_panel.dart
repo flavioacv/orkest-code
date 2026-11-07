@@ -109,6 +109,8 @@ class FileTreePanel extends StatefulWidget {
     this.onClearSelection,
     required this.onOpenDiff,
     this.onTapDiff,
+    this.onOpenStagedDiff,
+    this.onTapStagedDiff,
     required this.isGitRepo,
     required this.changedPaths,
     this.stagedPaths = const <String>[],
@@ -340,6 +342,8 @@ class FileTreePanel extends StatefulWidget {
   final VoidCallback? onClearSelection;
 
   /// Duplo-clique (modo source control) / "Show git diff" → abre o diff no pane.
+  final ValueChanged<String>? onOpenStagedDiff;
+  final ValueChanged<String>? onTapStagedDiff;
   final ValueChanged<String> onOpenDiff;
 
   /// Clique único no modo source control → abre o diff em preview.
@@ -758,7 +762,9 @@ class _FileTreePanelState extends State<FileTreePanel> {
     if (pick == null || !mounted) return;
     switch (pick) {
       case 'diff':
-        widget.onOpenDiff(absPath);
+        (staged
+            ? widget.onOpenStagedDiff ?? widget.onOpenDiff
+            : widget.onOpenDiff)(absPath);
       case 'commit':
         await showCommitMessageDialog(
           context,
@@ -1616,6 +1622,13 @@ class _FileTreePanelState extends State<FileTreePanel> {
         gitStatusOf: widget.gitStatusOf,
         selectedPath: effectiveSelected,
         onOpenDiff: widget.onOpenDiff,
+        onOpenStagedDiff: widget.onOpenStagedDiff ?? widget.onOpenDiff,
+        onTapStagedDiff: (path) {
+          _select(path);
+          (widget.onTapStagedDiff ??
+              widget.onOpenStagedDiff ??
+              widget.onOpenDiff)(path);
+        },
         viewAsTree: _sourceControlTree,
         onToggleViewMode: () {
           final next = !_sourceControlTree;
@@ -3260,6 +3273,8 @@ class _ChangedTree extends StatelessWidget {
     required this.gitStatusOf,
     required this.selectedPath,
     required this.onOpenDiff,
+    required this.onOpenStagedDiff,
+    required this.onTapStagedDiff,
     required this.onTapDiff,
     required this.onOpenFile,
     required this.viewAsTree,
@@ -3284,6 +3299,8 @@ class _ChangedTree extends StatelessWidget {
   final List<String> unstagedPaths;
   final GitFileStatus? Function(String absolutePath) gitStatusOf;
   final String? selectedPath;
+  final ValueChanged<String> onOpenStagedDiff;
+  final ValueChanged<String> onTapStagedDiff;
   final ValueChanged<String> onOpenDiff;
   final ValueChanged<String> onTapDiff;
   final ValueChanged<String> onOpenFile;
@@ -3496,8 +3513,8 @@ class _ChangedTree extends StatelessWidget {
       path: rootPath,
       gitStatusOf: (path) => staged ? GitFileStatus.staged : gitStatusOf(path),
       selectedPath: selectedPath,
-      onOpenDiff: onOpenDiff,
-      onTapDiff: onTapDiff,
+      onOpenDiff: staged ? onOpenStagedDiff : onOpenDiff,
+      onTapDiff: staged ? onTapStagedDiff : onTapDiff,
       onOpenFile: onOpenFile,
       onFileContextMenu: (path, pos) =>
           onFileContextMenu(path, pos, staged: staged),
@@ -3523,8 +3540,9 @@ class _ChangedTree extends StatelessWidget {
           file: f,
           gitStatus: staged ? GitFileStatus.staged : gitStatusOf(f.absPath),
           selected: f.absPath == selectedPath,
-          onTap: () => onTapDiff(f.absPath),
-          onDoubleTap: () => onOpenDiff(f.absPath),
+          onTap: () => (staged ? onTapStagedDiff : onTapDiff)(f.absPath),
+          onDoubleTap: () =>
+              (staged ? onOpenStagedDiff : onOpenDiff)(f.absPath),
           onOpenFileTap: () => onOpenFile(f.absPath),
           onSecondaryTap: (pos) =>
               onFileContextMenu(f.absPath, pos, staged: staged),

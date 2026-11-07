@@ -1,3 +1,4 @@
+import 'package:path/path.dart' as p;
 import 'dart:convert';
 import 'dart:io';
 
@@ -14,10 +15,19 @@ class GitDiffReaderImpl implements GitDiffReader {
   final GitBinary _gitBinary;
 
   @override
-  Future<FileDiff> read(String repoPath, String absPath) async {
+  Future<FileDiff> read(
+    String repoPath,
+    String absPath, {
+    GitDiffTarget target = GitDiffTarget.head,
+  }) async {
     try {
       final git = await _gitBinary.resolve();
-      final rel = _relative(repoPath, absPath);
+      final root = p.normalize(p.absolute(repoPath));
+      final path = p.normalize(p.absolute(absPath));
+      if (!p.isWithin(root, path)) {
+        return FileDiff.error(absPath, 'File is outside the repository root.');
+      }
+      final rel = p.posix.joinAll(p.split(p.relative(path, from: root)));
 
       // Untracked? `git diff HEAD` não mostra arquivo não rastreado — detecta via
       // status e lê o arquivo inteiro como adicionado.
@@ -30,7 +40,7 @@ class GitDiffReaderImpl implements GitDiffReader {
         rel,
       ], stdoutEncoding: utf8);
       final statusOut = status.exitCode == 0 ? (status.stdout as String) : '';
-      if (statusOut.startsWith('??')) {
+      if (target != GitDiffTarget.staged && statusOut.startsWith('??')) {
         return await _untrackedDiff(absPath);
       }
 
@@ -38,11 +48,17 @@ class GitDiffReaderImpl implements GitDiffReader {
         '-C',
         repoPath,
         'diff',
-        'HEAD',
+        '--no-color',
+        '--no-ext-diff',
+        '--no-textconv',
+        if (target == GitDiffTarget.staged) '--cached',
+        if (target == GitDiffTarget.head) 'HEAD',
         '--',
         rel,
       ], stdoutEncoding: utf8);
-      if (diff.exitCode != 0) return FileDiff.unchanged(absPath);
+      if (diff.exitCode != 0) {
+        return FileDiff.error(absPath, '${diff.stderr}'.trim());
+      }
       final out = diff.stdout as String;
       if (out.trim().isEmpty) return FileDiff.unchanged(absPath);
       if (unifiedDiffLooksBinary(out)) return FileDiff.binary(absPath);
@@ -50,8 +66,8 @@ class GitDiffReaderImpl implements GitDiffReader {
       final (hunks, kind) = parseUnifiedDiff(out);
       if (hunks.isEmpty) return FileDiff.unchanged(absPath);
       return FileDiff(path: absPath, kind: kind, hunks: hunks);
-    } catch (_) {
-      return FileDiff.unchanged(absPath);
+    } catch (error) {
+      return FileDiff.error(absPath, '$error');
     }
   }
 
@@ -168,16 +184,5 @@ class GitDiffReaderImpl implements GitDiffReader {
       if (bytes[i] == 0) return true;
     }
     return false;
-  }
-
-  /// Caminho de [absPath] relativo a [repoPath] (com `/`). Fora do repo → devolve
-  /// o próprio absPath.
-  String _relative(String repoPath, String absPath) {
-    var root = repoPath.replaceAll(r'\', '/');
-    if (root.endsWith('/')) root = root.substring(0, root.length - 1);
-    final p = absPath.replaceAll(r'\', '/');
-    if (p == root) return p;
-    final prefix = '$root/';
-    return p.startsWith(prefix) ? p.substring(prefix.length) : p;
   }
 }
