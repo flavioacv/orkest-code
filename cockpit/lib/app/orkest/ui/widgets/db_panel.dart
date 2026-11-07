@@ -1,11 +1,13 @@
 import 'package:orkest_code/app/orkest/domain/entities/db_connection.dart';
 import 'package:orkest_code/app/orkest/domain/entities/db_result.dart';
 import 'package:orkest_code/app/orkest/domain/entities/db_schema_entities.dart';
+import 'package:orkest_code/app/orkest/domain/entities/db_vendor.dart';
 import 'package:orkest_code/app/orkest/ui/viewmodels/orkest_viewmodel.dart';
 import 'package:orkest_code/app/orkest/ui/viewmodels/database_viewmodel.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/confirm_dialog.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/db_connection_dialog.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/db_engine_icon.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/db_vendor_icon.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
 import 'package:orkest_code/app/core/ui/widgets/app_menu.dart';
 import 'package:orkest_code/app/core/ui/widgets/app_tooltip.dart';
@@ -73,21 +75,25 @@ class _DbPanelState extends State<DbPanel> {
 
   Future<void> _add(BuildContext anchor) async {
     final vm = context.read<DatabaseViewModel>();
-    final engine = await showAppMenu<DbEngine>(
+    final vendor = await showAppMenu<DbVendorKind>(
       anchor,
       items: [
-        for (final e in DbEngine.values)
+        for (final v in DbVendorKind.values)
           AppMenuItem(
-            value: e,
-            label: e.label,
-            leading: DbEngineIcon(e, size: 15),
+            value: v,
+            label: v.label,
+            leading: DbVendorIcon(v, size: 15),
           ),
       ],
     );
-    if (engine == null || !mounted) return;
+    if (vendor == null || !mounted) return;
     final result = await showDialog<DbConnectionDialogResult>(
       context: context,
-      builder: (context) => DbConnectionDialog(engine: engine, viewModel: vm),
+      builder: (context) => DbConnectionDialog(
+        engine: vendor.engine,
+        vendor: vendor,
+        viewModel: vm,
+      ),
     );
     if (result?.connection == null) return;
     await vm.upsert(
@@ -406,7 +412,10 @@ class _ConnectionTile extends StatelessWidget {
                   color: colors.text4,
                 ),
                 SizedBox(width: expandable ? 2 : 7),
-                DbEngineIcon(conn.engine, size: 13),
+                if (conn.vendorId != null && DbVendorKind.fromId(conn.vendorId) != null)
+                  DbVendorIcon(DbVendorKind.fromId(conn.vendorId)!, size: 13)
+                else
+                  DbEngineIcon(conn.engine, size: 13),
                 const SizedBox(width: 7),
                 Expanded(
                   child: Column(

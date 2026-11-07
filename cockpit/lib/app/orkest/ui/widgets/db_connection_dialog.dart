@@ -3,8 +3,9 @@ import 'dart:async';
 import 'dart:io';
 
 import 'package:orkest_code/app/orkest/domain/entities/db_connection.dart';
+import 'package:orkest_code/app/orkest/domain/entities/db_vendor.dart';
 import 'package:orkest_code/app/orkest/ui/viewmodels/database_viewmodel.dart';
-import 'package:orkest_code/app/orkest/ui/widgets/db_engine_icon.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/db_vendor_icon.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
 import 'package:orkest_code/app/core/ui/widgets/hover_tap.dart';
 import 'package:orkest_code/app/core/utils/path_utils.dart';
@@ -46,6 +47,7 @@ class DbConnectionDialog extends StatefulWidget {
     required this.engine,
     required this.viewModel,
     this.initial,
+    this.vendor,
   });
 
   final DbEngine engine;
@@ -53,6 +55,9 @@ class DbConnectionDialog extends StatefulWidget {
 
   /// Presente = modo edição (campos pré-preenchidos, botão "Save").
   final DbConnection? initial;
+
+  /// Vendor predefinido (Open IDEA).
+  final DbVendorKind? vendor;
 
   @override
   State<DbConnectionDialog> createState() => _DbConnectionDialogState();
@@ -109,11 +114,24 @@ class _DbConnectionDialogState extends State<DbConnectionDialog> {
   DbEngine get _engine => widget.engine;
   bool get _editing => widget.initial != null;
 
+  late final DbVendorKind _vendor = widget.vendor ??
+      (widget.initial?.vendorId != null
+          ? DbVendorKind.fromId(widget.initial!.vendorId) ??
+              DbVendorKind.fromEngine(widget.engine)
+          : DbVendorKind.fromEngine(widget.engine));
+
   @override
   void initState() {
     super.initState();
     final c = widget.initial;
-    if (c == null) return;
+    if (c == null) {
+      if (_engine != DbEngine.sqlite && widget.vendor != null) {
+        final port = widget.vendor!.defaultPort > 0 ? ':${widget.vendor!.defaultPort}' : '';
+        final sslQuery = widget.vendor!.requiresSsl ? '?sslmode=require' : '';
+        _uri.text = '${widget.vendor!.scheme}://user:password@localhost$port/database$sslQuery';
+      }
+      return;
+    }
     _name.text = c.name;
     if (_engine == DbEngine.sqlite) {
       _file.text = c.sqlitePath;
@@ -257,6 +275,7 @@ class _DbConnectionDialogState extends State<DbConnectionDialog> {
         'savePassword': _savePassword,
         'access': (_allowWrites ? DbAccess.readwrite : DbAccess.read).name,
         'agents': _visibleToAgents,
+        'vendorId': _vendor.id,
         if (_buildSsh() != null) 'ssh': _buildSsh()!.toJson(),
       });
     } on Object {
@@ -736,10 +755,10 @@ class _DbConnectionDialogState extends State<DbConnectionDialog> {
     return AlertDialog(
       title: Row(
         children: [
-          DbEngineIcon(_engine, size: 18),
+          DbVendorIcon(_vendor, size: 18),
           const SizedBox(width: 8),
           Text(
-            _editing ? tr.editTitle : tr.newTitle,
+            _editing ? tr.editTitle : '${tr.newTitle} (${_vendor.label})',
             style: typo.title.copyWith(fontSize: 15, color: colors.text),
           ),
         ],
