@@ -63,8 +63,8 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Estágios do índice Git: `GitConflictService.readConflictStages` implementado para ler deterministamente o ancestral comum (:1:), HEAD (:2:) e incoming (:3:) diretamente dos estágios do índice Git, permitindo enriquecer blocos de 2 vias (`enrichBlocksWithBase`) com a base real do repositório mesmo quando o arquivo foi salvo sem marcadores diff3; validado em teste automatizado com repositório Git real e merge divergente.
       Autoria e Blame integrado ao editor: `GitBlameView` conectado diretamente ao `FileViewer` com botão contextual "Blame" e atalho `Alt+B`, leitura assíncrona via `GitHistoryReader.readBlame`, montagem lateral no editor (`Row -> [Expanded CodeEditor, GitBlameView]`), navegação de linha por clique sincronizada via `session.reveal(line, select: true)`, fechamento pelo botão `x`, e tratamento de subpixel layout overflow no gutter (`Flexible` + `ClipRect`); validado em teste automatizado de widget (`file_viewer_blame_test.dart`) cobrindo abertura, renderização, navegação e fechamento.
       Histórico e Comparação de Revisões no GitHistoryPanel: adicionada barra de pesquisa reativa em tempo real por assunto, autor, hash e hash curto (`git-history-search-input`); ações contextuais via `ContextMenuGesture` no desktop para "Compare with HEAD", "Mark for comparison…" e "Compare with <hash>"; visualização integrada de comparação (`_buildComparisonView`) com commits divergentes, contagem de arquivos e lista de alterações (`changedFiles`), abrindo o diff do arquivo selecionado na revisão de destino; botão voltar retornando à timeline linear; 9 testes automatizados de widget em `git_history_panel_test.dart` e 66 testes aprovados na suíte combinada E2 Git e Workbench.
-      Incrementos P02/P03 concluídos: revisão de PRs com seleção de repositório e comparações separadas de HEAD/Index/Working Tree. P04 registra a conexão restante das ações de hunk à VM.
-      Pendente: retirar o restante da composição Git do explorador de arquivos e auditoria restante da semântica Working Tree / Index / HEAD em projetos multifolder.
+      Incrementos P02/P03/P04/P05/P06 concluídos: revisão de PRs com seleção de repositório, comparações separadas de HEAD/Index/Working Tree, ações granulares por hunk integradas, resolução multifolder determinística e desacoplamento de Source Control do explorador de arquivos.
+      Pendente: auditoria restante de performance e drag-and-drop manual entre painéis em projetos complexos.
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 ## Em revisão
@@ -77,6 +77,13 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 ## Concluídas
+
+- [x] P06 · Desacoplar composição de Source Control do explorador de arquivos <!-- id: FE-P06 labels: git, estrutura, qualidade blockedBy: FE-P05 -->
+      Implementado: Desacoplamento estrutural da visão de alterações Git (Source Control) de dentro de `file_tree_panel.dart` para o widget dedicado `source_control_changes_view.dart`.
+      Extração modular: migrados `SourceControlChangedFile`, `SourceControlChangesTree`, `SourceControlCommitComposer`, `SourceControlChangedDirectory`, `SourceControlChangedDirectoryView`, `SourceControlChangedRow`, `SourceControlRootSection`, `SourceControlPanelHeaderAction` e função auxiliar `gitStatusColor`.
+      Entidade formal de workspace: criado `cockpit/lib/app/orkest/domain/entities/workspace_root.dart` tipando formalmente `WorkspaceRoot`, re-exportado em `file_tree_panel.dart` para retrocompatibilidade sem breaking changes.
+      Redução de acoplamento: remoção de mais de 900 linhas de código Git de dentro do explorador de arquivos (`file_tree_panel.dart`), mantendo sua responsabilidade restrita a arquivos, pastas e delegação transparente para o SourceControl.
+      Validação: análise estática estrita 100% limpa (`dart analyze --fatal-infos` com 0 erros e 0 avisos em toda a base de código e testes) e 43 testes de widgets, diff, commits e repositórios Git reais aprovados com 100% de sucesso (`file_tree_panel_test.dart`, `git_multifolder_source_control_test.dart`, `git_diff_target_ui_test.dart`, `git_hunk_actions_test.dart`, `git_history_panel_test.dart`, `git_branch_picker_test.dart`, `git_controller_test.dart`, `git_diff_targets_test.dart`). Ver relatório em plan/83-desacoplamento-source-control-file-tree.md.
 
 - [x] P05 · Endurecer resolução multifolder Git no SourceControl e semântica de diff <!-- id: FE-P05 labels: git, estrutura, qualidade blockedBy: FE-P04 -->
       Implementado: Resolução determinística e isolada de múltiplos repositórios Git em workspaces multifolder (multi-root).
