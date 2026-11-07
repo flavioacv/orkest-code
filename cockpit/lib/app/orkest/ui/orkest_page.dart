@@ -1032,55 +1032,47 @@ class _OrkestPageState extends State<OrkestPage> {
                     ),
                   ),
                 ),
-                if (!isMobilePlatform && _vm.selectedProjectId != null) ...[
-                  BottomDockHost(
-                    isOpen: _vm.bottomDockOpen,
-                    selectedTab: _vm.bottomDockTab,
-                    onTabSelected: _vm.openBottomDock,
-                    onClose: _vm.closeBottomDock,
-                    height: _vm.bottomDockHeight,
-                    onHeightChanged: _vm.setBottomDockHeight,
-                    isDebugging: _vm.selectedProjectId != null &&
-                        (_vm.debugForWorkspace(_vm.selectedProjectId!).isRunning ||
-                            _vm.debugForWorkspace(_vm.selectedProjectId!).isStopped),
-                    gitContent: _WorkspaceGitHistoryPanel(vm: _vm),
-                    debugContent: WorkspaceDebugPanel(
-                      key: ValueKey('dock-debug-${_vm.selectedProjectId}'),
-                      vm: _vm,
-                      workspaceId: _vm.selectedProjectId!,
-                      root: _vm.treeRootPath,
-                      workspaceRoots: _vm.treeRoots,
-                      path: _vm.focusedFilePath,
-                    ),
-                    problemsContent: ProblemsPanel(
-                      controller:
-                          _vm.problemsForWorkspace(_vm.selectedProjectId!),
-                      onNavigateToSource: (file, line, col) =>
-                          _vm.openFile(file, revealLine: line, isPreview: false),
-                    ),
-                    problemsCount: _vm
-                            .problemsForWorkspace(_vm.selectedProjectId!)
-                            .errorCount +
-                        _vm
-                            .problemsForWorkspace(_vm.selectedProjectId!)
-                            .warningCount,
-                  ),
-                  BottomStripeBar(
-                    isOpen: _vm.bottomDockOpen,
-                    selectedTab: _vm.bottomDockTab,
-                    onToggleTab: _vm.toggleBottomDock,
-                    isDebugging: _vm.selectedProjectId != null &&
-                        (_vm.debugForWorkspace(_vm.selectedProjectId!).isRunning ||
-                            _vm.debugForWorkspace(_vm.selectedProjectId!).isStopped),
-                    problemsCount: _vm.selectedProjectId != null
-                        ? (_vm.problemsForWorkspace(_vm.selectedProjectId!)
+                if (!isMobilePlatform)
+                  ListenableBuilder(
+                    listenable: _vm,
+                    builder: (context, _) {
+                      final projectId = _vm.selectedProjectId;
+                      if (projectId == null) return const SizedBox.shrink();
+
+                      return BottomDockHost(
+                        isOpen: _vm.bottomDockOpen,
+                        selectedTab: _vm.bottomDockTab,
+                        onTabSelected: _vm.openBottomDock,
+                        onClose: _vm.closeBottomDock,
+                        height: _vm.bottomDockHeight,
+                        onHeightChanged: _vm.setBottomDockHeight,
+                        isDebugging:
+                            _vm.debugForWorkspace(projectId).isRunning ||
+                            _vm.debugForWorkspace(projectId).isStopped,
+                        gitContent: _WorkspaceGitHistoryPanel(vm: _vm),
+                        debugContent: WorkspaceDebugPanel(
+                          key: ValueKey('dock-debug-$projectId'),
+                          vm: _vm,
+                          workspaceId: projectId,
+                          root: _vm.treeRootPath,
+                          workspaceRoots: _vm.treeRoots,
+                          path: _vm.focusedFilePath,
+                        ),
+                        problemsContent: ProblemsPanel(
+                          controller:
+                              _vm.problemsForWorkspace(projectId),
+                          onNavigateToSource: (file, line, col) =>
+                              _vm.openFile(file, revealLine: line, isPreview: false),
+                        ),
+                        problemsCount: _vm
+                                .problemsForWorkspace(projectId)
                                 .errorCount +
                             _vm
-                                .problemsForWorkspace(_vm.selectedProjectId!)
-                                .warningCount)
-                        : 0,
+                                .problemsForWorkspace(projectId)
+                                .warningCount,
+                      );
+                    },
                   ),
-                ],
                 // Barra de teclas do terminal (mobile): aparece acima do teclado
                 // virtual quando a aba ativa é terminal (plano 60, Wave F).
                 if (isMobilePlatform &&

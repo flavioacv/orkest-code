@@ -381,54 +381,57 @@ class RailBottomDockTools extends StatelessWidget {
       child: Row(
         children: [
           for (final tab in BottomDockTab.values) ...[
-            HoverTap(
-              key: ValueKey('rail-tool-btn-${tab.name}'),
-              onTap: () => onToggleTab(tab),
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 3),
-              borderRadius: BorderRadius.circular(3),
-              color: isOpen && selectedTab == tab
-                  ? colors.accent.withValues(alpha: 0.18)
-                  : Colors.transparent,
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(
-                    tab.icon,
-                    size: 12,
-                    color: isOpen && selectedTab == tab
-                        ? (tab == BottomDockTab.debug && isDebugging
-                            ? colors.warn
-                            : colors.accent)
-                        : colors.text3,
-                  ),
-                  const SizedBox(width: 4),
-                  Text(
-                    tab.label,
-                    style: context.typo.label.copyWith(
-                      fontSize: 10,
-                      fontWeight: isOpen && selectedTab == tab
-                          ? FontWeight.w600
-                          : FontWeight.normal,
+            AppTooltip(
+              message: tab.label,
+              child: HoverTap(
+                key: ValueKey('rail-tool-btn-${tab.name}'),
+                onTap: () => onToggleTab(tab),
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                borderRadius: BorderRadius.circular(4),
+                color: isOpen && selectedTab == tab
+                    ? colors.accent.withValues(alpha: 0.18)
+                    : Colors.transparent,
+                child: Stack(
+                  clipBehavior: Clip.none,
+                  alignment: Alignment.center,
+                  children: [
+                    Icon(
+                      tab.icon,
+                      size: 14,
                       color: isOpen && selectedTab == tab
-                          ? colors.text
+                          ? (tab == BottomDockTab.debug && isDebugging
+                              ? colors.warn
+                              : colors.accent)
                           : colors.text3,
                     ),
-                  ),
-                  if (tab == BottomDockTab.problems && problemsCount > 0) ...[
-                    const SizedBox(width: 4),
-                    Text(
-                      '$problemsCount',
-                      style: context.typo.mono.copyWith(
-                        fontSize: 9,
-                        color: colors.warn,
-                        fontWeight: FontWeight.bold,
+                    if (tab == BottomDockTab.problems && problemsCount > 0)
+                      Positioned(
+                        top: -5,
+                        right: -7,
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 3,
+                            vertical: 1,
+                          ),
+                          decoration: BoxDecoration(
+                            color: colors.warn,
+                            borderRadius: BorderRadius.circular(6),
+                          ),
+                          child: Text(
+                            '$problemsCount',
+                            style: context.typo.mono.copyWith(
+                              fontSize: 8,
+                              color: Colors.black,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          ),
+                        ),
                       ),
-                    ),
                   ],
-                ],
+                ),
               ),
             ),
-            const SizedBox(width: 3),
+            const SizedBox(width: 4),
           ],
         ],
       ),
