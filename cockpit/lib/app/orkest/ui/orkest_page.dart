@@ -1430,7 +1430,6 @@ class _CenterPanelState extends State<_CenterPanel> {
                         ? (vm.problemsForWorkspace(projectId).errorCount +
                             vm.problemsForWorkspace(projectId).warningCount)
                         : 0,
-                    rightWidget: const _LspStatusBar(),
                   ),
                 ],
               ),
