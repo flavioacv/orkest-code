@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/orkest/ui/actions/pull_request_review_actions.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/developer_workbench_panels.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/problems_panel.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/git_pr_review_panel.dart';
@@ -251,6 +252,7 @@ class _OrkestPageState extends State<OrkestPage> {
     // foco, então pega mesmo com um terminal focado. Ver [_handlePaneNavKey].
     HardwareKeyboard.instance.addHandler(_handlePaneNavKey);
     HardwareKeyboard.instance.addHandler(_realmKeyHandler);
+    HardwareKeyboard.instance.addHandler(_pullRequestReviewKeyHandler);
     // Mantém os overrides de comando do LSP (tela "Language") em sync com o pool:
     // empurra o estado atual e re-empurra a cada mudança das Configurações.
     _settings = context.read<SettingsController>()
@@ -635,6 +637,7 @@ class _OrkestPageState extends State<OrkestPage> {
     _remoteTaskCtx.clear();
     HardwareKeyboard.instance.removeHandler(_handlePaneNavKey);
     HardwareKeyboard.instance.removeHandler(_realmKeyHandler);
+    HardwareKeyboard.instance.removeHandler(_pullRequestReviewKeyHandler);
     _settings?.removeListener(_syncLspCommands);
     _settings?.removeListener(_syncNotifications);
     _settings?.removeListener(_syncOrkest);
@@ -686,6 +689,7 @@ class _OrkestPageState extends State<OrkestPage> {
     final hasProject = vm.selectedProject != null;
 
     final commands = <AppCommandItem>[
+      pullRequestReviewCommand(vm),
       AppCommandItem(
         id: 'file.openWorkspace',
         title: t.core.menu.openWorkspace,
@@ -837,6 +841,18 @@ class _OrkestPageState extends State<OrkestPage> {
     const SingleActivator(LogicalKeyboardKey.keyW, control: true):
         _closeActiveTab,
   };
+
+  bool _pullRequestReviewKeyHandler(KeyEvent event) {
+    if (!mounted ||
+        ModalRoute.of(context)?.isCurrent == false ||
+        !isPullRequestReviewShortcut(event)) {
+      return false;
+    }
+    final command = pullRequestReviewCommand(_vm);
+    if (!command.isEnabled) return false;
+    command.onSelected();
+    return true;
+  }
 
   void _closeActiveTab() => unawaited(closeActiveTab(context));
 
@@ -1986,6 +2002,7 @@ class _TreePanel extends StatelessWidget {
               workspaceId != null &&
                   vm.selectedProject?.isRemoteTerminal == false
               ? (_) => GitPrReviewPanel(
+                  key: ValueKey((workspaceId, vm.treeRootPath)),
                   repoRoot: vm.treeRootPath,
                   service: GitPullRequestService(),
                   onSelectReviewFile: (number, change) async {

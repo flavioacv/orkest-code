@@ -29,6 +29,8 @@ class GitPrReviewPanel extends StatefulWidget {
 }
 
 class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
+  int _detailGeneration = 0;
+  bool _showCompactDetail = false;
   bool _isLoadingList = false;
   bool _isLoadingDetail = false;
   bool _isSubmittingComment = false;
@@ -71,7 +73,7 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
           _prs = value;
           _isLoadingList = false;
           if (_prs.isNotEmpty && _selectedPr == null) {
-            _selectPr(_prs.first);
+            _selectPr(_prs.first, reveal: false);
           }
         });
       case Failure(:final error):
@@ -82,19 +84,23 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
     }
   }
 
-  Future<void> _selectPr(GitPullRequest pr) async {
+  Future<void> _selectPr(GitPullRequest pr, {bool reveal = true}) async {
+    final generation = ++_detailGeneration;
+    final root = widget.repoRoot;
     setState(() {
       _selectedPr = pr;
+      if (reveal) _showCompactDetail = true;
       _isLoadingDetail = true;
       _detailError = null;
       _selectedPrDetail = null;
     });
 
-    final res = await widget.service.getPullRequestDetail(
-      widget.repoRoot,
-      pr.number,
-    );
-    if (!mounted) return;
+    final res = await widget.service.getPullRequestDetail(root, pr.number);
+    if (!mounted ||
+        generation != _detailGeneration ||
+        widget.repoRoot != root) {
+      return;
+    }
 
     switch (res) {
       case Success(:final value):
@@ -201,43 +207,60 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
     final colors = context.colors;
     final typo = context.typo;
 
+    final list = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        _buildListHeader(colors, typo),
+        Expanded(child: _buildPrList(colors, typo)),
+      ],
+    );
+    final detail = _selectedPr == null
+        ? Center(
+            child: Text(
+              'Selecione um Pull Request para revisar',
+              style: typo.body.copyWith(color: colors.text3, fontSize: 13),
+            ),
+          )
+        : _buildDetailPanel(colors, typo);
     return Container(
       color: colors.bg,
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          // 1. Painel Esquerdo: Lista de PRs
-          SizedBox(
-            width: 280,
-            child: DecoratedBox(
-              decoration: BoxDecoration(
-                border: Border(right: BorderSide(color: colors.border)),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          if (constraints.maxWidth < 640) {
+            if (!_showCompactDetail || _selectedPr == null) return list;
+            return Column(
+              children: [
+                Align(
+                  alignment: Alignment.centerLeft,
+                  child: TextButton.icon(
+                    key: const ValueKey('pr-review-back'),
+                    onPressed: () => setState(() => _showCompactDetail = false),
+                    icon: const Icon(sc.LucideIcons.arrowLeft, size: 14),
+                    label: const Text('Pull Requests'),
+                  ),
+                ),
+                Expanded(child: detail),
+              ],
+            );
+          }
+          return Row(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              // 1. Painel Esquerdo: Lista de PRs
+              SizedBox(
+                width: 280,
+                child: DecoratedBox(
+                  decoration: BoxDecoration(
+                    border: Border(right: BorderSide(color: colors.border)),
+                  ),
+                  child: list,
+                ),
               ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  _buildListHeader(colors, typo),
-                  Expanded(child: _buildPrList(colors, typo)),
-                ],
-              ),
-            ),
-          ),
-
-          // 2. Painel Direito: Detalhe do PR selecionado
-          Expanded(
-            child: _selectedPr == null
-                ? Center(
-                    child: Text(
-                      'Selecione um Pull Request para revisar',
-                      style: typo.body.copyWith(
-                        color: colors.text3,
-                        fontSize: 13,
-                      ),
-                    ),
-                  )
-                : _buildDetailPanel(colors, typo),
-          ),
-        ],
+              // 2. Painel Direito: Detalhe do PR selecionado
+              Expanded(child: detail),
+            ],
+          );
+        },
       ),
     );
   }
@@ -481,15 +504,18 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
       length: 3,
       child: Column(
         children: [
-          TabBar(
-            labelColor: colors.accent,
-            unselectedLabelColor: colors.text2,
-            indicatorColor: colors.accent,
-            tabs: [
-              Tab(text: 'Descrição (${detail.pr.body.isEmpty ? 0 : 1})'),
-              Tab(text: 'Arquivos Alterados (${detail.changedFiles.length})'),
-              Tab(text: 'Comentários (${detail.comments.length})'),
-            ],
+          LayoutBuilder(
+            builder: (context, constraints) => TabBar(
+              isScrollable: constraints.maxWidth < 480,
+              labelColor: colors.accent,
+              unselectedLabelColor: colors.text2,
+              indicatorColor: colors.accent,
+              tabs: [
+                Tab(text: 'Descrição (${detail.pr.body.isEmpty ? 0 : 1})'),
+                Tab(text: 'Arquivos Alterados (${detail.changedFiles.length})'),
+                Tab(text: 'Comentários (${detail.comments.length})'),
+              ],
+            ),
           ),
           Expanded(
             child: TabBarView(
