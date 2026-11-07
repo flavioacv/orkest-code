@@ -6,6 +6,9 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
 
 ## Backlog
 
+- [ ] QV01 · Resolver falhas anteriores da suíte completa de temas <!-- id: FE-QV01 labels: qualidade -->
+      Reproduzidas com AppColors do HEAD anterior à mudança visual: docs/theme.schema.json ausente e divergência do teste de contraste com a política existente de onColor (limiar 0.24). Definir a correção mantendo as regras de temas importados e a decisão de contraste para ações destrutivas. Não foram introduzidos skips nos testes.
+
 ## Em andamento
 
 - [ ] E6 · Integrar revisão PR e ferramentas avançadas <!-- id: FE-E6 labels: git blockedBy: FE-E2, FE-E3, FE-E5 -->
@@ -79,3 +82,8 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
 
 - [x] I01 · Concluir conexões de produção identificadas na revisão 75 <!-- id: FE-I01 labels: estrutura, git, debug, bancos, qualidade -->
       Commits locais: 57366273 (Database) e cdbf555b (workbench/Debug/LSP/Git), na mesma branch. Debug/LSP/PR conectados ao workbench e ao editor; base real Git por trecho; grid com persistência e proveniência; descarte honesto de consulta. 110 testes combinados mais revalidação final de 42 testes direcionados, análise estática e build macOS; prévia visual com hot reload. Ver [entrega](76-integracao-frontend-teste-completo.md). Homologação manual é responsabilidade de E7; este cartão não declara o plano 73 inteiro concluído.
+
+- [x] V01 · Padronizar identidade visual com referência Open IDE <!-- id: FE-V01 labels: estrutura, git, qualidade -->
+      Implementado: paleta neutra com azul de seleção próxima ao Islands, superfície compartilhada entre abas de editor e ferramentas, ícones Lucide para navegação, estados ativo/inativo/hover e indicação da ferramenta selecionada. Preservados workspace esquerdo, cores semânticas de Git, logos de harness e customizações explícitas de temas.
+      Referência local: OpenIDEA 8021a8cc, src/styles/tokens.css e src/ui/Tabs.module.css. Implementação nativa independente; sem importar assets ou dependências da IDE de referência.
+      Validação: 43 testes direcionados aprovados, análise estrita sem issues, capturas claras/escuras inspecionadas e hot reload nativo concluído. Build normal macOS de debug restaurado com lib/main.dart. Commit visual 16396170. Ver [evidências e limites](77-identidade-visual-openidea.md). Os problemas anteriores da suíte completa de temas estão separados em QV01.
