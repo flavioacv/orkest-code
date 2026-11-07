@@ -31,3 +31,21 @@ O teste de logos passou após limpar o ciclo de vida das sessões simuladas e ag
 Há duas falhas anteriores na suíte completa `theme_codec_test.dart`, reproduzidas também com `AppColors` do HEAD anterior: ausência de `docs/theme.schema.json` e divergência entre o teste que exige a maior razão de contraste e a política existente de `onColor` (limiar 0.24). Os 28 testes direcionados de paleta, herança e contraste de superfícies/ANSI passam. Os dois problemas anteriores não foram ocultados com skips nem alterados fora deste escopo.
 
 Build e testes Flutter devem ser serializados neste checkout: a execução concorrente encontrou disputa na geração/assinatura dos mesmos native assets. A validação final é executada novamente sem essa concorrência.
+
+
+## Fechamento de QV01 — 06/11/2026
+
+As duas falhas anteriores descritas acima foram resolvidas. O schema e o exemplo de tema voltaram a integrar docs/, com todos os tokens atuais e apple-hig no enum de extends. A escolha de texto sobre cores comuns agora compara as razões de contraste reais, inclusive com candidatos personalizados; a exceção documentada para ações destrutivas só é aplicada ao destructiveForeground do tema.
+
+A suíte completa theme_codec_test.dart passou com 36 testes, sem filtros ou skips. A combinação com abas, fechamento, logos, host, Git e persistência passou com 51 testes. Os números desta seção substituem a limitação anterior de QV01; não declaram homologação de todas as jornadas da IDE.
+
+## Incremento funcional além do tema
+
+O painel de Run/Debug passou a descobrir configurações nas raízes explicitamente adicionadas ao workspace, com cwd e workspaceFolder resolvidos por pasta e IDs diferenciados pelo arquivo de origem. O seletor identifica a pasta quando há múltiplas raízes. Arquivos fora dessas raízes não geram execuções contextuais. A alteração não implementa variáveis workspaceFolder:nome nem descoberta recursiva de launch.json em pastas não adicionadas.
+
+Oito testes de serviços/painel passaram. O Kanban mantém E1–E6 em andamento e E7 em revisão: área inferior de ferramentas, composição/semântica Git, configurações avançadas e homologação de Debug, diagramas/drivers NoSQL, serviços/Search Everywhere e provedores Git self-hosted continuam pendentes. Não foi identificado relato específico da área de negócios nos registros consultados nesta etapa; isso não equivale a uma validação formal por essa área.
+
+
+Commits locais desta etapa: 77d94673 (contraste/schema) e 3330328d (Run/Debug multifolder), na mesma branch fix/harness-state-detection, sem push ou PR. Análise final dart analyze --fatal-infos lib test sem issues e git diff --check limpo. Prévia macOS clara/escura novamente inspecionada; hot reload concluído. As imagens de referência já versionadas continuam representando a direção visual adotada; a prévia usa fixtures, não uma sessão real do usuário.
+
+Build normal macOS de debug restaurado com sucesso por flutter build macos --debug --no-pub -t lib/main.dart, após encerrar a prévia. Artefato: cockpit/build/macos/Build/Products/Debug/Orkest Code.app. Persistem avisos de plugins nativos anteriores; não houve instalação sobre o aplicativo existente.

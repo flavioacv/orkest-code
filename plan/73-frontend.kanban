@@ -6,9 +6,6 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
 
 ## Backlog
 
-- [ ] QV01 · Resolver falhas anteriores da suíte completa de temas <!-- id: FE-QV01 labels: qualidade -->
-      Reproduzidas com AppColors do HEAD anterior à mudança visual: docs/theme.schema.json ausente e divergência do teste de contraste com a política existente de onColor (limiar 0.24). Definir a correção mantendo as regras de temas importados e a decisão de contraste para ações destrutivas. Não foram introduzidos skips nos testes.
-
 ## Em andamento
 
 - [ ] E6 · Integrar revisão PR e ferramentas avançadas <!-- id: FE-E6 labels: git blockedBy: FE-E2, FE-E3, FE-E5 -->
@@ -47,7 +44,7 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Watches e Console de Depuração: seção interativa de Watches no `DebugPanel` (`run-config-add-watch`) com avaliação sob demanda das variáveis monitoradas quando a execução pausa, e console interativo com histórico de logs DAP e prompt de avaliação de expressões no runtime (`controller.evaluate`).
       Barra de ferramentas de depuração (`DebugToolbar`): botões de pausar, continuar, step-over, step-in, step-out, stop, e ações de Hot Reload e Hot Restart para sessões Flutter.
       Validação deste incremento: análise estática limpa (`dart analyze` com 0 erros/avisos em todo o escopo de debug e editor) e 30 testes automatizados aprovados na suíte completa de DAP (`dap_core_test.dart`, `dart_debug_adapter_test.dart`, `multi_language_debug_adapter_test.dart`, `debug_widgets_test.dart`).
-      Pendente: homologar configurações e adaptadores instalados no ambiente real; ampliar descoberta de configurações multifolder conforme evolução do plano.
+      Pendente: homologar configurações e adaptadores instalados no ambiente real; suportar referências nomeadas entre pastas (${workspaceFolder:nome}) e ampliar descoberta contextual de configurações em subprojetos não adicionados ao workspace. A descoberta das raízes explícitas foi entregue em D01.
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 - [ ] E1 · Extrair host de ferramentas do explorador <!-- id: FE-E1 labels: estrutura -->
@@ -79,6 +76,12 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 ## Concluídas
+
+- [x] QV01 · Resolver falhas anteriores da suíte completa de temas <!-- id: FE-QV01 labels: qualidade -->
+      Commit local 77d94673. Restaurados docs/theme.schema.json e docs/theme.example.json, com enum dos temas atuais. onColor escolhe a maior razão de contraste para cores de marca/candidatos personalizados; a convenção do limiar 0.24 fica restrita ao contexto destrutivo em app_theme. Suíte completa de temas: 36 testes sem filtros ou skips; combinação de temas/abas/Git/persistência: 51 aprovados.
+
+- [x] D01 · Descobrir Run/Debug nas raízes explícitas do workspace <!-- id: FE-D01 labels: debug, estrutura, qualidade -->
+      Commit local 3330328d. Painel Debug recebe vm.treeRoots, atualiza ao mudar a lista e carrega launch.json/run.json em cada raiz, sem varredura recursiva. Raízes normalizadas sem duplicação, IDs por arquivo de origem, rótulos identificam a pasta, workspaceFolder e cwd relativos respeitam a origem. Producer contextual usa a raiz mais específica contendo o arquivo e não cria execução para arquivos externos ao workspace. Oito testes de serviço/painel aprovados, incluindo Git real, identidade estável e isolamento entre pastas. E3 conserva a homologação de adaptadores e evolução de referências nomeadas.
 
 - [x] I01 · Concluir conexões de produção identificadas na revisão 75 <!-- id: FE-I01 labels: estrutura, git, debug, bancos, qualidade -->
       Commits locais: 57366273 (Database) e cdbf555b (workbench/Debug/LSP/Git), na mesma branch. Debug/LSP/PR conectados ao workbench e ao editor; base real Git por trecho; grid com persistência e proveniência; descarte honesto de consulta. 110 testes combinados mais revalidação final de 42 testes direcionados, análise estática e build macOS; prévia visual com hot reload. Ver [entrega](76-integracao-frontend-teste-completo.md). Homologação manual é responsabilidade de E7; este cartão não declara o plano 73 inteiro concluído.
