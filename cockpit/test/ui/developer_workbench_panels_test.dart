@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/orkest/ui/widgets/workbench_tool_host.dart';
 import 'dart:async';
 import 'dart:io';
 
@@ -67,6 +68,53 @@ LspDocumentSymbol _symbol(String name) => LspDocumentSymbol(
 );
 
 void main() {
+  testWidgets('collapsed host preserves Debug constraints and mounted state', (
+    tester,
+  ) async {
+    final vm = _WorkbenchVm();
+    addTearDown(vm.dispose);
+    Widget host(bool collapsed) => _wrap(
+      Align(
+        alignment: Alignment.topLeft,
+        child: SizedBox(
+          width: collapsed ? 44 : 300,
+          child: WorkbenchToolHost(
+            selectedId: 'debug',
+            isCollapsed: collapsed,
+            onSelected: (_) {},
+            tools: [
+              WorkbenchTool(
+                id: 'debug',
+                title: 'Debug',
+                icon: LucideIcons.bug,
+                builder: (_) => WorkspaceDebugPanel(
+                  vm: vm,
+                  workspaceId: 'workspace',
+                  root: '',
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+    await tester.pumpWidget(host(false));
+    await tester.pumpAndSettle();
+    final state = tester.state(find.byType(WorkspaceDebugPanel));
+    await tester.pumpWidget(host(true));
+    await tester.pumpAndSettle();
+    expect(
+      tester.state(find.byType(WorkspaceDebugPanel, skipOffstage: false)),
+      same(state),
+    );
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(host(false));
+    await tester.pumpAndSettle();
+    expect(tester.state(find.byType(WorkspaceDebugPanel)), same(state));
+    expect(tester.takeException(), isNull);
+    await tester.pumpWidget(const SizedBox());
+  });
+
   testWidgets(
     'outline receives live document changes and rejects obsolete responses',
     (tester) async {

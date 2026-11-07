@@ -71,6 +71,7 @@ class WorkbenchToolHost extends StatefulWidget {
 
 class _WorkbenchToolHostState extends State<WorkbenchToolHost> {
   final Set<String> _visited = {};
+  Size? _lastContentSize;
   @override
   Widget build(BuildContext context) {
     final tools = widget.tools;
@@ -266,30 +267,49 @@ class _WorkbenchToolHostState extends State<WorkbenchToolHost> {
       children: [
         header,
         Expanded(
-          child: Stack(
-            children: [
-              for (final tool in tools)
-                if (_visited.contains(tool.id))
-                  Positioned.fill(
-                    key: ValueKey(tool.id),
-                    child: Offstage(
-                      offstage: widget.isCollapsed || tool.id != active,
-                      child: TickerMode(
-                        enabled: !widget.isCollapsed && tool.id == active,
-                        child: ExcludeFocus(
-                          excluding: widget.isCollapsed || tool.id != active,
-                          child: WorkbenchToolVisibility(
-                            active:
-                                parentActive &&
-                                !widget.isCollapsed &&
-                                tool.id == active,
-                            child: Builder(builder: tool.builder),
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              final hidden = widget.isCollapsed || !parentActive;
+              if (!hidden) _lastContentSize = constraints.biggest;
+              // Offstage still lays out its children. Keep their last usable
+              // bounds instead of squeezing editors into the collapsed icon rail.
+              final size = hidden
+                  ? _lastContentSize ?? const Size(320, 400)
+                  : constraints.biggest;
+              return OverflowBox(
+                alignment: Alignment.topLeft,
+                minWidth: size.width,
+                maxWidth: size.width,
+                minHeight: size.height,
+                maxHeight: size.height,
+                child: Stack(
+                  children: [
+                    for (final tool in tools)
+                      if (_visited.contains(tool.id))
+                        Positioned.fill(
+                          key: ValueKey(tool.id),
+                          child: Offstage(
+                            offstage: widget.isCollapsed || tool.id != active,
+                            child: TickerMode(
+                              enabled: !widget.isCollapsed && tool.id == active,
+                              child: ExcludeFocus(
+                                excluding:
+                                    widget.isCollapsed || tool.id != active,
+                                child: WorkbenchToolVisibility(
+                                  active:
+                                      parentActive &&
+                                      !widget.isCollapsed &&
+                                      tool.id == active,
+                                  child: Builder(builder: tool.builder),
+                                ),
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                  ),
-            ],
+                  ],
+                ),
+              );
+            },
           ),
         ),
       ],
