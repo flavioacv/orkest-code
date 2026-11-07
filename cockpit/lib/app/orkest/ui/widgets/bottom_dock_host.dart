@@ -6,8 +6,8 @@ import 'package:shadcn_flutter/shadcn_flutter.dart' as sc;
 
 /// Identificadores das abas suportadas no Bottom Dock (Painel Inferior)
 enum BottomDockTab {
+  git('Git', sc.LucideIcons.gitBranch),
   debug('Debug', sc.LucideIcons.bug),
-  terminal('Terminal', sc.LucideIcons.terminal),
   problems('Problems', sc.LucideIcons.circleAlert);
 
   const BottomDockTab(this.label, this.icon);
@@ -24,7 +24,7 @@ class BottomDockHost extends StatefulWidget {
     required this.onTabSelected,
     required this.onClose,
     required this.debugContent,
-    this.terminalContent,
+    this.gitContent,
     this.problemsContent,
     this.height = 280.0,
     this.onHeightChanged,
@@ -37,7 +37,7 @@ class BottomDockHost extends StatefulWidget {
   final ValueChanged<BottomDockTab> onTabSelected;
   final VoidCallback onClose;
   final Widget debugContent;
-  final Widget? terminalContent;
+  final Widget? gitContent;
   final Widget? problemsContent;
   final double height;
   final ValueChanged<double>? onHeightChanged;
@@ -218,18 +218,18 @@ class _BottomDockHostState extends State<BottomDockHost> {
                   // Conteúdo do Painel Ativo
                   Expanded(
                     child: switch (widget.selectedTab) {
-                      BottomDockTab.debug => widget.debugContent,
-                      BottomDockTab.terminal =>
-                        widget.terminalContent ??
+                      BottomDockTab.git =>
+                        widget.gitContent ??
                             Center(
                               child: Text(
-                                'Terminal integrado',
+                                'Git Log indisponível',
                                 style: context.typo.body.copyWith(
                                   color: colors.text4,
                                   fontSize: 12,
                                 ),
                               ),
                             ),
+                      BottomDockTab.debug => widget.debugContent,
                       BottomDockTab.problems =>
                         widget.problemsContent ??
                             Center(

@@ -4,7 +4,7 @@ import 'package:orkest_code/app/orkest/ui/widgets/bottom_dock_host.dart';
 
 void main() {
   group('BottomStripeBar & BottomDockHost Tests', () {
-    testWidgets('BottomStripeBar renderiza abas Debug, Terminal, Problems e responde a cliques', (tester) async {
+    testWidgets('BottomStripeBar renderiza abas Git, Debug, Problems e responde a cliques', (tester) async {
       BottomDockTab? toggledTab;
 
       await tester.pumpWidget(
@@ -25,16 +25,16 @@ void main() {
       );
 
       // Verifica itens do canto esquerdo
+      expect(find.text('Git'), findsOneWidget);
       expect(find.text('Debug'), findsOneWidget);
-      expect(find.text('Terminal'), findsOneWidget);
       expect(find.text('Problems'), findsOneWidget);
       expect(find.text('5'), findsOneWidget); // Badge de problems
       expect(find.text('LSP Ready'), findsOneWidget); // Status do lado direito
 
-      // Clica no Terminal
-      await tester.tap(find.text('Terminal'));
+      // Clica no Git
+      await tester.tap(find.text('Git'));
       await tester.pump();
-      expect(toggledTab, equals(BottomDockTab.terminal));
+      expect(toggledTab, equals(BottomDockTab.git));
 
       // Clica em Problems
       await tester.tap(find.text('Problems'));
@@ -60,14 +60,14 @@ void main() {
         ),
       );
 
+      expect(find.byKey(const ValueKey('rail-tool-btn-git')), findsOneWidget);
       expect(find.byKey(const ValueKey('rail-tool-btn-debug')), findsOneWidget);
-      expect(find.byKey(const ValueKey('rail-tool-btn-terminal')), findsOneWidget);
       expect(find.byKey(const ValueKey('rail-tool-btn-problems')), findsOneWidget);
       expect(find.text('2'), findsOneWidget);
 
-      await tester.tap(find.byKey(const ValueKey('rail-tool-btn-debug')));
+      await tester.tap(find.byKey(const ValueKey('rail-tool-btn-git')));
       await tester.pump();
-      expect(clickedTab, equals(BottomDockTab.debug));
+      expect(clickedTab, equals(BottomDockTab.git));
     });
 
     testWidgets('BottomDockHost exibe conteúdo correto conforme selectedTab e permite fechar', (tester) async {
@@ -84,8 +84,8 @@ void main() {
               onTabSelected: (tab) => currentTab = tab,
               onClose: () => closed = true,
               height: 250,
+              gitContent: const Text('CONTEUDO_GIT'),
               debugContent: const Text('CONTEUDO_DEBUG'),
-              terminalContent: const Text('CONTEUDO_TERMINAL'),
               problemsContent: const Text('CONTEUDO_PROBLEMS'),
             ),
           ),
@@ -94,7 +94,7 @@ void main() {
 
       // Com selectedTab = debug, CONTEUDO_DEBUG deve estar visível
       expect(find.text('CONTEUDO_DEBUG'), findsOneWidget);
-      expect(find.text('CONTEUDO_TERMINAL'), findsNothing);
+      expect(find.text('CONTEUDO_GIT'), findsNothing);
       expect(find.text('CONTEUDO_PROBLEMS'), findsNothing);
 
       // Clica no botão de fechar (×)
@@ -103,6 +103,29 @@ void main() {
       await tester.tap(closeButton);
       await tester.pump();
       expect(closed, isTrue);
+    });
+
+    testWidgets('BottomDockHost exibe git quando selectedTab é git', (tester) async {
+      await tester.pumpWidget(
+        MaterialApp(
+          theme: ThemeData.dark(),
+          home: Scaffold(
+            body: BottomDockHost(
+              isOpen: true,
+              selectedTab: BottomDockTab.git,
+              onTabSelected: (_) {},
+              onClose: () {},
+              height: 250,
+              gitContent: const Text('CONTEUDO_GIT'),
+              debugContent: const Text('CONTEUDO_DEBUG'),
+              problemsContent: const Text('CONTEUDO_PROBLEMS'),
+            ),
+          ),
+        ),
+      );
+
+      expect(find.text('CONTEUDO_GIT'), findsOneWidget);
+      expect(find.text('CONTEUDO_DEBUG'), findsNothing);
     });
 
     testWidgets('BottomDockHost exibe problems quando selectedTab é problems', (tester) async {
@@ -116,8 +139,8 @@ void main() {
               onTabSelected: (_) {},
               onClose: () {},
               height: 250,
+              gitContent: const Text('CONTEUDO_GIT'),
               debugContent: const Text('CONTEUDO_DEBUG'),
-              terminalContent: const Text('CONTEUDO_TERMINAL'),
               problemsContent: const Text('CONTEUDO_PROBLEMS'),
             ),
           ),

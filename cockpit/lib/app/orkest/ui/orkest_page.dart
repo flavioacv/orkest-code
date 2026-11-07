@@ -1,6 +1,7 @@
 import 'package:orkest_code/app/orkest/domain/contracts/git_diff_reader.dart';
 import 'package:orkest_code/app/orkest/ui/actions/pull_request_review_actions.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/bottom_dock_host.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/git_history_panel.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/developer_workbench_panels.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/problems_panel.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/workspace_pull_request_panel.dart';
@@ -1031,6 +1032,55 @@ class _OrkestPageState extends State<OrkestPage> {
                     ),
                   ),
                 ),
+                if (!isMobilePlatform && _vm.selectedProjectId != null) ...[
+                  BottomDockHost(
+                    isOpen: _vm.bottomDockOpen,
+                    selectedTab: _vm.bottomDockTab,
+                    onTabSelected: _vm.openBottomDock,
+                    onClose: _vm.closeBottomDock,
+                    height: _vm.bottomDockHeight,
+                    onHeightChanged: _vm.setBottomDockHeight,
+                    isDebugging: _vm.selectedProjectId != null &&
+                        (_vm.debugForWorkspace(_vm.selectedProjectId!).isRunning ||
+                            _vm.debugForWorkspace(_vm.selectedProjectId!).isStopped),
+                    gitContent: _WorkspaceGitHistoryPanel(vm: _vm),
+                    debugContent: WorkspaceDebugPanel(
+                      key: ValueKey('dock-debug-${_vm.selectedProjectId}'),
+                      vm: _vm,
+                      workspaceId: _vm.selectedProjectId!,
+                      root: _vm.treeRootPath,
+                      workspaceRoots: _vm.treeRoots,
+                      path: _vm.focusedFilePath,
+                    ),
+                    problemsContent: ProblemsPanel(
+                      controller:
+                          _vm.problemsForWorkspace(_vm.selectedProjectId!),
+                      onNavigateToSource: (file, line, col) =>
+                          _vm.openFile(file, revealLine: line, isPreview: false),
+                    ),
+                    problemsCount: _vm
+                            .problemsForWorkspace(_vm.selectedProjectId!)
+                            .errorCount +
+                        _vm
+                            .problemsForWorkspace(_vm.selectedProjectId!)
+                            .warningCount,
+                  ),
+                  BottomStripeBar(
+                    isOpen: _vm.bottomDockOpen,
+                    selectedTab: _vm.bottomDockTab,
+                    onToggleTab: _vm.toggleBottomDock,
+                    isDebugging: _vm.selectedProjectId != null &&
+                        (_vm.debugForWorkspace(_vm.selectedProjectId!).isRunning ||
+                            _vm.debugForWorkspace(_vm.selectedProjectId!).isStopped),
+                    problemsCount: _vm.selectedProjectId != null
+                        ? (_vm.problemsForWorkspace(_vm.selectedProjectId!)
+                                .errorCount +
+                            _vm
+                                .problemsForWorkspace(_vm.selectedProjectId!)
+                                .warningCount)
+                        : 0,
+                  ),
+                ],
                 // Barra de teclas do terminal (mobile): aparece acima do teclado
                 // virtual quando a aba ativa é terminal (plano 60, Wave F).
                 if (isMobilePlatform &&
@@ -1386,52 +1436,7 @@ class _CenterPanelState extends State<_CenterPanel> {
               child: terminalWorkspace,
             )
           else
-            Positioned.fill(
-              child: Column(
-                children: [
-                  Expanded(child: terminalWorkspace),
-                  if (projectId != null)
-                    BottomDockHost(
-                      isOpen: vm.bottomDockOpen,
-                      selectedTab: vm.bottomDockTab,
-                      onTabSelected: vm.openBottomDock,
-                      onClose: vm.closeBottomDock,
-                      height: vm.bottomDockHeight,
-                      onHeightChanged: vm.setBottomDockHeight,
-                      isDebugging: vm.debugForWorkspace(projectId).isRunning ||
-                          vm.debugForWorkspace(projectId).isStopped,
-                      debugContent: WorkspaceDebugPanel(
-                        key: ValueKey('dock-debug-$projectId'),
-                        vm: vm,
-                        workspaceId: projectId,
-                        root: vm.treeRootPath,
-                        workspaceRoots: vm.treeRoots,
-                        path: vm.focusedFilePath,
-                      ),
-                      problemsContent: ProblemsPanel(
-                        controller: vm.problemsForWorkspace(projectId),
-                        onNavigateToSource: (file, line, col) =>
-                            vm.openFile(file, revealLine: line, isPreview: false),
-                      ),
-                      problemsCount:
-                          vm.problemsForWorkspace(projectId).errorCount +
-                              vm.problemsForWorkspace(projectId).warningCount,
-                    ),
-                  BottomStripeBar(
-                    isOpen: vm.bottomDockOpen,
-                    selectedTab: vm.bottomDockTab,
-                    onToggleTab: vm.toggleBottomDock,
-                    isDebugging: projectId != null &&
-                        (vm.debugForWorkspace(projectId).isRunning ||
-                            vm.debugForWorkspace(projectId).isStopped),
-                    problemsCount: projectId != null
-                        ? (vm.problemsForWorkspace(projectId).errorCount +
-                            vm.problemsForWorkspace(projectId).warningCount)
-                        : 0,
-                  ),
-                ],
-              ),
-            ),
+            Positioned.fill(child: terminalWorkspace),
         // O terminal é a superfície mobile. Ao detectar um prompt de
         // permissão/pergunta, oferecemos somente o caminho seguro: abrir a
         // sessão real, preservando as escolhas específicas de cada CLI.
@@ -2536,6 +2541,56 @@ class _LspStatusBarState extends State<_LspStatusBar> {
           ],
         ],
       ),
+    );
+  }
+}
+
+class _WorkspaceGitHistoryPanel extends StatelessWidget {
+  const _WorkspaceGitHistoryPanel({required this.vm});
+
+  final OrkestViewModel vm;
+
+  @override
+  Widget build(BuildContext context) {
+    final roots = [
+      for (final r in vm.treeRoots)
+        GitHistoryRoot(
+          path: r,
+          name: r.split('/').last,
+          branch: vm.gitInfoForRoot(r)?.branch,
+        ),
+    ];
+
+    if (roots.isEmpty && vm.treeRootPath.isNotEmpty) {
+      roots.add(
+        GitHistoryRoot(
+          path: vm.treeRootPath,
+          name: vm.treeRootPath.split('/').last,
+        ),
+      );
+    }
+
+    if (roots.isEmpty) {
+      return Center(
+        child: Text(
+          'Nenhum repositório Git ativo no momento',
+          style: context.typo.body.copyWith(
+            color: context.colors.text3,
+            fontSize: 12,
+          ),
+        ),
+      );
+    }
+
+    return GitHistoryPanel(
+      roots: roots,
+      loadHistory: vm.loadGitHistory,
+      loadFiles: vm.loadGitHistoryFiles,
+      onOpenFileDiff: vm.openCommitDiff,
+      onRevertCommit: vm.revertGitCommit,
+      onUndoLastCommit: vm.undoLastGitCommit,
+      compareRefs: vm.compareGitRefs,
+      refreshToken: 0,
     );
   }
 }
