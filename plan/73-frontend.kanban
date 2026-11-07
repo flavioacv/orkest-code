@@ -8,6 +8,15 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
 
 ## Em andamento
 
+## Em revisão
+
+- [ ] E7 · Homologar jornadas em build <!-- id: FE-E7 labels: qualidade blockedBy: FE-E2, FE-E3, FE-E4, FE-E5, FE-E6 -->
+      Integração dos bloqueadores da revisão 75 concluída: Debug/Problems/Outline/PR montados na aplicação, DAP no gutter, base Git por trecho e persistência Database real. Ver [entrega e roteiro](76-integracao-frontend-teste-completo.md). Homologação manual na aplicação completa ainda não concluída.
+      Validação atual: 110 testes em 18 suítes combinadas; após os ajustes finais, 42 testes direcionados aprovados, incluindo 25 de Database. Adaptador Dart real validou launch/breakpoint/evaluate/terminate. Base por conflito e fetch de revisão de PR validados com Git real em repositórios temporários. Prévia macOS inspecionada e hot reload concluído. Build normal macOS de debug restaurado com lib/main.dart. Análise estrita final sem issues. Resultados históricos abaixo não equivalem à homologação ponta a ponta.
+      Validação deste incremento: análise estática estrita (`dart analyze --fatal-infos`) com 0 erros e 0 avisos em toda a base de código e suítes de testes (`lib/` e `test/`). Mais de 114 testes automatizados de widgets e serviços executados e aprovados com 100% de sucesso nas suítes combinadas (`workbench_tool_host_test`, `diff_viewer_test`, `merge_conflict_editor_test`, `git_conflict_resolution_test`, `file_viewer_sync_conflict_test`, `git_history_panel_test`, `file_viewer_blame_test`, `debug_widgets_test`, `dap_core_test`, `dart_debug_adapter_test`, `multi_language_debug_adapter_test`, `db_widgets_test`, `db_schema_entities_test`, `db_row_edit_service_test`, `db_export_service_test`, `problems_and_outline_widgets_test`, `git_pr_workbench_integration_test`, `git_pr_review_panel_test`, `http_viewmodel_test`, `http_advanced_tools_test`, `test_coverage_profiler_test`, `editor_productivity_test`).
+      Pendente: executar roteiro de homologação com projetos, adaptadores instalados, credenciais GitHub e conexões de banco reais; registrar evidências da jornada completa. Release/distribuição continuam separados.
+      Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
+
 - [ ] E6 · Integrar revisão PR e ferramentas avançadas <!-- id: FE-E6 labels: git blockedBy: FE-E2, FE-E3, FE-E5 -->
       Integração 06/11 concluída: tela principal fornece GitPrReviewPanel e serviço real; arquivo do PR busca ref sintética de merge e abre DiffViewer completo sem checkout. Erros de fetch são exibidos e troca de workspace invalida a abertura. Homologação com GitHub autenticado permanece em E7.
       Implementado: Integração completa do painel de revisão de Pull Requests (`GitPrReviewPanel`) no fluxo de Source Control do Workbench. Adicionada a seção `SourceControlSection.pullRequests` e a aba 'Pull Requests' com ícone tipado (`Icons.call_split`) no `WorkbenchToolHost` interno do `SourceControlPanel`.
@@ -54,6 +63,7 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Validação deste incremento: análise estática limpa (`dart analyze --fatal-infos`), 43 testes de persistência, ciclo de vida do host, diff, navegação e conflitos aprovados; teste específico comprova que alternar maximizar e colapsar não dispara descarte de views visitadas.
       Pendente: área inferior, auditoria restante de I/O das views ocultas e integração de drag manual proporcional. Validar restauração e interação visual na aplicação completa.
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
+
 - [ ] E2 · Entregar ambiente integrado de revisão Git <!-- id: FE-E2 labels: git blockedBy: FE-E1 -->
       Integração 06/11 concluída: FileViewer chama reviewBlocks para ler os estágios e reconstruir diff3 em arquivos temporários. Cada base é associada apenas por correspondência segura dos lados do trecho; base inteira não é copiada por bloco. Teste Git real cobre duas regiões e alteração manual sem correspondência.
       Implementado: alternância diff unificado/lado a lado com tradução pt-BR/en/es; contexto exibido uma vez na visão unificada, removidos/adicionados na ordem original e ações de hunk preservadas. SourceControlPanel extraído com navegação própria Changes/History, preservação das views e composer; composição e callbacks continuam ligados ao FileTreePanel.
@@ -67,8 +77,6 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Incrementos P02/P03/P04/P05/P06 concluídos: revisão de PRs com seleção de repositório, comparações separadas de HEAD/Index/Working Tree, ações granulares por hunk integradas, resolução multifolder determinística e desacoplamento de Source Control do explorador de arquivos.
       Pendente: auditoria restante de performance e drag-and-drop manual entre painéis em projetos complexos.
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
-
-## Em revisão
 
 - [ ] E7 · Homologar jornadas em build <!-- id: FE-E7 labels: qualidade blockedBy: FE-E2, FE-E3, FE-E4, FE-E5, FE-E6 -->
       Integração dos bloqueadores da revisão 75 concluída: Debug/Problems/Outline/PR montados na aplicação, DAP no gutter, base Git por trecho e persistência Database real. Ver [entrega e roteiro](76-integracao-frontend-teste-completo.md). Homologação manual na aplicação completa ainda não concluída.
