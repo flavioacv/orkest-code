@@ -45,7 +45,22 @@ final RegExp _hunkHeader = RegExp(r'^@@ -(\d+)(?:,\d+)? \+(\d+)(?:,\d+)? @@');
       continue;
     }
     if (current == null) continue;
-    if (line.startsWith(r'\')) continue; // "\ No newline at end of file"
+    if (line.startsWith(r'\')) {
+      // "\ No newline at end of file" refere-se à última linha processada do hunk
+      if (lines.isNotEmpty) {
+        final last = lines.removeLast();
+        lines.add(
+          DiffLine(
+            kind: last.kind,
+            text: last.text,
+            oldLine: last.oldLine,
+            newLine: last.newLine,
+            noNewline: true,
+          ),
+        );
+      }
+      continue;
+    }
     if (line.startsWith('+')) {
       lines.add(
         DiffLine(

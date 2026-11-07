@@ -1,6 +1,7 @@
 import 'package:orkest_code/app/orkest/domain/contracts/git_diff_reader.dart';
 import 'package:orkest_code/app/orkest/domain/entities/file_diff.dart';
 import 'package:orkest_code/app/orkest/ui/session/diff_viewer_session.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/confirm_dialog.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/file_path_breadcrumb.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
 import 'package:orkest_code/app/core/ui/widgets/code_highlight.dart';
@@ -9,6 +10,7 @@ import 'package:orkest_code/app/core/ui/widgets/hover_tap.dart';
 import 'package:orkest_code/app/core/ui/widgets/app_tooltip.dart';
 import 'package:flutter/material.dart' show SelectionArea;
 import 'package:flutter/services.dart';
+import 'package:path/path.dart' as p;
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 /// Extensão (minúscula) de [path] para alimentar o syntax highlight, ou `null`
@@ -435,6 +437,31 @@ class _DiffBodyState extends State<_DiffBody> {
                   ],
                 ),
               ),
+              if (widget.session.hunkOperationError != null)
+                Container(
+                  key: const ValueKey('diff-hunk-error-banner'),
+                  padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                  color: colors.error.withValues(alpha: 0.15),
+                  child: Row(
+                    children: [
+                      Icon(Icons.error_outline, size: 14, color: colors.error),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: Text(
+                          widget.session.hunkOperationError!,
+                          style: context.typo.label.copyWith(
+                            fontSize: 11.5,
+                            color: colors.error,
+                          ),
+                        ),
+                      ),
+                      GestureDetector(
+                        onTap: () => widget.session.clearHunkError(),
+                        child: Icon(Icons.close, size: 14, color: colors.error),
+                      ),
+                    ],
+                  ),
+                ),
               Expanded(
                 child: ColoredBox(
                   color: colors.bg,
@@ -494,9 +521,11 @@ class _DiffBodyState extends State<_DiffBody> {
                                       selected: _selectedHunk == index,
                                       hunk: hunk,
                                       width: total,
-                                      isStaged: widget.session.isStaged,
+                                      target: widget.session.target,
                                       isHistorical:
                                           widget.session.commitHash != null,
+                                      isOperating:
+                                          widget.session.isOperatingHunk,
                                       onStage:
                                           widget.session.onStageHunk != null
                                           ? () => widget.session.onStageHunk!(
@@ -511,9 +540,25 @@ class _DiffBodyState extends State<_DiffBody> {
                                           : null,
                                       onDiscard:
                                           widget.session.onDiscardHunk != null
-                                          ? () => widget.session.onDiscardHunk!(
-                                              hunk,
-                                            )
+                                          ? () async {
+                                              final tr =
+                                                  context.t.orkest.fileTreePanel;
+                                              final ok = await showConfirmDialog(
+                                                context,
+                                                title: tr.discardChangesTitle,
+                                                message: tr.discardOneMessage(
+                                                  name: p.basename(
+                                                    widget.session.path,
+                                                  ),
+                                                ),
+                                                confirmLabel: tr.discard,
+                                                danger: true,
+                                              );
+                                              if (ok) {
+                                                await widget.session
+                                                    .onDiscardHunk!(hunk);
+                                              }
+                                            }
                                           : null,
                                     ),
                                   _RowItem(:final row) =>
@@ -672,8 +717,9 @@ class _HunkHeader extends StatelessWidget {
     super.key,
     required this.hunk,
     required this.width,
-    this.isStaged = false,
+    required this.target,
     this.isHistorical = false,
+    this.isOperating = false,
     this.onStage,
     this.onUnstage,
     this.onDiscard,
@@ -682,8 +728,9 @@ class _HunkHeader extends StatelessWidget {
 
   final DiffHunk hunk;
   final double width;
-  final bool isStaged;
+  final GitDiffTarget target;
   final bool isHistorical;
+  final bool isOperating;
   final VoidCallback? onStage;
   final VoidCallback? onUnstage;
   final VoidCallback? onDiscard;
@@ -716,27 +763,30 @@ class _HunkHeader extends StatelessWidget {
               ),
             ),
           ),
-          if (!isHistorical) ...[
-            if (isStaged && onUnstage != null)
+          if (!isHistorical && target != GitDiffTarget.head) ...[
+            if (target == GitDiffTarget.staged && onUnstage != null)
               _HunkActionButton(
                 label: tr.unstageHunk,
                 icon: LucideIcons.minus,
-                onPressed: onUnstage!,
+                isLoading: isOperating,
+                onPressed: isOperating ? null : onUnstage,
               )
-            else if (!isStaged) ...[
+            else if (target == GitDiffTarget.workingTree) ...[
               if (onStage != null)
                 _HunkActionButton(
                   label: tr.stageHunk,
                   icon: LucideIcons.plus,
                   isPrimary: true,
-                  onPressed: onStage!,
+                  isLoading: isOperating,
+                  onPressed: isOperating ? null : onStage,
                 ),
               if (onDiscard != null) ...[
                 const SizedBox(width: 6),
                 _HunkActionButton(
                   label: tr.discardHunk,
                   icon: LucideIcons.undo,
-                  onPressed: onDiscard!,
+                  isLoading: isOperating,
+                  onPressed: isOperating ? null : onDiscard,
                 ),
               ],
             ],
@@ -753,45 +803,55 @@ class _HunkActionButton extends StatelessWidget {
     required this.icon,
     required this.onPressed,
     this.isPrimary = false,
+    this.isLoading = false,
   });
 
   final String label;
   final IconData icon;
-  final VoidCallback onPressed;
+  final VoidCallback? onPressed;
   final bool isPrimary;
+  final bool isLoading;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
-    final bg = isPrimary ? colors.gitStaged.withValues(alpha: 0.15) : colors.bg;
+    final enabled = onPressed != null && !isLoading;
+    final bg = isPrimary
+        ? colors.gitStaged.withValues(alpha: enabled ? 0.15 : 0.08)
+        : colors.bg;
     final border = isPrimary
-        ? colors.gitStaged.withValues(alpha: 0.4)
+        ? colors.gitStaged.withValues(alpha: enabled ? 0.4 : 0.2)
         : colors.border;
-    final textColor = isPrimary ? colors.gitStaged : colors.text2;
+    final textColor = isPrimary
+        ? (enabled ? colors.gitStaged : colors.gitStaged.withValues(alpha: 0.5))
+        : (enabled ? colors.text2 : colors.text4);
 
-    return GestureDetector(
-      onTap: onPressed,
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-        decoration: BoxDecoration(
-          color: bg,
-          border: Border.all(color: border),
-          borderRadius: BorderRadius.circular(4),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 11, color: textColor),
-            const SizedBox(width: 4),
-            Text(
-              label,
-              style: context.typo.label.copyWith(
-                fontSize: 10.5,
-                color: textColor,
-                fontWeight: isPrimary ? FontWeight.w600 : FontWeight.normal,
+    return Opacity(
+      opacity: enabled ? 1.0 : 0.6,
+      child: GestureDetector(
+        onTap: onPressed,
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+          decoration: BoxDecoration(
+            color: bg,
+            border: Border.all(color: border),
+            borderRadius: BorderRadius.circular(4),
+          ),
+          child: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 11, color: textColor),
+              const SizedBox(width: 4),
+              Text(
+                label,
+                style: context.typo.label.copyWith(
+                  fontSize: 10.5,
+                  color: textColor,
+                  fontWeight: isPrimary ? FontWeight.w600 : FontWeight.normal,
+                ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );

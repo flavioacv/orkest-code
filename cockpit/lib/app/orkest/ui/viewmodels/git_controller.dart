@@ -41,11 +41,13 @@ class GitController extends ChangeNotifier {
     this._reader,
     this._runner,
     this._activity, {
+    GitHunkService? hunkService,
     DirectoryWatch? directoryWatch,
     this._watchRetryDelay = const Duration(milliseconds: 500),
     this._fileTreeDebounce = const Duration(milliseconds: 400),
     this._fileTreeMaxLatency = const Duration(seconds: 2),
-  }) : _directoryWatch = directoryWatch ?? _defaultDirectoryWatch {
+  })  : _hunkService = hunkService ?? const GitHunkService(),
+        _directoryWatch = directoryWatch ?? _defaultDirectoryWatch {
     _activity.addListener(_onActivityChanged);
   }
 
@@ -390,18 +392,20 @@ class GitController extends ChangeNotifier {
 
   // ---- staging e unstage por hunk (G01) -------------------------------------
 
-  final GitHunkService _hunkService = const GitHunkService();
+  final GitHunkService _hunkService;
 
   /// Aplica o hunk no index do Git (`git apply --cached -`).
   Future<Result<void, String>> stageHunk({
     required String root,
     required String relativePath,
     required DiffHunk hunk,
+    FileDiffKind kind = FileDiffKind.modified,
   }) async {
     final result = await _hunkService.stageHunk(
       repoRoot: root,
       relativePath: relativePath,
       hunk: hunk,
+      kind: kind,
     );
     if (result.isSuccess) {
       markHistoryStale();
@@ -416,11 +420,13 @@ class GitController extends ChangeNotifier {
     required String root,
     required String relativePath,
     required DiffHunk hunk,
+    FileDiffKind kind = FileDiffKind.modified,
   }) async {
     final result = await _hunkService.unstageHunk(
       repoRoot: root,
       relativePath: relativePath,
       hunk: hunk,
+      kind: kind,
     );
     if (result.isSuccess) {
       markHistoryStale();
@@ -435,11 +441,13 @@ class GitController extends ChangeNotifier {
     required String root,
     required String relativePath,
     required DiffHunk hunk,
+    FileDiffKind kind = FileDiffKind.modified,
   }) async {
     final result = await _hunkService.discardHunk(
       repoRoot: root,
       relativePath: relativePath,
       hunk: hunk,
+      kind: kind,
     );
     if (result.isSuccess) {
       markHistoryStale();

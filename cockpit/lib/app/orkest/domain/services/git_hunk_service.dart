@@ -13,15 +13,43 @@ class GitHunkService {
   String buildHunkPatch({
     required String relativePath,
     required DiffHunk hunk,
+    FileDiffKind kind = FileDiffKind.modified,
   }) {
     final buffer = StringBuffer();
     // O Git espera caminhos com barras normais (POSIX) no cabeçalho do diff
     final normalizedPath = relativePath.replaceAll('\\', '/');
+    final needsQuotes = normalizedPath.contains(' ') ||
+        normalizedPath.contains('\t') ||
+        normalizedPath.contains('"');
+    final pathA = needsQuotes ? '"a/$normalizedPath"' : 'a/$normalizedPath';
+    final pathB = needsQuotes ? '"b/$normalizedPath"' : 'b/$normalizedPath';
 
-    buffer.writeln('diff --git a/$normalizedPath b/$normalizedPath');
-    buffer.writeln('--- a/$normalizedPath');
-    buffer.writeln('+++ b/$normalizedPath');
-    buffer.writeln(hunk.header);
+    buffer.writeln('diff --git $pathA $pathB');
+
+    final isNew = kind == FileDiffKind.added ||
+        hunk.header.contains(' -0,0 ') ||
+        hunk.header.startsWith('@@ +');
+    final isDeleted =
+        kind == FileDiffKind.deleted || hunk.header.contains(' +0,0 ');
+
+    if (isNew) {
+      buffer.writeln('new file mode 100644');
+      buffer.writeln('--- /dev/null');
+      buffer.writeln('+++ $pathB');
+    } else if (isDeleted) {
+      buffer.writeln('deleted file mode 100644');
+      buffer.writeln('--- $pathA');
+      buffer.writeln('+++ /dev/null');
+    } else {
+      buffer.writeln('--- $pathA');
+      buffer.writeln('+++ $pathB');
+    }
+
+    var header = hunk.header;
+    if (header.startsWith('@@ +')) {
+      header = header.replaceFirst('@@ +', '@@ -0,0 +');
+    }
+    buffer.writeln(header);
 
     for (final line in hunk.lines) {
       switch (line.kind) {
@@ -35,6 +63,9 @@ class GitHunkService {
           buffer.writeln(' ${line.text}');
           break;
       }
+      if (line.noNewline) {
+        buffer.writeln(r'\ No newline at end of file');
+      }
     }
 
     return buffer.toString();
@@ -45,9 +76,14 @@ class GitHunkService {
     required String repoRoot,
     required String relativePath,
     required DiffHunk hunk,
+    FileDiffKind kind = FileDiffKind.modified,
     String gitExecutable = 'git',
   }) async {
-    final patchText = buildHunkPatch(relativePath: relativePath, hunk: hunk);
+    final patchText = buildHunkPatch(
+      relativePath: relativePath,
+      hunk: hunk,
+      kind: kind,
+    );
     return _applyPatch(
       repoRoot: repoRoot,
       patchText: patchText,
@@ -61,9 +97,14 @@ class GitHunkService {
     required String repoRoot,
     required String relativePath,
     required DiffHunk hunk,
+    FileDiffKind kind = FileDiffKind.modified,
     String gitExecutable = 'git',
   }) async {
-    final patchText = buildHunkPatch(relativePath: relativePath, hunk: hunk);
+    final patchText = buildHunkPatch(
+      relativePath: relativePath,
+      hunk: hunk,
+      kind: kind,
+    );
     return _applyPatch(
       repoRoot: repoRoot,
       patchText: patchText,
@@ -77,9 +118,14 @@ class GitHunkService {
     required String repoRoot,
     required String relativePath,
     required DiffHunk hunk,
+    FileDiffKind kind = FileDiffKind.modified,
     String gitExecutable = 'git',
   }) async {
-    final patchText = buildHunkPatch(relativePath: relativePath, hunk: hunk);
+    final patchText = buildHunkPatch(
+      relativePath: relativePath,
+      hunk: hunk,
+      kind: kind,
+    );
     return _applyPatch(
       repoRoot: repoRoot,
       patchText: patchText,

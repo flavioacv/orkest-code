@@ -57,6 +57,18 @@ class DiffViewerSession extends PaneItem {
   Future<void> Function(DiffHunk hunk)? onUnstageHunk;
   Future<void> Function(DiffHunk hunk)? onDiscardHunk;
 
+  /// Indicador de operação granular em andamento (trava de concorrência e andamento na UI).
+  bool isOperatingHunk = false;
+
+  /// Erro explícito da última operação granular de hunk (ex: conflito ou hunk obsoleto).
+  String? hunkOperationError;
+
+  void clearHunkError() {
+    if (hunkOperationError == null) return;
+    hunkOperationError = null;
+    notifyListeners();
+  }
+
   // `package:path`, não corte no `/`: no Windows o path pode vir com `\`.
   @override
   String get title =>

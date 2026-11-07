@@ -3,7 +3,6 @@ import 'dart:io';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:orkest_code/app/orkest/domain/entities/file_diff.dart';
 import 'package:orkest_code/app/orkest/domain/services/git_hunk_service.dart';
-import 'package:orkest_code/app/orkest/ui/session/diff_viewer_session.dart';
 
 void main() {
   group('G01 · Revisão e staging por hunks (GitHunkService)', () {
@@ -190,36 +189,149 @@ void main() {
       }
     });
 
-    test('4. DiffViewerSession armazena callbacks e estado isStaged', () {
-      var stagedHunkTriggered = false;
-      var unstageHunkTriggered = false;
-      var discardHunkTriggered = false;
+    test('5. Staging e descarte de arquivo novo/untracked com Git real', () async {
+      final tempDir = await Directory.systemTemp.createTemp('orkest_new_file_test_');
 
-      const testHunk = DiffHunk(
-        header: '@@ -1,2 +1,2 @@',
-        lines: [],
-      );
+      try {
+        await Process.run('git', ['init', '-b', 'main'], workingDirectory: tempDir.path);
+        await Process.run('git', ['config', 'user.name', 'Test'], workingDirectory: tempDir.path);
+        await Process.run('git', ['config', 'user.email', 'test@example.com'], workingDirectory: tempDir.path);
 
-      final session = DiffViewerSession(
-        id: 'diff_1',
-        projectId: 'proj_1',
-        path: '/workspace/file.dart',
-        diff: const FileDiff(path: '/workspace/file.dart', kind: FileDiffKind.modified),
-        isStaged: true,
-        onStageHunk: (hunk) async => stagedHunkTriggered = true,
-        onUnstageHunk: (hunk) async => unstageHunkTriggered = true,
-        onDiscardHunk: (hunk) async => discardHunkTriggered = true,
-      );
+        // Cria arquivo novo untracked
+        final file = File('${tempDir.path}/novo.txt');
+        await file.writeAsString('linha 1 nova\nlinha 2 nova\n');
 
-      expect(session.isStaged, isTrue);
+        const newHunk = DiffHunk(
+          header: '@@ -0,0 +1,2 @@',
+          lines: [
+            DiffLine(kind: DiffLineKind.added, text: 'linha 1 nova'),
+            DiffLine(kind: DiffLineKind.added, text: 'linha 2 nova'),
+          ],
+        );
 
-      session.onStageHunk?.call(testHunk);
-      session.onUnstageHunk?.call(testHunk);
-      session.onDiscardHunk?.call(testHunk);
+        // Stage do arquivo novo
+        final stageResult = await service.stageHunk(
+          repoRoot: tempDir.path,
+          relativePath: 'novo.txt',
+          hunk: newHunk,
+          kind: FileDiffKind.added,
+        );
+        expect(stageResult.isSuccess, isTrue);
 
-      expect(stagedHunkTriggered, isTrue);
-      expect(unstageHunkTriggered, isTrue);
-      expect(discardHunkTriggered, isTrue);
+        final staged = await Process.run('git', ['status', '--porcelain'], workingDirectory: tempDir.path);
+        expect(staged.stdout, contains('A  novo.txt'));
+
+        // Unstage do arquivo novo
+        final unstageResult = await service.unstageHunk(
+          repoRoot: tempDir.path,
+          relativePath: 'novo.txt',
+          hunk: newHunk,
+          kind: FileDiffKind.added,
+        );
+        expect(unstageResult.isSuccess, isTrue);
+
+        final unstaged = await Process.run('git', ['status', '--porcelain'], workingDirectory: tempDir.path);
+        expect(unstaged.stdout, contains('?? novo.txt'));
+
+        // Descarte do arquivo novo no working tree
+        final discardResult = await service.discardHunk(
+          repoRoot: tempDir.path,
+          relativePath: 'novo.txt',
+          hunk: newHunk,
+          kind: FileDiffKind.added,
+        );
+        expect(discardResult.isSuccess, isTrue);
+        expect(await file.exists(), isFalse);
+      } finally {
+        await tempDir.delete(recursive: true);
+      }
+    });
+
+    test('6. Staging e unstage com caminhos com espaços e Unicode', () async {
+      final tempDir = await Directory.systemTemp.createTemp('orkest_unicode_hunk_test_');
+
+      try {
+        await Process.run('git', ['init', '-b', 'main'], workingDirectory: tempDir.path);
+        await Process.run('git', ['config', 'user.name', 'Test'], workingDirectory: tempDir.path);
+        await Process.run('git', ['config', 'user.email', 'test@example.com'], workingDirectory: tempDir.path);
+
+        const relPath = 'pasta com espaço/arquivo áéí.txt';
+        final subDir = Directory('${tempDir.path}/pasta com espaço');
+        await subDir.create(recursive: true);
+        final file = File('${tempDir.path}/$relPath');
+        await file.writeAsString('linha inicial\n');
+        await Process.run('git', ['add', relPath], workingDirectory: tempDir.path);
+        await Process.run('git', ['commit', '-m', 'init'], workingDirectory: tempDir.path);
+
+        await file.writeAsString('linha inicial alterada\n');
+
+        const unicodeHunk = DiffHunk(
+          header: '@@ -1,1 +1,1 @@',
+          lines: [
+            DiffLine(kind: DiffLineKind.removed, text: 'linha inicial'),
+            DiffLine(kind: DiffLineKind.added, text: 'linha inicial alterada'),
+          ],
+        );
+
+        final stageResult = await service.stageHunk(
+          repoRoot: tempDir.path,
+          relativePath: relPath,
+          hunk: unicodeHunk,
+        );
+        expect(stageResult.isSuccess, isTrue);
+
+        final diffCached = await Process.run('git', ['diff', '--cached'], workingDirectory: tempDir.path);
+        expect(diffCached.stdout, contains('linha inicial alterada'));
+
+        final unstageResult = await service.unstageHunk(
+          repoRoot: tempDir.path,
+          relativePath: relPath,
+          hunk: unicodeHunk,
+        );
+        expect(unstageResult.isSuccess, isTrue);
+
+        final diffCachedAfter = await Process.run('git', ['diff', '--cached'], workingDirectory: tempDir.path);
+        expect(diffCachedAfter.stdout.toString().trim(), isEmpty);
+      } finally {
+        await tempDir.delete(recursive: true);
+      }
+    });
+
+    test('7. Suporte a EOF sem newline na aplicação de hunk', () async {
+      final tempDir = await Directory.systemTemp.createTemp('orkest_eof_newline_test_');
+
+      try {
+        await Process.run('git', ['init', '-b', 'main'], workingDirectory: tempDir.path);
+        await Process.run('git', ['config', 'user.name', 'Test'], workingDirectory: tempDir.path);
+        await Process.run('git', ['config', 'user.email', 'test@example.com'], workingDirectory: tempDir.path);
+
+        final file = File('${tempDir.path}/nonewline.txt');
+        await file.writeAsString('conteudo sem quebra final');
+        await Process.run('git', ['add', 'nonewline.txt'], workingDirectory: tempDir.path);
+        await Process.run('git', ['commit', '-m', 'init'], workingDirectory: tempDir.path);
+
+        await file.writeAsString('conteudo sem quebra final alterado');
+
+        const eofHunk = DiffHunk(
+          header: '@@ -1,1 +1,1 @@',
+          lines: [
+            DiffLine(kind: DiffLineKind.removed, text: 'conteudo sem quebra final', noNewline: true),
+            DiffLine(kind: DiffLineKind.added, text: 'conteudo sem quebra final alterado', noNewline: true),
+          ],
+        );
+
+        final stageResult = await service.stageHunk(
+          repoRoot: tempDir.path,
+          relativePath: 'nonewline.txt',
+          hunk: eofHunk,
+        );
+        expect(stageResult.isSuccess, isTrue);
+
+        final stagedDiff = await Process.run('git', ['diff', '--cached'], workingDirectory: tempDir.path);
+        expect(stagedDiff.stdout, contains('conteudo sem quebra final alterado'));
+      } finally {
+        await tempDir.delete(recursive: true);
+      }
     });
   });
 }

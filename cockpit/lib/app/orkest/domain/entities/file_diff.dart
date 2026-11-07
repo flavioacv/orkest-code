@@ -9,12 +9,14 @@ class DiffLine {
     required this.text,
     this.oldLine,
     this.newLine,
+    this.noNewline = false,
   });
 
   final DiffLineKind kind;
   final String text;
   final int? oldLine;
   final int? newLine;
+  final bool noNewline;
 }
 
 /// Um hunk de diff (`@@ -a,b +c,d @@ …`) com suas linhas em ordem.

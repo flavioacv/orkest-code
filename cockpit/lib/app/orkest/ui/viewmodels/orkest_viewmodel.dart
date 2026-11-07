@@ -2452,8 +2452,9 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
         ..repoRoot = root
         ..previousRelativePath = commitHash == null
             ? null
-            : previousRelativePath
-        ..notifyListeners();
+            : previousRelativePath;
+      _bindDiffViewerHunkCallbacks(previewCandidate);
+      previewCandidate.notifyListeners();
       _trees[projectId] = updateLeaf(
         currentTree,
         paneId,
@@ -2474,6 +2475,7 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
       previousRelativePath: commitHash == null ? null : previousRelativePath,
       isPreview: isPreview,
     );
+    _bindDiffViewerHunkCallbacks(viewer);
     _sessions[viewer.id] = viewer;
 
     final current = _trees[projectId] ?? tree;
@@ -2526,6 +2528,156 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
     repoRoot: repoPath,
     previousRelativePath: change.previousPath,
   );
+
+  final Set<String> _activeHunkOperations = {};
+
+  /// Conecta ou atualiza os callbacks de ações granulares por hunk (`onStageHunk`, `onUnstageHunk`, `onDiscardHunk`)
+  /// em uma sessão de DiffViewer, de acordo com o alvo de comparação (`target`) e escopo de execução.
+  void _bindDiffViewerHunkCallbacks(DiffViewerSession session) {
+    // Diffs históricos (commitHash != null) ou conexões remotas não recebem mutações granulares.
+    if (session.commitHash != null || _activeRemoteHost() != null) {
+      session.onStageHunk = null;
+      session.onUnstageHunk = null;
+      session.onDiscardHunk = null;
+      return;
+    }
+
+    switch (session.target) {
+      case GitDiffTarget.workingTree:
+        session.onStageHunk =
+            (hunk) => _handleHunkAction(session, hunk, _HunkActionKind.stage);
+        session.onDiscardHunk =
+            (hunk) => _handleHunkAction(session, hunk, _HunkActionKind.discard);
+        session.onUnstageHunk = null;
+        break;
+      case GitDiffTarget.staged:
+        session.onStageHunk = null;
+        session.onDiscardHunk = null;
+        session.onUnstageHunk =
+            (hunk) => _handleHunkAction(session, hunk, _HunkActionKind.unstage);
+        break;
+      case GitDiffTarget.head:
+        // Comparação combinada contra HEAD permanece estritamente somente-leitura.
+        session.onStageHunk = null;
+        session.onUnstageHunk = null;
+        session.onDiscardHunk = null;
+        break;
+    }
+  }
+
+  Future<void> _handleHunkAction(
+    DiffViewerSession session,
+    DiffHunk hunk,
+    _HunkActionKind action,
+  ) async {
+    // 1. Trava de concorrência por sessão
+    if (_activeHunkOperations.contains(session.id)) return;
+    _activeHunkOperations.add(session.id);
+    session.isOperatingHunk = true;
+    session.hunkOperationError = null;
+    session.notifyListeners();
+
+    try {
+      // 2. Snapshot pré-await de identidade e contexto
+      final capturedSessionId = session.id;
+      final capturedProjectId = session.projectId;
+      final capturedPath = session.path;
+      final capturedTarget = session.target;
+      final capturedKind = session.diff.kind;
+      final capturedRoot =
+          session.repoRoot ?? rootContaining(capturedProjectId, capturedPath);
+
+      if (capturedRoot == null || capturedRoot.isEmpty) {
+        session.hunkOperationError =
+            'Não foi possível resolver o repositório Git do arquivo.';
+        session.notifyListeners();
+        return;
+      }
+
+      final relativePath = _relativePath(capturedRoot, capturedPath);
+
+      // 3. Guardrail para descarte: verificar se o arquivo está aberto no editor com alterações não salvas
+      if (action == _HunkActionKind.discard) {
+        final openViewer = _sessions.values
+            .whereType<FileViewerSession>()
+            .where((v) => v.path == capturedPath)
+            .firstOrNull;
+        if (openViewer != null && openViewer.dirty) {
+          session.hunkOperationError =
+              'Descarte recusado: o arquivo possui alterações não salvas no editor.';
+          session.notifyListeners();
+          return;
+        }
+      }
+
+      // 4. Execução da mutação via GitController
+      final Result<void, String> result;
+      switch (action) {
+        case _HunkActionKind.stage:
+          result = await git.stageHunk(
+            root: capturedRoot,
+            relativePath: relativePath,
+            hunk: hunk,
+            kind: capturedKind,
+          );
+          break;
+        case _HunkActionKind.unstage:
+          result = await git.unstageHunk(
+            root: capturedRoot,
+            relativePath: relativePath,
+            hunk: hunk,
+            kind: capturedKind,
+          );
+          break;
+        case _HunkActionKind.discard:
+          result = await git.discardHunk(
+            root: capturedRoot,
+            relativePath: relativePath,
+            hunk: hunk,
+            kind: capturedKind,
+          );
+          break;
+      }
+
+      // 5. Validação pós-await de consistência
+      if (result case Failure(:final error)) {
+        if (identical(_sessions[capturedSessionId], session)) {
+          session.hunkOperationError = error;
+          session.notifyListeners();
+        }
+        return;
+      }
+
+      // 6. Atualização da comparação após sucesso: releitura da fonte de verdade
+      if (_selectedProjectId == capturedProjectId &&
+          identical(_sessions[capturedSessionId], session) &&
+          session.path == capturedPath &&
+          session.target == capturedTarget) {
+        final newDiff =
+            await _gitDiff.read(capturedRoot, capturedPath, target: capturedTarget);
+
+        if (identical(_sessions[capturedSessionId], session) &&
+            session.path == capturedPath &&
+            session.target == capturedTarget) {
+          session.diff = newDiff;
+          session.hunkOperationError = null;
+          session.notifyListeners();
+          notifyListeners();
+        }
+      }
+    } catch (e) {
+      if (identical(_sessions[session.id], session)) {
+        session.hunkOperationError = 'Falha inesperada ao aplicar hunk: $e';
+        session.notifyListeners();
+      }
+    } finally {
+      _activeHunkOperations.remove(session.id);
+      if (identical(_sessions[session.id], session)) {
+        session.isOperatingHunk = false;
+        session.notifyListeners();
+      }
+    }
+  }
 
   /// Seleciona um arquivo no FileTreePanel (atualiza o highlight).
   void selectFileInTree(String path) {
@@ -6906,7 +7058,7 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
                 _relativePath(repoRoot, path),
                 previousRelativePath: previousRelativePath,
               );
-        _sessions[id] = DiffViewerSession(
+        final viewer = DiffViewerSession(
           id: id,
           projectId: project.id,
           path: path,
@@ -6916,6 +7068,8 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
           repoRoot: root,
           previousRelativePath: previousRelativePath,
         );
+        _bindDiffViewerHunkCallbacks(viewer);
+        _sessions[id] = viewer;
         return true;
       case 'redis':
         final conn = desc['conn'] as String?;
@@ -7555,3 +7709,5 @@ T _enumByName<T extends Enum>(List<T> values, Object? raw, T fallback) {
   }
   return fallback;
 }
+
+enum _HunkActionKind { stage, unstage, discard }

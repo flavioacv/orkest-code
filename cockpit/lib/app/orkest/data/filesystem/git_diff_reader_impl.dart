@@ -158,19 +158,33 @@ class GitDiffReaderImpl implements GitDiffReader {
       final bytes = await file.readAsBytes();
       if (_looksBinary(bytes)) return FileDiff.binary(absPath);
       final content = utf8.decode(bytes, allowMalformed: true);
+      final hasTrailingNewline = content.endsWith('\n');
       final lines = content.split('\n');
       // split deixa uma string vazia no fim quando o arquivo termina em '\n'.
-      if (lines.isNotEmpty && lines.last.isEmpty) lines.removeLast();
+      if (hasTrailingNewline && lines.isNotEmpty && lines.last.isEmpty) {
+        lines.removeLast();
+      }
       final diffLines = <DiffLine>[];
       for (var i = 0; i < lines.length; i++) {
+        final isLast = i == lines.length - 1;
         diffLines.add(
-          DiffLine(kind: DiffLineKind.added, text: lines[i], newLine: i + 1),
+          DiffLine(
+            kind: DiffLineKind.added,
+            text: lines[i],
+            newLine: i + 1,
+            noNewline: isLast && !hasTrailingNewline,
+          ),
         );
       }
       return FileDiff(
         path: absPath,
         kind: FileDiffKind.added,
-        hunks: [DiffHunk(header: '@@ +1,${lines.length} @@', lines: diffLines)],
+        hunks: [
+          DiffHunk(
+            header: '@@ -0,0 +1,${lines.length} @@',
+            lines: diffLines,
+          ),
+        ],
       );
     } catch (_) {
       return FileDiff.unchanged(absPath);
