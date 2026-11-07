@@ -6,6 +6,9 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
 
 ## Backlog
 
+- [ ] P04 · Conectar ações granulares de hunk às sessões de produção <!-- id: FE-P04 labels: git, qualidade blockedBy: FE-P03 -->
+      Auditoria identificou que GitHunkService/GitController e callbacks de DiffViewerSession existem, mas a abertura de diffs na VM não fornece essas ações. Implementar conexão em diffs Working Tree/Index, feedback/trava de operação, recarga da comparação correta e proteção contra sessão/raiz/hunk obsoletos. Histórico e comparação combinada permanecem somente leitura. Validar stage/unstage/descarte com Git real, incluindo arquivo parcialmente preparado, arquivo novo, EOF sem newline e caminhos especiais. P03 entrega a semântica de leitura necessária, sem habilitar mutações prematuramente.
+
 ## Em andamento
 
 - [ ] E6 · Integrar revisão PR e ferramentas avançadas <!-- id: FE-E6 labels: git blockedBy: FE-E2, FE-E3, FE-E5 -->
@@ -63,7 +66,7 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Estágios do índice Git: `GitConflictService.readConflictStages` implementado para ler deterministamente o ancestral comum (:1:), HEAD (:2:) e incoming (:3:) diretamente dos estágios do índice Git, permitindo enriquecer blocos de 2 vias (`enrichBlocksWithBase`) com a base real do repositório mesmo quando o arquivo foi salvo sem marcadores diff3; validado em teste automatizado com repositório Git real e merge divergente.
       Autoria e Blame integrado ao editor: `GitBlameView` conectado diretamente ao `FileViewer` com botão contextual "Blame" e atalho `Alt+B`, leitura assíncrona via `GitHistoryReader.readBlame`, montagem lateral no editor (`Row -> [Expanded CodeEditor, GitBlameView]`), navegação de linha por clique sincronizada via `session.reveal(line, select: true)`, fechamento pelo botão `x`, e tratamento de subpixel layout overflow no gutter (`Flexible` + `ClipRect`); validado em teste automatizado de widget (`file_viewer_blame_test.dart`) cobrindo abertura, renderização, navegação e fechamento.
       Histórico e Comparação de Revisões no GitHistoryPanel: adicionada barra de pesquisa reativa em tempo real por assunto, autor, hash e hash curto (`git-history-search-input`); ações contextuais via `ContextMenuGesture` no desktop para "Compare with HEAD", "Mark for comparison…" e "Compare with <hash>"; visualização integrada de comparação (`_buildComparisonView`) com commits divergentes, contagem de arquivos e lista de alterações (`changedFiles`), abrindo o diff do arquivo selecionado na revisão de destino; botão voltar retornando à timeline linear; 9 testes automatizados de widget em `git_history_panel_test.dart` e 66 testes aprovados na suíte combinada E2 Git e Workbench.
-      Incremento P02 concluído: revisão de PRs usa seleção explícita de repositório e navegação protegida por raiz.
+      Incrementos P02/P03 concluídos: revisão de PRs com seleção de repositório e comparações separadas de HEAD/Index/Working Tree. P04 registra a conexão restante das ações de hunk à VM.
       Pendente: retirar o restante da composição Git do explorador de arquivos e auditoria restante da semântica Working Tree / Index / HEAD em projetos multifolder.
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
@@ -77,6 +80,9 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 ## Concluídas
+
+- [x] P03 · Separar revisão de HEAD, Index e Working Tree <!-- id: FE-P03 labels: git, estrutura, qualidade -->
+      Commit local 174c6a7a. Staged Changes abre HEAD→Index; Changes abre Index→Working Tree, em lista/árvore, clique/duplo clique e menu contextual. Comparação combinada contra HEAD permanece como padrão da API existente. Modo/raiz entram na identidade e restauração das abas; preview atualiza seu modo e não sobrescreve árvore antiga após leitura. Cabeçalhos e títulos identificam Index/Working Tree. Leitor recusa raiz incompatível e mostra erros do Git; desativa cor/diff externo/textconv na leitura atual para parser determinístico. Trinta e cinco testes aprovados, com dois repositórios reais, mesmo nome de arquivo e conteúdo distinto em HEAD/Index/disco, untracked, staged-only e repositório sem commit inicial. Ver [entrega](80-comparacoes-git-index-working-tree.md). A integração de mutações por hunk continua em P04.
 
 - [x] P02 · Selecionar repositório da revisão de PRs em workspace multifolder <!-- id: FE-P02 labels: git, estrutura, qualidade -->
       Commit local 026114b8. WorkspacePullRequestPanel recebe apenas raízes com Git detectado e oferece seletor com nome/contexto de caminho. Lista/detalhes ganham identidade por raiz; fetch/diff carregam a raiz selecionada, sem usar a primeira pasta como destino implícito. Troca/remoção invalida navegação pendente por geração, inclusive A→B→A. Reordenação preserva seleção; ausência de repositórios tem estado vazio sem consulta. Checkout/comentário bloqueiam troca de repositório e seleção de PR; exceções exibem erro e liberam contexto. Campo de comentário bloqueado durante envio. Quatorze testes combinados aprovados; revalidações direcionadas de cinco casos de workspace e envio de comentário. E2/E6/E7 conservam suas demais pendências. Ver [entrega](79-pr-repositorios-workspace.md).
