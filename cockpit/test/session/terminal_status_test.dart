@@ -218,11 +218,15 @@ void main() {
           () async {
             final provider = _ProcessTree();
             final shell = provider.snapshots.first;
+            final argv = [
+              executable,
+              if (kind == HarnessKind.ollama) ...['run', 'llama3'],
+            ];
             final harness = ProcessSnapshot(
               pid: 101,
               ppid: 100,
               executable: executable,
-              argv: [executable],
+              argv: argv,
             );
             provider.snapshots = [shell];
             final gateway = _NoopGateway();
@@ -238,7 +242,7 @@ void main() {
             final s = _session(monitor: monitor, gateway: gateway);
             s.setVisible(true);
             await Future<void>.delayed(Duration.zero);
-            s.sendKeys(utf8.encode('$executable\r'));
+            s.sendKeys(utf8.encode('${argv.join(' ')}\r'));
             if (emitMarkers) gateway._out.add(utf8.encode('\x1b]133;C\x07'));
             await Future<void>.delayed(const Duration(milliseconds: 300));
             provider.snapshots = [shell, harness];
