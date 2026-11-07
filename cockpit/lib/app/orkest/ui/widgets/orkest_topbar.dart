@@ -6,11 +6,8 @@ import 'package:orkest_code/app/core/ui/menu/workspace_menu_bridge.dart';
 import 'package:orkest_code/app/core/ui/settings_controller.dart';
 import 'package:orkest_code/app/core/ui/widgets/window_controls.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
-import 'package:orkest_code/app/orkest/ui/widgets/office_world_settings_dialog.dart';
 import 'package:orkest_code/i18n/strings.g.dart';
-import 'package:orkest_code/app/core/ui/widgets/hover_tap.dart';
 import 'package:flutter_modular/flutter_modular.dart';
-import 'package:orkest_code/app/core/ui/widgets/app_tooltip.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
 
 /// Top bar (~46px) customizada — substitui a barra nativa da janela. Semáforo
@@ -66,86 +63,13 @@ class OrkestTopbar extends StatelessWidget {
           ),
           const SizedBox(width: 8),
         ],
-        _IconBtn(
-          icon: Icons.view_sidebar_outlined,
-          tooltip: context.t.orkest.topbar.collapseSidebar,
-          active: !railVisible,
-          onTap: onToggleRail,
-        ),
-        const SizedBox(width: 8),
         Text(
           projectName,
           style: context.typo.title.copyWith(fontSize: 14, color: colors.text),
         ),
         const Spacer(),
-        if (officeAvailable && officeView && !Platform.isLinux) ...[
-          _IconBtn(
-            icon: Icons.palette_outlined,
-            tooltip: context.t.orkest.officeWorld.appearance,
-            onTap: () => showOfficeWorldSettings(context),
-          ),
-          const SizedBox(width: 8),
-        ],
-        if (officeAvailable) ...[
-          _IconBtn(
-            icon: officeView ? Icons.terminal : Icons.groups_2_outlined,
-            tooltip: officeView
-                ? context.t.orkest.topbar.showTerminals
-                : context.t.orkest.topbar.showOffice,
-            active: officeView,
-            onTap: onToggleOffice,
-          ),
-          const SizedBox(width: 8),
-        ],
-        _IconBtn(
-          icon: Icons.view_sidebar_outlined,
-          tooltip: filesEnabled
-              ? context.t.orkest.topbar.toggleFiles
-              : context.t.orkest.topbar.filesUnavailable,
-          active: !treeVisible && filesEnabled,
-          enabled: filesEnabled,
-          onTap: onToggleTree,
-        ),
         const WindowControlsTrailing(),
       ],
-    );
-  }
-}
-
-class _IconBtn extends StatelessWidget {
-  const _IconBtn({
-    required this.icon,
-    required this.tooltip,
-    required this.onTap,
-    this.active = false,
-    this.enabled = true,
-  });
-
-  final IconData icon;
-  final String tooltip;
-  final VoidCallback onTap;
-  final bool active;
-  final bool enabled;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final iconColor = !enabled
-        ? colors.text3.withValues(alpha: 0.35)
-        : (active ? colors.accentText : colors.text3);
-    return AppTooltip(
-      message: tooltip,
-      child: HoverTap(
-        onTap: enabled ? onTap : () {},
-        color: active ? colors.accentSoft : null,
-        hoverColor: enabled ? colors.panel3 : null,
-        borderRadius: BorderRadius.circular(5),
-        child: SizedBox(
-          width: 28,
-          height: 28,
-          child: Icon(icon, size: 17, color: iconColor),
-        ),
-      ),
     );
   }
 }

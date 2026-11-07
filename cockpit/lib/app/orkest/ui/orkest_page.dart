@@ -985,6 +985,10 @@ class _OrkestPageState extends State<OrkestPage> {
                       swapped: swapped,
                       rail: _RailPanel(
                         width: _railWidth,
+                        isOpen: railVisibleEff,
+                        onToggleRail: narrow
+                            ? () => setState(() => _leftDrawer = !_leftDrawer)
+                            : _vm.toggleRail,
                         handleOnLeft: swapped,
                         onDismiss: _dismissDrawers,
                         onResizeStart: () => _beginPanelDrag(_railWidth),
@@ -1101,6 +1105,8 @@ class _OrkestPageState extends State<OrkestPage> {
 class _RailPanel extends StatelessWidget {
   const _RailPanel({
     required this.width,
+    required this.isOpen,
+    required this.onToggleRail,
     required this.onDismiss,
     required this.onResizeStart,
     required this.onResize,
@@ -1109,6 +1115,8 @@ class _RailPanel extends StatelessWidget {
   });
 
   final double width;
+  final bool isOpen;
+  final VoidCallback onToggleRail;
   final VoidCallback onDismiss;
   final VoidCallback onResizeStart;
   final ValueChanged<double> onResize;
@@ -1121,102 +1129,110 @@ class _RailPanel extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final vm = context.watch<OrkestViewModel>();
-    return Stack(
+    final projectId = vm.selectedProjectId;
+    final isDebugging = projectId != null &&
+        (vm.debugForWorkspace(projectId).isRunning ||
+            vm.debugForWorkspace(projectId).isStopped);
+    final problemsCount = projectId != null
+        ? (vm.problemsForWorkspace(projectId).errorCount +
+            vm.problemsForWorkspace(projectId).warningCount)
+        : 0;
+
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        ProjectsRail(
-          width: width,
-          projects: vm.rootProjects,
-          worktreesOf: vm.worktreesOf,
-          worktreesExpanded: vm.worktreesExpanded,
-          onWorktreesExpanded: vm.setWorktreesExpanded,
-          selectedId: vm.selectedProjectId,
-          notificationCounts: vm.notificationCounts,
-          gitInfo: vm.gitInfo,
-          rootsSummary: vm.rootsGitSummary,
-          forkOriginName: vm.forkOriginName,
-          rootsOf: (id) => [
-            // O git é perguntado **por workspace**: no remoto a mesma root
-            // existe em hosts diferentes, então resolver pelo selecionado
-            // pintaria o badge do vizinho.
-            for (final r in vm.rootsOf(id))
-              (
-                path: r,
-                name: r.split('/').last,
-                git: vm.gitInfoForRootIn(id, r),
-              ),
-          ],
-          onSelect: (id) {
-            vm.selectProject(id);
-            onDismiss(); // fecha o drawer no mobile
-          },
-          onAdd: () => createWorkspace(context),
-          onConfigure: (project) => configureProject(context, project),
-          onDelete: (project) => deleteProject(context, project),
-          onCreateWorktree: (root, rootPath) =>
-              createWorktree(context, root, rootPath),
-          onRemoveWorktree: (fork) => removeWorktree(context, fork),
-          onUpdateWorktree: (fork) => updateWorktree(context, fork),
-          onForkWorktree: (base) => forkWorktree(context, base),
-          onMergeWorktree: (fork) => mergeWorktree(context, fork),
-          onSync: (project, rootPath) =>
-              syncProject(context, project, rootPath),
-          onPull: (project, rootPath) =>
-              pullProject(context, project, rootPath),
-          onPush: (project, rootPath) =>
-              pushProject(context, project, rootPath),
-          onFetch: (project, rootPath) =>
-              fetchProject(context, project, rootPath),
-          onReorder: (moved, target, before) =>
-              vm.reorderWorkspace(moved, target, before: before),
+        LeftToolStripe(
+          isRailOpen: isOpen,
+          onToggleRail: onToggleRail,
+          isBottomDockOpen: vm.bottomDockOpen,
+          bottomDockTab: vm.bottomDockTab,
+          onToggleBottomDock: vm.toggleBottomDock,
+          problemsCount: problemsCount,
+          isDebugging: isDebugging,
           onOpenSettings: () => context.pushNamed(RoutePaths.settings),
-          realms: vm.realms,
-          activeRealm: vm.activeRealm,
-          onSwitchRealm: (id) => unawaited(vm.switchRealm(id)),
-          onCreateRealm: () => createRealm(context),
-          onManageRealms: () => manageRealms(context),
-          moveTargetsOf: (projectId) => moveTargets(vm, projectId),
-          onMoveToRealm: (projectId, realmId) =>
-              unawaited(vm.moveWorkspaceToRealm(projectId, realmId)),
-          orkest: vm.orkestWorkspace,
-          onSelectOrkest: () {
-            vm.selectProject(Project.orkestId);
-            onDismiss();
-          },
-          onNewWorkspace: (anchor) => newWorkspaceMenu(context, vm, anchor),
-          onSelectRemote: (id) {
-            vm.selectProject(id);
-            onDismiss();
-          },
-          remoteGitInfoOf: vm.remoteGitInfoOf,
-          onRemoteWorkspaceAction: (wsId, action) =>
-              handleRemoteWorkspaceAction(context, wsId, action),
-          bottomTools: RailBottomDockTools(
-            isOpen: vm.bottomDockOpen,
-            selectedTab: vm.bottomDockTab,
-            onToggleTab: vm.toggleBottomDock,
-            isDebugging: vm.selectedProjectId != null &&
-                (vm.debugForWorkspace(vm.selectedProjectId!).isRunning ||
-                    vm.debugForWorkspace(vm.selectedProjectId!).isStopped),
-            problemsCount: vm.selectedProjectId != null
-                ? (vm.problemsForWorkspace(vm.selectedProjectId!).errorCount +
-                    vm.problemsForWorkspace(vm.selectedProjectId!).warningCount)
-                : 0,
-          ),
         ),
-        // Alça de arraste na borda VOLTADA PARA O CENTRO: borda direita quando o
-        // painel está à esquerda, e vice-versa com "Inverter panes" — do outro
-        // lado ela cairia na moldura da janela.
-        Positioned(
-          left: handleOnLeft ? 0 : null,
-          right: handleOnLeft ? null : 0,
-          top: 0,
-          bottom: 0,
-          child: _ResizeHandle(
-            onStart: onResizeStart,
-            onDelta: onResize,
-            onEnd: onResizeEnd,
+        if (isOpen)
+          Stack(
+            children: [
+              ProjectsRail(
+                width: width,
+                projects: vm.rootProjects,
+                worktreesOf: vm.worktreesOf,
+                worktreesExpanded: vm.worktreesExpanded,
+                onWorktreesExpanded: vm.setWorktreesExpanded,
+                selectedId: vm.selectedProjectId,
+                notificationCounts: vm.notificationCounts,
+                gitInfo: vm.gitInfo,
+                rootsSummary: vm.rootsGitSummary,
+                forkOriginName: vm.forkOriginName,
+                rootsOf: (id) => [
+                  for (final r in vm.rootsOf(id))
+                    (
+                      path: r,
+                      name: r.split('/').last,
+                      git: vm.gitInfoForRootIn(id, r),
+                    ),
+                ],
+                onSelect: (id) {
+                  vm.selectProject(id);
+                  onDismiss(); // fecha o drawer no mobile
+                },
+                onAdd: () => createWorkspace(context),
+                onConfigure: (project) => configureProject(context, project),
+                onDelete: (project) => deleteProject(context, project),
+                onCreateWorktree: (root, rootPath) =>
+                    createWorktree(context, root, rootPath),
+                onRemoveWorktree: (fork) => removeWorktree(context, fork),
+                onUpdateWorktree: (fork) => updateWorktree(context, fork),
+                onForkWorktree: (base) => forkWorktree(context, base),
+                onMergeWorktree: (fork) => mergeWorktree(context, fork),
+                onSync: (project, rootPath) =>
+                    syncProject(context, project, rootPath),
+                onPull: (project, rootPath) =>
+                    pullProject(context, project, rootPath),
+                onPush: (project, rootPath) =>
+                    pushProject(context, project, rootPath),
+                onFetch: (project, rootPath) =>
+                    fetchProject(context, project, rootPath),
+                onReorder: (moved, target, before) =>
+                    vm.reorderWorkspace(moved, target, before: before),
+                onOpenSettings: () => context.pushNamed(RoutePaths.settings),
+                realms: vm.realms,
+                activeRealm: vm.activeRealm,
+                onSwitchRealm: (id) => unawaited(vm.switchRealm(id)),
+                onCreateRealm: () => createRealm(context),
+                onManageRealms: () => manageRealms(context),
+                moveTargetsOf: (projectId) => moveTargets(vm, projectId),
+                onMoveToRealm: (projectId, realmId) =>
+                    unawaited(vm.moveWorkspaceToRealm(projectId, realmId)),
+                orkest: vm.orkestWorkspace,
+                onSelectOrkest: () {
+                  vm.selectProject(Project.orkestId);
+                  onDismiss();
+                },
+                onNewWorkspace: (anchor) => newWorkspaceMenu(context, vm, anchor),
+                onSelectRemote: (id) {
+                  vm.selectProject(id);
+                  onDismiss();
+                },
+                remoteGitInfoOf: vm.remoteGitInfoOf,
+                onRemoteWorkspaceAction: (wsId, action) =>
+                    handleRemoteWorkspaceAction(context, wsId, action),
+              ),
+              Positioned(
+                left: handleOnLeft ? 0 : null,
+                right: handleOnLeft ? null : 0,
+                top: 0,
+                bottom: 0,
+                child: _ResizeHandle(
+                  onStart: onResizeStart,
+                  onDelta: onResize,
+                  onEnd: onResizeEnd,
+                ),
+              ),
+            ],
           ),
-        ),
       ],
     );
   }
@@ -2376,7 +2392,7 @@ class _PanelScaffold extends StatelessWidget {
     if (!narrow) {
       return Row(
         children: [
-          if (leftOpen) leftPanel,
+          if (!swapped || leftOpen) leftPanel,
           Expanded(child: center),
           if (rightOpen) rightPanel,
         ],

@@ -438,3 +438,170 @@ class RailBottomDockTools extends StatelessWidget {
     );
   }
 }
+
+/// Barra de ferramentas vertical da extrema esquerda (Activity Bar / Tool Stripe),
+/// espelhando fielmente o padrão do Open IDE / JetBrains.
+class LeftToolStripe extends StatelessWidget {
+  const LeftToolStripe({
+    super.key,
+    required this.isRailOpen,
+    required this.onToggleRail,
+    required this.isBottomDockOpen,
+    required this.bottomDockTab,
+    required this.onToggleBottomDock,
+    this.problemsCount = 0,
+    this.isDebugging = false,
+    this.onOpenSettings,
+  });
+
+  final bool isRailOpen;
+  final VoidCallback onToggleRail;
+  final bool isBottomDockOpen;
+  final BottomDockTab bottomDockTab;
+  final ValueChanged<BottomDockTab> onToggleBottomDock;
+  final int problemsCount;
+  final bool isDebugging;
+  final VoidCallback? onOpenSettings;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return Container(
+      width: 42,
+      decoration: BoxDecoration(
+        color: colors.panel2,
+        border: Border(
+          right: BorderSide(color: colors.border),
+        ),
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 6),
+          // Botão Workspaces (Topo da Stripe)
+          _StripeIconButton(
+            key: const ValueKey('left-stripe-workspaces'),
+            icon: sc.LucideIcons.folderKanban,
+            tooltip: 'Workspaces (Projetos)',
+            isSelected: isRailOpen,
+            onTap: onToggleRail,
+          ),
+          const Spacer(),
+
+          // Ferramentas Inferiores (Canto Inferior Esquerdo)
+          // 🌿 Git (Histórico / Commits / Branches)
+          _StripeIconButton(
+            key: const ValueKey('left-stripe-git'),
+            icon: sc.LucideIcons.gitBranch,
+            tooltip: 'Git (Log & Commits)',
+            isSelected: isBottomDockOpen && bottomDockTab == BottomDockTab.git,
+            onTap: () => onToggleBottomDock(BottomDockTab.git),
+          ),
+          const SizedBox(height: 4),
+
+          // 🐛 Debug (DAP)
+          _StripeIconButton(
+            key: const ValueKey('left-stripe-debug'),
+            icon: sc.LucideIcons.bug,
+            tooltip: 'Debug (F5)',
+            isSelected: isBottomDockOpen && bottomDockTab == BottomDockTab.debug,
+            highlightColor: isDebugging ? colors.warn : null,
+            onTap: () => onToggleBottomDock(BottomDockTab.debug),
+          ),
+          const SizedBox(height: 4),
+
+          // ⚠️ Problems (LSP)
+          _StripeIconButton(
+            key: const ValueKey('left-stripe-problems'),
+            icon: sc.LucideIcons.circleAlert,
+            tooltip: 'Problems & Diagnostics',
+            isSelected: isBottomDockOpen && bottomDockTab == BottomDockTab.problems,
+            badgeCount: problemsCount,
+            onTap: () => onToggleBottomDock(BottomDockTab.problems),
+          ),
+          const SizedBox(height: 4),
+
+          if (onOpenSettings != null) ...[
+            _StripeIconButton(
+              key: const ValueKey('left-stripe-settings'),
+              icon: sc.LucideIcons.settings,
+              tooltip: 'Configurações',
+              isSelected: false,
+              onTap: onOpenSettings!,
+            ),
+            const SizedBox(height: 6),
+          ],
+        ],
+      ),
+    );
+  }
+}
+
+class _StripeIconButton extends StatelessWidget {
+  const _StripeIconButton({
+    super.key,
+    required this.icon,
+    required this.tooltip,
+    required this.isSelected,
+    required this.onTap,
+    this.badgeCount = 0,
+    this.highlightColor,
+  });
+
+  final IconData icon;
+  final String tooltip;
+  final bool isSelected;
+  final VoidCallback onTap;
+  final int badgeCount;
+  final Color? highlightColor;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+
+    return AppTooltip(
+      message: tooltip,
+      child: HoverTap(
+        onTap: onTap,
+        padding: const EdgeInsets.all(7),
+        borderRadius: BorderRadius.circular(5),
+        color: isSelected
+            ? colors.accent.withValues(alpha: 0.22)
+            : Colors.transparent,
+        child: Stack(
+          clipBehavior: Clip.none,
+          alignment: Alignment.center,
+          children: [
+            Icon(
+              icon,
+              size: 17,
+              color: isSelected
+                  ? (highlightColor ?? colors.accent)
+                  : (highlightColor ?? colors.text3),
+            ),
+            if (badgeCount > 0)
+              Positioned(
+                top: -5,
+                right: -7,
+                child: Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  decoration: BoxDecoration(
+                    color: colors.warn,
+                    borderRadius: BorderRadius.circular(6),
+                  ),
+                  child: Text(
+                    '$badgeCount',
+                    style: context.typo.mono.copyWith(
+                      fontSize: 8,
+                      color: Colors.black,
+                      fontWeight: FontWeight.bold,
+                    ),
+                  ),
+                ),
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}

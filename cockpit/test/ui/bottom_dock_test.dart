@@ -4,42 +4,45 @@ import 'package:orkest_code/app/orkest/ui/widgets/bottom_dock_host.dart';
 
 void main() {
   group('BottomStripeBar & BottomDockHost Tests', () {
-    testWidgets('BottomStripeBar renderiza abas Git, Debug, Problems e responde a cliques', (tester) async {
-      BottomDockTab? toggledTab;
+    testWidgets('LeftToolStripe renderiza workspaces no topo e ferramentas no canto inferior esquerdo', (tester) async {
+      bool railToggled = false;
+      BottomDockTab? bottomTab;
 
       await tester.pumpWidget(
         MaterialApp(
           theme: ThemeData.dark(),
           home: Scaffold(
-            body: BottomStripeBar(
-              isOpen: true,
-              selectedTab: BottomDockTab.debug,
-              onToggleTab: (tab) {
-                toggledTab = tab;
-              },
-              problemsCount: 5,
-              rightWidget: const Text('LSP Ready'),
+            body: LeftToolStripe(
+              isRailOpen: true,
+              onToggleRail: () => railToggled = true,
+              isBottomDockOpen: false,
+              bottomDockTab: BottomDockTab.debug,
+              onToggleBottomDock: (tab) => bottomTab = tab,
+              problemsCount: 3,
+              isDebugging: true,
             ),
           ),
         ),
       );
 
-      // Verifica itens do canto esquerdo
-      expect(find.text('Git'), findsOneWidget);
-      expect(find.text('Debug'), findsOneWidget);
-      expect(find.text('Problems'), findsOneWidget);
-      expect(find.text('5'), findsOneWidget); // Badge de problems
-      expect(find.text('LSP Ready'), findsOneWidget); // Status do lado direito
+      // Topo: workspaces
+      expect(find.byKey(const ValueKey('left-stripe-workspaces')), findsOneWidget);
 
-      // Clica no Git
-      await tester.tap(find.text('Git'));
-      await tester.pump();
-      expect(toggledTab, equals(BottomDockTab.git));
+      // Base: Git, Debug, Problems
+      expect(find.byKey(const ValueKey('left-stripe-git')), findsOneWidget);
+      expect(find.byKey(const ValueKey('left-stripe-debug')), findsOneWidget);
+      expect(find.byKey(const ValueKey('left-stripe-problems')), findsOneWidget);
+      expect(find.text('3'), findsOneWidget);
 
-      // Clica em Problems
-      await tester.tap(find.text('Problems'));
+      // Clica em Workspaces
+      await tester.tap(find.byKey(const ValueKey('left-stripe-workspaces')));
       await tester.pump();
-      expect(toggledTab, equals(BottomDockTab.problems));
+      expect(railToggled, isTrue);
+
+      // Clica em Git
+      await tester.tap(find.byKey(const ValueKey('left-stripe-git')));
+      await tester.pump();
+      expect(bottomTab, equals(BottomDockTab.git));
     });
 
     testWidgets('RailBottomDockTools renderiza no canto esquerdo e responde aos cliques', (tester) async {
