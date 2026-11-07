@@ -1603,9 +1603,24 @@ class _FileTreePanelState extends State<FileTreePanel> {
       onSectionChanged: _selectSourceControlSection,
       onMenuRequested: _showSourceControlMenu,
       changeCount: sourceControlChangeCount,
-      repositoryLabel: widget.roots.length == 1
-          ? '${widget.roots.first.name} · ${widget.roots.first.git?.branch ?? ""}'
-          : null,
+      repositoryLabel: () {
+        final gitRoots = widget.roots.where((r) => r.git != null).toList();
+        if (gitRoots.length == 1) {
+          final branch = gitRoots.first.git?.branch ?? '';
+          return branch.isEmpty
+              ? gitRoots.first.name
+              : '${gitRoots.first.name} · $branch';
+        }
+        if (gitRoots.length > 1) {
+          final summary = gitRoots
+              .map((r) => r.git?.branch.isNotEmpty == true
+                  ? '${r.name}:${r.git!.branch}'
+                  : r.name)
+              .join(', ');
+          return '${gitRoots.length} repos · $summary';
+        }
+        return null;
+      }(),
       changesBuilder: (_) => _ChangedTree(
         rootPath: widget.rootPath,
         roots: widget.roots,
@@ -3334,9 +3349,9 @@ class _ChangedTree extends StatelessWidget {
     }
 
     // Multi-root: agrega as mudanças de todas as roots, **seccionadas por
-    // root** — cabeçalho (nome + branch + contagem) e, dentro, a mesma
-    // visualização (lista/hierarquia) com paths relativos à root. Roots
-    // limpas não têm seção. Single-root cai no fluxo plano (sem cabeçalho).
+    // root** — cabeçalho (nome + branch) e, dentro, as seções staged/unstaged
+    // com paths relativos à root. Roots limpas não têm seção. Single-root
+    // cai no fluxo plano (sem cabeçalho de root).
     if (roots.length > 1) {
       return SingleChildScrollView(
         padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
@@ -3347,14 +3362,8 @@ class _ChangedTree extends StatelessWidget {
               ..._rootSection(
                 context,
                 root,
-                _filesUnder(root.path, stagedPaths),
-                true,
-              ),
-              ..._rootSection(
-                context,
-                root,
-                _filesUnder(root.path, unstagedPaths),
-                false,
+                _filesUnder(root, stagedPaths),
+                _filesUnder(root, unstagedPaths),
               ),
             ],
           ],
@@ -3362,25 +3371,36 @@ class _ChangedTree extends StatelessWidget {
       );
     }
 
+    final singleRoot = roots.isNotEmpty
+        ? roots.first
+        : WorkspaceRoot(path: rootPath, name: rootPath.split('/').last);
     return SingleChildScrollView(
       padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          _changeSection(context, _filesUnder(rootPath, stagedPaths), true),
-          _changeSection(context, _filesUnder(rootPath, unstagedPaths), false),
+          _changeSection(context, _filesUnder(singleRoot, stagedPaths), true),
+          _changeSection(context, _filesUnder(singleRoot, unstagedPaths), false),
         ],
       ),
     );
   }
 
-  /// Mudanças sob [base], com paths relativos a ela, ordenadas por pasta.
-  List<_ChangedFile> _filesUnder(String base, List<String> paths) {
+  /// Mudanças sob [root], com paths relativos a ela, ordenadas por pasta.
+  /// Se houver múltiplas roots, resolve deterministicamente pela raiz dona
+  /// mais específica (evitando duplicações em raízes aninhadas).
+  List<_ChangedFile> _filesUnder(WorkspaceRoot root, List<String> paths) {
+    final base = root.path;
     final normalized = base.endsWith('/') ? base : '$base/';
     final files = <_ChangedFile>[];
     for (final abs in paths) {
-      if (!abs.startsWith(normalized)) continue;
-      final rel = abs.substring(normalized.length);
+      if (!abs.startsWith(normalized) && abs != base) continue;
+      // Em multi-root, garante que a raiz atual é a dona mais específica.
+      if (roots.length > 1) {
+        final owner = _ownerRoot(abs);
+        if (owner != null && owner.path != root.path) continue;
+      }
+      final rel = abs == base ? '' : abs.substring(normalized.length);
       final slash = rel.lastIndexOf('/');
       files.add(
         _ChangedFile(
@@ -3397,6 +3417,13 @@ class _ChangedTree extends StatelessWidget {
       return ap.toLowerCase().compareTo(bp.toLowerCase());
     });
     return files;
+  }
+
+  WorkspaceRoot? _ownerRoot(String path) {
+    final matches = roots.where((r) => isUnderPath(path, r.path)).toList();
+    if (matches.isEmpty) return null;
+    matches.sort((a, b) => b.path.length.compareTo(a.path.length));
+    return matches.first;
   }
 
   Widget _changeSection(
@@ -3558,15 +3585,22 @@ class _ChangedTree extends StatelessWidget {
   List<Widget> _rootSection(
     BuildContext context,
     WorkspaceRoot root,
-    List<_ChangedFile> files,
-    bool staged,
+    List<_ChangedFile> stagedFiles,
+    List<_ChangedFile> unstagedFiles,
   ) {
-    if (files.isEmpty) return const [];
+    if (stagedFiles.isEmpty && unstagedFiles.isEmpty) return const [];
     return [
       _ScRootSection(
         root: root,
-        // O corpo respeita o toggle lista/hierarquia vigente.
-        body: _changeSection(context, files, staged),
+        // O corpo respeita o toggle lista/hierarquia vigente exibindo
+        // Staged Changes e Changes daquela raiz específica.
+        body: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            _changeSection(context, stagedFiles, true),
+            _changeSection(context, unstagedFiles, false),
+          ],
+        ),
       ),
     ];
   }

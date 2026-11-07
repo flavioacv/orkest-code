@@ -78,6 +78,14 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
 
 ## Concluídas
 
+- [x] P05 · Endurecer resolução multifolder Git no SourceControl e semântica de diff <!-- id: FE-P05 labels: git, estrutura, qualidade blockedBy: FE-P04 -->
+      Implementado: Resolução determinística e isolada de múltiplos repositórios Git em workspaces multifolder (multi-root).
+      Cabeçalho do SourceControlPanel dinâmico: identifica a quantidade de repositórios Git ativos e suas branches (`${gitRoots.length} repos · ${gitRoots.map((r) => '${r.name}:${r.git.branch}').join(', ')}`), preservando o nome e a branch de repositório único mesmo em workspaces mistos com pastas comuns sem Git.
+      Agrupamento unificado por repositório em _ChangedTree: cada raiz com alterações possui uma seção colapsável dedicada _ScRootSection contendo suas respectivas seções de Staged Changes e Changes, eliminando duplicações de cabeçalho.
+      Resolução determinística de raiz em OrkestViewModel e RemoteWorkspaceController: método rootContaining ordena as raízes candidatas por profundidade/especificidade de caminho, prevenindo que uma raiz pai capture indevidamente arquivos de subprojetos/sub-repositórios. Mapeamento de _filesUnder garante que cada arquivo pertença estritamente à sua raiz mais específica.
+      Operações atômicas isoladas: stageFiles, unstageFiles e discard operam isoladamente por repositório. commitStaged suporta repoRoot explícito e bloqueia commits ambíguos de múltiplos repositórios. Restauração de sessão de diff valida contenção real antes de fallback para project.path.
+      Validação: 5 testes de integração com repositórios Git reais temporários (git_multifolder_source_control_test.dart) aprovados, 17 testes da suíte combinada de Git/Diff aprovados e análise estática 100% limpa (dart analyze lib test com 0 erros e 0 avisos). Ver entrega em plan/82-resolucao-multifolder-git-source-control.md.
+
 - [x] P04 · Conectar ações granulares de hunk às sessões de produção <!-- id: FE-P04 labels: git, qualidade blockedBy: FE-P03 -->
       Implementado: Conexão real de ações granulares por hunk (stage, unstage e descarte) no DiffViewer, DiffViewerSession e OrkestViewModel via GitHunkService e GitController.
       Mutações permitidas apenas para diffs locais: workingTree conecta stage e discard; staged conecta unstage; head, diffs históricos e workspaces remotos permanecem estritamente somente-leitura.

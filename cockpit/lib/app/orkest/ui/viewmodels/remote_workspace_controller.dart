@@ -163,8 +163,12 @@ class RemoteWorkspaceController extends ChangeNotifier {
 
   /// Root (path no host) que contém [absolutePath], ou `null` se o caminho
   /// está fora de todas (ex.: solto na pasta-mãe de um multirepo).
+  /// Ordena por especificidade (caminho mais longo primeiro) para evitar que
+  /// uma raiz pai capture arquivos de sub-raízes ou repositórios filhos.
   String? rootContaining(String wsId, String absolutePath) {
-    for (final r in rootsOf(wsId)) {
+    final candidateRoots = rootsOf(wsId).toList()
+      ..sort((a, b) => b.length.compareTo(a.length));
+    for (final r in candidateRoots) {
       if (absolutePath == r || isUnderPath(absolutePath, r)) return r;
     }
     return null;

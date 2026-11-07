@@ -895,8 +895,12 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
 
   /// Root (path absoluto) que contém [absolutePath] no projeto [projectId],
   /// ou `null` se o caminho está fora de todas (ex.: solto na pasta-mãe).
+  /// Em multifolder, avalia da raiz mais específica (mais profunda) para a mais
+  /// rasa, evitando que uma raiz pai capture arquivos de sub-raízes ou sub-repos.
   String? rootContaining(String projectId, String absolutePath) {
-    for (final r in rootsOf(projectId)) {
+    final candidateRoots = rootsOf(projectId).toList()
+      ..sort((a, b) => b.length.compareTo(a.length));
+    for (final r in candidateRoots) {
       if (isUnderPath(absolutePath, r)) return r;
     }
     return null;
@@ -4583,15 +4587,21 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
     return result.$1 == 0 ? result.$2.trim() : null;
   }
 
-  Future<String?> commitStaged(String message, {String? amendHash}) async {
+  Future<String?> commitStaged(
+    String message, {
+    String? repoRoot,
+    String? amendHash,
+  }) async {
     final pid = _selectedProjectId;
     if (pid == null) return 'No workspace selected.';
     if (_activeRemoteHost() != null) {
       // Mesma regra do local: commit implícito em dois repositórios diferentes
       // não acontece — o usuário comita cada um por vez.
-      final staged = rootsOf(
-        pid,
-      ).where((root) => stagedFilesOfRoot(root).isNotEmpty).toList();
+      final staged = repoRoot != null
+          ? [repoRoot]
+          : rootsOf(
+              pid,
+            ).where((root) => stagedFilesOfRoot(root).isNotEmpty).toList();
       if (staged.isEmpty) {
         return 'There are no staged changes to commit.';
       }
@@ -4618,9 +4628,11 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
         return '$e';
       }
     }
-    final roots = rootsOf(
-      pid,
-    ).where((root) => stagedFilesOfRoot(root).isNotEmpty).toList();
+    final roots = repoRoot != null
+        ? [repoRoot]
+        : rootsOf(
+            pid,
+          ).where((root) => stagedFilesOfRoot(root).isNotEmpty).toList();
     if (roots.isEmpty) return 'There are no staged changes to commit.';
     if (roots.length > 1) {
       return 'Stage changes belong to multiple repositories. Commit them separately.';
@@ -7046,7 +7058,10 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
             ? GitDiffTarget.fromName(desc['diffTarget'])
             : GitDiffTarget.head;
         final root =
-            repoRoot ?? rootContaining(project.id, path) ?? project.path;
+            repoRoot ??
+            rootContaining(project.id, path) ??
+            (isUnderPath(path, project.path) ? project.path : null);
+        if (root == null || root.isEmpty) return false;
         if (commitHash != null && (repoRoot == null || repoRoot.isEmpty)) {
           return false;
         }
