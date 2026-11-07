@@ -44,7 +44,8 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Watches e Console de Depuração: seção interativa de Watches no `DebugPanel` (`run-config-add-watch`) com avaliação sob demanda das variáveis monitoradas quando a execução pausa, e console interativo com histórico de logs DAP e prompt de avaliação de expressões no runtime (`controller.evaluate`).
       Barra de ferramentas de depuração (`DebugToolbar`): botões de pausar, continuar, step-over, step-in, step-out, stop, e ações de Hot Reload e Hot Restart para sessões Flutter.
       Validação deste incremento: análise estática limpa (`dart analyze` com 0 erros/avisos em todo o escopo de debug e editor) e 30 testes automatizados aprovados na suíte completa de DAP (`dap_core_test.dart`, `dart_debug_adapter_test.dart`, `multi_language_debug_adapter_test.dart`, `debug_widgets_test.dart`).
-      Pendente: homologar configurações e adaptadores instalados no ambiente real; suportar referências nomeadas entre pastas (${workspaceFolder:nome}) e ampliar descoberta contextual de configurações em subprojetos não adicionados ao workspace. A descoberta das raízes explícitas foi entregue em D01.
+      Incrementos D01/D02 concluídos: descoberta nas raízes explícitas do workspace, suporte a referências nomeadas entre pastas (${workspaceFolder:nome} e ${workspaceRoot:nome}) e descoberta contextual de subprojetos monorepo com configurações próprias.
+      Pendente: homologar configurações e adaptadores instalados no ambiente real com processos reais.
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 - [ ] E1 · Extrair host de ferramentas do explorador <!-- id: FE-E1 labels: estrutura -->
@@ -77,6 +78,12 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 ## Concluídas
+
+- [x] D02 · Suportar referências nomeadas entre pastas e descoberta contextual em subprojetos <!-- id: FE-D02 labels: debug, estrutura, qualidade blockedBy: FE-D01 -->
+      Implementado: Resolução determinística de variáveis nomeadas de workspace `${workspaceFolder:nome}` e `${workspaceRoot:nome}` em `LaunchJsonLoader` e `RunConfigurationLoader`.
+      Suporte multi-root em launch/run: mapeia cada raiz do workspace multifolder pelo seu nome/basename (`p.basename(root)`), permitindo que configurações em um subprojeto referenciem binários, scripts e caminhos de outros subprojetos do mesmo workspace.
+      Descoberta contextual em subprojetos de monorepo: quando o arquivo em foco pertence a um subprojeto interno não registrado diretamente como raiz de topo, mas contendo `.vscode/launch.json` ou `.orkest/run.json`, suas configurações são carregadas dinamicamente com nomes qualificados, além da geração contextual via `RunConfigurationProducer`.
+      Validação: análise estática estrita 100% limpa (`dart analyze --fatal-infos` com 0 erros e 0 avisos em toda a base e testes) e 41 testes automatizados aprovados na suíte de debug, tarefas e adapters DAP (`run_configuration_test.dart`, `debug_widgets_test.dart`, `dart_debug_adapter_test.dart`, `dap_core_test.dart`, `multi_language_debug_adapter_test.dart`). Ver relatório em plan/84-referencias-nomeadas-descoberta-subprojetos.md.
 
 - [x] P06 · Desacoplar composição de Source Control do explorador de arquivos <!-- id: FE-P06 labels: git, estrutura, qualidade blockedBy: FE-P05 -->
       Implementado: Desacoplamento estrutural da visão de alterações Git (Source Control) de dentro de `file_tree_panel.dart` para o widget dedicado `source_control_changes_view.dart`.

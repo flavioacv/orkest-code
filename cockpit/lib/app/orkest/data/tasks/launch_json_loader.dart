@@ -18,15 +18,27 @@ class LaunchJsonLoader {
   ];
 
   /// Carrega as configurações de execução do workspace em [workspaceRoot].
-  Future<List<RunConfiguration>> load(String workspaceRoot) async {
+  Future<List<RunConfiguration>> load(
+    String workspaceRoot, {
+    List<String> workspaceRoots = const [],
+  }) async {
     if (workspaceRoot.isEmpty) return const [];
+
+    final allRoots = <String>{
+      workspaceRoot,
+      ...workspaceRoots,
+    }.toList();
 
     for (final relative in candidatePaths) {
       final file = File(p.join(workspaceRoot, relative));
       if (await file.exists()) {
         try {
           final content = await file.readAsString();
-          final configs = parseContent(content, workspaceRoot);
+          final configs = parseContent(
+            content,
+            workspaceRoot,
+            workspaceRoots: allRoots,
+          );
           if (configs.isNotEmpty) {
             return configs;
           }
@@ -38,7 +50,11 @@ class LaunchJsonLoader {
   }
 
   /// Parseia o conteúdo JSONC de um arquivo launch/run.
-  List<RunConfiguration> parseContent(String content, String workspaceRoot) {
+  List<RunConfiguration> parseContent(
+    String content,
+    String workspaceRoot, {
+    List<String> workspaceRoots = const [],
+  }) {
     final Object? decoded;
     try {
       decoded = jsonDecode(stripJsonc(content));
@@ -54,7 +70,11 @@ class LaunchJsonLoader {
     final configs = <RunConfiguration>[];
     for (final raw in rawConfigs) {
       if (raw is! Map) continue;
-      final parsed = _parseEntry(raw, workspaceRoot);
+      final parsed = _parseEntry(
+        raw,
+        workspaceRoot,
+        workspaceRoots: workspaceRoots,
+      );
       if (parsed != null) {
         configs.add(parsed);
       }
@@ -63,22 +83,41 @@ class LaunchJsonLoader {
     return configs;
   }
 
-  RunConfiguration? _parseEntry(Map<dynamic, dynamic> m, String workspaceRoot) {
+  RunConfiguration? _parseEntry(
+    Map<dynamic, dynamic> m,
+    String workspaceRoot, {
+    List<String> workspaceRoots = const [],
+  }) {
     final name = m['name'] as String?;
     final type = (m['type'] as String?) ?? 'custom';
     if (name == null || name.isEmpty) return null;
 
     final rawProgram = (m['program'] as String?) ?? '';
-    final program = _substituteVariables(rawProgram, workspaceRoot);
+    final program = _substituteVariables(
+      rawProgram,
+      workspaceRoot,
+      workspaceRoots: workspaceRoots,
+    );
 
     final rawCwd = (m['cwd'] as String?) ?? workspaceRoot;
-    final cwd = _resolveCwd(_substituteVariables(rawCwd, workspaceRoot), workspaceRoot);
+    final cwd = _resolveCwd(
+      _substituteVariables(
+        rawCwd,
+        workspaceRoot,
+        workspaceRoots: workspaceRoots,
+      ),
+      workspaceRoot,
+    );
 
     final rawArgs = m['args'];
     final args = <String>[];
     if (rawArgs is List) {
       for (final a in rawArgs) {
-        args.add(_substituteVariables(a.toString(), workspaceRoot));
+        args.add(_substituteVariables(
+          a.toString(),
+          workspaceRoot,
+          workspaceRoots: workspaceRoots,
+        ));
       }
     }
 
@@ -86,8 +125,11 @@ class LaunchJsonLoader {
     final env = <String, String>{};
     if (rawEnv is Map) {
       for (final entry in rawEnv.entries) {
-        env[entry.key.toString()] =
-            _substituteVariables(entry.value.toString(), workspaceRoot);
+        env[entry.key.toString()] = _substituteVariables(
+          entry.value.toString(),
+          workspaceRoot,
+          workspaceRoots: workspaceRoots,
+        );
       }
     }
 
@@ -109,10 +151,21 @@ class LaunchJsonLoader {
     );
   }
 
-  String _substituteVariables(String input, String workspaceRoot) {
-    return input
+  String _substituteVariables(
+    String input,
+    String workspaceRoot, {
+    List<String> workspaceRoots = const [],
+  }) {
+    var result = input
         .replaceAll(r'${workspaceFolder}', workspaceRoot)
         .replaceAll(r'${workspaceRoot}', workspaceRoot);
+    for (final wr in workspaceRoots) {
+      final folderName = p.basename(wr);
+      result = result
+          .replaceAll('\${workspaceFolder:$folderName}', wr)
+          .replaceAll('\${workspaceRoot:$folderName}', wr);
+    }
+    return result;
   }
 
   String _resolveCwd(String cwd, String workspaceRoot) {

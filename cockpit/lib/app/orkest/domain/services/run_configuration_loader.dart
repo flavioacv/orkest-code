@@ -21,7 +21,12 @@ class RunConfigurationLoader {
     final result = <RunConfiguration>[];
     for (final folder in roots) {
       result.addAll(
-        await _loadFolder(folder, file, qualifyNames: roots.length > 1),
+        await _loadFolder(
+          folder,
+          file,
+          qualifyNames: roots.length > 1,
+          workspaceRoots: roots,
+        ),
       );
     }
     if (file != null) {
@@ -32,16 +37,28 @@ class RunConfigurationLoader {
       if (containingRoots.isNotEmpty) {
         final boundary = containingRoots.first;
         var fileRoot = p.dirname(absoluteFile);
-        while (p.isWithin(boundary, fileRoot)) {
+        var foundSubproject = false;
+        while (p.isWithin(boundary, fileRoot) || fileRoot == boundary) {
           if ([
             'pubspec.yaml',
             'package.json',
             'Cargo.toml',
             'pyproject.toml',
           ].any((marker) => File(p.join(fileRoot, marker)).existsSync())) {
+            foundSubproject = true;
             break;
           }
+          if (fileRoot == boundary) break;
           fileRoot = p.dirname(fileRoot);
+        }
+        if (foundSubproject && fileRoot != boundary && !roots.contains(fileRoot)) {
+          final subConfigs = await _loadFolder(
+            fileRoot,
+            file,
+            qualifyNames: true,
+            workspaceRoots: roots,
+          );
+          result.addAll(subConfigs);
         }
         result.addAll(
           const RunConfigurationProducer().produceForFile(
@@ -58,6 +75,7 @@ class RunConfigurationLoader {
     String root,
     String? file, {
     required bool qualifyNames,
+    List<String> workspaceRoots = const [],
   }) async {
     final result = <RunConfiguration>[];
     for (final name in ['.vscode/launch.json', '.orkest/run.json']) {
@@ -69,7 +87,12 @@ class RunConfigurationLoader {
       }
       for (final raw in data['configurations'] as List) {
         if (raw is! Map) continue;
-        final config = expand(raw.cast<String, dynamic>(), root, file);
+        final config = expand(
+          raw.cast<String, dynamic>(),
+          root,
+          file,
+          workspaceRoots: workspaceRoots,
+        );
         final configuredCwd = config['cwd'] as String? ?? root;
         config['cwd'] = p.normalize(
           p.isAbsolute(configuredCwd)
@@ -113,17 +136,25 @@ class RunConfigurationLoader {
   static Map<String, dynamic> expand(
     Map<String, dynamic> config,
     String root,
-    String? file,
-  ) {
+    String? file, {
+    List<String> workspaceRoots = const [],
+  }) {
     Object? value(Object? input) {
       if (input is String) {
-        final expanded = input
+        var expanded = input
             .replaceAll(r'${workspaceFolder}', root)
+            .replaceAll(r'${workspaceRoot}', root)
             .replaceAll(r'${file}', file ?? '')
             .replaceAll(
               r'${fileDirname}',
               file == null ? root : p.dirname(file),
             );
+        for (final wr in workspaceRoots) {
+          final folderName = p.basename(wr);
+          expanded = expanded
+              .replaceAll('\${workspaceFolder:$folderName}', wr)
+              .replaceAll('\${workspaceRoot:$folderName}', wr);
+        }
         if (expanded.contains(r'${')) {
           throw FormatException('Unsupported launch variable in $expanded');
         }
