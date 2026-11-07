@@ -11,6 +11,71 @@ import 'package:path/path.dart' as p;
 
 void main() {
   test(
+    'multifolder configurations preserve folder context and unique ids',
+    () async {
+      final temp = await Directory.systemTemp.createTemp('orkest-multifolder-');
+      addTearDown(() => temp.delete(recursive: true));
+      final roots = [p.join(temp.path, 'app'), p.join(temp.path, 'api')];
+      for (final root in roots) {
+        await Directory(p.join(root, '.vscode')).create(recursive: true);
+        await File(p.join(root, '.vscode', 'launch.json')).writeAsString(r'''{
+        "configurations": [{"name":"Start","type":"node","cwd":"src",
+          "program":"${workspaceFolder}/src/main.js", "env":{"ROOT":"${workspaceFolder}"}}]
+      }''');
+      }
+      final configs = await const RunConfigurationLoader().load(
+        roots.first,
+        null,
+        workspaceRoots: [roots.first, roots.last, p.join(roots.last, '.')],
+      );
+      expect(configs, hasLength(2));
+      expect(configs.map((config) => config.id).toSet(), hasLength(2));
+      expect(configs.map((config) => config.name).toSet(), hasLength(2));
+      for (var index = 0; index < roots.length; index++) {
+        expect(configs[index].cwd, p.join(roots[index], 'src'));
+        expect(configs[index].launchArguments['cwd'], configs[index].cwd);
+        expect(configs[index].program, p.join(roots[index], 'src', 'main.js'));
+        expect(configs[index].env['ROOT'], roots[index]);
+      }
+      final reloaded = await const RunConfigurationLoader().load(
+        roots.last,
+        null,
+        workspaceRoots: roots,
+      );
+      expect(
+        reloaded.map((config) => config.id).toSet(),
+        configs.map((config) => config.id).toSet(),
+      );
+    },
+  );
+
+  test(
+    'contextual runs use the active folder and exclude outside files',
+    () async {
+      final temp = await Directory.systemTemp.createTemp('orkest-run-roots-');
+      addTearDown(() => temp.delete(recursive: true));
+      final app = p.join(temp.path, 'app');
+      final api = p.join(temp.path, 'api');
+      await Directory(p.join(api, 'lib')).create(recursive: true);
+      await File(p.join(api, 'pubspec.yaml')).writeAsString('name: api');
+      final configs = await const RunConfigurationLoader().load(
+        app,
+        p.join(api, 'lib', 'main.dart'),
+        workspaceRoots: [api],
+      );
+      expect(configs, isNotEmpty);
+      expect(configs.every((config) => config.cwd == api), isTrue);
+      expect(
+        await const RunConfigurationLoader().load(
+          app,
+          p.join(temp.path, 'outside.dart'),
+        ),
+        isEmpty,
+      );
+    },
+  );
+
+  test(
     'launch loader preserves attach, environment and adapter-specific arguments',
     () async {
       final temp = await Directory.systemTemp.createTemp('orkest-launch-');

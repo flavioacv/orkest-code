@@ -1962,6 +1962,7 @@ class _TreePanel extends StatelessWidget {
                   vm: vm,
                   workspaceId: workspaceId,
                   root: vm.treeRootPath,
+                  workspaceRoots: vm.treeRoots,
                   path: vm.focusedFilePath,
                 )
               : null,
@@ -1991,7 +1992,10 @@ class _TreePanel extends StatelessWidget {
                     final root = vm.treeRootPath;
                     final service = GitPullRequestService();
                     final ref = await service.fetchReviewRef(root, number);
-                    if (vm.selectedProjectId != workspaceId || vm.treeRootPath != root) return;
+                    if (vm.selectedProjectId != workspaceId ||
+                        vm.treeRootPath != root) {
+                      return;
+                    }
                     await vm.openCommitDiff(
                       root,
                       ref,

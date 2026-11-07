@@ -9,7 +9,56 @@ import 'package:path/path.dart' as p;
 class RunConfigurationLoader {
   const RunConfigurationLoader();
 
-  Future<List<RunConfiguration>> load(String root, String? file) async {
+  Future<List<RunConfiguration>> load(
+    String root,
+    String? file, {
+    List<String> workspaceRoots = const [],
+  }) async {
+    final roots = <String>{
+      for (final path in [root, ...workspaceRoots])
+        if (path.isNotEmpty) p.normalize(p.absolute(path)),
+    }.toList();
+    final result = <RunConfiguration>[];
+    for (final folder in roots) {
+      result.addAll(
+        await _loadFolder(folder, file, qualifyNames: roots.length > 1),
+      );
+    }
+    if (file != null) {
+      final absoluteFile = p.normalize(p.absolute(file));
+      final containingRoots =
+          roots.where((folder) => p.isWithin(folder, absoluteFile)).toList()
+            ..sort((a, b) => b.length.compareTo(a.length));
+      if (containingRoots.isNotEmpty) {
+        final boundary = containingRoots.first;
+        var fileRoot = p.dirname(absoluteFile);
+        while (p.isWithin(boundary, fileRoot)) {
+          if ([
+            'pubspec.yaml',
+            'package.json',
+            'Cargo.toml',
+            'pyproject.toml',
+          ].any((marker) => File(p.join(fileRoot, marker)).existsSync())) {
+            break;
+          }
+          fileRoot = p.dirname(fileRoot);
+        }
+        result.addAll(
+          const RunConfigurationProducer().produceForFile(
+            filePath: absoluteFile,
+            projectRoot: fileRoot,
+          ),
+        );
+      }
+    }
+    return result;
+  }
+
+  Future<List<RunConfiguration>> _loadFolder(
+    String root,
+    String? file, {
+    required bool qualifyNames,
+  }) async {
     final result = <RunConfiguration>[];
     for (final name in ['.vscode/launch.json', '.orkest/run.json']) {
       final source = File(p.join(root, name));
@@ -21,6 +70,12 @@ class RunConfigurationLoader {
       for (final raw in data['configurations'] as List) {
         if (raw is! Map) continue;
         final config = expand(raw.cast<String, dynamic>(), root, file);
+        final configuredCwd = config['cwd'] as String? ?? root;
+        config['cwd'] = p.normalize(
+          p.isAbsolute(configuredCwd)
+              ? configuredCwd
+              : p.join(root, configuredCwd),
+        );
         var type = config['type'] as String? ?? '';
         final pubspec = File(
           p.join(config['cwd'] as String? ?? root, 'pubspec.yaml'),
@@ -37,8 +92,10 @@ class RunConfigurationLoader {
         if (!['launch', 'attach'].contains(request)) continue;
         result.add(
           RunConfiguration(
-            id: '$name:${result.length}',
-            name: config['name'] as String? ?? type,
+            id: '${source.path}:${result.length}',
+            name: qualifyNames
+                ? '${config['name'] as String? ?? type} · $root'
+                : config['name'] as String? ?? type,
             type: type,
             program: config['program'] as String? ?? '',
             cwd: config['cwd'] as String? ?? root,
@@ -49,26 +106,6 @@ class RunConfigurationLoader {
           ),
         );
       }
-    }
-    if (file != null) {
-      var fileRoot = p.dirname(file);
-      while (p.isWithin(root, fileRoot)) {
-        if ([
-          'pubspec.yaml',
-          'package.json',
-          'Cargo.toml',
-          'pyproject.toml',
-        ].any((marker) => File(p.join(fileRoot, marker)).existsSync())) {
-          break;
-        }
-        fileRoot = p.dirname(fileRoot);
-      }
-      result.addAll(
-        const RunConfigurationProducer().produceForFile(
-          filePath: file,
-          projectRoot: fileRoot,
-        ),
-      );
     }
     return result;
   }

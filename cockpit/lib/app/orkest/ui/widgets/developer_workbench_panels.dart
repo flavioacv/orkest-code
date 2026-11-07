@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:orkest_code/i18n/strings.g.dart';
 
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart' as sc;
 import 'package:orkest_code/app/core/domain/entities/lsp_symbol.dart';
 import 'package:orkest_code/app/orkest/domain/entities/run_configuration.dart';
@@ -21,10 +22,12 @@ class WorkspaceDebugPanel extends StatefulWidget {
     required this.workspaceId,
     required this.root,
     this.path,
+    this.workspaceRoots = const [],
   });
   final OrkestViewModel vm;
   final String workspaceId;
   final String root;
+  final List<String> workspaceRoots;
   final String? path;
   @override
   State<WorkspaceDebugPanel> createState() => _WorkspaceDebugPanelState();
@@ -46,6 +49,7 @@ class _WorkspaceDebugPanelState extends State<WorkspaceDebugPanel> {
     _configurations = const RunConfigurationLoader().load(
       widget.root,
       widget.path,
+      workspaceRoots: widget.workspaceRoots,
     );
     _selected = null;
   }
@@ -53,7 +57,11 @@ class _WorkspaceDebugPanelState extends State<WorkspaceDebugPanel> {
   @override
   void didUpdateWidget(WorkspaceDebugPanel oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (oldWidget.path != widget.path || oldWidget.root != widget.root) _load();
+    if (oldWidget.path != widget.path ||
+        oldWidget.root != widget.root ||
+        !listEquals(oldWidget.workspaceRoots, widget.workspaceRoots)) {
+      _load();
+    }
   }
 
   Future<void> _start(RunConfiguration config, {bool debug = true}) async {
