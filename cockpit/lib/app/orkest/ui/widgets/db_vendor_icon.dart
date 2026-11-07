@@ -13,8 +13,11 @@ class DbVendorIcon extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // Procura o arquivo correspondente ao id do vendor ou cai no engine subjacente
-    final fileName = '${vendor.id}.svg';
+    // Para MSSQL / SQL Server usa o ícone mssql.svg existente
+    final fileName = switch (vendor) {
+      DbVendorKind.mssql => 'mssql.svg',
+      _ => '${vendor.id}.svg',
+    };
     final fallbackFileName = '${vendor.engine.name}.svg';
 
     return SvgPicture.asset(
