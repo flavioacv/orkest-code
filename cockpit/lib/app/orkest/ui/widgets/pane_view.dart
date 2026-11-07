@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/orkest/ui/widgets/ide_tab_surface.dart';
 import 'dart:async';
 import 'dart:io';
 import 'dart:math';
@@ -205,15 +206,15 @@ class TabPointerSelection extends StatelessWidget {
 
 /// Ícone por tipo de aba (usado na aba e no dropdown "todas as abas").
 IconData _tabIcon(PaneItem? item) {
-  if (item is NeovimSession) return Icons.edit_note_outlined;
-  if (item is TerminalSession) return Icons.terminal_outlined;
-  if (item is TaskOutputSession) return Icons.play_circle_outline;
-  if (item is TelemetryCaseSession) return Icons.monitor_heart_outlined;
-  if (item is FileViewerSession) return Icons.description_outlined;
-  if (item is DiffViewerSession) return Icons.difference_outlined;
-  if (item is RedisBrowserSession) return Icons.grid_on_outlined;
-  if (item is MongoBrowserSession) return Icons.data_object_outlined;
-  if (item is NotebookSession) return Icons.menu_book_outlined;
+  if (item is NeovimSession) return LucideIcons.pencilLine;
+  if (item is TerminalSession) return LucideIcons.terminal;
+  if (item is TaskOutputSession) return LucideIcons.play;
+  if (item is TelemetryCaseSession) return LucideIcons.activity;
+  if (item is FileViewerSession) return LucideIcons.fileText;
+  if (item is DiffViewerSession) return LucideIcons.fileDiff;
+  if (item is RedisBrowserSession) return LucideIcons.table2;
+  if (item is MongoBrowserSession) return LucideIcons.database;
+  if (item is NotebookSession) return LucideIcons.notebook;
   if (item is EmptyTab) return Icons.edit_outlined;
   return Icons.auto_awesome;
 }
@@ -981,73 +982,67 @@ class _TabState extends State<_Tab> {
                 ),
               );
 
-        final tabBody = Container(
-          height: 40,
+        final tabBody = SizedBox(
+          height: IdeTabSurface.headerHeight,
           width: _kTabWidth,
-          alignment: Alignment.center,
-          decoration: BoxDecoration(
-            color: widget.active ? colors.panel : colors.bg,
-            border: Border(right: BorderSide(color: colors.border)),
-          ),
-          foregroundDecoration: isFocusedActive
-              ? BoxDecoration(
-                  border: Border(
-                    bottom: BorderSide(color: colors.accent, width: 2),
-                  ),
-                )
-              : null,
-          padding: const EdgeInsets.only(left: 11, right: 7),
-          child: Row(
-            children: [
-              // Ícone pelo NOME DO ARQUIVO, não pelo título: `.panel`/`.ckp`
-              // trocam o título da aba pelo `title:` do front-matter, e sem a
-              // extensão o ícone caía no genérico.
-              if (s is FileViewerSession)
-                FileTypeIcon.file(
-                  s.scratch ? s.title : s.path.split('/').last,
-                  size: 15,
-                )
-              // Browsers de banco usam o logo de marca do engine (plano 52/53).
-              else if (s is RedisBrowserSession)
-                const DbEngineIcon(DbEngine.redis, size: 14)
-              else if (s is MongoBrowserSession)
-                const DbEngineIcon(DbEngine.mongo, size: 14)
-              else
-                PaneTabLeading(
-                  item: s,
-                  defaultIcon: icon,
-                  size: 13,
-                  iconColor: isFocusedActive
-                      ? colors.accentText
-                      : (widget.active ? colors.text2 : colors.text3),
-                ),
-              const SizedBox(width: 7),
-              Expanded(child: titleWidget),
-              const SizedBox(width: 10),
-              if (streaming) ...[
-                SizedBox(
-                  width: 10,
-                  height: 10,
-                  child: CircularProgressIndicator(
-                    size: 10,
-                    strokeWidth: 1.5,
-                    color: colors.accent,
-                  ),
-                ),
-                const SizedBox(width: 7),
-              ] else if (s.unseenFinish) ...[
-                Container(
-                  width: 7,
-                  height: 7,
-                  decoration: BoxDecoration(
-                    color: colors.accent,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                const SizedBox(width: 7),
-              ],
-              _TabClose(onTap: _requestClose, dirty: dirty),
-            ],
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 2, vertical: 6),
+            child: IdeTabSurface(
+              selected: widget.active,
+              focused: widget.focused,
+              child: Row(
+                children: [
+                  // Ícone pelo NOME DO ARQUIVO, não pelo título: `.panel`/`.ckp`
+                  // trocam o título da aba pelo `title:` do front-matter, e sem a
+                  // extensão o ícone caía no genérico.
+                  if (s is FileViewerSession)
+                    FileTypeIcon.file(
+                      s.scratch ? s.title : s.path.split('/').last,
+                      size: 15,
+                    )
+                  // Browsers de banco usam o logo de marca do engine (plano 52/53).
+                  else if (s is RedisBrowserSession)
+                    const DbEngineIcon(DbEngine.redis, size: 14)
+                  else if (s is MongoBrowserSession)
+                    const DbEngineIcon(DbEngine.mongo, size: 14)
+                  else
+                    PaneTabLeading(
+                      item: s,
+                      defaultIcon: icon,
+                      size: 13,
+                      iconColor: isFocusedActive
+                          ? colors.accentText
+                          : (widget.active ? colors.text2 : colors.text3),
+                    ),
+                  const SizedBox(width: 7),
+                  Expanded(child: titleWidget),
+                  const SizedBox(width: 10),
+                  if (streaming) ...[
+                    SizedBox(
+                      width: 10,
+                      height: 10,
+                      child: CircularProgressIndicator(
+                        size: 10,
+                        strokeWidth: 1.5,
+                        color: colors.accent,
+                      ),
+                    ),
+                    const SizedBox(width: 7),
+                  ] else if (s.unseenFinish) ...[
+                    Container(
+                      width: 7,
+                      height: 7,
+                      decoration: BoxDecoration(
+                        color: colors.accent,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 7),
+                  ],
+                  _TabClose(onTap: _requestClose, dirty: dirty),
+                ],
+              ),
+            ),
           ),
         );
 
@@ -1215,7 +1210,7 @@ class _TabCloseState extends State<_TabClose> {
                     shape: BoxShape.circle,
                   ),
                 )
-              : Icon(Icons.close, size: 12, color: colors.text3),
+              : Icon(LucideIcons.x, size: 12, color: colors.text3),
         ),
       ),
     );
@@ -1262,7 +1257,7 @@ class _TabAdd extends StatelessWidget {
                     ? Border(right: BorderSide(color: colors.border))
                     : null,
               ),
-              child: Icon(Icons.add, size: 14, color: colors.text4),
+              child: Icon(LucideIcons.plus, size: 14, color: colors.text4),
             ),
           ),
         ),

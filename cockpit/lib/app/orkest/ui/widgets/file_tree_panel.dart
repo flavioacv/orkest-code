@@ -1655,14 +1655,15 @@ class _FileTreePanelState extends State<FileTreePanel> {
         compareRefs: widget.onCompareGitRefs,
         refreshToken: widget.gitHistoryRevision,
       ),
-      pullRequestsBuilder: widget.gitPullRequestsPanel ??
+      pullRequestsBuilder:
+          widget.gitPullRequestsPanel ??
           (widget.gitPullRequestService != null && widget.rootPath.isNotEmpty
               ? (_) => GitPrReviewPanel(
-                    repoRoot: widget.rootPath,
-                    service: widget.gitPullRequestService!,
-                    onSelectFileChange: widget.onSelectPrFileChange,
-                    onCheckoutSuccess: widget.onCheckoutPrSuccess,
-                  )
+                  repoRoot: widget.rootPath,
+                  service: widget.gitPullRequestService!,
+                  onSelectFileChange: widget.onSelectPrFileChange,
+                  onCheckoutSuccess: widget.onCheckoutPrSuccess,
+                )
               : null),
       composerBuilder: (_) => _CommitComposer(
         controller: _commitMessage,
@@ -1841,14 +1842,15 @@ class _FileTreePanelState extends State<FileTreePanel> {
       title: title,
       icon: icon,
       badgeCount: count,
+      badgeColor: id == WorkbenchToolId.problems ? colors.warn : null,
       builder: (_) => buildTool(id),
     );
     final tr = context.t.orkest.fileTreePanel;
     final panelWidth = _isCollapsed
         ? 44.0
         : _isMaximized
-            ? (widget.width < 650.0 ? 650.0 : widget.width)
-            : widget.width;
+        ? (widget.width < 650.0 ? 650.0 : widget.width)
+        : widget.width;
     return Container(
       width: panelWidth,
       decoration: BoxDecoration(
@@ -1859,6 +1861,7 @@ class _FileTreePanelState extends State<FileTreePanel> {
         children: [
           Expanded(
             child: WorkbenchToolHost(
+              showActiveTitle: true,
               isCollapsed: _isCollapsed,
               isMaximized: _isMaximized,
               onToggleCollapse: _toggleCollapseToolWindow,
@@ -1881,53 +1884,53 @@ class _FileTreePanelState extends State<FileTreePanel> {
                 tool(
                   WorkbenchToolId.files,
                   tr.filesTooltip,
-                  Icons.folder_outlined,
+                  LucideIcons.folderOpen,
                 ),
                 if (hasSearch)
-                  tool(WorkbenchToolId.search, tr.searchTooltip, Icons.search),
+                  tool(
+                    WorkbenchToolId.search,
+                    tr.searchTooltip,
+                    LucideIcons.search,
+                  ),
                 if (widget.isGitRepo)
                   tool(
                     WorkbenchToolId.sourceControl,
                     tr.sourceControlTooltip,
-                    Icons.account_tree_outlined,
+                    LucideIcons.gitBranch,
                     count: sourceControlChangeCount,
                   ),
                 if (hasDebug)
-                  tool(
-                    WorkbenchToolId.debug,
-                    'Run & Debug',
-                    Icons.bug_report_outlined,
-                  ),
+                  tool(WorkbenchToolId.debug, 'Run & Debug', LucideIcons.bug),
                 if (hasProblems)
                   tool(
                     WorkbenchToolId.problems,
                     'Problems',
-                    Icons.warning_amber_rounded,
+                    LucideIcons.circleAlert,
                     count: widget.problemsCount,
                   ),
                 if (hasOutline)
                   tool(
                     WorkbenchToolId.outline,
                     'Outline',
-                    Icons.account_tree_outlined,
+                    LucideIcons.listTree,
                   ),
                 if (hasDatabase)
                   tool(
                     WorkbenchToolId.database,
                     tr.databaseTooltip,
-                    Icons.storage,
+                    LucideIcons.database,
                   ),
                 if (hasTelemetry)
                   tool(
                     WorkbenchToolId.telemetry,
                     context.t.orkest.telemetry.tooltip,
-                    Icons.monitor_heart_outlined,
+                    LucideIcons.activity,
                   ),
                 if (hasGallery)
                   tool(
                     WorkbenchToolId.gallery,
                     tr.galleryTooltip,
-                    Icons.auto_awesome_mosaic_outlined,
+                    LucideIcons.layoutGrid,
                   ),
               ],
             ),

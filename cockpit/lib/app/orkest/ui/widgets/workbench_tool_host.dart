@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/orkest/ui/widgets/ide_tab_surface.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
 import 'package:orkest_code/app/core/ui/widgets/app_tooltip.dart';
 import 'package:orkest_code/app/core/ui/widgets/hover_tap.dart';
@@ -11,12 +12,14 @@ class WorkbenchTool {
     required this.icon,
     required this.builder,
     this.badgeCount = 0,
+    this.badgeColor,
   });
   final String id;
   final String title;
   final IconData icon;
   final WidgetBuilder builder;
   final int badgeCount;
+  final Color? badgeColor;
 }
 
 /// Visibility of a tool, including any containing tool host.
@@ -108,26 +111,31 @@ class _WorkbenchToolHostState extends State<WorkbenchToolHost> {
               const SizedBox(height: 6),
               for (final tool in tools)
                 Padding(
-                  padding:
-                      const EdgeInsets.symmetric(vertical: 2, horizontal: 4),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 2,
+                    horizontal: 4,
+                  ),
                   child: AppTooltip(
                     message: tool.title,
                     child: HoverTap(
                       key: ValueKey('${tool.id}-collapsed-tab'),
-                      color: tool.id == active
-                          ? colors.panel2
-                          : Colors.transparent,
-                      borderRadius: BorderRadius.circular(5),
+                      color: Colors.transparent,
+                      hoverColor: Colors.transparent,
+                      borderRadius: IdeTabSurface.radius,
                       onTap: () {
-                        widget.onSelected(tool.id);
                         widget.onToggleCollapse?.call();
+                        widget.onSelected(tool.id);
                       },
-                      padding: const EdgeInsets.all(8),
-                      child: Icon(
-                        tool.icon,
-                        size: 16,
-                        color:
-                            tool.id == active ? colors.accent : colors.text3,
+                      padding: EdgeInsets.zero,
+                      child: IdeTabSurface(
+                        selected: tool.id == active,
+                        child: Icon(
+                          tool.icon,
+                          size: IdeTabSurface.iconSize,
+                          color: tool.id == active
+                              ? colors.accentText
+                              : colors.text2,
+                        ),
                       ),
                     ),
                   ),
@@ -135,8 +143,9 @@ class _WorkbenchToolHostState extends State<WorkbenchToolHost> {
             ],
           )
         : Container(
-            height: 40,
+            height: IdeTabSurface.headerHeight,
             decoration: BoxDecoration(
+              color: colors.bg,
               border: Border(bottom: BorderSide(color: colors.border)),
             ),
             child: Row(
@@ -156,46 +165,52 @@ class _WorkbenchToolHostState extends State<WorkbenchToolHost> {
                               message: tool.title,
                               child: HoverTap(
                                 key: ValueKey('${tool.id}-tab'),
-                                color: tool.id == active
-                                    ? colors.panel2
-                                    : Colors.transparent,
-                                borderRadius: BorderRadius.circular(5),
+                                color: Colors.transparent,
+                                hoverColor: Colors.transparent,
+                                borderRadius: IdeTabSurface.radius,
                                 onTap: () => widget.onSelected(tool.id),
-                                padding: const EdgeInsets.all(6),
-                                child: Row(
-                                  mainAxisSize: MainAxisSize.min,
-                                  children: [
-                                    Icon(
-                                      tool.icon,
-                                      size: 16,
-                                      color: tool.id == active
-                                          ? colors.text
-                                          : colors.text3,
-                                    ),
-                                    if (widget.showActiveTitle &&
-                                        tool.id == active) ...[
-                                      const SizedBox(width: 5),
-                                      Text(
-                                        tool.title,
-                                        style: context.typo.label.copyWith(
-                                          fontSize: 11,
-                                          color: colors.text,
-                                        ),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 1,
+                                ),
+                                child: IdeTabSurface(
+                                  selected: tool.id == active,
+                                  child: Row(
+                                    mainAxisSize: MainAxisSize.min,
+                                    children: [
+                                      Icon(
+                                        tool.icon,
+                                        size: IdeTabSurface.iconSize,
+                                        color: tool.id == active
+                                            ? colors.accentText
+                                            : colors.text2,
                                       ),
-                                    ],
-                                    if (tool.badgeCount > 0) ...[
-                                      const SizedBox(width: 3),
-                                      Text(
-                                        tool.badgeCount > 99
-                                            ? '99+'
-                                            : '${tool.badgeCount}',
-                                        style: context.typo.mono.copyWith(
-                                          fontSize: 9,
-                                          color: colors.warn,
+                                      if (widget.showActiveTitle &&
+                                          tool.id == active) ...[
+                                        const SizedBox(width: 5),
+                                        Text(
+                                          tool.title,
+                                          style: context.typo.label.copyWith(
+                                            fontSize: 11,
+                                            color: colors.text,
+                                          ),
                                         ),
-                                      ),
+                                      ],
+                                      if (tool.badgeCount > 0) ...[
+                                        const SizedBox(width: 3),
+                                        Text(
+                                          tool.badgeCount > 99
+                                              ? '99+'
+                                              : '${tool.badgeCount}',
+                                          style: context.typo.mono.copyWith(
+                                            fontSize: 9,
+                                            color:
+                                                tool.badgeColor ??
+                                                colors.accentText,
+                                          ),
+                                        ),
+                                      ],
                                     ],
-                                  ],
+                                  ),
                                 ),
                               ),
                             ),
@@ -264,7 +279,8 @@ class _WorkbenchToolHostState extends State<WorkbenchToolHost> {
                         child: ExcludeFocus(
                           excluding: widget.isCollapsed || tool.id != active,
                           child: WorkbenchToolVisibility(
-                            active: parentActive &&
+                            active:
+                                parentActive &&
                                 !widget.isCollapsed &&
                                 tool.id == active,
                             child: Builder(builder: tool.builder),

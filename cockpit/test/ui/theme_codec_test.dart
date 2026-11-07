@@ -57,7 +57,10 @@ void main() {
       // Não declarado → vem da base, incluindo syntax e terminal.
       expect(dark.ui.bg, AppColors.dark.bg);
       expect(dark.syntax.keyword, SyntaxColors.githubDark.keyword);
-      expect(dark.terminal.background, orkestTerminalThemeDark.background);
+      expect(
+        dark.terminal.background,
+        orkestDefaultTheme.variantFor(Brightness.dark).terminal.background,
+      );
     });
 
     test('extends usa o built-in nomeado como base', () {
@@ -168,18 +171,15 @@ void main() {
       }
     });
 
-    test(
-      'Orkest 2: as camadas elevadas ficam acima do chrome E do conteúdo',
-      () {
-        for (final b in Brightness.values) {
-          final ui = orkest2Theme.variantFor(b).ui;
-          // panel2 = composer/cards/seleção. Aparece sobre o chrome claro e sobre
-          // o conteúdo escuro; tem de ler como elevação nos dois.
-          expect(lum(ui.panel2), greaterThan(lum(ui.panel)));
-          expect(lum(ui.panel2), greaterThan(lum(ui.bg)));
-        }
-      },
-    );
+    test('Orkest 2: as camadas elevadas ficam acima do chrome E do conteúdo', () {
+      for (final b in Brightness.values) {
+        final ui = orkest2Theme.variantFor(b).ui;
+        // panel2 = composer/cards/seleção. Aparece sobre o chrome claro e sobre
+        // o conteúdo escuro; tem de ler como elevação nos dois.
+        expect(lum(ui.panel2), greaterThan(lum(ui.panel)));
+        expect(lum(ui.panel2), greaterThan(lum(ui.bg)));
+      }
+    });
 
     test('Orkest 2: o terminal acompanha o fundo da aba', () {
       for (final b in Brightness.values) {

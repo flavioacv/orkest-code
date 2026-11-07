@@ -80,6 +80,8 @@ void main() {
         ),
       );
 
+      addTearDown(session.dispose);
+
       // Simulate active monochrome harness (Claude Code)
       session.applyClaudeStatus(
         status: TerminalStatus.working,
@@ -104,6 +106,8 @@ void main() {
 
       // Wait: activeHarness is set via monitor or status
       expect(find.byType(PaneTabLeading), findsOneWidget);
+      // The empty fake stream reports exit asynchronously and debounces status.
+      await tester.pump(const Duration(milliseconds: 60));
     });
 
     testWidgets('renders SvgPicture for each harness kind correctly', (
@@ -111,12 +115,14 @@ void main() {
     ) async {
       for (final kind in HarnessKind.values) {
         final spec = HarnessCatalog.getSpec(kind)!;
+        final session = _createDummySessionWithHarness(kind);
+        addTearDown(session.dispose);
 
         await tester.pumpWidget(
           MaterialApp(
             home: Scaffold(
               body: PaneTabLeading(
-                item: _createDummySessionWithHarness(kind),
+                item: session,
                 defaultIcon: Icons.terminal_outlined,
                 iconColor: Colors.green,
               ),

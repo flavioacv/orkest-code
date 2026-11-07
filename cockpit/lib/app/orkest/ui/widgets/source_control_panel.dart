@@ -57,7 +57,7 @@ class SourceControlPanel extends StatelessWidget {
                   onTap: () => onMenuRequested(context),
                   padding: const EdgeInsets.all(4),
                   child: Icon(
-                    Icons.more_horiz,
+                    LucideIcons.ellipsis,
                     size: 16,
                     color: context.colors.text3,
                   ),
@@ -71,21 +71,21 @@ class SourceControlPanel extends StatelessWidget {
             showActiveTitle: true,
             selectedId: switch (section) {
               SourceControlSection.history => 'source-control-history',
-              SourceControlSection.pullRequests => 'source-control-pull-requests',
+              SourceControlSection.pullRequests =>
+                'source-control-pull-requests',
               _ => 'source-control-changes',
             },
-            onSelected: (id) => onSectionChanged(
-              switch (id) {
-                'source-control-history' => SourceControlSection.history,
-                'source-control-pull-requests' => SourceControlSection.pullRequests,
-                _ => SourceControlSection.changes,
-              },
-            ),
+            onSelected: (id) => onSectionChanged(switch (id) {
+              'source-control-history' => SourceControlSection.history,
+              'source-control-pull-requests' =>
+                SourceControlSection.pullRequests,
+              _ => SourceControlSection.changes,
+            }),
             tools: [
               WorkbenchTool(
                 id: 'source-control-changes',
                 title: tr.changes,
-                icon: Icons.edit_note_outlined,
+                icon: LucideIcons.fileDiff,
                 badgeCount: changeCount,
                 builder: (context) => Column(
                   children: [
@@ -97,14 +97,14 @@ class SourceControlPanel extends StatelessWidget {
               WorkbenchTool(
                 id: 'source-control-history',
                 title: tr.history,
-                icon: Icons.history,
+                icon: LucideIcons.gitCommitHorizontal,
                 builder: historyBuilder,
               ),
               if (pullRequestsBuilder != null)
                 WorkbenchTool(
                   id: 'source-control-pull-requests',
                   title: 'Pull Requests',
-                  icon: Icons.call_split,
+                  icon: LucideIcons.gitPullRequest,
                   builder: pullRequestsBuilder!,
                 ),
             ],
