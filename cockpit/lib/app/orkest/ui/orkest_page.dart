@@ -1,5 +1,6 @@
 import 'package:orkest_code/app/orkest/domain/contracts/git_diff_reader.dart';
 import 'package:orkest_code/app/orkest/ui/actions/pull_request_review_actions.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/bottom_dock_host.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/developer_workbench_panels.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/problems_panel.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/workspace_pull_request_panel.dart';
@@ -1190,6 +1191,9 @@ class _CenterPanelState extends State<_CenterPanel> {
   final Set<TerminalSession> _observedTerminalSessions = <TerminalSession>{};
   bool _officeInitialized = false;
   bool _terminalSessionRebuildQueued = false;
+  bool _bottomDockOpen = false;
+  BottomDockTab _bottomDockTab = BottomDockTab.debug;
+  double _bottomDockHeight = 280.0;
 
   @override
   void initState() {
@@ -1373,7 +1377,64 @@ class _CenterPanelState extends State<_CenterPanel> {
               child: terminalWorkspace,
             )
           else
-            Positioned.fill(child: terminalWorkspace),
+            Positioned.fill(
+              child: Column(
+                children: [
+                  Expanded(child: terminalWorkspace),
+                  if (projectId != null)
+                    BottomDockHost(
+                      isOpen: _bottomDockOpen,
+                      selectedTab: _bottomDockTab,
+                      onTabSelected: (tab) =>
+                          setState(() => _bottomDockTab = tab),
+                      onClose: () => setState(() => _bottomDockOpen = false),
+                      height: _bottomDockHeight,
+                      onHeightChanged: (h) =>
+                          setState(() => _bottomDockHeight = h),
+                      isDebugging: vm.debugForWorkspace(projectId).isRunning ||
+                          vm.debugForWorkspace(projectId).isStopped,
+                      debugContent: WorkspaceDebugPanel(
+                        key: ValueKey('dock-debug-$projectId'),
+                        vm: vm,
+                        workspaceId: projectId,
+                        root: vm.treeRootPath,
+                        workspaceRoots: vm.treeRoots,
+                        path: vm.focusedFilePath,
+                      ),
+                      problemsContent: ProblemsPanel(
+                        controller: vm.problemsForWorkspace(projectId),
+                        onNavigateToSource: (file, line, col) =>
+                            vm.openFile(file, revealLine: line, isPreview: false),
+                      ),
+                      problemsCount:
+                          vm.problemsForWorkspace(projectId).errorCount +
+                              vm.problemsForWorkspace(projectId).warningCount,
+                    ),
+                  BottomStripeBar(
+                    isOpen: _bottomDockOpen,
+                    selectedTab: _bottomDockTab,
+                    onToggleTab: (tab) {
+                      setState(() {
+                        if (_bottomDockOpen && _bottomDockTab == tab) {
+                          _bottomDockOpen = false;
+                        } else {
+                          _bottomDockOpen = true;
+                          _bottomDockTab = tab;
+                        }
+                      });
+                    },
+                    isDebugging: projectId != null &&
+                        (vm.debugForWorkspace(projectId).isRunning ||
+                            vm.debugForWorkspace(projectId).isStopped),
+                    problemsCount: projectId != null
+                        ? (vm.problemsForWorkspace(projectId).errorCount +
+                            vm.problemsForWorkspace(projectId).warningCount)
+                        : 0,
+                    rightWidget: const _LspStatusBar(),
+                  ),
+                ],
+              ),
+            ),
         // O terminal é a superfície mobile. Ao detectar um prompt de
         // permissão/pergunta, oferecemos somente o caminho seguro: abrir a
         // sessão real, preservando as escolhas específicas de cada CLI.
@@ -1971,18 +2032,9 @@ class _TreePanel extends StatelessWidget {
       children: [
         FileTreePanel(
           workspaceId: workspaceId,
-          debugPanel:
-              workspaceId != null &&
-                  vm.selectedProject?.isRemoteTerminal == false
-              ? WorkspaceDebugPanel(
-                  key: ValueKey(workspaceId),
-                  vm: vm,
-                  workspaceId: workspaceId,
-                  root: vm.treeRootPath,
-                  workspaceRoots: vm.treeRoots,
-                  path: vm.focusedFilePath,
-                )
-              : null,
+          // O Debug agora reside no Bottom Dock (área inferior expansível, padrão Open IDEA),
+          // despoluindo a barra lateral direita de ferramentas.
+          debugPanel: null,
           problemsPanel:
               workspaceId != null &&
                   vm.selectedProject?.isRemoteTerminal == false
