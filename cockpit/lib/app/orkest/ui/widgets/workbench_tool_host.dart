@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart'
+    show PopupMenuButton, PopupMenuItem;
 import 'package:orkest_code/app/orkest/ui/widgets/ide_tab_surface.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
 import 'package:orkest_code/app/core/ui/widgets/app_tooltip.dart';
@@ -152,72 +154,135 @@ class _WorkbenchToolHostState extends State<WorkbenchToolHost> {
             child: Row(
               children: [
                 Expanded(
-                  child: SingleChildScrollView(
-                    scrollDirection: Axis.horizontal,
-                    padding: const EdgeInsets.symmetric(horizontal: 10),
-                    child: Row(
-                      children: [
-                        for (final tool in tools)
-                          Semantics(
-                            label: tool.title,
-                            selected: tool.id == active,
-                            button: true,
-                            child: AppTooltip(
-                              message: tool.title,
-                              child: HoverTap(
-                                key: ValueKey('${tool.id}-tab'),
-                                color: Colors.transparent,
-                                hoverColor: Colors.transparent,
-                                borderRadius: IdeTabSurface.radius,
-                                onTap: () => widget.onSelected(tool.id),
-                                padding: const EdgeInsets.symmetric(
-                                  horizontal: 1,
-                                ),
-                                child: IdeTabSurface(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: SingleChildScrollView(
+                          scrollDirection: Axis.horizontal,
+                          physics: const BouncingScrollPhysics(),
+                          padding: const EdgeInsets.symmetric(horizontal: 6),
+                          child: Row(
+                            children: [
+                              for (final tool in tools)
+                                Semantics(
+                                  label: tool.title,
                                   selected: tool.id == active,
-                                  child: Row(
-                                    mainAxisSize: MainAxisSize.min,
-                                    children: [
-                                      Icon(
-                                        tool.icon,
-                                        size: IdeTabSurface.iconSize,
-                                        color: tool.id == active
-                                            ? colors.accentText
-                                            : colors.text2,
+                                  button: true,
+                                  child: AppTooltip(
+                                    message: tool.title,
+                                    child: HoverTap(
+                                      key: ValueKey('${tool.id}-tab'),
+                                      color: Colors.transparent,
+                                      hoverColor: Colors.transparent,
+                                      borderRadius: IdeTabSurface.radius,
+                                      onTap: () => widget.onSelected(tool.id),
+                                      padding: const EdgeInsets.symmetric(
+                                        horizontal: 1,
                                       ),
-                                      if (widget.showActiveTitle &&
-                                          tool.id == active) ...[
-                                        const SizedBox(width: 5),
-                                        Text(
-                                          tool.title,
-                                          style: context.typo.label.copyWith(
-                                            fontSize: 11,
-                                            color: colors.text,
-                                          ),
+                                      child: IdeTabSurface(
+                                        selected: tool.id == active,
+                                        child: Row(
+                                          mainAxisSize: MainAxisSize.min,
+                                          children: [
+                                            Icon(
+                                              tool.icon,
+                                              size: IdeTabSurface.iconSize,
+                                              color: tool.id == active
+                                                  ? colors.accentText
+                                                  : colors.text2,
+                                            ),
+                                            if (widget.showActiveTitle &&
+                                                tool.id == active) ...[
+                                              const SizedBox(width: 5),
+                                              Text(
+                                                tool.title,
+                                                style: context.typo.label.copyWith(
+                                                  fontSize: 11,
+                                                  color: colors.text,
+                                                ),
+                                              ),
+                                            ],
+                                            if (tool.badgeCount > 0) ...[
+                                              const SizedBox(width: 3),
+                                              Text(
+                                                tool.badgeCount > 99
+                                                    ? '99+'
+                                                    : '${tool.badgeCount}',
+                                                style: context.typo.mono.copyWith(
+                                                  fontSize: 9,
+                                                  color:
+                                                      tool.badgeColor ??
+                                                      colors.accentText,
+                                                ),
+                                              ),
+                                            ],
+                                          ],
                                         ),
-                                      ],
-                                      if (tool.badgeCount > 0) ...[
-                                        const SizedBox(width: 3),
-                                        Text(
-                                          tool.badgeCount > 99
-                                              ? '99+'
-                                              : '${tool.badgeCount}',
-                                          style: context.typo.mono.copyWith(
-                                            fontSize: 9,
-                                            color:
-                                                tool.badgeColor ??
-                                                colors.accentText,
-                                          ),
-                                        ),
-                                      ],
-                                    ],
+                                      ),
+                                    ),
                                   ),
                                 ),
+                            ],
+                          ),
+                        ),
+                      ),
+                      // Dropdown de ferramentas excedentes para garantir 100% de visibilidade (Open IDEA)
+                      PopupMenuButton<String>(
+                        tooltip: 'Mais ferramentas',
+                        icon: Icon(
+                          LucideIcons.chevronDown,
+                          size: 13,
+                          color: colors.text3,
+                        ),
+                        color: colors.panel2,
+                        padding: EdgeInsets.zero,
+                        constraints: const BoxConstraints(minWidth: 140),
+                        onSelected: widget.onSelected,
+                        itemBuilder: (context) => [
+                          for (final tool in tools)
+                            PopupMenuItem<String>(
+                              value: tool.id,
+                              height: 32,
+                              child: Row(
+                                children: [
+                                  Icon(
+                                    tool.icon,
+                                    size: 14,
+                                    color: tool.id == active
+                                        ? colors.accent
+                                        : colors.text2,
+                                  ),
+                                  const SizedBox(width: 8),
+                                  Expanded(
+                                    child: Text(
+                                      tool.title,
+                                      style: context.typo.body.copyWith(
+                                        fontSize: 12,
+                                        fontWeight: tool.id == active
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                        color: tool.id == active
+                                            ? colors.text
+                                            : colors.text2,
+                                      ),
+                                    ),
+                                  ),
+                                  if (tool.badgeCount > 0) ...[
+                                    const SizedBox(width: 6),
+                                    Text(
+                                      '${tool.badgeCount}',
+                                      style: context.typo.mono.copyWith(
+                                        fontSize: 10,
+                                        color: tool.badgeColor ?? colors.accentText,
+                                      ),
+                                    ),
+                                  ],
+                                ],
                               ),
                             ),
-                          ),
-                      ],
-                    ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
                 if (widget.actions != null) ...widget.actions!,

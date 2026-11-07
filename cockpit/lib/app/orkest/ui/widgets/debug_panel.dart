@@ -171,92 +171,207 @@ class _DebugPanelState extends State<DebugPanel> {
                   color: colors.panel,
                   border: Border(bottom: BorderSide(color: colors.border)),
                 ),
-                child: Row(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    // Botão Iniciar (Play)
-                    AppTooltip(
-                      message: currentConfig != null
-                          ? 'Iniciar ${currentConfig.name} (F5)'
-                          : 'Selecione uma configuração',
-                      child: HoverTap(
-                        key: const ValueKey('run-config-start'),
-                        onTap: currentConfig != null
-                            ? () {
-                                if (widget.onStartConfiguration != null) {
-                                  widget.onStartConfiguration!(currentConfig);
-                                } else {
-                                  widget.controller.startFromRunConfiguration(
-                                    config: currentConfig,
-                                  );
-                                }
-                              }
-                            : null,
-                        padding: const EdgeInsets.all(6),
-                        borderRadius: BorderRadius.circular(4),
-                        color: colors.gitStaged.withValues(alpha: 0.15),
-                        child: Icon(
-                          sc.LucideIcons.play,
-                          size: 14,
-                          color: colors.gitStaged,
+                    Row(
+                      children: [
+                        // Botão Iniciar (Play)
+                        AppTooltip(
+                          message: currentConfig != null
+                              ? 'Iniciar ${currentConfig.name} (F5)'
+                              : 'Selecione uma configuração',
+                          child: HoverTap(
+                            key: const ValueKey('run-config-start'),
+                            onTap: currentConfig != null
+                                ? () {
+                                    if (widget.onStartConfiguration != null) {
+                                      widget.onStartConfiguration!(currentConfig);
+                                    } else {
+                                      widget.controller.startFromRunConfiguration(
+                                        config: currentConfig,
+                                      );
+                                    }
+                                  }
+                                : null,
+                            padding: const EdgeInsets.all(6),
+                            borderRadius: BorderRadius.circular(4),
+                            color: colors.gitStaged.withValues(alpha: 0.15),
+                            child: Icon(
+                              sc.LucideIcons.play,
+                              size: 14,
+                              color: colors.gitStaged,
+                            ),
+                          ),
                         ),
-                      ),
-                    ),
-                    const SizedBox(width: 8),
+                        const SizedBox(width: 8),
 
-                    // Dropdown ou Nome da Configuração
-                    Expanded(
-                      child: widget.configurations.isEmpty
-                          ? Text(
-                              'Nenhum alvo detectado',
-                              style: context.typo.body.copyWith(
-                                fontSize: 11,
-                                color: colors.text4,
-                              ),
-                            )
-                          : Container(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 8,
-                                vertical: 4,
-                              ),
-                              decoration: BoxDecoration(
-                                color: colors.panel2,
-                                border: Border.all(color: colors.border),
-                                borderRadius: BorderRadius.circular(4),
-                              ),
-                              child: Row(
-                                children: [
-                                  Icon(
-                                    currentConfig?.isTest == true
-                                        ? Icons.check_box_outlined
-                                        : sc.LucideIcons.cpu,
-                                    size: 12,
-                                    color: colors.accent,
+                        // Dropdown ou Nome da Configuração
+                        Expanded(
+                          child: widget.configurations.isEmpty
+                              ? Text(
+                                  'Nenhum alvo detectado',
+                                  style: context.typo.body.copyWith(
+                                    fontSize: 11,
+                                    color: colors.text4,
                                   ),
-                                  const SizedBox(width: 6),
-                                  Expanded(
-                                    child: Text(
-                                      currentConfig?.name ?? 'Configuração',
-                                      maxLines: 1,
-                                      overflow: TextOverflow.ellipsis,
-                                      style: context.typo.body.copyWith(
-                                        fontSize: 11,
-                                        fontWeight: FontWeight.w600,
-                                        color: colors.text,
+                                )
+                              : Container(
+                                  padding: const EdgeInsets.symmetric(
+                                    horizontal: 8,
+                                    vertical: 4,
+                                  ),
+                                  decoration: BoxDecoration(
+                                    color: colors.panel2,
+                                    border: Border.all(color: colors.border),
+                                    borderRadius: BorderRadius.circular(4),
+                                  ),
+                                  child: Row(
+                                    children: [
+                                      Icon(
+                                        currentConfig?.isTest == true
+                                            ? Icons.check_box_outlined
+                                            : sc.LucideIcons.cpu,
+                                        size: 12,
+                                        color: colors.accent,
                                       ),
-                                    ),
+                                      const SizedBox(width: 6),
+                                      Expanded(
+                                        child: Text(
+                                          currentConfig?.name ?? 'Configuração',
+                                          maxLines: 1,
+                                          overflow: TextOverflow.ellipsis,
+                                          style: context.typo.body.copyWith(
+                                            fontSize: 11,
+                                            fontWeight: FontWeight.w600,
+                                            color: colors.text,
+                                          ),
+                                        ),
+                                      ),
+                                      if (widget.configurations.length > 1) ...[
+                                        const SizedBox(width: 4),
+                                        Icon(
+                                          sc.LucideIcons.chevronDown,
+                                          size: 12,
+                                          color: colors.text3,
+                                        ),
+                                      ],
+                                    ],
                                   ),
-                                  if (widget.configurations.length > 1) ...[
-                                    const SizedBox(width: 4),
-                                    Icon(
-                                      sc.LucideIcons.chevronDown,
-                                      size: 12,
-                                      color: colors.text3,
-                                    ),
-                                  ],
-                                ],
+                                ),
+                        ),
+                      ],
+                    ),
+
+                    // Barra de Ações Rápidas de Debugging (Padrão Open IDEA)
+                    if (isRunning || isStopped) ...[
+                      const SizedBox(height: 6),
+                      Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 4,
+                          vertical: 2,
+                        ),
+                        decoration: BoxDecoration(
+                          color: colors.panel2,
+                          borderRadius: BorderRadius.circular(4),
+                          border: Border.all(color: colors.border),
+                        ),
+                        child: Row(
+                          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+                          children: [
+                            // Resume (F9) ou Pause
+                            if (isStopped)
+                              AppTooltip(
+                                message: 'Resume (F9)',
+                                child: HoverTap(
+                                  key: const ValueKey('debug-action-resume'),
+                                  onTap: widget.controller.resume,
+                                  padding: const EdgeInsets.all(4),
+                                  child: Icon(
+                                    Icons.play_arrow,
+                                    size: 16,
+                                    color: colors.gitStaged,
+                                  ),
+                                ),
+                              )
+                            else
+                              AppTooltip(
+                                message: 'Pause',
+                                child: HoverTap(
+                                  key: const ValueKey('debug-action-pause'),
+                                  onTap: widget.controller.pause,
+                                  padding: const EdgeInsets.all(4),
+                                  child: Icon(
+                                    Icons.pause,
+                                    size: 16,
+                                    color: colors.warn,
+                                  ),
+                                ),
+                              ),
+
+                            // Step Over (F8)
+                            AppTooltip(
+                              message: 'Step Over (F8)',
+                              child: HoverTap(
+                                key: const ValueKey('debug-action-step-over'),
+                                onTap: isStopped ? widget.controller.stepOver : null,
+                                padding: const EdgeInsets.all(4),
+                                child: Icon(
+                                  Icons.redo,
+                                  size: 16,
+                                  color: isStopped ? colors.text : colors.text4,
+                                ),
                               ),
                             ),
-                    ),
+
+                            // Step Into (F7)
+                            AppTooltip(
+                              message: 'Step Into (F7)',
+                              child: HoverTap(
+                                key: const ValueKey('debug-action-step-into'),
+                                onTap: isStopped ? widget.controller.stepIn : null,
+                                padding: const EdgeInsets.all(4),
+                                child: Icon(
+                                  Icons.south,
+                                  size: 16,
+                                  color: isStopped ? colors.text : colors.text4,
+                                ),
+                              ),
+                            ),
+
+                            // Step Out (Shift+F8)
+                            AppTooltip(
+                              message: 'Step Out (Shift+F8)',
+                              child: HoverTap(
+                                key: const ValueKey('debug-action-step-out'),
+                                onTap: isStopped ? widget.controller.stepOut : null,
+                                padding: const EdgeInsets.all(4),
+                                child: Icon(
+                                  Icons.north,
+                                  size: 16,
+                                  color: isStopped ? colors.text : colors.text4,
+                                ),
+                              ),
+                            ),
+
+                            // Stop
+                            AppTooltip(
+                              message: 'Stop Session',
+                              child: HoverTap(
+                                key: const ValueKey('debug-action-stop'),
+                                onTap: widget.controller.stop,
+                                padding: const EdgeInsets.all(4),
+                                child: Icon(
+                                  Icons.stop,
+                                  size: 16,
+                                  color: colors.error,
+                                ),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ],
                   ],
                 ),
               ),
