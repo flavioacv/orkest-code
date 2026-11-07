@@ -1,7 +1,7 @@
 import 'package:orkest_code/app/orkest/ui/actions/pull_request_review_actions.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/developer_workbench_panels.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/problems_panel.dart';
-import 'package:orkest_code/app/orkest/ui/widgets/git_pr_review_panel.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/workspace_pull_request_panel.dart';
 import 'package:orkest_code/app/orkest/domain/services/git_pull_request_service.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/office_workspace_window.dart';
 import 'package:orkest_core/orkest_core.dart';
@@ -2001,16 +2001,16 @@ class _TreePanel extends StatelessWidget {
           gitPullRequestsPanel:
               workspaceId != null &&
                   vm.selectedProject?.isRemoteTerminal == false
-              ? (_) => GitPrReviewPanel(
-                  key: ValueKey((workspaceId, vm.treeRootPath)),
-                  repoRoot: vm.treeRootPath,
+              ? (_) => WorkspacePullRequestPanel(
+                  key: ValueKey(workspaceId),
+                  roots: [
+                    for (final root in vm.treeRoots)
+                      if (vm.gitInfoForRoot(root) != null) root,
+                  ],
                   service: GitPullRequestService(),
-                  onSelectReviewFile: (number, change) async {
-                    final root = vm.treeRootPath;
-                    final service = GitPullRequestService();
-                    final ref = await service.fetchReviewRef(root, number);
+                  onOpenDiff: (root, ref, change) async {
                     if (vm.selectedProjectId != workspaceId ||
-                        vm.treeRootPath != root) {
+                        !vm.treeRoots.contains(root)) {
                       return;
                     }
                     await vm.openCommitDiff(
@@ -2020,7 +2020,7 @@ class _TreePanel extends StatelessWidget {
                       isPreview: false,
                     );
                   },
-                  onCheckoutSuccess: (_) => vm.git.refresh(workspaceId),
+                  onCheckoutSuccess: (_, _) => vm.git.refresh(workspaceId),
                 )
               : null,
 

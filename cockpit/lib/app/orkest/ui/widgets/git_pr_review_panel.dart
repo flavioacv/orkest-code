@@ -15,10 +15,12 @@ class GitPrReviewPanel extends StatefulWidget {
     this.onSelectFileChange,
     this.onSelectReviewFile,
     this.onCheckoutSuccess,
+    this.onMutationStateChanged,
   });
 
   final Future<void> Function(int number, GitHistoryFileChange change)?
   onSelectReviewFile;
+  final ValueChanged<bool>? onMutationStateChanged;
   final String repoRoot;
   final GitPullRequestService service;
   final void Function(GitHistoryFileChange fileChange)? onSelectFileChange;
@@ -85,6 +87,7 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
   }
 
   Future<void> _selectPr(GitPullRequest pr, {bool reveal = true}) async {
+    if (_isCheckingOut || _isSubmittingComment) return;
     final generation = ++_detailGeneration;
     final root = widget.repoRoot;
     setState(() {
@@ -118,18 +121,25 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
 
   Future<void> _checkoutSelectedPr() async {
     final pr = _selectedPr;
-    if (pr == null) return;
+    if (pr == null || _isCheckingOut || _isSubmittingComment) return;
 
     setState(() {
       _isCheckingOut = true;
       _actionMessage = 'Criando branch local pr-${pr.number}...';
     });
 
-    final res = await widget.service.checkoutPullRequest(
-      widget.repoRoot,
-      pr.number,
-    );
+    widget.onMutationStateChanged?.call(true);
+    Result<void, String> res;
+    try {
+      res = await widget.service.checkoutPullRequest(
+        widget.repoRoot,
+        pr.number,
+      );
+    } catch (error) {
+      res = Failure('$error');
+    }
     if (!mounted) return;
+    widget.onMutationStateChanged?.call(false);
 
     switch (res) {
       case Success():
@@ -164,20 +174,28 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
   Future<void> _submitComment() async {
     final pr = _selectedPr;
     final text = _commentController.text.trim();
-    if (pr == null || text.isEmpty) return;
+    if (pr == null || text.isEmpty || _isCheckingOut || _isSubmittingComment) {
+      return;
+    }
 
     setState(() {
       _isSubmittingComment = true;
       _actionMessage = null;
     });
 
-    final res = await widget.service.addComment(
-      widget.repoRoot,
-      number: pr.number,
-      body: text,
-    );
-
+    widget.onMutationStateChanged?.call(true);
+    Result<GitPrComment, String> res;
+    try {
+      res = await widget.service.addComment(
+        widget.repoRoot,
+        number: pr.number,
+        body: text,
+      );
+    } catch (error) {
+      res = Failure('$error');
+    }
     if (!mounted) return;
+    widget.onMutationStateChanged?.call(false);
 
     switch (res) {
       case Success(:final value):
@@ -342,7 +360,9 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
         final isSelected = pr.number == _selectedPr?.number;
 
         return InkWell(
-          onTap: () => _selectPr(pr),
+          onTap: _isCheckingOut || _isSubmittingComment
+              ? null
+              : () => _selectPr(pr),
           child: Container(
             padding: const EdgeInsets.all(10),
             color: isSelected ? colors.accent.withValues(alpha: 0.12) : null,
@@ -684,6 +704,7 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
                           Expanded(
                             child: TextField(
                               controller: _commentController,
+                              enabled: !_isCheckingOut && !_isSubmittingComment,
                               maxLines: 2,
                               decoration: const InputDecoration(
                                 hintText: 'Escreva um comentário de revisão...',
