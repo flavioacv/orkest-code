@@ -12,6 +12,7 @@ class DbDdlGenerator {
     switch (engine) {
       case DbEngine.sqlite:
       case DbEngine.postgres:
+      case DbEngine.clickhouse:
         return '"$identifier"';
       case DbEngine.mysql:
         return '`$identifier`';

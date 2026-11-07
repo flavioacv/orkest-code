@@ -560,6 +560,7 @@ class DbQueryService {
         case DbEngine.postgres:
         case DbEngine.mysql:
         case DbEngine.mssql:
+        case DbEngine.clickhouse:
           await _driverFor(
             conn,
           ).query(target, 'SELECT 1', limit: 1, password: password);

@@ -1,4 +1,5 @@
 import 'package:orkest_core/orkest_core.dart';
+import 'db_options_and_introspection.dart';
 
 /// Engine de banco suportado pela DB tab (plano 51). A ordem é a do popup do
 /// "+" no painel Database; novos engines (MSSQL…) entram aqui + no registry.
@@ -7,6 +8,7 @@ enum DbEngine {
   postgres,
   mysql,
   mssql,
+  clickhouse,
   redis,
   mongo;
 
@@ -16,6 +18,7 @@ enum DbEngine {
     DbEngine.postgres => 'Postgres',
     DbEngine.mysql => 'MySQL',
     DbEngine.mssql => 'SQL Server',
+    DbEngine.clickhouse => 'ClickHouse',
     DbEngine.redis => 'Redis',
     DbEngine.mongo => 'MongoDB',
   };
@@ -26,6 +29,7 @@ enum DbEngine {
     DbEngine.postgres => 5432,
     DbEngine.mysql => 3306,
     DbEngine.mssql => 1433,
+    DbEngine.clickhouse => 8123,
     DbEngine.redis => 6379,
     DbEngine.mongo => 27017,
   };
@@ -36,7 +40,8 @@ enum DbEngine {
     DbEngine.sqlite ||
     DbEngine.postgres ||
     DbEngine.mysql ||
-    DbEngine.mssql => true,
+    DbEngine.mssql ||
+    DbEngine.clickhouse => true,
     DbEngine.redis || DbEngine.mongo => false,
   };
 
@@ -106,6 +111,10 @@ class DbConnection {
     this.access = DbAccess.read,
     this.agents = true,
     this.ssh,
+    this.vendorId,
+    this.readOnly = false,
+    this.options = const DbOptions(),
+    this.introspection = const DbIntrospection(),
   });
 
   /// Ordem canônica de uma lista de conexões: alfabética por nome, insensível
@@ -202,6 +211,12 @@ class DbConnection {
       agents: json['agents'] as bool? ?? true,
       // Ausente (todo databases.json pré-plano 54) → conexão TCP direta.
       ssh: SshTunnelConfig.fromJson(json['ssh']),
+      vendorId: json['vendorId'] as String?,
+      readOnly: (json['readOnly'] as bool?) ?? false,
+      options: DbOptions.fromJson(json['options'] as Map<String, dynamic>?),
+      introspection: DbIntrospection.fromJson(
+        json['introspection'] as Map<String, dynamic>?,
+      ),
     );
   }
 
@@ -223,6 +238,18 @@ class DbConnection {
   /// isso que `localhost` numa conexão tunelada significa o localhost *do
   /// servidor SSH*, não o da máquina do usuário.
   final SshTunnelConfig? ssh;
+
+  /// ID opcional do provedor/vendor específico compatível (Open IDEA).
+  final String? vendorId;
+
+  /// Se ativado, queries de escrita (INSERT/UPDATE/DELETE/DDL) são recusadas.
+  final bool readOnly;
+
+  /// Opções avançadas de conexão e sessão de banco de dados (Open IDEA).
+  final DbOptions options;
+
+  /// Configurações de filtro e introspecção de catálogo (Open IDEA).
+  final DbIntrospection introspection;
 
   bool get hasSshTunnel => ssh != null;
 
@@ -284,6 +311,10 @@ class DbConnection {
       'VERIFY_IDENTITY',
     }.contains((_uri.queryParameters['ssl-mode'] ?? '').toUpperCase()),
     DbEngine.mssql => _uri.queryParameters['encrypt'] == 'true',
+    DbEngine.clickhouse =>
+      _uri.queryParameters['ssl'] == 'true' ||
+          _uri.queryParameters['secure'] == 'true' ||
+          url.startsWith('https://'),
   };
 
   /// Alvo curto pra exibição na lista do painel (path ou host:porta; SRV não
@@ -303,6 +334,11 @@ class DbConnection {
     // Chave ausente (e não `null`) quando não há túnel: `save()` reescreve a
     // entrada inteira, então remover o túnel remove o bloco do arquivo.
     if (ssh != null) 'ssh': ssh!.toJson(),
+    if (vendorId != null) 'vendorId': vendorId,
+    if (readOnly) 'readOnly': readOnly,
+    if (options.toJson().isNotEmpty) 'options': options.toJson(),
+    if (introspection.toJson().isNotEmpty)
+      'introspection': introspection.toJson(),
   };
 
   /// [ssh] segue a sentinela [_unset]: omitido preserva o túnel atual, `null`
@@ -314,6 +350,10 @@ class DbConnection {
     DbAccess? access,
     bool? agents,
     Object? ssh = _unset,
+    String? vendorId,
+    bool? readOnly,
+    DbOptions? options,
+    DbIntrospection? introspection,
   }) => DbConnection(
     name: name ?? this.name,
     engine: url == null ? engine : _engineFromUrl(url),
@@ -323,6 +363,10 @@ class DbConnection {
     access: access ?? this.access,
     agents: agents ?? this.agents,
     ssh: identical(ssh, _unset) ? this.ssh : ssh as SshTunnelConfig?,
+    vendorId: vendorId ?? this.vendorId,
+    readOnly: readOnly ?? this.readOnly,
+    options: options ?? this.options,
+    introspection: introspection ?? this.introspection,
   );
 
   /// Cópia que roteia o driver por um **proxy SOCKS5** local, preservando a
@@ -378,6 +422,7 @@ class DbConnection {
     DbEngine.postgres => ('sslmode', 'require'),
     DbEngine.mysql => ('ssl-mode', 'REQUIRED'),
     DbEngine.mssql => ('encrypt', 'true'),
+    DbEngine.clickhouse => ('ssl', 'true'),
     DbEngine.mongo => ('tls', 'true'),
     DbEngine.sqlite || DbEngine.redis => null,
   };

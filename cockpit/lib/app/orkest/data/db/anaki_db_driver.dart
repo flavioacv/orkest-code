@@ -156,6 +156,18 @@ class AnakiDbDriver implements DbDriver {
             _ => null,
           },
         );
+      case DbEngine.clickhouse:
+        // ClickHouse via MySQL wire protocol ou interface HTTP/compatível.
+        return MysqlDriver(
+          host: conn.host,
+          port: conn.port,
+          username: conn.user.isEmpty ? 'default' : conn.user,
+          password: password ?? '',
+          database: conn.database.isEmpty ? 'default' : conn.database,
+          sslMode: Uri.parse(
+            conn.url,
+          ).queryParameters['ssl'] == 'true' ? 'required' : null,
+        );
       case DbEngine.redis:
       case DbEngine.mongo:
         // Não-SQL: nunca chega aqui (registry devolve null; o CLI usa o

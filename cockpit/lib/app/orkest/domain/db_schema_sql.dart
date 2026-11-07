@@ -53,6 +53,20 @@ String dbSchemaSql(DbEngine engine, {String? table, String? schema}) {
                 'AS `primaryKey` FROM information_schema.columns '
                 "WHERE table_schema = DATABASE() AND table_name = '$t' "
                 'ORDER BY ordinal_position';
+    case DbEngine.clickhouse:
+      final s = _safeIdent(schema ?? 'default');
+      return t == null
+          ? 'SELECT name AS "table", database AS "schema", '
+                "CASE WHEN is_temporary THEN 'view' ELSE 'table' END AS type "
+                'FROM system.tables '
+                "WHERE database NOT IN ('system', 'information_schema') "
+                'ORDER BY database, name'
+          : 'SELECT name AS "column", type, '
+                'CASE WHEN startsWith(type, \'Nullable\') THEN 1 ELSE 0 END AS nullable, '
+                'is_in_primary_key AS "primaryKey" '
+                'FROM system.columns '
+                "WHERE database = '$s' AND table = '$t' "
+                'ORDER BY position';
     case DbEngine.mssql:
       final s = _safeIdent(schema ?? 'dbo');
       return t == null
@@ -115,6 +129,8 @@ String dbIndexesSql(DbEngine engine, {required String table, String? schema}) {
           'INNER JOIN sys.schemas s ON s.schema_id = t.schema_id '
           "WHERE s.name = '$s' AND t.name = '$t' AND i.name IS NOT NULL "
           'ORDER BY i.name';
+    case DbEngine.clickhouse:
+      return 'SELECT \'\' AS "name", 0 AS "isUnique", 0 AS "isPrimary", \'\' AS "columns" WHERE 1=0';
     case DbEngine.redis:
     case DbEngine.mongo:
       throw const DbQueryException(
@@ -174,6 +190,8 @@ String dbForeignKeysSql(DbEngine engine, {required String table, String? schema}
           'INNER JOIN sys.tables t2 ON t2.object_id = fkc.referenced_object_id '
           'INNER JOIN sys.columns c2 ON c2.object_id = fkc.referenced_object_id AND c2.column_id = fkc.referenced_column_id '
           "WHERE s.name = '$s' AND t1.name = '$t'";
+    case DbEngine.clickhouse:
+      return 'SELECT \'\' AS "name", \'\' AS "column", \'\' AS "referencedTable", \'\' AS "referencedColumn", \'\' AS "onDelete", \'\' AS "onUpdate" WHERE 1=0';
     case DbEngine.redis:
     case DbEngine.mongo:
       throw const DbQueryException(
@@ -219,6 +237,8 @@ String dbRoutinesSql(DbEngine engine, {String? schema}) {
           'FROM INFORMATION_SCHEMA.ROUTINES '
           'WHERE $schemaFilter '
           'ORDER BY ROUTINE_SCHEMA, ROUTINE_NAME';
+    case DbEngine.clickhouse:
+      return 'SELECT name AS "name", \'system\' AS "schema", \'function\' AS "type", \'\' AS "returnType" FROM system.functions ORDER BY name';
     case DbEngine.redis:
     case DbEngine.mongo:
       throw const DbQueryException(
@@ -245,6 +265,9 @@ String dbViewDefinitionSql(DbEngine engine, {required String view, String? schem
       final s = _safeIdent(schema ?? 'dbo');
       return 'SELECT VIEW_DEFINITION AS [definition] FROM INFORMATION_SCHEMA.VIEWS '
           "WHERE TABLE_SCHEMA = '$s' AND TABLE_NAME = '$v'";
+    case DbEngine.clickhouse:
+      final s = _safeIdent(schema ?? 'default');
+      return 'SELECT create_table_query AS "definition" FROM system.tables WHERE database = \'$s\' AND name = \'$v\'';
     case DbEngine.redis:
     case DbEngine.mongo:
       throw const DbQueryException(
@@ -276,6 +299,8 @@ String dbExplainSql(DbEngine engine, String query, {bool analyze = false}) {
       return analyze
           ? 'SET STATISTICS PROFILE ON;\n$clean;\nSET STATISTICS PROFILE OFF;'
           : 'SET SHOWPLAN_TEXT ON;\n$clean;\nSET SHOWPLAN_TEXT OFF;';
+    case DbEngine.clickhouse:
+      return 'EXPLAIN $clean;';
     case DbEngine.redis:
     case DbEngine.mongo:
       throw const DbQueryException(
