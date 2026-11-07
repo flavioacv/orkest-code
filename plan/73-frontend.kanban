@@ -15,7 +15,7 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Ferramentas HTTP e GraphQL: `HttpRequestView`, `HttpViewModel`, `HttpAdvancedToolsService` e scanner de rotas (`FrameworkRouteScanner`) integrados para extração estática de rotas de frameworks de backend e sanitização segura de credenciais.
       Cobertura de código e produtividade: parsing determinístico de relatórios LCOV (`TestCoverageProfilerService`) preservando a regra de não mascarar dados ausentes como zero, profiler de CPU/RSS sob demanda e expansão Emmet/snippets no editor.
       Validação deste incremento: análise estática 100% limpa (`dart analyze --fatal-infos` com 0 erros e 0 avisos em toda a lib e testes) e 39 testes automatizados aprovados na suíte combinada (`git_pr_workbench_integration_test.dart`, `git_pr_review_panel_test.dart`, `http_viewmodel_test.dart`, `http_advanced_tools_test.dart`, `test_coverage_profiler_test.dart`, `editor_productivity_test.dart`).
-      Pendente: atalho de teclado global para abrir revisão de PRs a partir do editor e expansão para provedores de Git corporativos self-hosted.
+      Pendente: expansão para provedores de Git corporativos self-hosted. A abertura por atalho/paleta e a revisão em painel estreito foram entregues em P01; homologação autenticada continua em E7.
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 - [ ] E5 · Integrar navegação, Problems e serviços <!-- id: FE-E5 labels: estrutura blockedBy: FE-E1 -->
@@ -76,6 +76,12 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 ## Concluídas
+
+- [x] B01 · Preservar dimensões de ferramentas ocultas ao recolher o painel <!-- id: FE-B01 labels: estrutura, debug, qualidade -->
+      Commit local 01160627. Execução real relatou overflow no Debug durante colapso para a barra de ícones. WorkbenchToolHost mantém as últimas dimensões úteis do conteúdo via LayoutBuilder/OverflowBox, inclusive quando oculto por outro host; preserva Offstage, foco, tickers e State. Primeira montagem oculta usa dimensão de conteúdo de fallback. Teste com WorkspaceDebugPanel real verifica recolher de 300 para 44 px e reabrir sem exceção ou remontagem. Vinte e um testes de workbench/Debug/Git/paleta/persistência aprovados e análise estática sem issues. Não encerra os demais itens de E1.
+
+- [x] P01 · Abrir revisão de PRs por comando e adaptar painel lateral <!-- id: FE-P01 labels: git, estrutura, qualidade -->
+      Commit local 6fecaa3d. Review Pull Requests na paleta e atalhos globais Cmd+Shift+G/Ctrl+Shift+G, com contexto local Git validado também ao executar. Revela Source Control/PRs e expande painel recolhido, preservando maximização e layouts dos outros workspaces. Handler ignora repetição, modificadores adicionais e rotas modais sobrepostas. Abaixo de 640 px, lista e detalhe alternam com botão voltar; em largura maior, continuam lado a lado. Abas de detalhe rolam em espaço restrito. Respostas de detalhe obsoletas são descartadas por geração; painel ganha identidade por workspace/raiz. Quinze testes aprovados, incluindo 320 px, redimensionamento, corrida assíncrona e teclado com foco consumidor. Ver [entrega](78-revisao-pr-acesso-layout.md). E6 e E7 continuam abertas para seus escopos restantes.
 
 - [x] QV01 · Resolver falhas anteriores da suíte completa de temas <!-- id: FE-QV01 labels: qualidade -->
       Commit local 77d94673. Restaurados docs/theme.schema.json e docs/theme.example.json, com enum dos temas atuais. onColor escolhe a maior razão de contraste para cores de marca/candidatos personalizados; a convenção do limiar 0.24 fica restrita ao contexto destrutivo em app_theme. Suíte completa de temas: 36 testes sem filtros ou skips; combinação de temas/abas/Git/persistência: 51 aprovados.
