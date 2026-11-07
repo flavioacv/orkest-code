@@ -1014,6 +1014,10 @@ class _OrkestPageState extends State<OrkestPage> {
                         sourceControlViewMode: _sourceControlViewMode,
                         searchFocusSignal: _searchFocusSignal,
                         onDismiss: _dismissDrawers,
+                        officeAvailable: !isMobilePlatform,
+                        officeView: _officeView,
+                        onToggleOffice: () =>
+                            setState(() => _officeView = !_officeView),
                         onResizeTreeStart: () => _beginPanelDrag(_treeWidth),
                         onResizeTree: (dx) => setState(() {
                           _treeWidth = _panelDrag.update(
@@ -2012,6 +2016,9 @@ class _TreePanel extends StatelessWidget {
     required this.onResizeTreeEnd,
     required this.onTasksResize,
     required this.onTasksResizeEnd,
+    this.officeAvailable = false,
+    this.officeView = false,
+    this.onToggleOffice,
     this.handleOnLeft = true,
   });
 
@@ -2029,6 +2036,9 @@ class _TreePanel extends StatelessWidget {
   final VoidCallback onResizeTreeEnd;
   final ValueChanged<double> onTasksResize;
   final VoidCallback onTasksResizeEnd;
+  final bool officeAvailable;
+  final bool officeView;
+  final VoidCallback? onToggleOffice;
 
   @override
   Widget build(BuildContext context) {
@@ -2042,6 +2052,9 @@ class _TreePanel extends StatelessWidget {
       children: [
         FileTreePanel(
           workspaceId: workspaceId,
+          officeAvailable: officeAvailable,
+          officeView: officeView,
+          onToggleOffice: onToggleOffice,
           // O Debug agora reside no Bottom Dock (área inferior expansível, padrão Open IDEA),
           // despoluindo a barra lateral direita de ferramentas.
           debugPanel: null,

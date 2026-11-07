@@ -161,7 +161,15 @@ class FileTreePanel extends StatefulWidget {
     this.gitPullRequestService,
     this.onSelectPrFileChange,
     this.onCheckoutPrSuccess,
+    this.officeAvailable = false,
+    this.officeView = false,
+    this.onToggleOffice,
   });
+
+  /// Permite alternar a visualização do Office World pelo header do painel lateral.
+  final bool officeAvailable;
+  final bool officeView;
+  final VoidCallback? onToggleOffice;
 
   /// "Revelar na árvore": arquivo-alvo + geração. Quando [revealGen] muda, a
   /// árvore expande a root e os folders ancestrais de [revealPath] (uma vez) e
@@ -1879,6 +1887,33 @@ class _FileTreePanelState extends State<FileTreePanel> {
               isMaximized: _isMaximized,
               onToggleCollapse: _toggleCollapseToolWindow,
               onToggleMaximize: _toggleMaximizeToolWindow,
+              actions: [
+                if (widget.officeAvailable && widget.onToggleOffice != null)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal: 2),
+                    child: AppTooltip(
+                      message: widget.officeView
+                          ? 'Voltar para os terminais'
+                          : 'Abrir Office World',
+                      child: HoverTap(
+                        key: const ValueKey('office-world-toggle-btn'),
+                        onTap: widget.onToggleOffice,
+                        padding: const EdgeInsets.all(5),
+                        color: widget.officeView ? colors.accentSoft : null,
+                        borderRadius: BorderRadius.circular(4),
+                        child: Icon(
+                          widget.officeView
+                              ? LucideIcons.terminal
+                              : LucideIcons.building2,
+                          size: 15,
+                          color: widget.officeView
+                              ? colors.accentText
+                              : colors.text2,
+                        ),
+                      ),
+                    ),
+                  ),
+              ],
               selectedId: tab == WorkbenchToolId.sourceControl
                   ? 'source-control'
                   : tab.name,

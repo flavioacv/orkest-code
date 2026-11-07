@@ -143,6 +143,23 @@ class _WorkbenchToolHostState extends State<WorkbenchToolHost> {
                     ),
                   ),
                 ),
+              if (widget.actions != null && widget.actions!.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                Container(
+                  width: 24,
+                  height: 1,
+                  color: colors.border,
+                ),
+                const SizedBox(height: 6),
+                for (final action in widget.actions!)
+                  Padding(
+                    padding: const EdgeInsets.symmetric(
+                      vertical: 2,
+                      horizontal: 4,
+                    ),
+                    child: Center(child: action),
+                  ),
+              ],
             ],
           )
         : Container(

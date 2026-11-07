@@ -220,6 +220,67 @@ void main() {
       expect(probeDisposals, 0);
     },
   );
+
+  testWidgets(
+    'renders actions in both expanded and collapsed workbench states',
+    (tester) async {
+      var collapsed = false;
+      var actionTapped = 0;
+      late StateSetter trigger;
+
+      await tester.pumpWidget(
+        ShadcnApp(
+          theme: buildTheme(brightness: Brightness.dark),
+          home: Scaffold(
+            child: SizedBox(
+              width: 300,
+              height: 400,
+              child: StatefulBuilder(
+                builder: (context, setState) {
+                  trigger = setState;
+                  return WorkbenchToolHost(
+                    isCollapsed: collapsed,
+                    selectedId: 'files',
+                    onSelected: (_) {},
+                    onToggleCollapse: () => setState(() => collapsed = !collapsed),
+                    actions: [
+                      GestureDetector(
+                        key: const ValueKey('office-toggle-test-btn'),
+                        onTap: () => actionTapped++,
+                        child: const Icon(Icons.business, size: 16),
+                      ),
+                    ],
+                    tools: [
+                      WorkbenchTool(
+                        id: 'files',
+                        title: 'Files',
+                        icon: Icons.folder,
+                        builder: (_) => const Text('Files content'),
+                      ),
+                    ],
+                  );
+                },
+              ),
+            ),
+          ),
+        ),
+      );
+
+      // Estado Expandido
+      expect(find.byKey(const ValueKey('office-toggle-test-btn')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('office-toggle-test-btn')));
+      expect(actionTapped, 1);
+
+      // Alternar para Colapsado
+      trigger(() => collapsed = true);
+      await tester.pumpAndSettle();
+
+      // Estado Colapsado
+      expect(find.byKey(const ValueKey('office-toggle-test-btn')), findsOneWidget);
+      await tester.tap(find.byKey(const ValueKey('office-toggle-test-btn')));
+      expect(actionTapped, 2);
+    },
+  );
 }
 
 class _Probe extends StatefulWidget {
