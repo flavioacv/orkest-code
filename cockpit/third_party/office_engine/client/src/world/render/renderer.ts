@@ -5,7 +5,7 @@ import { TILE, type ArtModule, type CharacterFrameRequest, type FurnitureSprites
 import type { ExteriorSeason, SeasonalTheme, WorldOptions } from '../api';
 import type { WorldAssets } from '../assets';
 import type { Camera } from '../camera';
-import { BUILDING_H, COL_W, CORE_COLS, CORRIDOR_Y } from '../constants';
+import { UNIFIED_COWORKING, BUILDING_H, COL_W, CORE_COLS, CORRIDOR_Y } from '../constants';
 import { layoutExterior, slotShell, type ExteriorLayout, type SlotShell } from '../layout/exterior';
 import { slotAt } from '../layout/geometry';
 import type { ExteriorProp } from '../layout/types';
@@ -24,7 +24,12 @@ import { countBadge, fallbackIcon } from './shell-sprites';
 import { decorateElevator, drawSeasonalLights, drawSeasonalWindow, seasonalCostume, seasonalFurniture } from './seasonal';
 import { buildAreaVis, furnitureSprites, opaqueBounds, paintShell, toWallVis, WALL_MARGIN, wallItemOrigin, wallSprites, type AreaVis, type FurnVis, type WallVis } from './scene';
 
+import { CoworkingSceneRenderer } from './floor-plan';
+import { ACTOR_SCALE, coworkingScene, type CoworkingObject } from '../layout/floor-plan';
+
 const enum K {
+  SceneBase,
+  SceneFront,
   FurnBase,
   FurnFront,
   Char,
@@ -39,7 +44,7 @@ export interface OutdoorActor { id: string; x: number; y: number; sprite: Sprite
 interface Ent {
   k: K;
   y: number;
-  ref: FurnVis | Character | ExteriorProp | Car | OutdoorActor | null;
+  ref: CoworkingObject | FurnVis | Character | ExteriorProp | Car | OutdoorActor | null;
   area: AreaVis | null;
   scale: number;
 }
@@ -80,6 +85,7 @@ const VIGNETTE_ALPHA = 0.2;
 const VIGNETTE_EDGE = `rgba(18,40,26,${VIGNETTE_ALPHA})`;
 
 export class Renderer {
+  private readonly floorPlan = new CoworkingSceneRenderer();
   outdoorActors: ((dt: number) => readonly OutdoorActor[]) | null = null;
   furnitureOverride: ((furniture: FurnVis, state: number) => FurnitureSprites | null) | null = null;
   /** Optional raster art for the exterior; movement and placement stay in the simulation. */
@@ -222,7 +228,7 @@ export class Renderer {
     for (let x = this.baseX + 4; x < this.baseX + c.width; x += 24) ctx.fillRect(x, ly, 12, 2);
     this.shells = [];
     this.shellWindows = [];
-    for (let col = CORE_COLS; col < cols; col++) {
+    for (let col = CORE_COLS; !UNIFIED_COWORKING && col < cols; col++) {
       for (const side of ['north', 'south'] as const) {
         const sh = slotShell(slotAt(col, side), col === cols - 1, this.season);
         this.shells.push(sh);
@@ -409,16 +415,17 @@ export class Renderer {
       const p = vis.px;
       if (!visible(p.x, p.y - WALL_MARGIN, p.w, p.h + WALL_MARGIN)) continue;
       const anim = vis.room ? buildAnim(vis.room.phase, vis.room.progress(now)) : NO_ANIM;
-      this.drawFloor(vis, anim);
+      if (!UNIFIED_COWORKING) this.drawFloor(vis, anim);
     }
     for (const vis of this.areas.values()) {
       const p = vis.px;
       if (!visible(p.x, p.y - WALL_MARGIN, p.w, p.h + WALL_MARGIN)) continue;
       const anim = vis.room ? buildAnim(vis.room.phase, vis.room.progress(now)) : NO_ANIM;
-      this.drawWalls(vis, anim, now, hour);
+      if (!UNIFIED_COWORKING) this.drawWalls(vis, anim, now, hour);
     }
     const view = { x0: vx0, y0: vy0, x1: vx1, y1: vy1 };
     // alarme de CI: tom vermelho no piso (por baixo dos móveis e personagens)
+    if (UNIFIED_COWORKING) this.floorPlan.draw(ctx, this.sim.building.cols);
     this.roomFx.drawFloor(ctx, this.sim, now, view);
 
     // ---- entidades ordenadas por profundidade
@@ -442,7 +449,7 @@ export class Renderer {
       const p = vis.px;
       if (!visible(p.x - TILE, p.y - 3 * TILE, p.w + 2 * TILE, p.h + 4 * TILE)) continue;
       const anim = vis.room ? buildAnim(vis.room.phase, vis.room.progress(now)) : NO_ANIM;
-      for (const f of vis.furniture) {
+      for (const f of UNIFIED_COWORKING ? [] : vis.furniture) {
         const s = anim.mode === 'none' ? 1 : furnitureScale(anim, f.order);
         if (s <= 0.01) continue;
         if (!visible(f.ax - 3 * TILE, f.ay - 4 * TILE, 6 * TILE, 4 * TILE + 4)) continue;
@@ -452,12 +459,17 @@ export class Renderer {
         if (fs?.front) push(K.FurnFront, f.ay + 0.5, f, vis, s);
       }
     }
+    if (UNIFIED_COWORKING) for (const node of coworkingScene(this.sim.building.cols).objects) {
+      push(K.SceneBase, node.depth, node, null, 1);
+      if (this.floorPlan.hasFront(node, this.art)) push(K.SceneFront, node.depth + .5, node, null, 1);
+    }
     // os agentes e, na visita, o visitante
     for (const ch of this.sim.people()) {
       const head = this.headOf(ch);
       head.visible = false;
       if (ch.inside || ch.alpha <= 0.01 || now < ch.hiddenUntil) continue;
-      if (!visible(ch.x - 24, ch.y - 48, 48, 56)) {
+      const actorScale = UNIFIED_COWORKING ? ACTOR_SCALE : 1;
+      if (!visible(ch.x - 24 * actorScale, ch.y - 48 * actorScale, 48 * actorScale, 56 * actorScale)) {
         head.x = ch.x;
         head.y = ch.y - 26;
         head.feetY = ch.y;
@@ -492,6 +504,14 @@ export class Renderer {
     this.iconCount = 0;
     for (const e of ents) {
       switch (e.k) {
+        case K.SceneBase:
+        case K.SceneFront: {
+          const node = e.ref as CoworkingObject;
+          const busy = node.kind === 'coffee_machine' ? (this.sim.machineUntil.get(node.id) ?? 0) > now
+            : node.kind === 'toilet_stall' && this.sim.stallBusy.has(node.id);
+          this.floorPlan.object(ctx, node, this.art, now, this.sim, e.k === K.SceneFront, busy);
+          break;
+        }
         case K.FurnBase:
           this.drawFurniture(e.ref as FurnVis, e.area!, e.scale, false, now);
           break;
@@ -893,15 +913,16 @@ export class Renderer {
       }
     }
     if (sprite) {
-      const sx = x - sprite.ax;
-      const sy = y - sprite.ay;
-      ctx.drawImage(sprite.canvas, sx, sy);
+      const scale = UNIFIED_COWORKING ? ACTOR_SCALE : 1;
+      const sx = x - sprite.ax * scale;
+      const sy = y - sprite.ay * scale;
+      ctx.drawImage(sprite.canvas, sx, sy, sprite.canvas.width * scale, sprite.canvas.height * scale);
       const b = opaqueBounds(sprite.canvas);
-      head.bx = sx + b.x;
-      head.by = sy + b.y;
-      head.bw = b.w;
-      head.bh = b.h;
-      head.y = sy + b.y;
+      head.bx = sx + b.x * scale;
+      head.by = sy + b.y * scale;
+      head.bw = b.w * scale;
+      head.bh = b.h * scale;
+      head.y = sy + b.y * scale;
     } else {
       head.bx = x - 7;
       head.by = y - 26;

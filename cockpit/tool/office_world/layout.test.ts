@@ -2,6 +2,8 @@ import assert from 'node:assert/strict';
 import test from 'node:test';
 import { configureOfficeLayout, COL_W, CORE_COLS, CORRIDOR_Y, SOUTH_Y } from '../../third_party/office_engine/client/src/world/constants.ts';
 import { assembleBuilding } from '../../third_party/office_engine/client/src/world/layout/building.ts';
+import { ACTOR_SCALE, coworkingScene } from '../../third_party/office_engine/client/src/world/layout/floor-plan.ts';
+import { renderFurniture } from '../../third_party/office_engine/client/src/art/furniture/index.ts';
 import { layoutProjectRoom } from '../../third_party/office_engine/client/src/world/layout/room.ts';
 import { slotRect } from '../../third_party/office_engine/client/src/world/layout/geometry.ts';
 import { roomTheme } from '../../third_party/office_engine/client/src/art/index.ts';
@@ -107,32 +109,127 @@ test('night lighting covers both sidewalks, the promenade and the station in eve
   } finally { configureOfficeLayout(false); }
 });
 
-test('spacious Office separates rooms and connects every coworking seat to the corridor', () => {
+test('unified floor plan connects every workstation and public interaction through the west entrance', () => {
   configureOfficeLayout(true);
   try {
-    assert.equal(COL_W, 20); assert.equal(CORE_COLS, 3);
-    assert.equal(slotRect(0).x, 60); assert.ok(SOUTH_Y - CORRIDOR_Y >= 9);
-    const rooms = [0, 1, 2, 3].map(slot => layoutProjectRoom({ id: `room-${slot}`, slot, seed: slot + 1 }, roomTheme(slot + 1)));
-    const building = assembleBuilding(5, rooms);
-    const coworking = building.core.filter(area => area.id === 'core:coworking' || area.id === 'core:lounge');
-    assert.equal(coworking.length, 2);
-    const seats = coworking.flatMap(area => area.spots.filter(spot => spot.seated));
-    assert.ok(seats.length >= 20);
-    const shared = building.core.find(area => area.id === 'core:lounge')!;
-    assert.equal(shared.rect.w, COL_W + 16);
-    assert.equal(shared.spots.filter(spot => spot.furnitureId?.endsWith(':coworking_set')).length, 10);
-    assert.ok(!building.core.some(area => area.id === 'core:coworking-lounge'));
-    assert.ok(!building.core.flatMap(area => area.furniture).some(f => f.kind === 'meeting_set' || f.kind === 'meeting_pair' || f.kind === 'focus_pod'));
-    const finder = new PathFinder(building.grid);
-    for (const spot of seats) {
-      assert.ok(building.grid.walkable(spot.tx, spot.ty), `Blocked seat: ${spot.id}`);
-      const path: number[] = [];
-      assert.ok(finder.find(7, CORRIDOR_Y + 2, spot.tx, spot.ty, path), `Unreachable seat: ${spot.id}`);
+    for (const cols of [4, 5, 8]) {
+      const rooms = [0, 1, 2, 3].map(slot => layoutProjectRoom({ id: `room-${slot}`, slot, seed: slot + 1 }, roomTheme(slot + 1)));
+      const building = assembleBuilding(cols, rooms);
+      assert.ok(rooms.every(room => room.walls.length === 0 && room.furniture.length === 0));
+      const desks = building.spots.filter(s => s.kind === 'desk');
+      assert.equal(desks.length, 20 + (cols - 4) * 12);
+      assert.equal(new Set(desks.map(s => `${s.tx},${s.ty}`)).size, desks.length);
+      const entrance = building.spots.find(s => s.kind === 'elevator')!;
+      const finder = new PathFinder(building.grid);
+      const inaccessible = building.spots.filter(spot => !finder.find(entrance.tx, entrance.ty, spot.tx, spot.ty, []));
+      assert.deepEqual(inaccessible.map(s => `${s.areaId}: ${s.kind} (${s.tx},${s.ty})`), []);
+      for (const id of ['core:recepcao', 'core:banheiros', 'core:copa', 'core:focus', 'core:meeting', 'core:coworking', 'core:lounge', 'core:games']) {
+        assert.ok(building.core.some(area => area.id === id));
+      }
     }
-    for (const room of rooms) for (const spot of room.spots.filter(spot => spot.kind === 'desk')) {
-      const path: number[] = [];
-      assert.ok(finder.find(7, CORRIDOR_Y + 2, spot.tx, spot.ty, path), `Unreachable desk: ${spot.id}`);
+  } finally { configureOfficeLayout(false); }
+});
+
+test('editable objects own their scaled cardinal seat anchors, back layers and collisions', () => {
+  configureOfficeLayout(true);
+  try {
+    for (const cols of [4, 5, 8]) {
+      const scene = coworkingScene(cols), building = assembleBuilding(cols, []);
+      const nodes = new Map(scene.objects.map(node => [node.id, node]));
+      assert.equal(nodes.size, scene.objects.length);
+      for (const spot of building.spots.filter(s => s.seated)) {
+        const node = nodes.get(spot.furnitureId!)!;
+        assert.ok(node, `Missing object for ${spot.id}`);
+        assert.ok(node.seatIds.includes(spot.id));
+        assert.equal(spot.y, node.y + node.h - 3 * ACTOR_SCALE);
+        assert.equal(spot.sortY, node.depth + .25);
+        assert.ok(spot.x >= node.x && spot.x <= node.x + node.w);
+        if (node.kind === 'office_chair') {
+          assert.equal(spot.dir, 'up'); assert.ok(renderFurniture(node.kind, node.variant).front);
+        } else if (node.kind === 'office_chair_front') {
+          assert.equal(spot.dir, 'down'); assert.ok(!renderFurniture(node.kind, node.variant).front);
+        } else if (node.kind === 'armchair' || node.kind === 'cafe_chair' || node.kind === 'sofa') {
+          assert.equal(node.variant, spot.dir);
+        }
+        for (const object of scene.objects) if (object.collision) {
+          const r = object.collision;
+          assert.ok(spot.x < r.x || spot.x >= r.x + r.w || spot.y < r.y || spot.y >= r.y + r.h,
+            `Seat ${spot.id} intersects ${object.id}`);
+        }
+      }
+      for (const node of scene.objects.filter(n => n.collision)) {
+        const r = node.collision!;
+        const tx = Math.floor((r.x + r.w / 2) / TILE), ty = Math.floor((r.y + r.h / 2) / TILE);
+        assert.equal(building.grid.walkable(tx, ty), false, `Missing collision: ${node.id}`);
+      }
     }
+  } finally { configureOfficeLayout(false); }
+});
+
+test('shared hall grows for sessions from multiple projects without moving existing desks', () => {
+  configureOfficeLayout(true);
+  try {
+    const sim = new OrkestSim(art, () => DEFAULT_WORLD_OPTIONS, null);
+    let time = 1_800_000_000_000;
+    const input: Parameters<OrkestSim['applySnapshot']>[0] = {
+      serverTime: time, accounts: [],
+      rooms: [0, 1].map(slot => ({ id: `project-${slot}`, name: `Project ${slot}`, seed: slot + 1,
+        slot, path: `/project/${slot}`, createdAt: time })),
+      agents: Array.from({ length: 20 }, (_, i) => ({ id: `worker-${i}`, kind: 'main',
+        roomId: `project-${i % 2}`, name: `Worker ${i}`, account: 'test', look: 'm', seed: i + 1,
+        status: 'working', startedAt: time, statusSince: time, lastEventAt: time, tasks: [],
+        stats: { toolCalls: 0, tokensIn: 0, tokensOut: 0, subagents: 0 } })),
+    };
+    sim.applySnapshot(input, time);
+    const original = [...sim.chars.values()].map(ch => ({ id: ch.id, home: ch.homeSpot, x: ch.x, y: ch.y }));
+    for (const count of [21, 33, 45]) {
+      const agents = Array.from({ length: count }, (_, i) => ({ ...input.agents[i % 20], id: `worker-${i}` }));
+      sim.applySnapshot({ ...input, agents }, time);
+      assert.equal(sim.building.cols, 4 + Math.ceil((count - 20) / 12));
+      for (let frame = 0; frame < 10800; frame++) { time += 1000 / 60; sim.update(1 / 60, time); }
+      assert.equal(new Set([...sim.chars.values()].map(ch => ch.homeSpot)).size, count);
+      for (const ch of sim.chars.values()) {
+        assert.ok(ch.homeSpot, `Missing desk for ${ch.id}`);
+        assert.equal(ch.atSpot, ch.homeSpot, `Did not reach desk: ${ch.id}`);
+        assert.equal(ch.seated, true);
+      }
+      for (const saved of original) {
+        const ch = sim.chars.get(saved.id)!;
+        assert.equal(ch.homeSpot, saved.home);
+        assert.equal(ch.x, saved.x);
+        assert.equal(ch.y, saved.y);
+      }
+      assert.ok(sim.building.rooms.every(room => room.walls.length === 0));
+    }
+  } finally { configureOfficeLayout(false); }
+});
+
+test('expansion keeps a seated meeting participant attached to the glass room', () => {
+  configureOfficeLayout(true);
+  try {
+    const sim = new OrkestSim(art, () => DEFAULT_WORLD_OPTIONS, null);
+    const time = 1_800_000_000_000;
+    const input: Parameters<OrkestSim['applySnapshot']>[0] = { serverTime: time, accounts: [],
+      rooms: [{ id: 'project', name: 'Project', seed: 1, slot: 0, path: '/project', createdAt: time }],
+      agents: Array.from({ length: 20 }, (_, i) => ({ id: `worker-${i}`, kind: 'main', roomId: 'project',
+        name: `Worker ${i}`, account: 'test', look: 'm', seed: i + 1, status: 'working',
+        startedAt: time, statusSince: time, lastEventAt: time, tasks: [],
+        stats: { toolCalls: 0, tokensIn: 0, tokensOut: 0, subagents: 0 } })) };
+    sim.applySnapshot(input, time);
+    const ch = sim.chars.get('worker-0')!;
+    assert.equal(sim.startCoworkingTest('meeting', ch.id).ok, true);
+    const seatId = sim.getCoworkingTest()!.spotId;
+    let elapsed = 0;
+    while ((!ch.seated || ch.atSpot !== seatId) && elapsed < 30000) {
+      elapsed += 1000 / 60; sim.update(1 / 60, time + elapsed);
+    }
+    assert.equal(ch.atSpot, seatId);
+    sim.applySnapshot({ ...input, agents: [...input.agents, { ...input.agents[0], id: 'new-worker' }] }, time + elapsed);
+    const seat = sim.spots.get(seatId)!;
+    assert.equal(ch.atSpot, seatId);
+    assert.equal(ch.x, seat.x);
+    assert.equal(ch.y, seat.y);
+    assert.equal(sim.spots.ownerOf(seatId), ch.id);
   } finally { configureOfficeLayout(false); }
 });
 

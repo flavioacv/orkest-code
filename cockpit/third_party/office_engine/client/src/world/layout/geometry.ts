@@ -1,5 +1,5 @@
 // Geometria do prédio: mapeamento de slots, colunas e retângulos. Puro e testável.
-import { BUILDING_H, COL_W, CORE_COLS, CORRIDOR_H, CORRIDOR_Y, NORTH_Y, ROOM_H, SOUTH_Y, TILE } from '../constants';
+import { UNIFIED_COWORKING, BUILDING_H, COL_W, CORE_COLS, CORRIDOR_H, CORRIDOR_Y, NORTH_Y, ROOM_H, SOUTH_Y, TILE } from '../constants';
 import type { TileRect } from './types';
 
 export type Side = 'north' | 'south';
@@ -30,6 +30,7 @@ export function slotAt(col: number, side: Side): number {
 
 /** Total de colunas do prédio para um conjunto de slots em uso (mínimo: 1 coluna de projeto). */
 export function columnsFor(slots: Iterable<number>): number {
+  if (UNIFIED_COWORKING) return 4;
   let maxCol = 0;
   for (const s of slots) maxCol = Math.max(maxCol, Math.floor(Math.max(0, s) / 2));
   return CORE_COLS + maxCol + 1;

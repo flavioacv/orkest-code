@@ -16855,16 +16855,18 @@
   var ROOM_H = 12;
   var CORRIDOR_H = 5;
   var CORE_COLS = 2;
+  var UNIFIED_COWORKING = false;
   var NORTH_Y = 0;
   var CORRIDOR_Y = ROOM_H;
   var SOUTH_Y = ROOM_H + CORRIDOR_H;
   var BUILDING_H = ROOM_H * 2 + CORRIDOR_H;
   function configureOfficeLayout(spacious) {
+    UNIFIED_COWORKING = spacious;
     COL_W = spacious ? 20 : 16;
     CORRIDOR_H = spacious ? 9 : 5;
     CORE_COLS = spacious ? 3 : 2;
     SOUTH_Y = ROOM_H + CORRIDOR_H;
-    BUILDING_H = ROOM_H * 2 + CORRIDOR_H;
+    BUILDING_H = spacious ? 52 : ROOM_H * 2 + CORRIDOR_H;
   }
   var DOOR_X = 7;
   var DOOR_W = 2;
@@ -17508,16 +17510,20 @@
       floor: { x: (r.x + 0.5) * TILE, y: (r.y + 2) * TILE, w: (r.w - 1) * TILE, h: (r.h - 3) * TILE }
     };
   }
+  function effectRegions(sim2, roomId) {
+    const room = sim2.rooms.get(roomId);
+    if (!room || !room.present || room.phase === "dismantling") return [];
+    if (!UNIFIED_COWORKING) return [roomRects(room.layout.rect)];
+    return [...sim2.chars.values()].filter((ch) => ch.roomId === roomId && !ch.gone && !ch.leaving).flatMap((ch) => {
+      const home = sim2.spots.get(ch.homeSpot);
+      return home ? [roomRects({ x: (home.x - 32) / TILE, y: (home.y - 40) / TILE, w: 4, h: 4 })] : [];
+    });
+  }
   var RoomFxRenderer = class {
     /** Acumulador da taxa de confete por sala. */
     acc = /* @__PURE__ */ new Map();
-    visibleRoom(sim2, fx, v) {
-      const room = sim2.rooms.get(fx.roomId);
-      if (!room || !room.present || room.phase === "dismantling") return null;
-      const rects = roomRects(room.layout.rect);
-      const p = rects.room;
-      if (p.x > v.x1 || p.x + p.w < v.x0 || p.y - 8 > v.y1 || p.y + p.h < v.y0) return null;
-      return rects;
+    visibleRooms(sim2, fx, v) {
+      return effectRegions(sim2, fx.roomId).filter(({ room: p }) => p.x <= v.x1 && p.x + p.w >= v.x0 && p.y - 8 <= v.y1 && p.y + p.h >= v.y0);
     }
     /** Tom vermelho pulsando no piso das salas em alarme (antes dos móveis e personagens). */
     drawFloor(ctx, sim2, now, v) {
@@ -17525,13 +17531,13 @@
       const still = reducedMotion();
       for (const fx of sim2.roomFx.active.values()) {
         if (fx.kind !== "alarm" || now >= fx.end) continue;
-        const rects = this.visibleRoom(sim2, fx, v);
-        if (!rects) continue;
         const pulse = still ? 0.5 : 0.5 + 0.5 * Math.sin((now - fx.start) / 1100 * Math.PI * 2);
-        const f = rects.floor;
-        ctx.globalAlpha = fxFade(fx, now) * (0.08 + 0.09 * pulse);
-        ctx.fillStyle = "#ff2a36";
-        ctx.fillRect(f.x, f.y, f.w, f.h);
+        for (const rects of this.visibleRooms(sim2, fx, v)) {
+          const f = rects.floor;
+          ctx.globalAlpha = fxFade(fx, now) * (0.08 + 0.09 * pulse);
+          ctx.fillStyle = "#ff2a36";
+          ctx.fillRect(f.x, f.y, f.w, f.h);
+        }
       }
       ctx.globalAlpha = 1;
     }
@@ -17547,14 +17553,15 @@
           this.acc.delete(id);
           continue;
         }
-        const rects = this.visibleRoom(sim2, fx, v);
-        if (!rects) continue;
+        const regions = this.visibleRooms(sim2, fx, v);
+        if (!regions.length) continue;
         const k = Math.min(1, (fx.end - now) / 2e3) * (now - fx.start < 1500 ? 1.6 : 1);
         let a = (this.acc.get(id) ?? 0) + Math.min(0.1, dt) * CONFETTI_RATE * k;
-        const f = rects.floor;
-        const top = rects.room.y + 4;
         while (a >= 1) {
           a -= 1;
+          const rects = regions[Math.floor(Math.random() * regions.length)];
+          const f = rects.floor;
+          const top = rects.room.y + 4;
           const y = top + Math.random() * 6;
           particles.confettiFall(f.x + 2 + Math.random() * (f.w - 4), y, f.y + f.h - 4 - y);
         }
@@ -17572,8 +17579,7 @@
       for (const fx of sim2.roomFx.active.values()) {
         if (fx.kind !== "alarm" || now >= fx.end) continue;
         const fade = fxFade(fx, now);
-        const rects = this.visibleRoom(sim2, fx, v);
-        if (rects) this.drawBeacons(ctx, rects, now - fx.start, fade, still);
+        for (const rects of this.visibleRooms(sim2, fx, v)) this.drawBeacons(ctx, rects, now - fx.start, fade, still);
         const head = fx.agentId ? heads.get(fx.agentId) : void 0;
         if (head?.visible) {
           const s = bangSprite();
@@ -18007,6 +18013,7 @@
     }
     // =================================================================== salas
     drawRoomTexts(now, zoom) {
+      if (UNIFIED_COWORKING) return;
       const { camera: camera2 } = this;
       const vw = camera2.viewW;
       const vh = camera2.viewH;
@@ -18055,10 +18062,12 @@
         const room = this.sim.rooms.get(fx.roomId);
         if (!room || !room.present || now >= fx.end) continue;
         const r = room.layout.rect;
-        const cx = this.sx((r.x + r.w / 2) * TILE);
-        const top = this.sy((r.y + 2) * TILE) + 4;
+        const owner = UNIFIED_COWORKING ? fx.agentId ? this.sim.chars.get(fx.agentId) : [...this.sim.chars.values()].find((ch) => ch.roomId === fx.roomId && !ch.gone) : null;
+        const head = owner ? this.renderer.heads.get(owner.id) : null;
+        const cx = this.sx(owner?.x ?? (r.x + r.w / 2) * TILE);
+        const top = this.sy(head?.y != null ? head.y - 32 : (r.y + 2) * TILE) + 4;
         if (cx < -200 || cx > camera2.viewW + 200 || top < -40 || top > camera2.viewH + 40) continue;
-        const b = drawFxBanner(this.ctx, fx, cx, top, r.w * TILE * zoom - 12, now, (f, t2, w) => this.fit(f, t2, w), (f, t2) => this.measure(f, t2));
+        const b = drawFxBanner(this.ctx, fx, cx, top, UNIFIED_COWORKING ? 260 : r.w * TILE * zoom - 12, now, (f, t2, w) => this.fit(f, t2, w), (f, t2) => this.measure(f, t2));
         if (b) this.place(b.x, b.y, b.w, b.h);
       }
     }
@@ -18558,6 +18567,7 @@
     return (col - CORE_COLS) * 2 + (side === "north" ? 0 : 1);
   }
   function columnsFor(slots) {
+    if (UNIFIED_COWORKING) return 4;
     let maxCol = 0;
     for (const s of slots) maxCol = Math.max(maxCol, Math.floor(Math.max(0, s) / 2));
     return CORE_COLS + maxCol + 1;
@@ -21066,6 +21076,661 @@
     return s;
   }
 
+  // third_party/office_engine/client/src/world/layout/builder.ts
+  var SEAT_FOOT_DY = 3;
+  var SEATED_SORT_BIAS = 0.25;
+  var AreaBuilder = class {
+    area;
+    seq = 0;
+    constructor(id, kind, rect) {
+      this.area = { id, kind, rect, floors: [], rugs: [], walls: [], wallItems: [], furniture: [], spots: [], walkable: [] };
+    }
+    get x0() {
+      return this.area.rect.x;
+    }
+    get y0() {
+      return this.area.rect.y;
+    }
+    /** px absoluto de uma coordenada local em tiles (aceita frações). */
+    px(lx) {
+      return (this.x0 + lx) * TILE;
+    }
+    py(ly) {
+      return (this.y0 + ly) * TILE;
+    }
+    floor(kind, lx, ly, w, h, seed, tint, tint2) {
+      this.area.floors.push({ kind, x: this.px(lx), y: this.py(ly), w: w * TILE, h: h * TILE, seed, tint, tint2 });
+      return this;
+    }
+    rug(lx, ly, w, h, color, seed) {
+      this.area.rugs.push({ x: Math.round(this.px(lx)), y: Math.round(this.py(ly)), w: Math.round(w * TILE), h: Math.round(h * TILE), color, seed });
+      return this;
+    }
+    /** Face da parede norte (2 tiles) entre lx e lx+w (tiles locais, aceita frações). */
+    face(lx, w, style, doorways = [], ly = 0) {
+      this.area.walls.push({ kind: "face", x: this.px(lx), y: this.py(ly), w: w * TILE, style, doorways: this.doors(doorways) });
+      return this;
+    }
+    south(lx, w, ly, style, doorways = []) {
+      this.area.walls.push({ kind: "south", x: this.px(lx), y: this.py(ly), w: w * TILE, style, doorways: this.doors(doorways) });
+      return this;
+    }
+    cap(lx, ly, w, h, style) {
+      this.area.walls.push({ kind: "cap", x: this.px(lx), y: this.py(ly), w: w * TILE, h: h * TILE, style });
+      return this;
+    }
+    doors(list) {
+      return list.length ? list.map((d) => ({ x: this.px(d.lx), w: d.w * TILE })) : void 0;
+    }
+    /** Item de parede centrado em `lcx` (tiles locais). `ly` = linha local do rodapé (default 2 = base da face norte). */
+    wall(kind, lcx, variant, opts = {}) {
+      const id = `${this.area.id}#w${this.seq++}:${kind}`;
+      this.area.wallItems.push({
+        id,
+        kind,
+        variant,
+        cx: Math.round(this.px(lcx)),
+        baseY: this.py(opts.ly ?? 2),
+        on: opts.on ?? "face",
+        order: opts.order ?? 0.5
+      });
+      return id;
+    }
+    /** Móvel de chão com o canto superior esquerdo do footprint em (lx, ly). */
+    furn(kind, lx, ly, variant, opts = {}) {
+      const id = `${this.area.id}#f${this.seq++}:${kind}`;
+      const f = {
+        id,
+        kind,
+        variant,
+        tx: this.x0 + lx,
+        ty: this.y0 + ly,
+        dx: opts.dx,
+        dy: opts.dy,
+        order: opts.order ?? 0.5,
+        seat: opts.seat
+      };
+      this.area.furniture.push(f);
+      return id;
+    }
+    /** Spot com aproximação no tile local (lx, ly). Posição final padrão = pés no tile. */
+    spot(kind, lx, ly, dir, opts = {}) {
+      const tx = this.x0 + lx;
+      const ty = this.y0 + ly;
+      const s = {
+        id: `${this.area.id}#s${this.seq++}:${kind}`,
+        kind,
+        areaId: this.area.id,
+        tx,
+        ty,
+        x: opts.x ?? tx * TILE + FOOT_DX + (opts.dx ?? 0),
+        y: opts.y ?? ty * TILE + FOOT_DY + (opts.dy ?? 0),
+        dir,
+        seated: opts.seated,
+        furnitureId: opts.furnitureId,
+        sortY: opts.sortY,
+        group: opts.group,
+        deskId: opts.deskId,
+        rank: opts.rank,
+        side: opts.side
+      };
+      this.area.spots.push(s);
+      return s;
+    }
+    /**
+     * Assento (cadeira, banqueta, poltrona...) no tile local (lx, ly). O personagem se aproxima
+     * pelo próprio tile do assento e encaixa na posição do assento (com `dx` opcional em px).
+     */
+    seat(kind, furnitureKind, lx, ly, dir, variant, opts = {}) {
+      const furnitureId = opts.noFurniture ? opts.furnitureId : this.furn(furnitureKind, lx, ly, variant, { dx: opts.dx, order: opts.order });
+      const base = this.py(ly + 1);
+      return this.spot(kind, lx, ly, dir, {
+        ...opts,
+        furnitureId,
+        seated: true,
+        x: this.px(lx) + TILE / 2 + (opts.dx ?? 0),
+        y: base - SEAT_FOOT_DY + (opts.dy ?? 0),
+        sortY: base + SEATED_SORT_BIAS
+      });
+    }
+    walk(lx, ly, w, h) {
+      this.area.walkable.push({ x: this.x0 + lx, y: this.y0 + ly, w, h });
+      return this;
+    }
+    block(lx, ly, w, h) {
+      (this.area.blocked ??= []).push({ x: this.x0 + lx, y: this.y0 + ly, w, h });
+      return this;
+    }
+    build() {
+      return this.area;
+    }
+  };
+  function furnitureBlocks(kind) {
+    const def = FURNITURE[kind];
+    return def.mount === "floor" && def.blocks;
+  }
+  function furnitureIsSeat(kind) {
+    const def = FURNITURE[kind];
+    return def.mount === "floor" && !!def.seat;
+  }
+
+  // third_party/office_engine/client/src/world/layout/floor-plan.ts
+  var PLAN = { x: 48, y: 51, w: 1456, h: 944, width: 1280, height: 832, insertX: 1210, southInsertX: 924, southY: 678 };
+  var ACTOR_SCALE = 2;
+  var planX = (x) => Math.round((x - PLAN.x) * PLAN.width / PLAN.w);
+  var planY = (y) => Math.round((y - PLAN.y) * PLAN.height / PLAN.h);
+  var expansionWidth = (cols) => Math.max(0, cols - 4) * COL_W * TILE;
+  var scenes = /* @__PURE__ */ new Map();
+  function benchPatches(cols) {
+    return Array.from({ length: Math.max(0, cols - 4) }, (_, i) => ({ dx: planX(PLAN.insertX) + i * COL_W * TILE - planX(860) }));
+  }
+  function coworkingScene(cols) {
+    const cached = scenes.get(cols);
+    if (cached) return cached;
+    const extra = expansionWidth(cols), objects = [];
+    const hall = new AreaBuilder("core:floor-plan", "corridor", { x: 0, y: 0, w: cols * COL_W, h: BUILDING_H });
+    hall.walk(1, 2, cols * COL_W - 2, BUILDING_H - 3);
+    const areas = [hall.area];
+    const zone = (id, kind) => {
+      const b = new AreaBuilder(id, kind, hall.area.rect);
+      areas.push(b.area);
+      return b;
+    };
+    const px = (x, y, dx = 0) => planX(x) + dx + (x >= (y >= PLAN.southY ? PLAN.southInsertX : PLAN.insertX) ? extra : 0);
+    const block = (b, r) => {
+      const tx = Math.floor(r.x / TILE), ty = Math.floor(r.y / TILE);
+      b.block(tx, ty, Math.ceil((r.x + r.w) / TILE) - tx, Math.ceil((r.y + r.h) / TILE) - ty);
+    };
+    const object = (b, shape, x, y, w, h, opts = {}) => {
+      const r = { x: px(x, y, opts.dx), y: planY(y), w: Math.round(w * PLAN.width / PLAN.w), h: Math.round(h * PLAN.height / PLAN.h) };
+      if (shape === "wall" && w === 1447) r.w += extra;
+      const node = {
+        ...r,
+        id: `${b.area.id}:object:${objects.length}`,
+        areaId: b.area.id,
+        shape,
+        scale: ACTOR_SCALE,
+        depth: r.y + r.h,
+        color: opts.color,
+        label: opts.label,
+        seatIds: []
+      };
+      if (opts.solid !== false) {
+        node.collision = shape === "bench" ? { ...r, y: r.y + 16, h: Math.max(1, r.h - 16) } : { ...r };
+        block(b, node.collision);
+      }
+      objects.push(node);
+      return node;
+    };
+    const sprite2 = (b, kind, x, base, variant, solid = true, dx = 0) => {
+      const def = FURNITURE[kind], ax = px(x, base, dx), ay = planY(base);
+      const scale = kind === "toilet_stall" ? 1.5 : ACTOR_SCALE;
+      const w = def.footprint.w * TILE * scale, h = def.footprint.h * TILE * scale;
+      const id = b.furn(kind, Math.floor((ax - w / 2) / TILE), Math.floor((ay - h) / TILE), variant);
+      const node = {
+        id,
+        areaId: b.area.id,
+        shape: "sprite",
+        kind,
+        variant,
+        x: ax - w / 2,
+        y: ay - h,
+        w,
+        h,
+        scale,
+        depth: ay,
+        seatIds: []
+      };
+      if (solid) {
+        node.collision = { x: node.x, y: node.y, w, h };
+        block(b, node.collision);
+      }
+      objects.push(node);
+      return node;
+    };
+    const interaction = (b, kind, x, y, dir, node) => {
+      const fx = px(x, y), fy = planY(y);
+      const s = b.spot(kind, Math.floor(fx / TILE), Math.floor(fy / TILE), dir, { x: fx, y: fy, furnitureId: node?.id });
+      node?.seatIds.push(s.id);
+      return s;
+    };
+    const seat = (b, kind, x, base, dir, furniture, variant = dir, dx = 0, parent, offset = 0) => {
+      const node = parent ?? sprite2(b, furniture, x, base, variant, false, dx);
+      const fx = node.x + node.w / 2 + offset, fy = node.y + node.h - 3 * ACTOR_SCALE;
+      const approachX = fx + (dir === "left" ? 12 : dir === "right" ? -12 : 0);
+      const approachY = fy + (furniture === "stool" ? 0 : dir === "up" ? 12 : dir === "down" ? -12 : 0);
+      const s = b.spot(
+        kind,
+        Math.floor(approachX / TILE),
+        Math.floor(approachY / TILE),
+        dir,
+        { x: fx, y: fy, seated: true, furnitureId: node.id, sortY: node.depth + 0.25 }
+      );
+      node.seatIds.push(s.id);
+      return s;
+    };
+    const plant = (b, x, y, dx = 0) => {
+      const variants = ["palm", "ficus", "monstera", "bonsai"];
+      return sprite2(b, "plant_tall", x, y, variants[(Math.floor(x / 31) + Math.floor(y / 23)) % variants.length], true, dx);
+    };
+    const reception = zone("core:recepcao", "reception");
+    object(reception, "wall", 49, 51, 1447, 17);
+    object(reception, "wall", 49, 51, 14, 345);
+    object(reception, "wall", 49, 680, 14, 300);
+    object(reception, "wall", 1480, 51, 16, 930);
+    object(reception, "wall", 49, 966, 1447, 18);
+    object(reception, "wall", 496, 51, 118, 313);
+    object(reception, "slats", 65, 70, 426, 100, { label: "Coworking" });
+    object(reception, "counter", 160, 210, 265, 48);
+    for (const x of [259, 340]) object(reception, "monitor", x - 16, 194, 32, 24, { solid: false }).depth = planY(258) + 1;
+    interaction(reception, "elevator", 91, 425, "right").group = "elevator:0";
+    interaction(reception, "elevator", 91, 598, "right").group = "elevator:1";
+    seat(reception, "armchair", 193, 352, "right", "armchair");
+    seat(reception, "armchair", 346, 352, "left", "armchair");
+    sprite2(reception, "cafe_table", 269, 349);
+    seat(reception, "beanbag", 241, 510, "down", "beanbag", "yellow");
+    seat(reception, "beanbag", 285, 589, "up", "beanbag", "blue");
+    sprite2(reception, "coffee_table", 300, 553);
+    sprite2(reception, "bookshelf", 180, 626);
+    interaction(reception, "shelf", 230, 640, "up");
+    for (const [x, y] of [[89, 193], [465, 198], [83, 333], [466, 336], [327, 476], [109, 697]]) plant(reception, x, y);
+    sprite2(reception, "floor_lamp", 273, 487);
+    const window2 = sprite2(reception, "window", 555, 340, void 0, false);
+    window2.depth = planY(364) + 1;
+    interaction(reception, "window", 555, 390, "up", window2);
+    const cabinet = sprite2(reception, "filing_cabinet", 405, 691);
+    sprite2(reception, "printer", 405, 674, void 0, false).depth = cabinet.depth + 1;
+    const cafe = zone("core:copa", "cafe");
+    object(cafe, "wall", 615, 68, 590, 20);
+    const kitchenCounter = sprite2(cafe, "counter", 712, 171, "drawers");
+    sprite2(cafe, "microwave", 712, 149, void 0, false).depth = kitchenCounter.depth + 1;
+    for (const [kind, x, spotKind] of [
+      ["fridge", 650, "fridge"],
+      ["counter_sink", 770, "sink"],
+      ["coffee_machine", 817, "coffee"],
+      ["coffee_machine", 861, "coffee"],
+      ["vending_machine", 927, "snack"],
+      ["water_cooler", 973, "water"]
+    ]) {
+      const node = sprite2(cafe, kind, x, 171);
+      interaction(cafe, spotKind, x, 195, "up", node);
+    }
+    object(cafe, "counter", 879, 210, 239, 46);
+    object(cafe, "pastry", 1018, 133, 101, 67);
+    for (const x of [926, 969, 1012, 1055, 1098]) seat(cafe, "cafe_seat", x, 299, "up", "stool", "").group = "cafe:bar";
+    for (const [x, y] of [[700, 293], [843, 322], [1008, 349]]) {
+      sprite2(cafe, "cafe_table", x, y);
+      seat(cafe, "cafe_seat", x - 49, y, "right", "cafe_chair").group = `cafe:bistro:${x}`;
+      seat(cafe, "cafe_seat", x + 49, y, "left", "cafe_chair").group = `cafe:bistro:${x}`;
+      seat(cafe, "cafe_seat", x, y + 47, "up", "cafe_chair").group = `cafe:bistro:${x}`;
+    }
+    plant(cafe, 1172, 199);
+    plant(cafe, 1168, 350);
+    const focus = zone("core:focus", "lounge");
+    object(focus, "wall", 1214, 69, 272, 35);
+    for (const x of [1250, 1324, 1398]) {
+      object(focus, "wall", x - 30, 134, 7, 149, { color: "#3b3552" });
+      object(focus, "slats", x - 23, 137, 58, 47, { color: "#4d3b47" });
+      object(focus, "counter", x - 20, 201, 48, 24);
+      seat(focus, "armchair", x + 4, 266, "up", "office_chair", "black");
+    }
+    sprite2(focus, "bookshelf", 1461, 282);
+    interaction(focus, "shelf", 1461, 309, "up");
+    const meeting = zone("core:meeting", "lounge");
+    object(meeting, "glass", 1252, 354, 231, 10);
+    object(meeting, "glass", 1252, 354, 7, 272);
+    object(meeting, "glass", 1477, 354, 7, 272);
+    object(meeting, "glass", 1252, 626, 84, 8);
+    object(meeting, "glass", 1414, 626, 70, 8);
+    object(meeting, "display", 1324, 399, 96, 50, { solid: false, label: "stats" });
+    object(meeting, "bench", 1315, 492, 120, 52);
+    for (const x of [1334, 1375, 1416]) {
+      seat(meeting, "armchair", x, 510, "down", "office_chair_front", "black");
+      seat(meeting, "armchair", x, 577, "up", "office_chair", "black");
+    }
+    plant(meeting, 1287, 420);
+    plant(meeting, 1450, 420);
+    const restroom = zone("core:banheiros", "restroom");
+    for (const [x, y, w, h] of [[65, 704, 169, 8], [298, 704, 186, 8], [65, 704, 8, 260], [476, 704, 8, 260]]) object(restroom, "wall", x, y, w, h);
+    for (const x of [125, 173, 221]) {
+      sprite2(restroom, "mirror", x, 753, void 0, false);
+      const sink2 = sprite2(restroom, "sink", x, 791);
+      interaction(restroom, "sink", x, 815, "up", sink2).group = "mirror:vanity";
+    }
+    object(restroom, "hygiene", 80, 738, 24, 48, { solid: false });
+    sprite2(restroom, "trash_bin", 264, 846);
+    sprite2(restroom, "clock", 269, 741, void 0, false);
+    for (const x of [325, 386, 447]) {
+      const stall = sprite2(restroom, "toilet_stall", x, 803);
+      interaction(restroom, "stall", x, 827, "up", stall);
+    }
+    const wcBench = sprite2(restroom, "bench", 171, 935, void 0, false);
+    for (const offset of [-16, 16]) seat(restroom, "bench", 0, 0, "down", "bench", "", 0, wcBench, offset);
+    plant(restroom, 97, 936);
+    plant(restroom, 426, 947);
+    const lounge = zone("core:lounge", "lounge");
+    const sofa2 = sprite2(lounge, "sofa", 713, 794, "down", false);
+    for (const offset of [-24, 0, 24]) seat(lounge, "sofa", 0, 0, "down", "sofa", "down", 0, sofa2, offset).group = "screen:tv";
+    sprite2(lounge, "coffee_table", 714, 850);
+    seat(lounge, "armchair", 637, 899, "right", "armchair").group = "screen:tv";
+    seat(lounge, "armchair", 803, 899, "left", "armchair").group = "screen:tv";
+    object(lounge, "display", 671, 932, 87, 30, { solid: false, label: "social-tv" });
+    plant(lounge, 574, 766);
+    plant(lounge, 855, 814);
+    sprite2(lounge, "floor_lamp", 603, 870);
+    const games = zone("core:games", "lounge");
+    const pingpong = sprite2(games, "pingpong_table", 1058, 795);
+    interaction(games, "pingpong", 975, 785, "right", pingpong).group = "pingpong:arena";
+    interaction(games, "pingpong", 1142, 785, "left", pingpong).group = "pingpong:arena";
+    for (const x of [995, 1058, 1120]) interaction(games, "watch", x, 711, "down");
+    object(games, "pool", 959, 826, 95, 103);
+    object(games, "foosball", 1096, 846, 95, 72);
+    const arcade2 = sprite2(games, "arcade", 1204, 826);
+    interaction(games, "arcade", 1204, 852, "up", arcade2);
+    const secondArcade = sprite2(games, "arcade", 1250, 826);
+    interaction(games, "arcade", 1250, 852, "up", secondArcade);
+    object(games, "display", 1335, 736, 123, 76, { label: "game" });
+    const gameSofa = sprite2(games, "sofa", 1384, 888, "up", false);
+    for (const offset of [-24, 0, 24]) seat(games, "sofa", 0, 0, "up", "sofa", "up", 0, gameSofa, offset).group = "screen:videogame";
+    for (const [x, y, color] of [[1268, 892, "blue"], [1319, 926, "yellow"], [1440, 929, "red"]]) {
+      seat(games, "beanbag", x, y, "up", "beanbag", color).group = "screen:videogame";
+    }
+    interaction(games, "talk", 940, 865, "right").group = "talk:pool";
+    interaction(games, "talk", 1080, 810, "left").group = "talk:pool";
+    interaction(games, "talk", 1071, 911, "right").group = "talk:foosball";
+    interaction(games, "talk", 1203, 911, "left").group = "talk:foosball";
+    plant(games, 1470, 952);
+    plant(games, 946, 777);
+    const desks = zone("core:coworking", "lounge");
+    const island = (xs, y, dx = 0) => {
+      const table = object(desks, "bench", xs[0] - 55, y + 18, xs[xs.length - 1] - xs[0] + 110, 44, { dx });
+      for (const x of xs) {
+        for (const [base, dir] of [[y + 37, "down"], [y + 92, "up"]]) {
+          const s = seat(desks, "desk", x, base, dir, dir === "up" ? "office_chair" : "office_chair_front", "black", dx);
+          s.rank = desks.area.spots.length;
+          s.side = dir === "up" ? "S" : "N";
+        }
+        object(desks, "monitor", x - 17, y + 19, 34, 24, { dx, solid: false }).depth = table.depth + 1;
+        sprite2(desks, "plant_small", x + 31, y + 40, ["succulent", "fern", "flower"][(x + y) % 3], false, dx).depth = table.depth + 2;
+      }
+      plant(desks, xs[0] - 83, y + 77, dx);
+      plant(desks, xs[xs.length - 1] + 78, y + 77, dx);
+    };
+    for (const y of [428, 553]) {
+      island([521, 638], y);
+      island([980, 1051, 1120], y);
+    }
+    for (const patch of benchPatches(cols)) for (const y of [428, 553]) island([980, 1051, 1120], y, patch.dx);
+    plant(desks, 818, 587);
+    const scene = { objects, areas };
+    scenes.set(cols, scene);
+    return scene;
+  }
+  function coworkingAreas(cols) {
+    return coworkingScene(cols).areas;
+  }
+
+  // third_party/office_engine/client/src/world/render/floor-plan.ts
+  var CoworkingSceneRenderer = class {
+    cache = null;
+    columns = -1;
+    draw(ctx, cols) {
+      if (this.columns !== cols || !this.cache) {
+        const canvas3 = document.createElement("canvas");
+        canvas3.width = cols * COL_W * TILE;
+        canvas3.height = PLAN.height;
+        const c = canvas3.getContext("2d"), extra = expansionWidth(cols);
+        c.fillStyle = "#c9935a";
+        c.fillRect(0, 0, canvas3.width, canvas3.height);
+        for (let y = 0; y < canvas3.height; y += 14) for (let x = -90; x < canvas3.width; x += 116) {
+          const xx = x + y / 14 % 2 * 58, seed = (x + 200) * 19 + y * 31 >>> 0;
+          c.fillStyle = ["#d8a66c", "#d4a064", "#dca970", "#cd975e"][seed % 4];
+          c.fillRect(xx, y, 115, 13);
+          c.fillStyle = "#e8b982";
+          c.fillRect(xx + 1, y, 113, 1);
+          c.fillStyle = "#ba854f";
+          c.fillRect(xx, y + 13, 116, 1);
+          c.fillStyle = "#ce995f";
+          c.fillRect(xx + 12, y + 7, 57, 1);
+        }
+        const rug = (x, y, w, h, color, shift = 0) => {
+          const xx = planX(x) + shift, yy = planY(y), ww = Math.round(w * PLAN.width / PLAN.w), hh = Math.round(h * PLAN.height / PLAN.h);
+          c.fillStyle = "#f1c18a";
+          c.fillRect(xx - 2, yy - 2, ww + 4, hh + 4);
+          c.fillStyle = color;
+          c.fillRect(xx, yy, ww, hh);
+          c.fillStyle = "#ffffff0c";
+          for (let py = yy + 3; py < yy + hh; py += 6) for (let px = xx + 3; px < xx + ww; px += 8) c.fillRect(px, py, 2, 1);
+        };
+        rug(155, 290, 258, 98, "#9a8b80");
+        rug(625, 252, 505, 113, "#a8947f");
+        rug(145, 460, 223, 177, "#7c6b72");
+        rug(390, 452, 380, 214, "#a39180");
+        rug(861, 452, 348, 214, "#a39180");
+        for (const p of benchPatches(cols)) rug(861, 452, 348, 214, "#a39180", p.dx);
+        rug(553, 756, 315, 164, "#454551");
+        rug(927, 770, 552, 175, "#685578", extra);
+        rug(1255, 369, 222, 255, "#a99e91", extra);
+        const rx = planX(65), ry = planY(711), rw = planX(476) - rx, rh = planY(965) - ry;
+        c.fillStyle = "#d7dbe3";
+        c.fillRect(rx, ry, rw, rh);
+        c.strokeStyle = "#b4bccb";
+        c.lineWidth = 1;
+        for (let x = rx; x <= rx + rw; x += 32) {
+          c.beginPath();
+          c.moveTo(x, ry);
+          c.lineTo(x, ry + rh);
+          c.stroke();
+        }
+        for (let y = ry; y <= ry + rh; y += 32) {
+          c.beginPath();
+          c.moveTo(rx, y);
+          c.lineTo(rx + rw, y);
+          c.stroke();
+        }
+        c.fillStyle = "#364052";
+        c.fillRect(21, planY(444), 38, 86);
+        c.fillStyle = "#e6b551";
+        c.font = "22px sans-serif";
+        c.fillText("\u2039 \u203A", 24, planY(495));
+        c.strokeStyle = "#d4f5ff";
+        c.lineWidth = 3;
+        for (const y of [planY(404), planY(550)]) c.strokeRect(9, y, 5, 120);
+        const sign2 = (text, x, y, shift = 0) => {
+          c.font = "600 13px system-ui";
+          const w = c.measureText(text).width + 22;
+          c.fillStyle = "#232936";
+          c.fillRect(planX(x) + shift - w / 2, planY(y), w, 23);
+          c.fillStyle = "#f5f0e8";
+          c.textAlign = "center";
+          c.fillText(text, planX(x) + shift, planY(y) + 16);
+          c.textAlign = "left";
+        };
+        sign2("Recep\xE7\xE3o", 277, 271);
+        sign2("Cafeteria", 803, 203);
+        sign2("Games", 1100, 930, extra);
+        this.cache = canvas3;
+        this.columns = cols;
+      }
+      ctx.drawImage(this.cache, 0, 0);
+    }
+    hasFront(node, art) {
+      return node.shape === "sprite" && !!node.kind && !!art.furnitureSprites(node.kind, node.variant).front;
+    }
+    object(ctx, node, art, now, sim2, front = false, busy = false) {
+      const { x, y, w, h } = node;
+      if (node.shape === "sprite" && node.kind) {
+        const sprites = art.furnitureSprites(node.kind, node.variant, busy ? 1 : 0);
+        const s = front ? sprites.front : sprites.base;
+        if (!s) return;
+        this.sprite(ctx, s, x + w / 2, y + h, node.scale);
+        if (!front && node.kind === "arcade" && s.rects?.screen) {
+          const r = s.rects.screen;
+          art.drawScreen(ctx, {
+            x: x + w / 2 + (r.x - s.ax) * node.scale,
+            y: y + h + (r.y - s.ay) * node.scale,
+            w: r.w * node.scale,
+            h: r.h * node.scale
+          }, "game", now, sim2.social.arcadeSeed() ?? 4);
+        }
+        if (!front && node.kind === "mirror" && s.rects?.glass) this.reflection(ctx, node, s, art, sim2);
+        if (!front && node.kind === "coffee_machine" && busy) {
+          ctx.fillStyle = "#edf7ff";
+          for (let i = 0; i < 3; i++) {
+            const phase = (now / 1200 + i / 3) % 1;
+            ctx.fillRect(x + w / 2 - 5 + i * 4, y - 10 - phase * 20, 2, 4);
+          }
+        }
+        return;
+      }
+      if (front) return;
+      const rect = (xx, yy, ww, hh, color) => {
+        ctx.fillStyle = color;
+        ctx.fillRect(xx, yy, ww, hh);
+      };
+      const box = (color, edge = "#33343f") => {
+        rect(x + 3, y + 5, w, h, "#1b22302b");
+        rect(x, y, w, h, edge);
+        rect(x + 2, y + 2, w - 4, h - 4, color);
+      };
+      switch (node.shape) {
+        case "wall":
+          box(node.color ?? "#414354");
+          rect(x + 2, y + 2, w - 4, 3, "#76798a");
+          break;
+        case "glass":
+          box("#a9e1eb2b");
+          rect(x, y, w, 2, "#cee9ed");
+          if (h > w) for (let yy = y + 25; yy < y + h; yy += 55) rect(x, yy, w, 2, "#424c59");
+          break;
+        case "slats":
+          box(node.color ?? "#543a29");
+          for (let xx = x + 3; xx < x + w - 3; xx += 7) {
+            rect(xx, y + 3, 2, h - 6, "#956039");
+            rect(xx + 2, y + 3, 1, h - 6, "#322c2b");
+          }
+          if (node.label) {
+            ctx.save();
+            ctx.textAlign = "center";
+            ctx.fillStyle = "#ffdf93";
+            ctx.shadowColor = "#ffb435";
+            ctx.shadowBlur = 12;
+            ctx.font = "600 25px system-ui";
+            ctx.fillText("\u25C7", x + w / 2, y + h / 2 - 4);
+            ctx.font = "600 19px system-ui";
+            ctx.fillText(node.label, x + w / 2, y + h - 13);
+            ctx.restore();
+          }
+          break;
+        case "counter":
+        case "bench":
+          rect(x + 4, y + h - 1, 5, 15, "#49434a");
+          rect(x + w - 9, y + h - 1, 5, 15, "#49434a");
+          box("#eac18b", "#70553b");
+          rect(x + 2, y + 2, w - 4, 3, "#ffe0ad");
+          for (let yy = y + 8; yy < y + h - 3; yy += 11) rect(x + 6, yy, w - 12, 1, "#dab17d");
+          rect(x, y + h - 5, w, 5, "#9e704a");
+          if (node.shape === "counter") {
+            rect(x + 3, y + h - 3, w - 6, 20, "#ab8056");
+            rect(x + 3, y + h + 16, w - 6, 4, "#55463d");
+          }
+          break;
+        case "monitor":
+          rect(x + w / 2 - 2, y + h - 6, 4, 9, "#242d40");
+          rect(x + 6, y + h + 1, w - 12, 3, "#334355");
+          box("#142b46");
+          rect(x + 3, y + 3, w - 6, h - 7, "#174064");
+          for (let i = 0; i < 5; i++) rect(x + 5 + i % 2 * 3, y + 5 + i * 3, (w - 11) * (0.4 + (i + Math.floor(now / 500)) % 3 * 0.2), 1, i % 2 ? "#61d4c0" : "#88b9e8");
+          rect(x - 1, y + h + 9, w + 2, 5, "#586277");
+          break;
+        case "pastry":
+          box("#a57041");
+          rect(x + 3, y + 3, w - 6, h - 6, "#d0edee70");
+          for (let row = 0; row < 3; row++) {
+            rect(x + 2, y + 4 + row * h / 3, w - 4, 2, "#ffe4a4");
+            for (let col = 0; col < 3; col++) {
+              rect(x + 10 + col * 23, y + 12 + row * h / 3, 13, 7, "#d68b32");
+              rect(x + 11 + col * 23, y + 11 + row * h / 3, 10, 3, "#f8d17d");
+            }
+          }
+          break;
+        case "pool":
+          box("#65452f");
+          rect(x + 7, y + 7, w - 14, h - 14, "#08744e");
+          rect(x + 10, y + 10, w - 20, h - 20, "#12825a");
+          for (const xx of [x + 5, x + w - 9]) for (const yy of [y + 5, y + h / 2 - 2, y + h - 9]) rect(xx, yy, 5, 5, "#19252a");
+          for (let i = 0; i < 6; i++) rect(x + w / 2 + i % 3 * 4 - 4, y + h * 0.7 + Math.floor(i / 3) * 4, 3, 3, ["#f8e7c2", "#f6c23d", "#f16b5e"][i % 3]);
+          ctx.strokeStyle = "#dfbd7f";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(x + 20, y + 45);
+          ctx.lineTo(x + w - 18, y + 16);
+          ctx.stroke();
+          break;
+        case "foosball":
+          box("#72503a");
+          rect(x + 7, y + 7, w - 14, h - 14, "#306354");
+          for (let i = 0; i < 5; i++) {
+            const xx = x + 12 + i * (w - 24) / 4;
+            rect(xx, y - 5, 2, h + 10, "#a7b7c4");
+            for (let j = 0; j < 3; j++) rect(xx - 2, y + 12 + j * 13, 6, 8, i % 2 ? "#efaa55" : "#478cc3");
+          }
+          break;
+        case "display":
+          box("#253148");
+          rect(x + 4, y + 4, w - 8, h - 8, node.label === "game" ? "#42205f" : "#254b7b");
+          if (node.label === "game" || node.label === "social-tv") {
+            const mode = node.label === "game" ? "game" : "show";
+            const live = sim2.social.tvScreen();
+            art.drawScreen(ctx, { x: x + 4, y: y + 4, w: w - 8, h: h - 8 }, mode, now, live?.mode === mode ? live.seed : 4);
+          } else for (let i = 0; i < 5; i++) rect(x + 15 + i * 10, y + h - 12 - i * 5, 6, 6 + i * 5, "#e5d89e");
+          break;
+        case "hygiene":
+          box("#e4e9ee");
+          rect(x + 5, y + 6, w - 10, 10, "#697d8a");
+          rect(x + 6, y + 19, w - 12, 13, "#ffffff");
+          rect(x + 4, y + h - 7, w - 8, 3, "#a3b9c4");
+          break;
+      }
+    }
+    reflection(ctx, node, mirror2, art, sim2) {
+      const r = mirror2.rects.glass;
+      const gx = node.x + node.w / 2 + (r.x - mirror2.ax) * node.scale;
+      const gy = node.y + node.h + (r.y - mirror2.ay) * node.scale;
+      const gw = r.w * node.scale, gh = r.h * node.scale;
+      const person = [...sim2.chars.values()].find((ch) => !ch.inside && !ch.seated && ch.alpha > 0.5 && ch.dir === "up" && Math.abs(ch.x - node.x - node.w / 2) < node.w / 2 && ch.y - node.y > 10 && ch.y - node.y < 90);
+      if (!person) return;
+      const pose = person.pose === "groom" ? "groom" : "stand";
+      const sprite2 = art.characterSprite({
+        appearance: person.appearance,
+        dir: "down",
+        pose,
+        frame: Math.floor(person.animT / art.poseFrameDuration(pose)) % art.poseFrameCount(pose),
+        held: pose === "groom" ? person.held : "none",
+        seated: false
+      });
+      ctx.save();
+      ctx.beginPath();
+      ctx.rect(gx, gy, gw, gh);
+      ctx.clip();
+      ctx.globalAlpha = 0.75;
+      ctx.drawImage(
+        sprite2.canvas,
+        gx + gw / 2 - sprite2.ax * node.scale,
+        gy - 7 * node.scale,
+        sprite2.canvas.width * node.scale,
+        sprite2.canvas.height * node.scale
+      );
+      ctx.globalAlpha = 0.2;
+      ctx.fillStyle = "#d5efff";
+      ctx.fillRect(gx, gy, gw, gh);
+      ctx.restore();
+    }
+    sprite(ctx, sprite2, x, y, scale) {
+      ctx.drawImage(sprite2.canvas, Math.round(x - sprite2.ax * scale), Math.round(y - sprite2.ay * scale), sprite2.canvas.width * scale, sprite2.canvas.height * scale);
+    }
+  };
+
   // third_party/office_engine/client/src/world/render/renderer.ts
   var TV_MODES = ["browser", "idle", "chat", "code"];
   var POPCORN_DX = { down: 0, up: -9, left: -5, right: 5 };
@@ -21087,6 +21752,7 @@
     art;
     sim;
     camera;
+    floorPlan = new CoworkingSceneRenderer();
     outdoorActors = null;
     furnitureOverride = null;
     /** Optional raster art for the exterior; movement and placement stay in the simulation. */
@@ -21206,7 +21872,7 @@
       for (let x = this.baseX + 4; x < this.baseX + c.width; x += 24) ctx.fillRect(x, ly, 12, 2);
       this.shells = [];
       this.shellWindows = [];
-      for (let col = CORE_COLS; col < cols; col++) {
+      for (let col = CORE_COLS; !UNIFIED_COWORKING && col < cols; col++) {
         for (const side of ["north", "south"]) {
           const sh = slotShell(slotAt(col, side), col === cols - 1, this.season);
           this.shells.push(sh);
@@ -21371,15 +22037,16 @@
         const p = vis.px;
         if (!visible(p.x, p.y - WALL_MARGIN, p.w, p.h + WALL_MARGIN)) continue;
         const anim = vis.room ? buildAnim(vis.room.phase, vis.room.progress(now)) : NO_ANIM;
-        this.drawFloor(vis, anim);
+        if (!UNIFIED_COWORKING) this.drawFloor(vis, anim);
       }
       for (const vis of this.areas.values()) {
         const p = vis.px;
         if (!visible(p.x, p.y - WALL_MARGIN, p.w, p.h + WALL_MARGIN)) continue;
         const anim = vis.room ? buildAnim(vis.room.phase, vis.room.progress(now)) : NO_ANIM;
-        this.drawWalls(vis, anim, now, hour);
+        if (!UNIFIED_COWORKING) this.drawWalls(vis, anim, now, hour);
       }
       const view = { x0: vx0, y0: vy0, x1: vx1, y1: vy1 };
+      if (UNIFIED_COWORKING) this.floorPlan.draw(ctx, this.sim.building.cols);
       this.roomFx.drawFloor(ctx, this.sim, now, view);
       const ents = this.ents;
       ents.length = 0;
@@ -21401,27 +22068,32 @@
         const p = vis.px;
         if (!visible(p.x - TILE, p.y - 3 * TILE, p.w + 2 * TILE, p.h + 4 * TILE)) continue;
         const anim = vis.room ? buildAnim(vis.room.phase, vis.room.progress(now)) : NO_ANIM;
-        for (const f of vis.furniture) {
+        for (const f of UNIFIED_COWORKING ? [] : vis.furniture) {
           const s = anim.mode === "none" ? 1 : furnitureScale(anim, f.order);
           if (s <= 0.01) continue;
           if (!visible(f.ax - 3 * TILE, f.ay - 4 * TILE, 6 * TILE, 4 * TILE + 4)) continue;
           const composite = f.kind === "focus_pod" || f.kind === "coworking_set" || f.kind === "meeting_pair" || f.kind === "meeting_set";
           const fs = this.furnitureOverride?.(f, this.furnState(f, now)) ?? furnitureSprites2(this.art, f, this.furnState(f, now));
-          push(0 /* FurnBase */, composite && fs ? f.ay - fs.base.ay : f.ay, f, vis, s);
-          if (fs?.front) push(1 /* FurnFront */, f.ay + 0.5, f, vis, s);
+          push(2 /* FurnBase */, composite && fs ? f.ay - fs.base.ay : f.ay, f, vis, s);
+          if (fs?.front) push(3 /* FurnFront */, f.ay + 0.5, f, vis, s);
         }
+      }
+      if (UNIFIED_COWORKING) for (const node of coworkingScene(this.sim.building.cols).objects) {
+        push(0 /* SceneBase */, node.depth, node, null, 1);
+        if (this.floorPlan.hasFront(node, this.art)) push(1 /* SceneFront */, node.depth + 0.5, node, null, 1);
       }
       for (const ch of this.sim.people()) {
         const head = this.headOf(ch);
         head.visible = false;
         if (ch.inside || ch.alpha <= 0.01 || now < ch.hiddenUntil) continue;
-        if (!visible(ch.x - 24, ch.y - 48, 48, 56)) {
+        const actorScale = UNIFIED_COWORKING ? ACTOR_SCALE : 1;
+        if (!visible(ch.x - 24 * actorScale, ch.y - 48 * actorScale, 48 * actorScale, 56 * actorScale)) {
           head.x = ch.x;
           head.y = ch.y - 26;
           head.feetY = ch.y;
           continue;
         }
-        push(2 /* Char */, ch.depth(), ch, null, 1);
+        push(4 /* Char */, ch.depth(), ch, null, 1);
       }
       for (const sh of this.shells) {
         const room = this.roomInSlot(sh.slot);
@@ -21434,39 +22106,46 @@
         }
         for (const prop of sh.props) {
           if (!visible(prop.x - 24, prop.y - 56, 48, 60)) continue;
-          push(3 /* Prop */, prop.y, prop, null, alpha);
+          push(5 /* Prop */, prop.y, prop, null, alpha);
         }
       }
       for (const car of this.cars) {
         const s = this.exteriorSprites?.car(car.variant, car.dir < 0) ?? carSprite(car.variant, car.dir < 0);
-        if (visible(car.x - s.ax, car.y - s.ay, s.canvas.width, s.canvas.height)) push(4 /* Car */, car.y, car, null, 1);
+        if (visible(car.x - s.ax, car.y - s.ay, s.canvas.width, s.canvas.height)) push(6 /* Car */, car.y, car, null, 1);
       }
       for (const actor of this.outdoorActors?.(dt) ?? []) {
-        if (visible(actor.x - 24, actor.y - 40, 48, 48)) push(5 /* Outdoor */, actor.y, actor, null, 1);
+        if (visible(actor.x - 24, actor.y - 40, 48, 48)) push(7 /* Outdoor */, actor.y, actor, null, 1);
       }
       ents.sort((a, b) => a.y - b.y || a.k - b.k);
       this.iconCount = 0;
       for (const e of ents) {
         switch (e.k) {
-          case 0 /* FurnBase */:
+          case 0 /* SceneBase */:
+          case 1 /* SceneFront */: {
+            const node = e.ref;
+            const busy = node.kind === "coffee_machine" ? (this.sim.machineUntil.get(node.id) ?? 0) > now : node.kind === "toilet_stall" && this.sim.stallBusy.has(node.id);
+            this.floorPlan.object(ctx, node, this.art, now, this.sim, e.k === 1 /* SceneFront */, busy);
+            break;
+          }
+          case 2 /* FurnBase */:
             this.drawFurniture(e.ref, e.area, e.scale, false, now);
             break;
-          case 1 /* FurnFront */:
+          case 3 /* FurnFront */:
             this.drawFurniture(e.ref, e.area, e.scale, true, now);
             break;
-          case 2 /* Char */:
+          case 4 /* Char */:
             this.drawCharacter(e.ref, now, sel);
             break;
-          case 3 /* Prop */:
+          case 5 /* Prop */:
             this.drawProp(e.ref, e.scale);
             break;
-          case 6 /* PropFront */:
+          case 8 /* PropFront */:
             this.drawProp(e.ref, e.scale, true);
             break;
-          case 4 /* Car */:
+          case 6 /* Car */:
             this.drawCar(e.ref);
             break;
-          case 5 /* Outdoor */: {
+          case 7 /* Outdoor */: {
             const actor = e.ref;
             this.ctx.drawImage(actor.sprite.canvas, Math.round(actor.x - actor.sprite.ax), Math.round(actor.y - actor.sprite.ay));
             break;
@@ -21815,15 +22494,16 @@
         }
       }
       if (sprite2) {
-        const sx = x - sprite2.ax;
-        const sy = y - sprite2.ay;
-        ctx.drawImage(sprite2.canvas, sx, sy);
+        const scale = UNIFIED_COWORKING ? ACTOR_SCALE : 1;
+        const sx = x - sprite2.ax * scale;
+        const sy = y - sprite2.ay * scale;
+        ctx.drawImage(sprite2.canvas, sx, sy, sprite2.canvas.width * scale, sprite2.canvas.height * scale);
         const b = opaqueBounds(sprite2.canvas);
-        head.bx = sx + b.x;
-        head.by = sy + b.y;
-        head.bw = b.w;
-        head.bh = b.h;
-        head.y = sy + b.y;
+        head.bx = sx + b.x * scale;
+        head.by = sy + b.y * scale;
+        head.bw = b.w * scale;
+        head.bh = b.h * scale;
+        head.y = sy + b.y * scale;
       } else {
         head.bx = x - 7;
         head.by = y - 26;
@@ -22227,144 +22907,6 @@
     }
   };
 
-  // third_party/office_engine/client/src/world/layout/builder.ts
-  var SEAT_FOOT_DY = 3;
-  var SEATED_SORT_BIAS = 0.25;
-  var AreaBuilder = class {
-    area;
-    seq = 0;
-    constructor(id, kind, rect) {
-      this.area = { id, kind, rect, floors: [], rugs: [], walls: [], wallItems: [], furniture: [], spots: [], walkable: [] };
-    }
-    get x0() {
-      return this.area.rect.x;
-    }
-    get y0() {
-      return this.area.rect.y;
-    }
-    /** px absoluto de uma coordenada local em tiles (aceita frações). */
-    px(lx) {
-      return (this.x0 + lx) * TILE;
-    }
-    py(ly) {
-      return (this.y0 + ly) * TILE;
-    }
-    floor(kind, lx, ly, w, h, seed, tint, tint2) {
-      this.area.floors.push({ kind, x: this.px(lx), y: this.py(ly), w: w * TILE, h: h * TILE, seed, tint, tint2 });
-      return this;
-    }
-    rug(lx, ly, w, h, color, seed) {
-      this.area.rugs.push({ x: Math.round(this.px(lx)), y: Math.round(this.py(ly)), w: Math.round(w * TILE), h: Math.round(h * TILE), color, seed });
-      return this;
-    }
-    /** Face da parede norte (2 tiles) entre lx e lx+w (tiles locais, aceita frações). */
-    face(lx, w, style, doorways = [], ly = 0) {
-      this.area.walls.push({ kind: "face", x: this.px(lx), y: this.py(ly), w: w * TILE, style, doorways: this.doors(doorways) });
-      return this;
-    }
-    south(lx, w, ly, style, doorways = []) {
-      this.area.walls.push({ kind: "south", x: this.px(lx), y: this.py(ly), w: w * TILE, style, doorways: this.doors(doorways) });
-      return this;
-    }
-    cap(lx, ly, w, h, style) {
-      this.area.walls.push({ kind: "cap", x: this.px(lx), y: this.py(ly), w: w * TILE, h: h * TILE, style });
-      return this;
-    }
-    doors(list) {
-      return list.length ? list.map((d) => ({ x: this.px(d.lx), w: d.w * TILE })) : void 0;
-    }
-    /** Item de parede centrado em `lcx` (tiles locais). `ly` = linha local do rodapé (default 2 = base da face norte). */
-    wall(kind, lcx, variant, opts = {}) {
-      const id = `${this.area.id}#w${this.seq++}:${kind}`;
-      this.area.wallItems.push({
-        id,
-        kind,
-        variant,
-        cx: Math.round(this.px(lcx)),
-        baseY: this.py(opts.ly ?? 2),
-        on: opts.on ?? "face",
-        order: opts.order ?? 0.5
-      });
-      return id;
-    }
-    /** Móvel de chão com o canto superior esquerdo do footprint em (lx, ly). */
-    furn(kind, lx, ly, variant, opts = {}) {
-      const id = `${this.area.id}#f${this.seq++}:${kind}`;
-      const f = {
-        id,
-        kind,
-        variant,
-        tx: this.x0 + lx,
-        ty: this.y0 + ly,
-        dx: opts.dx,
-        dy: opts.dy,
-        order: opts.order ?? 0.5,
-        seat: opts.seat
-      };
-      this.area.furniture.push(f);
-      return id;
-    }
-    /** Spot com aproximação no tile local (lx, ly). Posição final padrão = pés no tile. */
-    spot(kind, lx, ly, dir, opts = {}) {
-      const tx = this.x0 + lx;
-      const ty = this.y0 + ly;
-      const s = {
-        id: `${this.area.id}#s${this.seq++}:${kind}`,
-        kind,
-        areaId: this.area.id,
-        tx,
-        ty,
-        x: opts.x ?? tx * TILE + FOOT_DX + (opts.dx ?? 0),
-        y: opts.y ?? ty * TILE + FOOT_DY + (opts.dy ?? 0),
-        dir,
-        seated: opts.seated,
-        furnitureId: opts.furnitureId,
-        sortY: opts.sortY,
-        group: opts.group,
-        deskId: opts.deskId,
-        rank: opts.rank,
-        side: opts.side
-      };
-      this.area.spots.push(s);
-      return s;
-    }
-    /**
-     * Assento (cadeira, banqueta, poltrona...) no tile local (lx, ly). O personagem se aproxima
-     * pelo próprio tile do assento e encaixa na posição do assento (com `dx` opcional em px).
-     */
-    seat(kind, furnitureKind, lx, ly, dir, variant, opts = {}) {
-      const furnitureId = opts.noFurniture ? opts.furnitureId : this.furn(furnitureKind, lx, ly, variant, { dx: opts.dx, order: opts.order });
-      const base = this.py(ly + 1);
-      return this.spot(kind, lx, ly, dir, {
-        ...opts,
-        furnitureId,
-        seated: true,
-        x: this.px(lx) + TILE / 2 + (opts.dx ?? 0),
-        y: base - SEAT_FOOT_DY + (opts.dy ?? 0),
-        sortY: base + SEATED_SORT_BIAS
-      });
-    }
-    walk(lx, ly, w, h) {
-      this.area.walkable.push({ x: this.x0 + lx, y: this.y0 + ly, w, h });
-      return this;
-    }
-    block(lx, ly, w, h) {
-      (this.area.blocked ??= []).push({ x: this.x0 + lx, y: this.y0 + ly, w, h });
-      return this;
-    }
-    build() {
-      return this.area;
-    }
-  };
-  function furnitureBlocks(kind) {
-    const def = FURNITURE[kind];
-    return def.mount === "floor" && def.blocks;
-  }
-  function furnitureIsSeat(kind) {
-    const def = FURNITURE[kind];
-    return def.mount === "floor" && !!def.seat;
-  }
-
   // third_party/office_engine/client/src/world/layout/core.ts
   var RECEPTION_ID = "core:recepcao";
   var RESTROOM_ID = "core:banheiros";
@@ -22715,6 +23257,24 @@
     return grid;
   }
   function assembleBuilding(cols, rooms, version = 0) {
+    if (UNIFIED_COWORKING) {
+      const core2 = coworkingAreas(cols);
+      const corridor2 = { id: "core:corredor", kind: "corridor", rect: buildingRect(cols), floors: [], rugs: [], walls: [], wallItems: [], furniture: [], spots: [], walkable: [] };
+      const grid2 = new WalkGrid(cols * COL_W, BUILDING_H, version);
+      for (const area of core2) for (const r of area.walkable) grid2.fill(r.x, r.y, r.w, r.h, FREE);
+      for (const area of core2) for (const r of area.blocked ?? []) grid2.fill(r.x, r.y, r.w, r.h, BLOCKED);
+      const spots2 = core2.flatMap((area) => area.spots);
+      const seatObjects = new Set(spots2.filter((s) => s.seated).map((s) => s.furnitureId));
+      for (const node of coworkingScene(cols).objects) if (seatObjects.has(node.id)) {
+        for (let ty = Math.floor(node.y / TILE); ty < Math.ceil((node.y + node.h) / TILE); ty++) {
+          for (let tx = Math.floor(node.x / TILE); tx < Math.ceil((node.x + node.w) / TILE); tx++) {
+            if (grid2.get(tx, ty) === FREE) grid2.set(tx, ty, SEAT);
+          }
+        }
+      }
+      for (const spot of spots2) if (spot.seated && grid2.get(spot.tx, spot.ty) === FREE) grid2.set(spot.tx, spot.ty, SEAT);
+      return { cols, rect: buildingRect(cols), core: core2, corridor: corridor2, rooms: [...rooms], grid: grid2, spots: spots2 };
+    }
     const core = coreAreas();
     const corridor = layoutCorridor(cols);
     const all = [...core, corridor, ...rooms];
@@ -22752,6 +23312,7 @@
     return { mirror: mirror2, meeting, left, right };
   }
   function layoutProjectRoom(room, theme) {
+    if (UNIFIED_COWORKING) return new AreaBuilder(room.id, "room", { x: 20, y: 20, w: 42, h: 14 }).build();
     const rect = slotRect(room.slot);
     const side = slotSide(room.slot);
     const rng = mulberry32(room.seed ^ 24301);
@@ -24247,12 +24808,14 @@
         case "tv":
         case "videogame": {
           if (this.tvBusy()) return null;
-          const seats = [...spots.ofKind("sofa"), ...spots.ofKind("armchair")].filter((s) => s.areaId === LOUNGE_ID && free(s));
+          const screenSeats = [...spots.all()].filter((s) => s.group === `screen:${kind}`);
+          const seats = (screenSeats.length ? screenSeats : [...spots.ofKind("sofa"), ...spots.ofKind("armchair")].filter((s) => s.areaId === LOUNGE_ID)).filter(free);
           const sofa2 = seats.filter((s) => s.kind === "sofa").sort((a, b) => a.tx - b.tx);
           const chairs = seats.filter((s) => s.kind !== "sofa");
           if (kind === "videogame") {
             for (let i = 0; i + 1 < sofa2.length; i++) {
-              if (sofa2[i + 1].tx !== sofa2[i].tx + 1) continue;
+              const sameSofa = !!sofa2[i].furnitureId && sofa2[i].furnitureId === sofa2[i + 1].furnitureId;
+              if (screenSeats.length ? !sameSofa : sofa2[i + 1].tx !== sofa2[i].tx + 1) continue;
               const pair = [sofa2[i], sofa2[i + 1]];
               const rest = [...sofa2.filter((s) => !pair.includes(s)), ...chairs];
               if (n > 2 + rest.length) return null;
@@ -24286,7 +24849,10 @@
         case "mirror": {
           const sinks = spots.ofKind("sink").filter((s) => s.areaId === RESTROOM_ID && free(s)).sort((a, b) => a.tx - b.tx);
           if (n === 1) return sinks.length ? { seats: [sinks[Math.floor(ch.rng() * sinks.length)]], pool: [] } : null;
-          for (let i = 0; i + 1 < sinks.length; i++) if (sinks[i + 1].tx === sinks[i].tx + 1) return { seats: [sinks[i], sinks[i + 1]], pool: [] };
+          for (let i = 0; i + 1 < sinks.length; i++) {
+            const sameVanity = sinks[i].group?.startsWith("mirror:") && sinks[i].group === sinks[i + 1].group;
+            if (sameVanity || sinks[i + 1].tx === sinks[i].tx + 1) return { seats: [sinks[i], sinks[i + 1]], pool: [] };
+          }
           return null;
         }
       }
@@ -24297,6 +24863,18 @@
      */
     kitchenSeats(n, free, rng) {
       const seats = this.sim.spots.ofKind("cafe_seat").filter((s) => s.areaId === CAFE_ID);
+      const groups = /* @__PURE__ */ new Map();
+      for (const s of seats) if (s.group?.startsWith("cafe:")) {
+        const group = groups.get(s.group) ?? [];
+        group.push(s);
+        groups.set(s.group, group);
+      }
+      if (groups.size) {
+        const available = [...groups.values()].map((group) => group.filter(free)).filter((group) => group.length >= n);
+        if (!available.length) return null;
+        const pool = available[Math.floor(rng() * available.length)];
+        return { seats: pool.slice(0, n), pool };
+      }
       const at = (x, y, dir) => seats.find((s) => s.tx === x && s.ty === y && s.dir === dir);
       const pairs = [];
       for (const s of seats) {
@@ -25146,7 +25724,7 @@
   function inParty(ch, roomId, rect, now) {
     if (ch.gone || ch.leaving || ch.inside || ch.arriving || ch.alpha < 0.5 || now < ch.hiddenUntil) return false;
     if (ch.mode === "wait" || ch.mode === "leave" || ch.mode === "deliver") return false;
-    return ch.roomId === roomId || inRect(rect, ch.tx, ch.ty);
+    return ch.roomId === roomId || !UNIFIED_COWORKING && inRect(rect, ch.tx, ch.ty);
   }
 
   // third_party/office_engine/client/src/world/sim/room-state.ts
@@ -25446,6 +26024,7 @@
     effects = [];
     /** Festa e alarme das salas (eventos do GitHub; sim/github.ts). */
     roomFx = new RoomFxState();
+    coworkingCapacity = 20;
     lastSnapshot = null;
     /** Desde quando há uma vaga livre antes da última sala (0 = não há). */
     gapSince = 0;
@@ -25495,6 +26074,15 @@
         if (!listed.has(rs.id) && rs.listed) {
           rs.listed = false;
           rs.unlistedAt = now;
+        }
+      }
+      if (UNIFIED_COWORKING) {
+        const occupants = new Set([...this.chars.values()].filter((ch) => !ch.gone).map((ch) => ch.id));
+        for (const agent of snap.agents) if (agent.status !== "offline" && agent.status !== "done" && !this.hiddenRooms.has(agent.roomId) && !this.forcedOffline.has(agent.id)) occupants.add(agent.id);
+        const capacity = Math.max(20, occupants.size);
+        if (capacity !== this.coworkingCapacity) {
+          this.coworkingCapacity = capacity;
+          layoutDirty = true;
         }
       }
       if (layoutDirty) this.relayout();
@@ -25757,7 +26345,7 @@
       ch.homeSpot = null;
       const room = this.rooms.get(ch.roomId);
       if (!room || !room.present) return;
-      const seat = chooseSeat(room.layout.spots, (id) => this.spots.isFree(id, ch.id), ch.info.kind);
+      const seat = chooseSeat(UNIFIED_COWORKING ? this.building.spots.filter((s) => s.kind === "desk") : room.layout.spots, (id) => this.spots.isFree(id, ch.id), ch.info.kind);
       if (seat && this.spots.reserve(seat.id, ch.id)) ch.homeSpot = seat.id;
     }
     pickElevator(ch) {
@@ -25769,7 +26357,7 @@
     /** Recalcula o prédio (largura, grade, spots) a partir das salas presentes. */
     relayout(force = false) {
       const present = [...this.rooms.values()].filter((r) => r.present);
-      let cols = columnsFor(present.map((r) => r.slot));
+      let cols = UNIFIED_COWORKING ? 4 + Math.ceil(Math.max(0, this.coworkingCapacity - 20) / 12) : columnsFor(present.map((r) => r.slot));
       const cur = this.building.cols;
       if (cols < cur && !force) {
         const limit = cols * COL_W * TILE;
@@ -25783,6 +26371,8 @@
         present.map((r) => r.layout),
         this.layoutVersion + 1
       );
+      const eastEdge = (y) => planX(y >= planY(PLAN.southY) ? PLAN.southInsertX : PLAN.insertX) + expansionWidth(cur);
+      const eastShift = UNIFIED_COWORKING ? (cols - cur) * COL_W * TILE : 0;
       this.building = building;
       this.layoutVersion++;
       this.finder.setGrid(building.grid);
@@ -25794,6 +26384,21 @@
         ch.tempSpots = ch.tempSpots.filter((s) => this.spots.get(s));
       }
       for (const ch of this.chars.values()) {
+        if (eastShift) {
+          if (ch.x >= eastEdge(ch.y)) {
+            ch.x += eastShift;
+            ch.tx += eastShift / TILE;
+          }
+          if (ch.standTile && ch.standTile.x * TILE >= eastEdge(ch.standTile.y * TILE)) ch.standTile.x += eastShift / TILE;
+          for (const step of ch.step ? [ch.step, ...ch.queue] : ch.queue) {
+            if (step.t === "go" && step.tx * TILE >= eastEdge(step.ty * TILE)) {
+              step.tx += eastShift / TILE;
+              if (step.fx !== void 0) step.fx += eastShift;
+            }
+          }
+          const seat = this.spots.get(ch.atSpot);
+          if (ch.seated && seat) this.snapTo(ch, seat);
+        }
         if (ch.atSpot && !this.spots.get(ch.atSpot)) {
           ch.atSpot = null;
           ch.seated = false;
@@ -26471,7 +27076,7 @@
       return true;
     }
     hasFreeSeat(room, ch) {
-      return !!chooseSeat(room.layout.spots, (id) => this.spots.isFree(id, ch.id), ch.info.kind);
+      return !!chooseSeat(UNIFIED_COWORKING ? this.building.spots.filter((s) => s.kind === "desk") : room.layout.spots, (id) => this.spots.isFree(id, ch.id), ch.info.kind);
     }
     /** Tile livre para alguém ficar em pé (sem assento, sem spot e sem outra pessoa). */
     overflowFree(x, y, ch, busy = this.busyTiles(ch.id)) {
@@ -27233,7 +27838,7 @@
         name: state.name,
         spotId: state.spotId,
         zone: state.zone,
-        phase: this.chars.get(state.agentId)?.atSpot === state.spotId ? "using" : "walking"
+        phase: this.chars.get(state.agentId)?.atSpot === state.spotId && this.chars.get(state.agentId)?.seated ? "using" : "walking"
       }));
     }
     getCoworkingTest() {
@@ -27256,7 +27861,7 @@
     }
     planCoworking(ch, zone, group = false) {
       const kind = zone === "focus" ? "office_chair" : zone === "meeting" ? "armchair" : "coworking_set";
-      const furniture = this.building.core.flatMap((area) => area.furniture.filter((f) => group ? area.id === "core:lounge" : f.kind === kind));
+      const furniture = this.building.core.flatMap((area) => area.furniture.filter((f) => UNIFIED_COWORKING ? group ? ["core:lounge", "core:games", "core:copa", "core:recepcao", "core:meeting"].includes(area.id) : area.id === (zone === "focus" ? "core:focus" : zone === "meeting" ? "core:meeting" : "core:lounge") : group ? area.id === "core:lounge" : f.kind === kind));
       const furnitureIds = new Set(furniture.map((f) => f.id));
       const finder = new PathFinder(this.building.grid), path = [];
       const candidates = this.building.spots.filter((s) => s.seated && !!s.furnitureId && furnitureIds.has(s.furnitureId));
@@ -28225,7 +28830,7 @@
   var raf = 0;
   var destroyed = false;
   var disposeSpriteMix = null;
-  void installSpriteMix(renderer, sim, (percent) => outdoorPeople.setFurnitureScale(percent)).then((dispose) => {
+  void installSpriteMix(renderer, sim).then((dispose) => {
     if (destroyed) dispose();
     else disposeSpriteMix = dispose;
   });
@@ -28295,7 +28900,7 @@
     const pad = 2 * TILE;
     const bounds = { x: b.x - pad, y: b.y - pad, w: b.w + pad * 2, h: b.h + pad * 2 };
     camera.bounds = bounds;
-    camera.minZoom = Math.min(6, Math.max(
+    camera.minZoom = Math.min(6, Math.min(
       (camera.viewW - camera.insets.left - camera.insets.right) / bounds.w,
       (camera.viewH - camera.insets.top - camera.insets.bottom) / bounds.h
     ));

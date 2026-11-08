@@ -5,6 +5,7 @@
 import type { RoomInfo } from '../../../../shared/types';
 import { hash32 } from '../../../../shared/hash';
 import { inRect } from '../layout/geometry';
+import { UNIFIED_COWORKING } from '../constants';
 import type { Character } from './character';
 import type { Sim } from './sim';
 
@@ -127,5 +128,5 @@ export function celebrate(sim: Sim, fx: RoomFx, now: number): void {
 function inParty(ch: Character, roomId: string, rect: { x: number; y: number; w: number; h: number }, now: number): boolean {
   if (ch.gone || ch.leaving || ch.inside || ch.arriving || ch.alpha < 0.5 || now < ch.hiddenUntil) return false;
   if (ch.mode === 'wait' || ch.mode === 'leave' || ch.mode === 'deliver') return false;
-  return ch.roomId === roomId || inRect(rect, ch.tx, ch.ty);
+  return ch.roomId === roomId || (!UNIFIED_COWORKING && inRect(rect, ch.tx, ch.ty));
 }

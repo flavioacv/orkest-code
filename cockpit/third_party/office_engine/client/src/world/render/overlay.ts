@@ -7,7 +7,7 @@
 import { TILE } from '../../art/api';
 import type { WorldOptions } from '../api';
 import type { Camera } from '../camera';
-import { COL_W, CORE_COLS, CORRIDOR_Y, SOUTH_Y } from '../constants';
+import { UNIFIED_COWORKING, COL_W, CORE_COLS, CORRIDOR_Y, SOUTH_Y } from '../constants';
 import type { Character } from '../sim/character';
 import { shellAgeKey, shellBubbleAlpha, shellBubbleText, STORM_LIFT, unitHash } from '../sim/shell';
 import type { Sim } from '../sim/sim';
@@ -415,6 +415,8 @@ export class Overlay {
   // =================================================================== salas
 
   private drawRoomTexts(now: number, zoom: number): void {
+    // The unified scene already draws its signs; projects share the same work floor.
+    if (UNIFIED_COWORKING) return;
     const { camera } = this;
     const vw = camera.viewW;
     const vh = camera.viewH;
@@ -468,10 +470,13 @@ export class Overlay {
       const room = this.sim.rooms.get(fx.roomId);
       if (!room || !room.present || now >= fx.end) continue;
       const r = room.layout.rect;
-      const cx = this.sx((r.x + r.w / 2) * TILE);
-      const top = this.sy((r.y + 2) * TILE) + 4;
+      const owner = UNIFIED_COWORKING ? (fx.agentId ? this.sim.chars.get(fx.agentId)
+        : [...this.sim.chars.values()].find(ch => ch.roomId === fx.roomId && !ch.gone)) : null;
+      const head = owner ? this.renderer.heads.get(owner.id) : null;
+      const cx = this.sx(owner?.x ?? (r.x + r.w / 2) * TILE);
+      const top = this.sy(head?.y != null ? head.y - 32 : (r.y + 2) * TILE) + 4;
       if (cx < -200 || cx > camera.viewW + 200 || top < -40 || top > camera.viewH + 40) continue;
-      const b = drawFxBanner(this.ctx, fx, cx, top, r.w * TILE * zoom - 12, now, (f, t, w) => this.fit(f, t, w), (f, t) => this.measure(f, t));
+      const b = drawFxBanner(this.ctx, fx, cx, top, UNIFIED_COWORKING ? 260 : r.w * TILE * zoom - 12, now, (f, t, w) => this.fit(f, t, w), (f, t) => this.measure(f, t));
       if (b) this.place(b.x, b.y, b.w, b.h);
     }
   }

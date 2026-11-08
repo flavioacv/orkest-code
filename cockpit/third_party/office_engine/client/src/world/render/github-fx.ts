@@ -5,6 +5,7 @@
 // Desempenho: só percorre as salas com efeito (quase sempre nenhuma); sprites em cache; o confete
 // usa o pool fixo de partículas, com taxa limitada por sala.
 import { TILE } from '../../art/api';
+import { UNIFIED_COWORKING } from '../constants';
 import type { HeadInfo } from './renderer';
 import type { Particles } from './particles';
 import type { RoomFx } from '../sim/github';
@@ -127,17 +128,24 @@ function roomRects(r: { x: number; y: number; w: number; h: number }) {
   };
 }
 
+/** Project effects follow its occupied desks when projects share an open floor. */
+export function effectRegions(sim: Sim, roomId: string): ReturnType<typeof roomRects>[] {
+  const room = sim.rooms.get(roomId);
+  if (!room || !room.present || room.phase === 'dismantling') return [];
+  if (!UNIFIED_COWORKING) return [roomRects(room.layout.rect)];
+  return [...sim.chars.values()].filter(ch => ch.roomId === roomId && !ch.gone && !ch.leaving).flatMap(ch => {
+    const home = sim.spots.get(ch.homeSpot);
+    return home ? [roomRects({ x: (home.x - 32) / TILE, y: (home.y - 40) / TILE, w: 4, h: 4 })] : [];
+  });
+}
+
 export class RoomFxRenderer {
   /** Acumulador da taxa de confete por sala. */
   private acc = new Map<string, number>();
 
-  private visibleRoom(sim: Sim, fx: RoomFx, v: View) {
-    const room = sim.rooms.get(fx.roomId);
-    if (!room || !room.present || room.phase === 'dismantling') return null;
-    const rects = roomRects(room.layout.rect);
-    const p = rects.room;
-    if (p.x > v.x1 || p.x + p.w < v.x0 || p.y - 8 > v.y1 || p.y + p.h < v.y0) return null;
-    return rects;
+  private visibleRooms(sim: Sim, fx: RoomFx, v: View) {
+    return effectRegions(sim, fx.roomId).filter(({ room: p }) =>
+      p.x <= v.x1 && p.x + p.w >= v.x0 && p.y - 8 <= v.y1 && p.y + p.h >= v.y0);
   }
 
   /** Tom vermelho pulsando no piso das salas em alarme (antes dos móveis e personagens). */
@@ -146,13 +154,13 @@ export class RoomFxRenderer {
     const still = reducedMotion();
     for (const fx of sim.roomFx.active.values()) {
       if (fx.kind !== 'alarm' || now >= fx.end) continue;
-      const rects = this.visibleRoom(sim, fx, v);
-      if (!rects) continue;
       const pulse = still ? 0.5 : 0.5 + 0.5 * Math.sin(((now - fx.start) / 1100) * Math.PI * 2);
-      const f = rects.floor;
-      ctx.globalAlpha = fxFade(fx, now) * (0.08 + 0.09 * pulse);
-      ctx.fillStyle = '#ff2a36';
-      ctx.fillRect(f.x, f.y, f.w, f.h);
+      for (const rects of this.visibleRooms(sim, fx, v)) {
+        const f = rects.floor;
+        ctx.globalAlpha = fxFade(fx, now) * (0.08 + 0.09 * pulse);
+        ctx.fillStyle = '#ff2a36';
+        ctx.fillRect(f.x, f.y, f.w, f.h);
+      }
     }
     ctx.globalAlpha = 1;
   }
@@ -169,15 +177,16 @@ export class RoomFxRenderer {
         this.acc.delete(id);
         continue;
       }
-      const rects = this.visibleRoom(sim, fx, v);
-      if (!rects) continue;
+      const regions = this.visibleRooms(sim, fx, v);
+      if (!regions.length) continue;
       // começa forte e rareia nos últimos 2 s
       const k = Math.min(1, (fx.end - now) / 2000) * (now - fx.start < 1500 ? 1.6 : 1);
       let a = (this.acc.get(id) ?? 0) + Math.min(0.1, dt) * CONFETTI_RATE * k;
-      const f = rects.floor;
-      const top = rects.room.y + 4;
       while (a >= 1) {
         a -= 1;
+        const rects = regions[Math.floor(Math.random() * regions.length)];
+        const f = rects.floor;
+        const top = rects.room.y + 4;
         const y = top + Math.random() * 6;
         particles.confettiFall(f.x + 2 + Math.random() * (f.w - 4), y, f.y + f.h - 4 - y);
       }
@@ -196,8 +205,7 @@ export class RoomFxRenderer {
     for (const fx of sim.roomFx.active.values()) {
       if (fx.kind !== 'alarm' || now >= fx.end) continue;
       const fade = fxFade(fx, now);
-      const rects = this.visibleRoom(sim, fx, v);
-      if (rects) this.drawBeacons(ctx, rects, now - fx.start, fade, still);
+      for (const rects of this.visibleRooms(sim, fx, v)) this.drawBeacons(ctx, rects, now - fx.start, fade, still);
       // balão "!" sobre o responsável (onde ele estiver), à direita do ícone da cabeça; o overlay
       // sobe o balão de atividade para não cobri-lo
       const head = fx.agentId ? heads.get(fx.agentId) : undefined;

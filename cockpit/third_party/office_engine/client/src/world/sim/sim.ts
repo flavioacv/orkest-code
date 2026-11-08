@@ -4,8 +4,9 @@ import { partsKey } from '../../../../shared/appearance';
 import type { AgentInfo, OfficeSnapshot, Provider, RoomInfo } from '../../../../shared/types';
 import type { ArtModule, Dir, RoomTheme } from '../../art/api';
 import type { WorldOptions } from '../api';
-import { COL_W, COMPACT_DELAY_MS, DISMANTLE_DELAY_MS, FOOT_DX, FOOT_DY, MISSING_DEBOUNCE_MS, RUN_SPEED, TILE, WALK_SPEED } from '../constants';
+import { UNIFIED_COWORKING, COL_W, COMPACT_DELAY_MS, DISMANTLE_DELAY_MS, FOOT_DX, FOOT_DY, MISSING_DEBOUNCE_MS, RUN_SPEED, TILE, WALK_SPEED } from '../constants';
 import { assembleBuilding, type BuildingLayout } from '../layout/building';
+import { PLAN, expansionWidth, planX, planY } from '../layout/floor-plan';
 import { RECEPTION_ID } from '../layout/core';
 import { columnsFor, inRect } from '../layout/geometry';
 import { layoutProjectRoom } from '../layout/room';
@@ -127,6 +128,7 @@ export class Sim {
   readonly effects: WorldEffect[] = [];
   /** Festa e alarme das salas (eventos do GitHub; sim/github.ts). */
   readonly roomFx = new RoomFxState();
+  private coworkingCapacity = 20;
   private lastSnapshot: OfficeSnapshot | null = null;
   /** Desde quando há uma vaga livre antes da última sala (0 = não há). */
   private gapSince = 0;
@@ -197,6 +199,15 @@ export class Sim {
         rs.listed = false;
         rs.unlistedAt = now;
       }
+    }
+    if (UNIFIED_COWORKING) {
+      // Departing occupants keep their reservations until they actually leave.
+      // Count their union with arrivals, including a complete session replacement in one snapshot.
+      const occupants = new Set([...this.chars.values()].filter(ch => !ch.gone).map(ch => ch.id));
+      for (const agent of snap.agents) if (agent.status !== 'offline' && agent.status !== 'done'
+        && !this.hiddenRooms.has(agent.roomId) && !this.forcedOffline.has(agent.id)) occupants.add(agent.id);
+      const capacity = Math.max(20, occupants.size);
+      if (capacity !== this.coworkingCapacity) { this.coworkingCapacity = capacity; layoutDirty = true; }
     }
     if (layoutDirty) this.relayout();
     this.roomFx.sync(snap.rooms, input.serverTime, now);
@@ -504,7 +515,7 @@ export class Sim {
     ch.homeSpot = null;
     const room = this.rooms.get(ch.roomId);
     if (!room || !room.present) return;
-    const seat = chooseSeat(room.layout.spots, (id) => this.spots.isFree(id, ch.id), ch.info.kind);
+    const seat = chooseSeat(UNIFIED_COWORKING ? this.building.spots.filter(s => s.kind === 'desk') : room.layout.spots, (id) => this.spots.isFree(id, ch.id), ch.info.kind);
     if (seat && this.spots.reserve(seat.id, ch.id)) ch.homeSpot = seat.id;
   }
 
@@ -519,7 +530,7 @@ export class Sim {
   /** Recalcula o prédio (largura, grade, spots) a partir das salas presentes. */
   relayout(force = false): void {
     const present = [...this.rooms.values()].filter((r) => r.present);
-    let cols = columnsFor(present.map((r) => r.slot));
+    let cols = UNIFIED_COWORKING ? 4 + Math.ceil(Math.max(0, this.coworkingCapacity - 20) / 12) : columnsFor(present.map((r) => r.slot));
     const cur = this.building.cols;
     if (cols < cur && !force) {
       // só encolhe quando ninguém está na faixa que vai sumir
@@ -534,6 +545,9 @@ export class Sim {
       present.map((r) => r.layout),
       this.layoutVersion + 1,
     );
+    // Inserting benches moves the east wing together with its occupants and destinations.
+    const eastEdge = (y: number) => planX(y >= planY(PLAN.southY) ? PLAN.southInsertX : PLAN.insertX) + expansionWidth(cur);
+    const eastShift = UNIFIED_COWORKING ? (cols - cur) * COL_W * TILE : 0;
     this.building = building;
     this.layoutVersion++;
     this.finder.setGrid(building.grid);
@@ -545,6 +559,18 @@ export class Sim {
       ch.tempSpots = ch.tempSpots.filter((s) => this.spots.get(s));
     }
     for (const ch of this.chars.values()) {
+      if (eastShift) {
+        if (ch.x >= eastEdge(ch.y)) { ch.x += eastShift; ch.tx += eastShift / TILE; }
+        if (ch.standTile && ch.standTile.x * TILE >= eastEdge(ch.standTile.y * TILE)) ch.standTile.x += eastShift / TILE;
+        for (const step of ch.step ? [ch.step, ...ch.queue] : ch.queue) {
+          if (step.t === 'go' && step.tx * TILE >= eastEdge(step.ty * TILE)) {
+            step.tx += eastShift / TILE;
+            if (step.fx !== undefined) step.fx += eastShift;
+          }
+        }
+        const seat = this.spots.get(ch.atSpot);
+        if (ch.seated && seat) this.snapTo(ch, seat);
+      }
       if (ch.atSpot && !this.spots.get(ch.atSpot)) {
         ch.atSpot = null;
         ch.seated = false;
@@ -1278,7 +1304,7 @@ export class Sim {
   }
 
   private hasFreeSeat(room: RoomState, ch: Character): boolean {
-    return !!chooseSeat(room.layout.spots, (id) => this.spots.isFree(id, ch.id), ch.info.kind);
+    return !!chooseSeat(UNIFIED_COWORKING ? this.building.spots.filter(s => s.kind === 'desk') : room.layout.spots, (id) => this.spots.isFree(id, ch.id), ch.info.kind);
   }
 
   /** Tile livre para alguém ficar em pé (sem assento, sem spot e sem outra pessoa). */

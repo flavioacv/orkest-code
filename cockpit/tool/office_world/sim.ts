@@ -1,3 +1,4 @@
+import { UNIFIED_COWORKING } from '../../third_party/office_engine/client/src/world/constants.ts';
 import { Sim } from '../../third_party/office_engine/client/src/world/sim/sim.ts';
 import type { Character } from '../../third_party/office_engine/client/src/world/sim/character.ts';
 import type { AgentInfo, OfficeSnapshot } from '../../third_party/office_engine/shared/types.ts';
@@ -34,7 +35,7 @@ export class OrkestSim extends Sim {
 
   getCoworkingTests(): CoworkingTestState[] {
     return [...this.coworkingTests.values()].map(state => ({ agentId: state.agentId, name: state.name,
-      spotId: state.spotId, zone: state.zone, phase: this.chars.get(state.agentId)?.atSpot === state.spotId ? 'using' : 'walking' }));
+      spotId: state.spotId, zone: state.zone, phase: this.chars.get(state.agentId)?.atSpot === state.spotId && this.chars.get(state.agentId)?.seated ? 'using' : 'walking' }));
   }
 
   getCoworkingTest(): CoworkingTestState | null { return this.getCoworkingTests()[0] ?? null; }
@@ -59,7 +60,10 @@ export class OrkestSim extends Sim {
 
   private planCoworking(ch: Character, zone: CoworkingZone, group = false): { ok: boolean; message: string } {
     const kind = zone === 'focus' ? 'office_chair' : zone === 'meeting' ? 'armchair' : 'coworking_set';
-    const furniture = this.building.core.flatMap(area => area.furniture.filter(f => group ? area.id === 'core:lounge' : f.kind === kind));
+    const furniture = this.building.core.flatMap(area => area.furniture.filter(f => UNIFIED_COWORKING
+      ? group ? ['core:lounge', 'core:games', 'core:copa', 'core:recepcao', 'core:meeting'].includes(area.id)
+        : area.id === (zone === 'focus' ? 'core:focus' : zone === 'meeting' ? 'core:meeting' : 'core:lounge')
+      : group ? area.id === 'core:lounge' : f.kind === kind));
     const furnitureIds = new Set(furniture.map(f => f.id));
     const finder = new PathFinder(this.building.grid), path: number[] = [];
     const candidates = this.building.spots.filter(s => s.seated && !!s.furnitureId && furnitureIds.has(s.furnitureId));

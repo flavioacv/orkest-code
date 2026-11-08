@@ -11,11 +11,64 @@ npm run office:test
 
 Sources are local: no adjacent Habblaud checkout or node_modules is required.
 The build preserves locale compatibility and expiring completion bubbles.
-Brand images are not loaded; the reception label is Orkest Code.
-The embedded manifest has no upstream brand plaque or logo payload.
+The coworking scene uses native sprites and procedural objects with registered
+collision footprints and cardinal seat anchors. The supplied floor-plan PNG is
+a design reference; it is not rendered as the room background.
 
 After changing the bundle, recreate the application/WebView. Ordinary Office
 switching retains the simulation of the same live sessions.
+
+## Application integration
+
+On macOS and Windows, `OfficeWorldView` mounts `HabblaudWorldWebView`, which embeds
+`assets/office_world/engine.js`. That bundle is built from this directory's
+`main.ts`; it enables the unified layout and instantiates `OrkestSim`. The sprite
+preview imports the same entry point. No preview URL or server is needed by the
+application.
+
+The existing `orkestOfficeWorld` bridge remains intact: Flutter sends normalized
+terminal/session snapshots and receives their revision acknowledgements. Agent
+clicks call `officeAgentClicked` with the live session ID. Profiles, portraits,
+selection/follow, settings, sound cues and session-owned social state use the
+existing APIs. `getSocialSnapshot` returns state scoped to `socialIdentity` so a
+WebView recreation can restore the same session without transferring its wallet
+to a replacement session.
+
+The social engine retains TV, videogame, arcade duels, ping-pong, kitchen
+conversations, chat, rock-paper-scissors and mirrors, together with personalities,
+wallets, bets and work interruption. Furniture groups replace fixed tile spacing
+where the larger sprites need it. CI alarms and project celebrations follow that
+project's desks and agents instead of the former enclosed room rectangles.
+Pool and foosball are decorative furniture with conversation points, not new match
+simulators.
+
+The hall starts with 20 exclusive workstations and adds 12 per expansion column.
+Existing desks retain their IDs and positions. Demand counts both incoming
+sessions and occupants still departing; an outing keeps the home desk reserved.
+The east wing, navigation targets and seated occupants move together during an
+expansion. The generator has no new fixed population ceiling; regression tests
+exercise 45 agents and simultaneous replacement of a 20-person shift.
+
+Linux still selects `OfficeWorldFlutterView` and its separate baked/native
+layout. The native exporter remains in its legacy profile; this coworking replaces
+the Canvas/WebView Office used by macOS and Windows.
+
+## Validation
+
+`npm run office:test` checks the legacy and unified social scripts, environment
+interactions, reservations, navigation/collisions, expansion, session identity and
+project effects. To check the production bundle against the actual Flutter HTML
+template after building it:
+
+```sh
+node tool/office_world/webview-smoke.mjs
+```
+
+Open `http://127.0.0.1:4322`. The page reports `passed` after checking snapshot
+acknowledgements, social restore/isolation, portraits, camera APIs, agent clicks
+and closed-session cleanup. It uses fixture session snapshots and a callback
+receiver in a browser, not a running Flutter application or real PTYs. The test
+server listens only on localhost.
 
 ## Harness-independent events
 

@@ -12,6 +12,8 @@ export let CORRIDOR_H = 5;
 /** Colunas do núcleo (recepção/banheiros e copa/lounge). */
 export let CORE_COLS = 2;
 
+export let UNIFIED_COWORKING = false;
+
 export const NORTH_Y = 0;
 export const CORRIDOR_Y = ROOM_H;
 export let SOUTH_Y = ROOM_H + CORRIDOR_H;
@@ -19,11 +21,12 @@ export let BUILDING_H = ROOM_H * 2 + CORRIDOR_H;
 
 /** Select before creating a simulation. The legacy profile remains available to raster exports. */
 export function configureOfficeLayout(spacious: boolean): void {
+  UNIFIED_COWORKING = spacious;
   COL_W = spacious ? 20 : 16;
   CORRIDOR_H = spacious ? 9 : 5;
   CORE_COLS = spacious ? 3 : 2;
   SOUTH_Y = ROOM_H + CORRIDOR_H;
-  BUILDING_H = ROOM_H * 2 + CORRIDOR_H;
+  BUILDING_H = spacious ? 52 : ROOM_H * 2 + CORRIDOR_H;
 }
 
 /** Primeira coluna (local) da porta de 2 tiles das salas. */

@@ -11,7 +11,7 @@
 // (descanso, impressão, verde, mesa de pé) e a coluna de apoio junto à parede.
 import { FURNITURE, type Dir, type FurnitureKind, type RoomTheme, type WallStyle } from '../../art/api';
 import { mulberry32 } from '../../../../shared/hash';
-import { DOOR_W, DOOR_X, TILE } from '../constants';
+import { UNIFIED_COWORKING, DOOR_W, DOOR_X, TILE } from '../constants';
 import { AreaBuilder, type SpotOpts } from './builder';
 import { slotRect, slotSide } from './geometry';
 import type { AreaLayout, SpotDef, SpotKind } from './types';
@@ -67,6 +67,8 @@ export function roomVariant(seed: number): RoomVariant {
 }
 
 export function layoutProjectRoom(room: RoomInput, theme: RoomTheme): AreaLayout {
+  // Projects retain their session lifecycle; workstations belong to the shared hall.
+  if (UNIFIED_COWORKING) return new AreaBuilder(room.id, 'room', { x: 20, y: 20, w: 42, h: 14 }).build();
   const rect = slotRect(room.slot);
   const side = slotSide(room.slot);
   const rng = mulberry32(room.seed ^ 0x5eed);

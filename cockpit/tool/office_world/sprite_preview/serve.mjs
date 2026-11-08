@@ -39,8 +39,9 @@ canvas{display:block;width:100vw;height:calc(100vh - 52px);touch-action:none}.er
 const port = Number(process.env.PORT ?? 4318);
 createServer((req, res) => {
   res.setHeader('Cache-Control', 'no-store');
-  if (req.url === '/preview.js') { res.writeHead(200, { 'Content-Type': 'text/javascript' }); res.end(result.outputFiles[0].text); }
-  else if (req.url === '/__orkest__/orkest.css') { res.writeHead(200, { 'Content-Type': 'text/css' }); res.end(css); }
-  else if (req.url === '/') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); res.end(html); }
+  const pathname = new URL(req.url, 'http://127.0.0.1').pathname;
+  if (pathname === '/preview.js') { res.writeHead(200, { 'Content-Type': 'text/javascript' }); res.end(result.outputFiles[0].text); }
+  else if (pathname === '/__orkest__/orkest.css') { res.writeHead(200, { 'Content-Type': 'text/css' }); res.end(css); }
+  else if (pathname === '/') { res.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8' }); res.end(html); }
   else { res.writeHead(404); res.end(); }
 }).listen(port, '127.0.0.1', () => console.log(`Office sprite preview: http://127.0.0.1:${port}`));

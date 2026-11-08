@@ -430,13 +430,15 @@ export class Social {
       case 'tv':
       case 'videogame': {
         if (this.tvBusy()) return null;
-        const seats = [...spots.ofKind('sofa'), ...spots.ofKind('armchair')].filter((s) => s.areaId === LOUNGE_ID && free(s));
+        const screenSeats = [...spots.all()].filter(s => s.group === `screen:${kind}`);
+        const seats = (screenSeats.length ? screenSeats : [...spots.ofKind('sofa'), ...spots.ofKind('armchair')].filter(s => s.areaId === LOUNGE_ID)).filter(free);
         const sofa = seats.filter((s) => s.kind === 'sofa').sort((a, b) => a.tx - b.tx);
         const chairs = seats.filter((s) => s.kind !== 'sofa');
         if (kind === 'videogame') {
           // os dois jogadores lado a lado no sofá, de frente para a TV
           for (let i = 0; i + 1 < sofa.length; i++) {
-            if (sofa[i + 1].tx !== sofa[i].tx + 1) continue;
+            const sameSofa = !!sofa[i].furnitureId && sofa[i].furnitureId === sofa[i + 1].furnitureId;
+            if (screenSeats.length ? !sameSofa : sofa[i + 1].tx !== sofa[i].tx + 1) continue;
             const pair = [sofa[i], sofa[i + 1]];
             const rest = [...sofa.filter((s) => !pair.includes(s)), ...chairs];
             if (n > 2 + rest.length) return null;
@@ -470,7 +472,10 @@ export class Social {
       case 'mirror': {
         const sinks = spots.ofKind('sink').filter((s) => s.areaId === RESTROOM_ID && free(s)).sort((a, b) => a.tx - b.tx);
         if (n === 1) return sinks.length ? { seats: [sinks[Math.floor(ch.rng() * sinks.length)]], pool: [] } : null;
-        for (let i = 0; i + 1 < sinks.length; i++) if (sinks[i + 1].tx === sinks[i].tx + 1) return { seats: [sinks[i], sinks[i + 1]], pool: [] };
+        for (let i = 0; i + 1 < sinks.length; i++) {
+          const sameVanity = sinks[i].group?.startsWith('mirror:') && sinks[i].group === sinks[i + 1].group;
+          if (sameVanity || sinks[i + 1].tx === sinks[i].tx + 1) return { seats: [sinks[i], sinks[i + 1]], pool: [] };
+        }
         return null;
       }
     }
@@ -482,6 +487,17 @@ export class Social {
    */
   private kitchenSeats(n: number, free: (s: SpotDef) => boolean, rng: () => number): SeatPlan | null {
     const seats = this.sim.spots.ofKind('cafe_seat').filter((s) => s.areaId === CAFE_ID);
+    // Explicit furniture groups survive changes in furniture scale and spacing.
+    const groups = new Map<string, SpotDef[]>();
+    for (const s of seats) if (s.group?.startsWith('cafe:')) {
+      const group = groups.get(s.group) ?? []; group.push(s); groups.set(s.group, group);
+    }
+    if (groups.size) {
+      const available = [...groups.values()].map(group => group.filter(free)).filter(group => group.length >= n);
+      if (!available.length) return null;
+      const pool = available[Math.floor(rng() * available.length)];
+      return { seats: pool.slice(0, n), pool };
+    }
     const at = (x: number, y: number, dir: Dir) => seats.find((s) => s.tx === x && s.ty === y && s.dir === dir);
     const pairs: SpotDef[][] = [];
     for (const s of seats) {

@@ -13,6 +13,8 @@ import { Sim } from '../../third_party/office_engine/client/src/world/sim/sim.ts
 import { OrkestSim, repairCharacterVisibility } from './sim.ts';
 import { coreAreaName } from '../../third_party/office_engine/client/src/world/render/overlay.ts';
 import { setLocale, tr } from '../../third_party/office_engine/shared/i18n.ts';
+import { configureOfficeLayout } from '../../third_party/office_engine/client/src/world/constants.ts';
+import { effectRegions } from '../../third_party/office_engine/client/src/world/render/github-fx.ts';
 
 const now = 1_800_000_000_000;
 
@@ -240,8 +242,10 @@ test('confirmed shell outcomes trigger the correct effect once', () => {
   }
 });
 
-for (const kind of ['tv','videogame','arcade','pingpong','kitchen','talk','rps','mirror'] as const) {
-  test(`social ${kind} executes its script and yields to work`, () => {
+for (const unified of [false, true]) for (const kind of ['tv','videogame','arcade','pingpong','kitchen','talk','rps','mirror'] as const) {
+  test(`social ${kind} executes its script and yields to work (${unified ? 'coworking' : 'legacy'})`, () => {
+    configureOfficeLayout(unified);
+    try {
     const input = snapshot('idle');
     input.agents[1].status = 'idle';
     const sim = new OrkestSim(art, () => DEFAULT_WORLD_OPTIONS, null);
@@ -263,6 +267,128 @@ for (const kind of ['tv','videogame','arcade','pingpong','kitchen','talk','rps',
     assert.equal(sim.chars.get('orchestrator')!.mode, 'work');
     assert.equal(sim.chars.get('orchestrator')!.gathering, null);
     assert.equal(sim.chars.get('orchestrator')!.atSpot, sim.chars.get('orchestrator')!.homeSpot);
+    } finally { configureOfficeLayout(false); }
+  });
+}
+
+test('shared workstations keep project celebrations and CI alarms scoped to their real sessions', () => {
+  configureOfficeLayout(true);
+  try {
+    const input = snapshot();
+    input.rooms.push({ ...input.rooms[0], id: 'remote', name: 'Remote', slot: 1 });
+    input.agents[1].roomId = 'remote';
+    input.rooms[0].effect = { kind: 'party', at: now, until: now + 12000, text: 'PR merged', agentId: 'orchestrator' };
+    const sim = new OrkestSim(art, () => DEFAULT_WORLD_OPTIONS, null);
+    sim.applySnapshot(input, now);
+    for (let i = 1; i <= 120; i++) sim.update(1 / 60, now + i * 1000 / 60);
+    const party = sim.roomFx.get('project', now + 2000)!;
+    assert.ok(party.cheered.has('orchestrator'));
+    assert.ok(!party.cheered.has('developer'));
+    const regions = effectRegions(sim, 'project');
+    assert.equal(regions.length, 1);
+    const home = sim.spots.get(sim.chars.get('orchestrator')!.homeSpot)!;
+    assert.ok(home.x >= regions[0].room.x && home.x < regions[0].room.x + regions[0].room.w);
+    input.rooms[0].effect = { kind: 'alarm', at: now + 2001, until: now + 62001, text: 'CI failed', agentId: 'orchestrator' };
+    sim.applySnapshot(input, now + 2001);
+    assert.ok(sim.roomFx.alarmOwner('orchestrator', now + 2001));
+    assert.equal(sim.roomFx.alarmOwner('developer', now + 2001), undefined);
+    assert.equal(sim.chars.get('developer')!.info.status, 'working');
+  } finally { configureOfficeLayout(false); }
+});
+
+test('a running pingpong match keeps its participants and reservations when the hall expands', () => {
+  configureOfficeLayout(true);
+  try {
+    const input = snapshot('idle'); input.agents[1].status = 'idle';
+    const sim = new OrkestSim(art, () => DEFAULT_WORLD_OPTIONS, null);
+    sim.applySnapshot(input, now);
+    assert.ok(sim.social.force('pingpong', now + 1, ['orchestrator', 'developer']));
+    const match = [...sim.social.gatherings][0];
+    let time = now;
+    for (let frame = 0; match.phase !== 'run' && frame < 4200; frame++) { time += 1000 / 60; sim.update(1 / 60, time); }
+    assert.equal(match.phase, 'run');
+    const members = match.members.map(m => ({ id: m.id, spot: m.spot, x: sim.chars.get(m.id)!.x }));
+    input.agents.push(...Array.from({ length: 19 }, (_, i) => ({ ...input.agents[0], id: `arrival-${i}`, status: 'working' })));
+    sim.applySnapshot(input, time);
+    assert.equal(sim.building.cols, 5); assert.equal(match.phase, 'run');
+    for (const member of members) {
+      const ch = sim.chars.get(member.id)!;
+      assert.equal(ch.x, member.x + 320);
+      assert.equal(ch.x, sim.spots.get(member.spot)!.x);
+      assert.equal(ch.gathering, match);
+      assert.ok(sim.spots.ownerOf(member.spot!));
+    }
+  } finally { configureOfficeLayout(false); }
+});
+
+test('coworking supports larger kitchen and videogame groups using furniture identities', () => {
+  configureOfficeLayout(true);
+  try {
+    const sim = new OrkestSim(art, () => DEFAULT_WORLD_OPTIONS, null);
+    sim.applySnapshot(snapshot('idle'), now);
+    const host = sim.chars.get('orchestrator')!;
+    for (const size of [2, 3, 4]) {
+      const kitchen = sim.social.plan('kitchen', size, host)!;
+      assert.ok(kitchen); assert.equal(kitchen.seats.length, size);
+      assert.equal(new Set(kitchen.seats.map(s => s.group)).size, 1);
+      const game = sim.social.plan('videogame', size, host)!;
+      assert.ok(game); assert.equal(game.seats.length, size);
+      assert.ok(game.seats.every(s => s.areaId === 'core:games'));
+      assert.equal(game.seats[0].furnitureId, game.seats[1].furnitureId);
+    }
+    assert.ok(sim.social.plan('tv', 4, host)!.seats.every(s => s.areaId === 'core:lounge'));
+  } finally { configureOfficeLayout(false); }
+});
+
+test('coworking reserves desks for arrivals while a full previous shift is still leaving', () => {
+  configureOfficeLayout(true);
+  try {
+    const input = snapshot();
+    input.agents = Array.from({ length: 20 }, (_, i) => ({ ...input.agents[0], id: `old-${i}`, seed: i + 1 }));
+    const sim = new OrkestSim(art, () => DEFAULT_WORLD_OPTIONS, null);
+    sim.applySnapshot(input, now);
+    const existing = [...sim.chars.values()].map(ch => [ch.id, ch.homeSpot] as const);
+    assert.equal(existing.length, 20);
+    input.agents = input.agents.map((a, i) => ({ ...a, id: `new-${i}` }));
+    sim.applySnapshot(input, now + 1);
+    assert.equal(sim.chars.size, 40);
+    assert.equal(sim.building.spots.filter(s => s.kind === 'desk').length, 44);
+    for (const [id, spot] of existing) assert.equal(sim.chars.get(id)!.homeSpot, spot);
+    for (let frame = 1; frame <= 10800; frame++) sim.update(1 / 60, now + frame * 1000 / 60);
+    const arrivals = input.agents.map(a => sim.chars.get(a.id)!);
+    assert.equal(new Set(arrivals.map(ch => ch.homeSpot)).size, 20);
+    for (const ch of arrivals) { assert.ok(ch.homeSpot); assert.equal(ch.atSpot, ch.homeSpot); }
+  } finally { configureOfficeLayout(false); }
+});
+
+for (const kind of ['coffee', 'water', 'snack', 'fridge', 'sink', 'stall', 'shelf', 'window'] as const) {
+  test(`coworking environment ${kind} approaches, uses, releases and returns to its desk`, () => {
+    configureOfficeLayout(true);
+    try {
+      const sim = new OrkestSim(art, () => DEFAULT_WORLD_OPTIONS, null);
+      sim.applySnapshot(snapshot(), now);
+      const ch = sim.chars.get('orchestrator')!;
+      const spot = sim.spots.ofKind(kind)[0]; assert.ok(spot);
+      sim.clearPlan(ch); ch.replan = false;
+      assert.ok(sim.reserveTemp(ch, spot));
+      let used = false, observedBusy = false;
+      ch.queue.push({ t: 'exit' }, { t: 'go', tx: spot.tx, ty: spot.ty, fx: spot.x, fy: spot.y, dir: spot.dir },
+        { t: 'do', fn: () => { used = true; assert.equal(ch.x, spot.x); assert.equal(ch.y, spot.y); } });
+      if (kind === 'stall') ch.queue.push({ t: 'stall', spot: spot.id, ms: 700, phase: 0 });
+      else ch.queue.push({ t: 'act', pose: kind === 'shelf' ? 'read' : kind === 'window' ? 'stand' : 'use',
+        ms: 700, machine: kind === 'coffee' ? spot.furnitureId : undefined });
+      ch.queue.push({ t: 'do', fn: () => { sim.releaseTemp(ch); sim.pushHome(ch, 'none'); } });
+      for (let frame = 1; frame <= 9000; frame++) {
+        sim.update(1 / 60, now + frame * 1000 / 60);
+        if (kind === 'coffee') observedBusy ||= (sim.machineUntil.get(spot.furnitureId!) ?? 0) > sim.now;
+        if (kind === 'stall') observedBusy ||= sim.stallBusy.has(spot.furnitureId!);
+        if (used && ch.atSpot === ch.homeSpot) break;
+      }
+      assert.ok(used); assert.equal(ch.atSpot, ch.homeSpot);
+      assert.equal(sim.spots.ownerOf(spot.id), undefined);
+      if (kind === 'coffee' || kind === 'stall') assert.ok(observedBusy, `No object state change: ${kind}`);
+      assert.equal(ch.inside, false); assert.equal(ch.alpha, 1);
+    } finally { configureOfficeLayout(false); }
   });
 }
 

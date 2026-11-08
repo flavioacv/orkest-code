@@ -2,6 +2,8 @@
 import '../main.ts';
 
 const startedAt = Date.now();
+const requestedAgents = Number(new URLSearchParams(location.search).get('agents') ?? 6);
+const agentCount = Number.isFinite(requestedAgents) ? Math.max(1, Math.min(60, Math.floor(requestedAgents))) : 6;
 let season = 'summer';
 const snapshot = () => ({
   serverTime: Date.now(),
@@ -11,9 +13,9 @@ const snapshot = () => ({
     { id: 'project-a', name: 'Sala · sprites novos + originais', seed: 1, slot: 0, path: '/office/a', createdAt: startedAt },
     { id: 'project-b', name: 'Sala · comparação de móveis', seed: 2, slot: 1, path: '/office/b', createdAt: startedAt },
   ],
-  agents: Array.from({ length: 6 }, (_, index) => ({
+  agents: Array.from({ length: agentCount }, (_, index) => ({
     id: `person-${index}`, kind: 'main', roomId: index < 3 ? 'project-a' : 'project-b',
-    name: ['Ana', 'Bruno', 'Carla', 'Diego', 'Elisa', 'Fábio'][index], account: 'preview',
+    name: ['Ana', 'Bruno', 'Carla', 'Diego', 'Elisa', 'Fábio'][index % 6] + (index >= 6 ? ` ${index + 1}` : ''), account: 'preview',
     look: index % 2 ? 'm' : 'f', seed: index + 4, status: 'working',
     startedAt, statusSince: startedAt, lastEventAt: startedAt, tasks: [],
     stats: { toolCalls: 0, tokensIn: 0, tokensOut: 0, subagents: 0 },

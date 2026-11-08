@@ -15,7 +15,6 @@ import { SoundCues } from '../../third_party/office_engine/client/src/world/soun
 import { __OFFICE_ASSETS__ } from './assets.ts';
 import { setLocale, getLocale, normalizeLocale } from '../../third_party/office_engine/shared/i18n.ts';
 import { outdoorLifeLayout } from '../../third_party/office_engine/client/src/world/layout/outdoor-life.ts';
-import { OutdoorPeople } from './outdoor_people.ts';
 import { installSpriteMix } from './sprite_mix.ts';
 
 configureOfficeLayout(true);
@@ -37,7 +36,7 @@ let lastTs = 0;
 let raf = 0;
 let destroyed = false;
 let disposeSpriteMix: (() => void) | null = null;
-void installSpriteMix(renderer, sim, percent => outdoorPeople.setFurnitureScale(percent)).then(dispose => {
+void installSpriteMix(renderer, sim).then(dispose => {
   if (destroyed) dispose();
   else disposeSpriteMix = dispose;
 });
@@ -113,7 +112,7 @@ function updateBounds() {
   const pad = 2 * TILE;
   const bounds = { x: b.x - pad, y: b.y - pad, w: b.w + pad * 2, h: b.h + pad * 2 };
   camera.bounds = bounds;
-  camera.minZoom = Math.min(6, Math.max(
+  camera.minZoom = Math.min(6, Math.min(
     (camera.viewW - camera.insets.left - camera.insets.right) / bounds.w,
     (camera.viewH - camera.insets.top - camera.insets.bottom) / bounds.h,
   ));
