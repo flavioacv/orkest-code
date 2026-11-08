@@ -26,11 +26,13 @@ export function layoutReception(): AreaLayout {
   const b = new AreaBuilder(RECEPTION_ID, 'reception', { x: 0, y: NORTH_Y, w: 16, h: ROOM_H });
   const wall = CORE_WALLS.reception;
   b.floor('marble', 0, 0, 16, 12, 101);
-  b.rug(1.5, 2.2, 6.5, 2.6, '#212d3d', 102);
-  b.rug(8.6, 6.4, 5.2, 3.2, '#382e27', 103);
+  b.rug(1.5, 2.2, 6.5, 2.6, '#242c38', 102);
+  b.rug(8.6, 6.4, 5.2, 3.2, '#2b2622', 103);
   b.face(0.5, 15, wall);
   b.cap(0, 0, 0.5, 12, wall);
-  b.cap(15.5, 0, 0.5, 12, wall);
+  // Open space coworking: pilar estrutural no topo e base, integrando com o salão do café
+  b.cap(15.5, 0, 0.5, 3, wall);
+  b.cap(15.5, 10, 0.5, 2, wall);
 
   // elevadores (é por onde todos chegam e vão embora)
   ELEVATOR_CX.forEach((cx, i) => {
@@ -62,7 +64,7 @@ export function layoutReception(): AreaLayout {
 
   // aberta para o corredor: divisórias de vidro nas pontas
   for (const lx of [1, 2, 3, 12, 13, 14]) b.furn('glass_partition', lx, 11, 'h', { order: 0.15 });
-  b.walk(1, 2, 14, 10);
+  b.walk(1, 2, 15, 10);
   b.spot('talk', 6, 9, 'right', { group: 'talk:recepcao', dx: -1 });
   b.spot('talk', 7, 9, 'left', { group: 'talk:recepcao', dx: 1 });
 
@@ -74,9 +76,9 @@ export function layoutReception(): AreaLayout {
 export function layoutRestroom(): AreaLayout {
   const b = new AreaBuilder(RESTROOM_ID, 'restroom', { x: 0, y: SOUTH_Y, w: 16, h: ROOM_H });
   const wall = CORE_WALLS.restroom;
-  b.floor('tile_white', 0, 0, 16, 12, 201);
-  // tapetinho só na frente das pias em tom ardósia moderno
-  b.rug(2, 3.15, 3, 0.85, '#2b3e47', 202);
+  b.floor('concrete', 0, 0, 16, 12, 201);
+  // tapetinho na frente das pias em tom ardósia moderno
+  b.rug(2, 3.15, 3, 0.85, '#26343e', 202);
   b.face(0.5, 15, wall, [{ lx: 7, w: 2 }]);
   b.wall('door_frame', 8, undefined, { order: 0.05 });
   b.south(0.5, 15, 11, { ...wall, exterior: true });
@@ -109,7 +111,7 @@ export function layoutRestroom(): AreaLayout {
   const bench = b.furn('bench', 3, 9, undefined, { order: 0.5 });
   for (let i = 0; i < 2; i++) b.seat('bench', 'bench', 3 + i, 9, 'down', undefined, { noFurniture: true, furnitureId: bench });
   b.furn('trash_bin', 9, 10, undefined, { order: 0.6 });
-  b.rug(2.5, 9.9, 3, 0.9, '#9cc3cf', 203);
+  b.rug(2.5, 9.9, 3, 0.9, '#2d3b45', 203);
   b.furn('plant_small', 1, 6, 'flower', { order: 0.24 });
   b.furn('plant_small', 12, 10, 'fern', { order: 0.25 });
   return b.build();
@@ -118,11 +120,13 @@ export function layoutRestroom(): AreaLayout {
 export function layoutCafe(): AreaLayout {
   const b = new AreaBuilder(CAFE_ID, 'cafe', { x: COL_W, y: NORTH_Y, w: 16, h: ROOM_H });
   const wall = CORE_WALLS.cafe;
-  b.floor('tile_check', 0, 0, 16, 12, 301);
+  b.floor('concrete', 0, 0, 16, 12, 301);
   // frontão de mármore atrás da bancada + parede clara com janelas
   b.face(0.5, 9, CORE_WALLS.cafeSplash);
   b.face(9.5, 6, wall);
-  b.cap(0, 0, 0.5, 12, wall);
+  // Open space coworking: pilar estrutural no topo e base, integrando com a recepção
+  b.cap(0, 0, 0.5, 3, wall);
+  b.cap(0, 10, 0.5, 2, wall);
   b.cap(15.5, 0, 0.5, 12, wall);
 
   // bancada encostada na parede norte
@@ -154,7 +158,7 @@ export function layoutCafe(): AreaLayout {
   b.spot('window', 13, 2, 'up', { dx: 12, dy: 1 });
 
   // mesa comunitária comprida no centro, sobre um tapete, com cadeiras dos dois lados
-  b.rug(2.6, 4.15, 8.8, 3.7, '#b98a5e', 302);
+  b.rug(2.6, 4.15, 8.8, 3.7, '#262d38', 302);
   b.furn('meeting_table', 4, 5, undefined, { order: 0.5 });
   b.furn('meeting_table', 7, 5, undefined, { order: 0.51 });
   for (let i = 0; i < 6; i++) {
@@ -179,7 +183,7 @@ export function layoutCafe(): AreaLayout {
 
   // aberta para o corredor com vidro
   for (const lx of [1, 2, 3, 4, 5, 10, 11, 12, 13, 14]) b.furn('glass_partition', lx, 11, 'h', { order: 0.15 });
-  b.walk(1, 2, 14, 10);
+  b.walk(0, 2, 15, 10);
   b.spot('talk', 7, 9, 'right', { group: 'talk:copa', dx: -1 });
   b.spot('talk', 8, 9, 'left', { group: 'talk:copa', dx: 1 });
   b.area.shade = undefined;
@@ -190,8 +194,8 @@ export function layoutLounge(): AreaLayout {
   const b = new AreaBuilder(LOUNGE_ID, 'lounge', { x: COL_W, y: SOUTH_Y, w: 16, h: ROOM_H });
   const wall = CORE_WALLS.lounge;
   b.floor('wood', 0, 0, 16, 12, 401);
-  b.rug(1.5, 3.2, 7, 5.2, '#4f8a5b', 402);
-  b.rug(9.2, 4.6, 5.6, 4.4, '#d7c8a8', 403);
+  b.rug(1.5, 3.2, 7, 5.2, '#2a343d', 402);
+  b.rug(9.2, 4.6, 5.6, 4.4, '#242b35', 403);
   // parede com TV a oeste; vidro a leste; passagem larga no meio
   b.face(0.5, 6.5, wall);
   b.face(10, 5.5, CORE_WALLS.glass);
