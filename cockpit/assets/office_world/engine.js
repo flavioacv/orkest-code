@@ -22382,13 +22382,11 @@
   function layoutReception() {
     const b = new AreaBuilder(RECEPTION_ID, "reception", { x: 0, y: NORTH_Y, w: 16, h: ROOM_H });
     const wall = CORE_WALLS.reception;
-    b.floor("marble", 0, 0, 16, 12, 101);
+    b.floor("wood", 0, 0, 16, 12, 101);
     b.rug(1.5, 2.2, 6.5, 2.6, "#242c38", 102);
     b.rug(8.6, 6.4, 5.2, 3.2, "#2b2622", 103);
     b.face(0.5, 15, wall);
     b.cap(0, 0, 0.5, 12, wall);
-    b.cap(15.5, 0, 0.5, 3, wall);
-    b.cap(15.5, 10, 0.5, 2, wall);
     ELEVATOR_CX.forEach((cx, i) => {
       b.wall("elevator", cx, void 0, { order: 0.2 + i * 0.1 });
       const lx = Math.floor(cx - 0.5);
@@ -22411,8 +22409,7 @@
     b.furn("plant_small", 4, 7, "fern", { order: 0.52 });
     b.furn("water_cooler", 1, 7, void 0, { order: 0.53 });
     b.spot("water", 1, 8, "up", { dy: -3 });
-    for (const lx of [1, 2, 3, 12, 13, 14]) b.furn("glass_partition", lx, 11, "h", { order: 0.15 });
-    b.walk(1, 2, 15, 10);
+    b.walk(1, 2, 15, 11);
     b.spot("talk", 6, 9, "right", { group: "talk:recepcao", dx: -1 });
     b.spot("talk", 7, 9, "left", { group: "talk:recepcao", dx: 1 });
     const a = b.build();
@@ -22460,12 +22457,10 @@
   function layoutCafe() {
     const b = new AreaBuilder(CAFE_ID, "cafe", { x: COL_W, y: NORTH_Y, w: 16, h: ROOM_H });
     const wall = CORE_WALLS.cafe;
-    b.floor("concrete", 0, 0, 16, 12, 301);
+    b.floor("wood", 0, 0, 16, 12, 301);
     b.face(0.5, 9, CORE_WALLS.cafeSplash);
     b.face(9.5, 6, wall);
-    b.cap(0, 0, 0.5, 3, wall);
-    b.cap(0, 10, 0.5, 2, wall);
-    b.cap(15.5, 0, 0.5, 12, wall);
+    b.cap(15.5, 0, 0.5, 12, CORE_WALLS.glass);
     b.furn("fridge", 1, 2, void 0, { order: 0.2 });
     b.spot("fridge", 1, 3, "up", { dy: -3 });
     b.furn("counter", 2, 2, "drawers", { order: 0.22 });
@@ -22509,8 +22504,7 @@
     b.furn("plant_tall", 1, 10, "monstera", { order: 0.2 });
     b.furn("plant_tall", 14, 10, "ficus", { order: 0.21 });
     b.furn("trash_bin", 1, 6, void 0, { order: 0.6 });
-    for (const lx of [1, 2, 3, 4, 5, 10, 11, 12, 13, 14]) b.furn("glass_partition", lx, 11, "h", { order: 0.15 });
-    b.walk(0, 2, 15, 10);
+    b.walk(0, 2, 15, 11);
     b.spot("talk", 7, 9, "right", { group: "talk:copa", dx: -1 });
     b.spot("talk", 8, 9, "left", { group: "talk:copa", dx: 1 });
     b.area.shade = void 0;
@@ -22523,13 +22517,12 @@
     b.rug(1.5, 3.2, 7, 5.2, "#2a343d", 402);
     b.rug(9.2, 4.6, 5.6, 4.4, "#242b35", 403);
     b.face(0.5, 6.5, wall);
-    b.face(10, 5.5, CORE_WALLS.glass);
     b.south(0.5, 15, 11, { ...wall, exterior: true });
     b.cap(0, 0, 0.5, 12, wall);
-    b.cap(15.5, 0, 0.5, 12, wall);
+    b.cap(15.5, 0, 0.5, 12, CORE_WALLS.glass);
     b.walk(1, 2, 14, 9);
-    b.walk(7, 0, 3, 2);
-    b.area.door = { x: COL_W + 7, y: SOUTH_Y, w: 3, h: 2 };
+    b.walk(7, 0, 9, 2);
+    b.area.door = { x: COL_W + 7, y: SOUTH_Y, w: 9, h: 2 };
     b.wall("tv", 4.5, void 0, { order: 0.4 });
     b.wall("painting", 1.75, void 0, { order: 0.5 });
     const sofa2 = b.furn("sofa", 3, 6, "up", { order: 0.5 });
@@ -22573,7 +22566,7 @@
   function layoutCorridor(cols) {
     const w = cols * COL_W;
     const b = new AreaBuilder(CORRIDOR_ID, "corridor", { x: 0, y: CORRIDOR_Y, w, h: CORRIDOR_H });
-    b.floor("concrete", 0, 0, w, CORRIDOR_H, 501);
+    b.floor("wood", 0, 0, w, CORRIDOR_H, 501);
     for (let ly = 0; ly < CORRIDOR_H; ly++) {
       b.furn("glass_partition", 0, ly, ly === 0 || ly === CORRIDOR_H - 1 ? "end" : "v", { order: 0.1 });
       b.furn("glass_partition", w - 1, ly, ly === 0 || ly === CORRIDOR_H - 1 ? "end" : "v", { order: 0.1 });
@@ -22603,7 +22596,9 @@
         if (k % 2 === 1) b.furn("plant_small", x + 12, CORRIDOR_H - 1, SMALL[(k + 1) % SMALL.length], { order: 0.5 });
       }
       if (!last && c % 2 === 1) b.furn("plant_tall", x + 15, CORRIDOR_H - 1, TALL[(c + 1) % TALL.length], { order: 0.5 });
-      b.rug(x + 2, CORRIDOR_H / 2 - 0.55, COL_W - 4, 1.1, RUNNERS[c % RUNNERS.length], 502 + c);
+      if (c >= CORE_COLS) {
+        b.rug(x + 2, CORRIDOR_H / 2 - 0.55, COL_W - 4, 1.1, RUNNERS[c % RUNNERS.length], 502 + c);
+      }
       b.spot("talk", x + 5, Math.floor(CORRIDOR_H / 2), "right", { group: `talk:corredor:${c}`, dx: -1 });
       b.spot("talk", x + 6, Math.floor(CORRIDOR_H / 2), "left", { group: `talk:corredor:${c}`, dx: 1 });
     }

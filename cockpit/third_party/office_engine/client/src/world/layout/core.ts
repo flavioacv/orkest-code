@@ -25,14 +25,13 @@ export const ELEVATOR_CX = [3, 6.5] as const;
 export function layoutReception(): AreaLayout {
   const b = new AreaBuilder(RECEPTION_ID, 'reception', { x: 0, y: NORTH_Y, w: 16, h: ROOM_H });
   const wall = CORE_WALLS.reception;
-  b.floor('marble', 0, 0, 16, 12, 101);
+  // Piso de madeira unificado contínuo de aceleradora tech
+  b.floor('wood', 0, 0, 16, 12, 101);
   b.rug(1.5, 2.2, 6.5, 2.6, '#242c38', 102);
   b.rug(8.6, 6.4, 5.2, 3.2, '#2b2622', 103);
   b.face(0.5, 15, wall);
   b.cap(0, 0, 0.5, 12, wall);
-  // Open space coworking: pilar estrutural no topo e base, integrando com o salão do café
-  b.cap(15.5, 0, 0.5, 3, wall);
-  b.cap(15.5, 10, 0.5, 2, wall);
+  // Open space total: sem parede na lateral leste, fundindo diretamente com a cafeteria
 
   // elevadores (é por onde todos chegam e vão embora)
   ELEVATOR_CX.forEach((cx, i) => {
@@ -62,9 +61,8 @@ export function layoutReception(): AreaLayout {
   b.furn('water_cooler', 1, 7, undefined, { order: 0.53 });
   b.spot('water', 1, 8, 'up', { dy: -3 });
 
-  // aberta para o corredor: divisórias de vidro nas pontas
-  for (const lx of [1, 2, 3, 12, 13, 14]) b.furn('glass_partition', lx, 11, 'h', { order: 0.15 });
-  b.walk(1, 2, 15, 10);
+  // 100% aberta para o salão central (sem divisórias de bloqueio no sul)
+  b.walk(1, 2, 15, 11);
   b.spot('talk', 6, 9, 'right', { group: 'talk:recepcao', dx: -1 });
   b.spot('talk', 7, 9, 'left', { group: 'talk:recepcao', dx: 1 });
 
@@ -120,14 +118,14 @@ export function layoutRestroom(): AreaLayout {
 export function layoutCafe(): AreaLayout {
   const b = new AreaBuilder(CAFE_ID, 'cafe', { x: COL_W, y: NORTH_Y, w: 16, h: ROOM_H });
   const wall = CORE_WALLS.cafe;
-  b.floor('concrete', 0, 0, 16, 12, 301);
+  // Piso de madeira unificado contínuo de aceleradora tech
+  b.floor('wood', 0, 0, 16, 12, 301);
   // frontão de mármore atrás da bancada + parede clara com janelas
   b.face(0.5, 9, CORE_WALLS.cafeSplash);
   b.face(9.5, 6, wall);
-  // Open space coworking: pilar estrutural no topo e base, integrando com a recepção
-  b.cap(0, 0, 0.5, 3, wall);
-  b.cap(0, 10, 0.5, 2, wall);
-  b.cap(15.5, 0, 0.5, 12, wall);
+  // Open space total: sem parede a oeste (100% fundido com a recepção)
+  // Divisória de vidro panorâmico estilo aquário na face leste (com salas de projeto)
+  b.cap(15.5, 0, 0.5, 12, CORE_WALLS.glass);
 
   // bancada encostada na parede norte
   b.furn('fridge', 1, 2, undefined, { order: 0.2 });
@@ -181,9 +179,8 @@ export function layoutCafe(): AreaLayout {
   b.furn('plant_tall', 14, 10, 'ficus', { order: 0.21 });
   b.furn('trash_bin', 1, 6, undefined, { order: 0.6 });
 
-  // aberta para o corredor com vidro
-  for (const lx of [1, 2, 3, 4, 5, 10, 11, 12, 13, 14]) b.furn('glass_partition', lx, 11, 'h', { order: 0.15 });
-  b.walk(0, 2, 15, 10);
+  // 100% aberta para o salão central (sem divisórias de bloqueio no sul)
+  b.walk(0, 2, 15, 11);
   b.spot('talk', 7, 9, 'right', { group: 'talk:copa', dx: -1 });
   b.spot('talk', 8, 9, 'left', { group: 'talk:copa', dx: 1 });
   b.area.shade = undefined;
@@ -193,18 +190,19 @@ export function layoutCafe(): AreaLayout {
 export function layoutLounge(): AreaLayout {
   const b = new AreaBuilder(LOUNGE_ID, 'lounge', { x: COL_W, y: SOUTH_Y, w: 16, h: ROOM_H });
   const wall = CORE_WALLS.lounge;
+  // Piso de madeira unificado contínuo de aceleradora tech
   b.floor('wood', 0, 0, 16, 12, 401);
   b.rug(1.5, 3.2, 7, 5.2, '#2a343d', 402);
   b.rug(9.2, 4.6, 5.6, 4.4, '#242b35', 403);
-  // parede com TV a oeste; vidro a leste; passagem larga no meio
+  // parede com TV a oeste; vão de entrada amplo de x: 7 a 15 aberto para o salão central
   b.face(0.5, 6.5, wall);
-  b.face(10, 5.5, CORE_WALLS.glass);
   b.south(0.5, 15, 11, { ...wall, exterior: true });
   b.cap(0, 0, 0.5, 12, wall);
-  b.cap(15.5, 0, 0.5, 12, wall);
+  // Divisória de vidro panorâmico estilo aquário na face leste
+  b.cap(15.5, 0, 0.5, 12, CORE_WALLS.glass);
   b.walk(1, 2, 14, 9);
-  b.walk(7, 0, 3, 2);
-  b.area.door = { x: COL_W + 7, y: SOUTH_Y, w: 3, h: 2 };
+  b.walk(7, 0, 9, 2);
+  b.area.door = { x: COL_W + 7, y: SOUTH_Y, w: 9, h: 2 };
 
   b.wall('tv', 4.5, undefined, { order: 0.4 });
   b.wall('painting', 1.75, undefined, { order: 0.5 });

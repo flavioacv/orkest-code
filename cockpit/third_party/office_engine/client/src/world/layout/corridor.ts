@@ -13,7 +13,8 @@ const RUNNERS = ['#8b9bb0', '#8597ab', '#909fb3'] as const;
 export function layoutCorridor(cols: number): AreaLayout {
   const w = cols * COL_W;
   const b = new AreaBuilder(CORRIDOR_ID, 'corridor', { x: 0, y: CORRIDOR_Y, w, h: CORRIDOR_H });
-  b.floor('concrete', 0, 0, w, CORRIDOR_H, 501);
+  // Piso de madeira unificado contínuo com todo o coworking
+  b.floor('wood', 0, 0, w, CORRIDOR_H, 501);
   // fachadas de vidro nas pontas do corredor (entrada principal a oeste)
   for (let ly = 0; ly < CORRIDOR_H; ly++) {
     b.furn('glass_partition', 0, ly, ly === 0 || ly === CORRIDOR_H - 1 ? 'end' : 'v', { order: 0.1 });
@@ -47,8 +48,10 @@ export function layoutCorridor(cols: number): AreaLayout {
     }
     // planta alta onde as paredes das salas se encontram (uma coluna sim, outra não)
     if (!last && c % 2 === 1) b.furn('plant_tall', x + 15, CORRIDOR_H - 1, TALL[(c + 1) % TALL.length], { order: 0.5 });
-    // passadeira estreita (um trecho por coluna), centrada no corredor
-    b.rug(x + 2, CORRIDOR_H / 2 - 0.55, COL_W - 4, 1.1, RUNNERS[c % RUNNERS.length], 502 + c);
+    // passadeira apenas nas alas de salas de projeto; o núcleo central mantém piso de madeira contínuo e limpo
+    if (c >= CORE_COLS) {
+      b.rug(x + 2, CORRIDOR_H / 2 - 0.55, COL_W - 4, 1.1, RUNNERS[c % RUNNERS.length], 502 + c);
+    }
     // pontos de conversa no meio do corredor
     b.spot('talk', x + 5, Math.floor(CORRIDOR_H / 2), 'right', { group: `talk:corredor:${c}`, dx: -1 });
     b.spot('talk', x + 6, Math.floor(CORRIDOR_H / 2), 'left', { group: `talk:corredor:${c}`, dx: 1 });
