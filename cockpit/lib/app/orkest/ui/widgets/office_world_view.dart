@@ -22,6 +22,11 @@ class OfficeWorldView extends StatelessWidget {
     required this.labels,
     required this.onOpenSession,
     required this.onRenameSession,
+    this.onCreateTerminal,
+    this.onToggleTerminal,
+    this.onToggleTerminalDock,
+    this.isTerminalVisible = false,
+    this.isTerminalDocked = false,
   });
 
   final List<Project> projects;
@@ -29,6 +34,11 @@ class OfficeWorldView extends StatelessWidget {
   final OfficeWorldLabels labels;
   final ValueChanged<TerminalSession> onOpenSession;
   final void Function(TerminalSession session, String name) onRenameSession;
+  final VoidCallback? onCreateTerminal;
+  final VoidCallback? onToggleTerminal;
+  final VoidCallback? onToggleTerminalDock;
+  final bool isTerminalVisible;
+  final bool isTerminalDocked;
 
   @override
   Widget build(BuildContext context) {
@@ -47,6 +57,11 @@ class OfficeWorldView extends StatelessWidget {
       sessions: sessions,
       onOpenSession: onOpenSession,
       onRenameSession: onRenameSession,
+      onCreateTerminal: onCreateTerminal,
+      onToggleTerminal: onToggleTerminal,
+      onToggleTerminalDock: onToggleTerminalDock,
+      isTerminalVisible: isTerminalVisible,
+      isTerminalDocked: isTerminalDocked,
     );
   }
 }

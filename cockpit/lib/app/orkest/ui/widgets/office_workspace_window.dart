@@ -12,12 +12,14 @@ class OfficeWorkspaceWindow extends StatefulWidget {
     required this.projectName,
     required this.onClose,
     required this.child,
+    this.onToggleDock,
   });
 
   final String title;
   final String projectName;
   final VoidCallback onClose;
   final Widget child;
+  final VoidCallback? onToggleDock;
 
   @override
   State<OfficeWorkspaceWindow> createState() => _OfficeWorkspaceWindowState();
@@ -178,6 +180,17 @@ class _OfficeWorkspaceWindowState extends State<OfficeWorkspaceWindow> {
                                         ),
                                       ),
                                     ),
+                                    if (widget.onToggleDock != null)
+                                      IconButton.ghost(
+                                        key: const ValueKey(
+                                          'office-workspace-dock',
+                                        ),
+                                        icon: const Icon(
+                                          Icons.vertical_align_bottom,
+                                          size: 16,
+                                        ),
+                                        onPressed: widget.onToggleDock,
+                                      ),
                                     IconButton.ghost(
                                       key: const ValueKey(
                                         'office-workspace-maximize',

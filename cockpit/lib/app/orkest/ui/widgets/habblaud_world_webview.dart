@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:ui' show ImageFilter;
 
 import 'package:orkest_code/app/orkest/domain/entities/project.dart';
 import 'package:orkest_code/app/orkest/ui/session/pane_item.dart';
@@ -32,12 +33,22 @@ class HabblaudWorldWebView extends StatefulWidget {
     required this.sessions,
     required this.onOpenSession,
     required this.onRenameSession,
+    this.onCreateTerminal,
+    this.onToggleTerminal,
+    this.onToggleTerminalDock,
+    this.isTerminalVisible = false,
+    this.isTerminalDocked = false,
   });
 
   final List<Project> projects;
   final List<PaneItem> sessions;
   final ValueChanged<TerminalSession> onOpenSession;
   final void Function(TerminalSession session, String name) onRenameSession;
+  final VoidCallback? onCreateTerminal;
+  final VoidCallback? onToggleTerminal;
+  final VoidCallback? onToggleTerminalDock;
+  final bool isTerminalVisible;
+  final bool isTerminalDocked;
 
   @override
   State<HabblaudWorldWebView> createState() => _HabblaudWorldWebViewState();
@@ -60,7 +71,8 @@ class _HabblaudWorldWebViewState extends State<HabblaudWorldWebView> {
   int _webLoadGeneration = 0;
   String? _lastOpenedAgent;
   int _lastOpenedAt = 0;
-  bool _sidebarVisible = true;
+  bool _topBarVisible = true;
+  bool _rosterDropdownOpen = false;
   String _agentQuery = '';
   final TextEditingController _agentSearch = TextEditingController();
   final Map<String, Future<_OfficePortrait?>> _portraitCache = {};
@@ -792,16 +804,16 @@ canvas{display:block;image-rendering:pixelated;outline:none}
                 ),
               ),
             ),
-            if (_sidebarVisible) _buildAgentSidebar(context),
-            if (!_sidebarVisible)
+            if (_topBarVisible) _buildTopBar(context),
+            if (!_topBarVisible)
               Positioned(
-                left: 16,
-                bottom: 16,
+                top: 14,
+                left: 14,
                 child: _panelToggle(
                   context,
-                  '☷',
+                  '👥',
                   labels.reopenRoster,
-                  () => setState(() => _sidebarVisible = true),
+                  () => setState(() => _topBarVisible = true),
                 ),
               ),
           ],
@@ -947,7 +959,251 @@ canvas{display:block;image-rendering:pixelated;outline:none}
     return base64Decode(value.substring(comma + 1));
   }
 
-  Widget _buildAgentSidebar(BuildContext context) {
+  Widget _buildTopBar(BuildContext context) {
+    final colors = context.colors;
+    final labels = context.t.orkest.officeWorld;
+    final sessions = _officeSessions;
+    final workingCount =
+        sessions.where((s) => s.status == TerminalStatus.working).length;
+    final waitingCount =
+        sessions.where((s) => s.status == TerminalStatus.waiting).length;
+
+    return Positioned(
+      top: 14,
+      left: 14,
+      right: 14,
+      child: Align(
+        alignment: Alignment.topCenter,
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            // Barra Superior Comprimida Semitransparente (Glassmorphism)
+            ClipRRect(
+              borderRadius: BorderRadius.circular(22),
+              child: BackdropFilter(
+                filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+                child: Container(
+                  height: 44,
+                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: colors.panel.withValues(alpha: 0.82),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: colors.border2.withValues(alpha: 0.6),
+                    ),
+                    boxShadow: const [
+                      BoxShadow(
+                        color: Color(0x44000000),
+                        blurRadius: 18,
+                        offset: Offset(0, 4),
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      // Botão / Pill de Agentes Ativos
+                      Material(
+                        color: Colors.transparent,
+                        child: InkWell(
+                          borderRadius: BorderRadius.circular(16),
+                          onTap: () => setState(
+                            () => _rosterDropdownOpen = !_rosterDropdownOpen,
+                          ),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 6,
+                            ),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Text(
+                                  workingCount > 0
+                                      ? '💻 $workingCount'
+                                      : waitingCount > 0
+                                      ? '✋ $waitingCount'
+                                      : '👥',
+                                  style: const TextStyle(fontSize: 13),
+                                ),
+                                const SizedBox(width: 6),
+                                Text(
+                                  sessions.isEmpty
+                                      ? '0 agentes'
+                                      : '${sessions.length} ${sessions.length == 1 ? 'agente' : 'agentes'}',
+                                  style: TextStyle(
+                                    color: colors.text,
+                                    fontWeight: FontWeight.w600,
+                                    fontSize: 12,
+                                  ),
+                                ),
+                                const SizedBox(width: 4),
+                                Icon(
+                                  _rosterDropdownOpen
+                                      ? Icons.keyboard_arrow_up
+                                      : Icons.keyboard_arrow_down,
+                                  size: 17,
+                                  color: colors.text2,
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                      Container(
+                        height: 20,
+                        width: 1,
+                        margin: const EdgeInsets.symmetric(horizontal: 6),
+                        color: colors.border.withValues(alpha: 0.6),
+                      ),
+                      // Ação direta: Novo Terminal
+                      if (widget.onCreateTerminal != null)
+                        Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: widget.onCreateTerminal,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.add, size: 16, color: colors.accent),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    'Novo Terminal',
+                                    style: TextStyle(
+                                      color: colors.accent,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      // Ação direta: Terminal do Projeto (abrir/fechar)
+                      if (widget.onToggleTerminal != null) ...[
+                        const SizedBox(width: 4),
+                        Material(
+                          color: widget.isTerminalVisible
+                              ? colors.accent.withValues(alpha: 0.18)
+                              : Colors.transparent,
+                          borderRadius: BorderRadius.circular(14),
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: widget.onToggleTerminal,
+                            child: Padding(
+                              padding: const EdgeInsets.symmetric(
+                                horizontal: 10,
+                                vertical: 6,
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.terminal,
+                                    size: 16,
+                                    color: widget.isTerminalVisible
+                                        ? colors.accent
+                                        : colors.text,
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    widget.isTerminalVisible
+                                        ? 'Ocultar Terminal'
+                                        : 'Terminal',
+                                    style: TextStyle(
+                                      color: widget.isTerminalVisible
+                                          ? colors.accent
+                                          : colors.text,
+                                      fontWeight: FontWeight.w600,
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                      // Alternar Modo (Janela Flutuante vs Acoplado embaixo)
+                      if (widget.isTerminalVisible &&
+                          widget.onToggleTerminalDock != null) ...[
+                        const SizedBox(width: 4),
+                        Tooltip(
+                          message: widget.isTerminalDocked
+                              ? 'Destacar como janela flutuante'
+                              : 'Acoplar terminal embaixo',
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(14),
+                              onTap: widget.onToggleTerminalDock,
+                              child: Padding(
+                                padding: const EdgeInsets.all(6),
+                                child: Icon(
+                                  widget.isTerminalDocked
+                                      ? Icons.open_in_new
+                                      : Icons.vertical_align_bottom,
+                                  size: 16,
+                                  color: colors.text2,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                      Container(
+                        height: 20,
+                        width: 1,
+                        margin: const EdgeInsets.symmetric(horizontal: 6),
+                        color: colors.border.withValues(alpha: 0.6),
+                      ),
+                      // Recolher a Top Bar
+                      Tooltip(
+                        message: labels.collapseRoster,
+                        child: Material(
+                          color: Colors.transparent,
+                          child: InkWell(
+                            borderRadius: BorderRadius.circular(14),
+                            onTap: () => setState(() {
+                              _topBarVisible = false;
+                              _rosterDropdownOpen = false;
+                            }),
+                            child: Padding(
+                              padding: const EdgeInsets.all(6),
+                              child: Icon(
+                                Icons.expand_less,
+                                size: 17,
+                                color: colors.text2,
+                              ),
+                            ),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+            // Roster Dropdown Panel
+            if (_rosterDropdownOpen) ...[
+              const SizedBox(height: 8),
+              _buildRosterDropdown(context),
+            ],
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildRosterDropdown(BuildContext context) {
     final colors = context.colors;
     final labels = context.t.orkest.officeWorld;
     final query = _agentQuery.trim().toLowerCase();
@@ -969,96 +1225,106 @@ canvas{display:block;image-rendering:pixelated;outline:none}
         projectGroups.putIfAbsent(project, () => []).add(session);
       }
     }
-    return Positioned(
-      left: 14,
-      top: 14,
-      bottom: 14,
-      width: 292,
-      child: _officePanel(
-        colors,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            _panelHeader(
-              context,
-              labels.rosterTitle,
-              labels.collapseRoster,
-              () => setState(() => _sidebarVisible = false),
-            ),
-            Padding(
-              padding: const EdgeInsets.fromLTRB(12, 4, 12, 10),
-              child: TextField(
-                controller: _agentSearch,
-                onChanged: (value) => setState(() => _agentQuery = value),
-                style: TextStyle(color: colors.text, fontSize: 13),
-                decoration: InputDecoration(
-                  isDense: true,
-                  hintText: labels.rosterSearch,
-                  hintStyle: TextStyle(color: colors.text3),
-                  filled: true,
-                  fillColor: colors.panel3,
-                  prefixIcon: const Icon(Icons.search, size: 17),
-                  prefixIconColor: colors.text3,
-                  enabledBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(9),
-                    borderSide: BorderSide(color: colors.border),
-                  ),
-                  focusedBorder: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(9),
-                    borderSide: BorderSide(color: colors.accent),
-                  ),
-                  border: OutlineInputBorder(
-                    borderRadius: BorderRadius.circular(9),
-                  ),
-                  contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 9,
+
+    return ClipRRect(
+      borderRadius: BorderRadius.circular(14),
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 18, sigmaY: 18),
+        child: Container(
+          width: 320,
+          constraints: const BoxConstraints(maxHeight: 380),
+          decoration: BoxDecoration(
+            color: colors.panel.withValues(alpha: 0.90),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(color: colors.border2.withValues(alpha: 0.7)),
+            boxShadow: const [
+              BoxShadow(
+                color: Color(0x55000000),
+                blurRadius: 20,
+                offset: Offset(0, 8),
+              ),
+            ],
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(10, 10, 10, 6),
+                child: TextField(
+                  controller: _agentSearch,
+                  onChanged: (value) => setState(() => _agentQuery = value),
+                  style: TextStyle(color: colors.text, fontSize: 13),
+                  decoration: InputDecoration(
+                    isDense: true,
+                    hintText: labels.rosterSearch,
+                    hintStyle: TextStyle(color: colors.text3),
+                    filled: true,
+                    fillColor: colors.panel3.withValues(alpha: 0.7),
+                    prefixIcon: const Icon(Icons.search, size: 16),
+                    prefixIconColor: colors.text3,
+                    enabledBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(
+                        color: colors.border.withValues(alpha: 0.5),
+                      ),
+                    ),
+                    focusedBorder: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                      borderSide: BorderSide(color: colors.accent),
+                    ),
+                    border: OutlineInputBorder(
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 8,
+                      vertical: 8,
+                    ),
                   ),
                 ),
               ),
-            ),
-            Expanded(
-              child: sessions.isEmpty
-                  ? Center(
-                      child: Padding(
-                        padding: const EdgeInsets.all(16),
+              Flexible(
+                child: sessions.isEmpty
+                    ? Padding(
+                        padding: const EdgeInsets.all(20),
                         child: Text(
                           labels.rosterEmpty,
                           textAlign: TextAlign.center,
                           style: TextStyle(color: colors.text2, fontSize: 12),
                         ),
-                      ),
-                    )
-                  : ListView(
-                      padding: const EdgeInsets.fromLTRB(8, 0, 8, 8),
-                      children: [
-                        for (final entry in projectGroups.entries) ...[
-                          Padding(
-                            padding: const EdgeInsets.fromLTRB(8, 9, 8, 5),
-                            child: Row(
-                              children: [
-                                Expanded(
-                                  child: Text(
-                                    entry.key.name,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      color: colors.text,
-                                      fontWeight: FontWeight.w700,
-                                      fontSize: 13,
+                      )
+                    : ListView(
+                        shrinkWrap: true,
+                        padding: const EdgeInsets.fromLTRB(6, 0, 6, 8),
+                        children: [
+                          for (final entry in projectGroups.entries) ...[
+                            Padding(
+                              padding: const EdgeInsets.fromLTRB(8, 8, 8, 4),
+                              child: Row(
+                                children: [
+                                  Expanded(
+                                    child: Text(
+                                      entry.key.name,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: TextStyle(
+                                        color: colors.text,
+                                        fontWeight: FontWeight.w700,
+                                        fontSize: 12,
+                                      ),
                                     ),
                                   ),
-                                ),
-                                _smallCount(entry.value.length, colors),
-                              ],
+                                  _smallCount(entry.value.length, colors),
+                                ],
+                              ),
                             ),
-                          ),
-                          for (final session in entry.value)
-                            _agentRow(context, session, entry.key),
+                            for (final session in entry.value)
+                              _agentRow(context, session, entry.key),
+                          ],
                         ],
-                      ],
-                    ),
-            ),
-          ],
+                      ),
+              ),
+            ],
+          ),
         ),
       ),
     );
@@ -1147,55 +1413,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
     );
   }
 
-  Widget _officePanel(AppColors colors, {required Widget child}) => Container(
-    clipBehavior: Clip.antiAlias,
-    decoration: BoxDecoration(
-      color: colors.panel.withValues(alpha: 0.96),
-      borderRadius: BorderRadius.circular(13),
-      border: Border.all(color: colors.border2.withValues(alpha: 0.85)),
-      boxShadow: const [
-        BoxShadow(
-          color: Color(0x55000000),
-          blurRadius: 16,
-          offset: Offset(0, 5),
-        ),
-      ],
-    ),
-    child: child,
-  );
 
-  Widget _panelHeader(
-    BuildContext context,
-    String title,
-    String tooltip,
-    VoidCallback onClose,
-  ) {
-    final colors = context.colors;
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(12, 5, 5, 4),
-      child: Row(
-        children: [
-          Expanded(
-            child: Text(
-              title,
-              style: TextStyle(
-                color: colors.text,
-                fontWeight: FontWeight.w700,
-                fontSize: 13,
-              ),
-            ),
-          ),
-          IconButton(
-            tooltip: tooltip,
-            visualDensity: VisualDensity.compact,
-            iconSize: 17,
-            onPressed: onClose,
-            icon: Icon(Icons.expand_less, color: context.colors.text2),
-          ),
-        ],
-      ),
-    );
-  }
 
   Widget _panelToggle(
     BuildContext context,

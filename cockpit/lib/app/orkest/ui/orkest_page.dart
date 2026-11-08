@@ -11,6 +11,7 @@ import 'package:orkest_core/orkest_core.dart';
 
 import 'dart:async' show StreamSubscription, Timer, unawaited;
 import 'dart:io';
+import 'dart:math' as math;
 
 import 'package:orkest_code/app/orkest/ui/actions/remote_workspace_actions.dart';
 import 'package:orkest_code/app/orkest/ui/actions/tab_actions.dart';
@@ -1270,11 +1271,33 @@ class _CenterPanelState extends State<_CenterPanel> {
   // workspace's pane tree.
   final Map<String, Widget> _workspaceWidgets = {};
   bool _officeWorkspaceVisible = false;
+  bool _officeWorkspaceDocked = false;
+  double _officeDockHeight = 320.0;
   int? _lastWorkspaceRevealRevision;
   final Map<String, int> _dismissedOfficeWaiting = <String, int>{};
   final Set<TerminalSession> _observedTerminalSessions = <TerminalSession>{};
   bool _officeInitialized = false;
   bool _terminalSessionRebuildQueued = false;
+
+  void _toggleOfficeWorkspaceDock() {
+    setState(() => _officeWorkspaceDocked = !_officeWorkspaceDocked);
+  }
+
+  void _toggleOfficeTerminal() {
+    setState(() => _officeWorkspaceVisible = !_officeWorkspaceVisible);
+  }
+
+  void _createOfficeTerminal() {
+    final vm = context.read<OrkestViewModel>();
+    final targetProjectId = vm.selectedProjectId ?? vm.projects.firstOrNull?.id;
+    if (targetProjectId != null) {
+      if (vm.selectedProjectId != targetProjectId) {
+        vm.selectProject(targetProjectId);
+      }
+      vm.newTabIn('');
+      setState(() => _officeWorkspaceVisible = true);
+    }
+  }
 
   @override
   void initState() {
@@ -1398,6 +1421,11 @@ class _CenterPanelState extends State<_CenterPanel> {
             },
             onRenameSession: (session, name) =>
                 vm.setPaneLabel(session.id, name),
+            onCreateTerminal: _createOfficeTerminal,
+            onToggleTerminal: _toggleOfficeTerminal,
+            onToggleTerminalDock: _toggleOfficeWorkspaceDock,
+            isTerminalVisible: _officeWorkspaceVisible,
+            isTerminalDocked: _officeWorkspaceDocked,
           )
         : null;
 
@@ -1441,68 +1469,194 @@ class _CenterPanelState extends State<_CenterPanel> {
             ),
           );
 
-    final center = Stack(
-      fit: StackFit.expand,
-      children: [
-        if (office != null)
-          Positioned.fill(
-            child: Offstage(offstage: !widget.officeView, child: office),
-          ),
-        if (terminalWorkspace != null)
-          if (widget.officeView)
-            OfficeWorkspaceWindow(
-              title:
-                  activeItem?.displayTitle ?? officeProject?.name ?? 'Orkest',
-              projectName: officeProject?.name ?? '',
-              onClose: () => setState(() => _officeWorkspaceVisible = false),
-              child: terminalWorkspace,
-            )
-          else
-            Positioned.fill(child: terminalWorkspace),
-        // Keep Office alerts above its floating live-terminal window; otherwise
-        // a permission prompt opened in that window hides the notification.
-        if (widget.officeView && office != null && waitingSessions.isNotEmpty)
-          Positioned(
-            right: 16,
-            bottom: 16,
-            width: 360,
-            child: _OfficeWaitingNotifications(
-              sessions: waitingSessions.take(3).toList(growable: false),
-              projectName: (session) =>
-                  vm.projects
-                      .where((project) => project.id == session.projectId)
-                      .firstOrNull
-                      ?.name ??
-                  session.projectId,
-              onRespond: (session) {
-                setState(() {
-                  _dismissedOfficeWaiting[session.id] =
-                      session.latestWaitingEventSequence;
-                });
-                unawaited(_openOfficeTerminal(session));
-              },
-              onDismiss: (session) => setState(() {
-                _dismissedOfficeWaiting[session.id] =
-                    session.latestWaitingEventSequence;
-              }),
-            ),
-          ),
-        if (widget.officeView && office != null)
-          Positioned(
-            right: 16,
-            bottom: (16 + (waitingSessions.length.clamp(0, 3) * 76)).toDouble(),
-            width: 360,
-            child: _OfficeCompletionNotifications(
-              sessions: vm.allSessions.whereType<TerminalSession>().toList(),
-              projectName: (session) =>
-                  vm.projects
-                      .where((project) => project.id == session.projectId)
-                      .firstOrNull
-                      ?.name ??
-                  session.projectId,
-            ),
-          ),
-      ],
+    final center = LayoutBuilder(
+      builder: (context, constraints) {
+        final maxHeight = constraints.maxHeight;
+        final clampedDockHeight = _officeDockHeight
+            .clamp(160.0, math.max(160.0, maxHeight - 120.0))
+            .toDouble();
+        final isDocked = widget.officeView &&
+            _officeWorkspaceVisible &&
+            _officeWorkspaceDocked;
+
+        return Stack(
+          fit: StackFit.expand,
+          children: [
+            if (office != null)
+              Positioned(
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: isDocked ? clampedDockHeight : 0.0,
+                child: Offstage(offstage: !widget.officeView, child: office),
+              ),
+            if (terminalWorkspace != null)
+              if (widget.officeView)
+                if (_officeWorkspaceDocked)
+                  Positioned(
+                    left: 0,
+                    right: 0,
+                    bottom: 0,
+                    height: clampedDockHeight,
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        color: colors.bg,
+                        border: Border(
+                          top: BorderSide(color: colors.border),
+                        ),
+                        boxShadow: const [
+                          BoxShadow(
+                            color: Color(0x44000000),
+                            blurRadius: 16,
+                            offset: Offset(0, -4),
+                          ),
+                        ],
+                      ),
+                      child: Column(
+                        children: [
+                          // Alça de redimensionamento do dock inferior
+                          MouseRegion(
+                            cursor: SystemMouseCursors.resizeUpDown,
+                            child: GestureDetector(
+                              behavior: HitTestBehavior.opaque,
+                              onPanUpdate: (details) {
+                                setState(() {
+                                  _officeDockHeight = (_officeDockHeight - details.delta.dy)
+                                      .clamp(160.0, maxHeight - 120.0);
+                                });
+                              },
+                              child: Container(
+                                height: 6,
+                                color: Colors.transparent,
+                                alignment: Alignment.center,
+                                child: Container(
+                                  width: 48,
+                                  height: 3,
+                                  decoration: BoxDecoration(
+                                    color: colors.border2,
+                                    borderRadius: BorderRadius.circular(2),
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ),
+                          // Barra de título do dock acoplado
+                          Container(
+                            height: 32,
+                            padding: const EdgeInsets.symmetric(horizontal: 10),
+                            color: colors.panel2.withValues(alpha: 0.5),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  Icons.terminal,
+                                  size: 15,
+                                  color: colors.accent,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    activeItem?.displayTitle ??
+                                        officeProject?.name ??
+                                        'Terminal',
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
+                                    style: TextStyle(
+                                      color: colors.text,
+                                      fontSize: 12,
+                                      fontWeight: FontWeight.w600,
+                                    ),
+                                  ),
+                                ),
+                                IconButton.ghost(
+                                  icon: const Icon(Icons.add, size: 15),
+                                  onPressed: () {
+                                    final pId = vm.selectedProjectId;
+                                    if (pId != null) vm.newTabIn('');
+                                  },
+                                ),
+                                IconButton.ghost(
+                                  icon: const Icon(Icons.open_in_new, size: 15),
+                                  onPressed: _toggleOfficeWorkspaceDock,
+                                ),
+                                IconButton.ghost(
+                                  icon: const Icon(Icons.close, size: 15),
+                                  onPressed: () => setState(
+                                    () => _officeWorkspaceVisible = false,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                          Divider(height: 1, color: colors.border),
+                          Expanded(child: terminalWorkspace),
+                        ],
+                      ),
+                    ),
+                  )
+                else
+                  OfficeWorkspaceWindow(
+                    title:
+                        activeItem?.displayTitle ??
+                        officeProject?.name ??
+                        'Orkest',
+                    projectName: officeProject?.name ?? '',
+                    onClose: () =>
+                        setState(() => _officeWorkspaceVisible = false),
+                    onToggleDock: _toggleOfficeWorkspaceDock,
+                    child: terminalWorkspace,
+                  )
+              else
+                Positioned.fill(child: terminalWorkspace),
+            // Keep Office alerts above its floating live-terminal window; otherwise
+            // a permission prompt opened in that window hides the notification.
+            if (widget.officeView &&
+                office != null &&
+                waitingSessions.isNotEmpty)
+              Positioned(
+                right: 16,
+                bottom: (isDocked ? clampedDockHeight : 0.0) + 16.0,
+                width: 360,
+                child: _OfficeWaitingNotifications(
+                  sessions: waitingSessions.take(3).toList(growable: false),
+                  projectName: (session) =>
+                      vm.projects
+                          .where((project) => project.id == session.projectId)
+                          .firstOrNull
+                          ?.name ??
+                      session.projectId,
+                  onRespond: (session) {
+                    setState(() {
+                      _dismissedOfficeWaiting[session.id] =
+                          session.latestWaitingEventSequence;
+                    });
+                    unawaited(_openOfficeTerminal(session));
+                  },
+                  onDismiss: (session) => setState(() {
+                    _dismissedOfficeWaiting[session.id] =
+                        session.latestWaitingEventSequence;
+                  }),
+                ),
+              ),
+            if (widget.officeView && office != null)
+              Positioned(
+                right: 16,
+                bottom: (isDocked ? clampedDockHeight : 0.0) +
+                    (16.0 + (waitingSessions.length.clamp(0, 3) * 76.0)),
+                width: 360,
+                child: _OfficeCompletionNotifications(
+                  sessions:
+                      vm.allSessions.whereType<TerminalSession>().toList(),
+                  projectName: (session) =>
+                      vm.projects
+                          .where((project) => project.id == session.projectId)
+                          .firstOrNull
+                          ?.name ??
+                      session.projectId,
+                ),
+              ),
+          ],
+        );
+      },
     );
 
     return KeyedSubtree(key: widget.centerKey, child: center);
