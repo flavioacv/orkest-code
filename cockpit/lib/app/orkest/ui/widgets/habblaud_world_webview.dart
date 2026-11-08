@@ -46,6 +46,7 @@ class HabblaudWorldWebView extends StatefulWidget {
 class _HabblaudWorldWebViewState extends State<HabblaudWorldWebView> {
   static const _engineAsset = 'assets/office_world/engine.js';
   static const _baseUrl = 'https://orkest.local/office-world/';
+  final int _loadTimestamp = DateTime.now().millisecondsSinceEpoch;
 
   InAppWebViewController? _web;
   Future<String>? _htmlFuture;
@@ -731,11 +732,11 @@ canvas{display:block;image-rendering:pixelated;outline:none}
               child: WebViewEnvironmentGate(
                 builder: (context, environment) => UnzoomedNativeView(
                   builder: (context, contentZoom) => InAppWebView(
-                    key: const ValueKey('orkest-habblaud-world'),
+                    key: ValueKey('orkest-habblaud-world-$_loadTimestamp'),
                     webViewEnvironment: environment,
                     initialData: InAppWebViewInitialData(
                       data: html,
-                      baseUrl: WebUri(_baseUrl),
+                      baseUrl: WebUri('$_baseUrl?t=$_loadTimestamp'),
                       mimeType: 'text/html',
                       encoding: 'utf-8',
                     ),
@@ -747,9 +748,12 @@ canvas{display:block;image-rendering:pixelated;outline:none}
                       underPageBackgroundColor: webViewBackground(context),
                       pageZoom: contentZoom,
                       supportZoom: false,
+                      cacheEnabled: false,
+                      clearCache: true,
                     ),
-                    onWebViewCreated: (web) {
+                    onWebViewCreated: (web) async {
                       _web = web;
+                      await web.clearCache();
                       web.addJavaScriptHandler(
                         handlerName: 'officeAgentClicked',
                         callback: _handleAgentClick,
