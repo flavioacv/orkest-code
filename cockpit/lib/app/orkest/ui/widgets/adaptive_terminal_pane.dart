@@ -7,6 +7,7 @@ import 'package:orkest_code/app/core/terminal/terminal_controller.dart';
 import 'package:orkest_code/app/core/terminal/terminal_find.dart';
 import 'package:orkest_code/app/core/terminal/terminal_font_weight.dart';
 import 'package:orkest_code/app/core/terminal/terminal_zoom.dart';
+import 'package:orkest_code/app/core/utils/platform_kind.dart';
 import 'package:orkest_code/app/core/terminal/xterm/xterm.dart' as xterm;
 import 'package:orkest_code/app/core/ui/settings_controller.dart';
 import 'package:flterm/flterm.dart' as ghost;
@@ -235,7 +236,18 @@ class _GhosttyPaneState extends State<_GhosttyPane>
                   },
                 ),
               },
-              child: view,
+              child: isMobilePlatform && !readOnly
+                  ? Listener(
+                      behavior: HitTestBehavior.translucent,
+                      onPointerDown: (_) {
+                        if (!widget.focusNode.hasFocus) {
+                          widget.focusNode.requestFocus();
+                        }
+                        SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+                      },
+                      child: view,
+                    )
+                  : view,
             ),
           ),
         ),

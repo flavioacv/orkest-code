@@ -1607,8 +1607,18 @@ class _PaneBodyState extends State<_PaneBody> {
       // `widget.focused` false = o pane ainda vai ser focado pela VM neste
       // frame; o caminho da geração cobre esse caso.
       if (!_wantsTerminalFocus || !widget.focused) return;
-      if (_terminalFocus.hasFocus) return;
+      if (_terminalFocus.hasFocus) {
+        if (isMobilePlatform) {
+          // No mobile, mesmo já tendo o foco, se o teclado do SO foi fechado
+          // (ex.: após pressionar Enter), o toque deve reabrir o teclado virtual.
+          SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+        }
+        return;
+      }
       _requestTerminalFocusSoon();
+      if (isMobilePlatform) {
+        SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+      }
     },
     child: child,
   );

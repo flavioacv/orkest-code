@@ -170,3 +170,57 @@ class TerminalKeyBar extends StatelessWidget {
     );
   }
 }
+
+/// Barra compacta ancorada na base do terminal no mobile quando o teclado está
+/// recolhido. Permite reabrir o teclado virtual e focar com um único toque.
+class MobileTerminalInputDock extends StatelessWidget {
+  const MobileTerminalInputDock({super.key, required this.onTap});
+
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final colors = context.colors;
+    return DecoratedBox(
+      decoration: BoxDecoration(
+        color: colors.panel,
+        border: Border(top: BorderSide(color: colors.border)),
+      ),
+      child: HoverTap(
+        key: const ValueKey('mobile-terminal-input-dock'),
+        onTap: onTap,
+        color: colors.panel,
+        child: SizedBox(
+          height: 38,
+          child: Padding(
+            padding: const EdgeInsets.symmetric(horizontal: 14),
+            child: Row(
+              children: [
+                Icon(
+                  Icons.keyboard_outlined,
+                  size: 18,
+                  color: colors.accentText,
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    'Toque para digitar no terminal…',
+                    style: context.typo.body.copyWith(
+                      fontSize: 12,
+                      color: colors.text2,
+                    ),
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_upward_rounded,
+                  size: 16,
+                  color: colors.text3,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ),
+    );
+  }
+}

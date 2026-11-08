@@ -69,7 +69,8 @@ import 'package:flutter/services.dart'
         KeyEvent,
         KeyRepeatEvent,
         LogicalKeyboardKey,
-        PhysicalKeyboardKey;
+        PhysicalKeyboardKey,
+        SystemChannels;
 import 'package:flutter/scheduler.dart';
 import 'package:orkest_code/app/core/ui/widgets/app_tooltip.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -1081,16 +1082,22 @@ class _OrkestPageState extends State<OrkestPage> {
                       );
                     },
                   ),
-                // Barra de teclas do terminal (mobile): aparece acima do teclado
-                // virtual quando a aba ativa é terminal (plano 60, Wave F).
-                if (isMobilePlatform &&
-                    MediaQuery.viewInsetsOf(context).bottom > 0 &&
-                    shell.terminalActive)
-                  TerminalKeyBar(
-                    onKeys: _vm.sendKeysToActiveTerminal,
-                    onCopy: _vm.copyFromActiveTerminal,
-                    onPaste: _vm.pasteToActiveTerminal,
-                  ),
+                // Barra de teclas / dock do terminal no mobile:
+                // - Se o teclado virtual estiver aberto: exibe a barra completa com teclas auxiliares.
+                // - Se o teclado estiver fechado: exibe a barra compacta de toque para reabrir o teclado.
+                if (isMobilePlatform && shell.terminalActive)
+                  if (MediaQuery.viewInsetsOf(context).bottom > 0)
+                    TerminalKeyBar(
+                      onKeys: _vm.sendKeysToActiveTerminal,
+                      onCopy: _vm.copyFromActiveTerminal,
+                      onPaste: _vm.pasteToActiveTerminal,
+                    )
+                  else
+                    MobileTerminalInputDock(
+                      onTap: () {
+                        SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+                      },
+                    ),
               ],
             ),
           ),
@@ -1452,33 +1459,6 @@ class _CenterPanelState extends State<_CenterPanel> {
             )
           else
             Positioned.fill(child: terminalWorkspace),
-        // O terminal é a superfície mobile. Ao detectar um prompt de
-        // permissão/pergunta, oferecemos somente o caminho seguro: abrir a
-        // sessão real, preservando as escolhas específicas de cada CLI.
-        if (isMobilePlatform && waitingSessions.isNotEmpty)
-          Positioned(
-            left: 12,
-            right: 12,
-            bottom: 12,
-            child: _MobileWaitingBanner(
-              session: waitingSessions.first,
-              projectName: vm.projects
-                  .where(
-                    (project) => project.id == waitingSessions.first.projectId,
-                  )
-                  .firstOrNull
-                  ?.name,
-              onOpen: () {
-                final session = waitingSessions.first;
-                unawaited(() async {
-                  await vm.selectProjectAndWait(session.projectId);
-                  if (!mounted) return;
-                  final pane = vm.leafOfTab(session.projectId, session.id);
-                  if (pane != null) vm.selectTab(pane, session.id);
-                }());
-              },
-            ),
-          ),
         // Keep Office alerts above its floating live-terminal window; otherwise
         // a permission prompt opened in that window hides the notification.
         if (widget.officeView && office != null && waitingSessions.isNotEmpty)
@@ -1540,70 +1520,6 @@ class _CenterPanelState extends State<_CenterPanel> {
   int _activeIndex(OrkestViewModel vm) {
     final index = vm.projects.indexWhere((p) => p.id == vm.selectedProjectId);
     return index < 0 ? 0 : index;
-  }
-}
-
-/// Aviso compacto de resposta pendente no mobile. Não tenta reproduzir os
-/// botões Allow/Deny de uma CLI: abre a sessão que possui o prompt de verdade.
-class _MobileWaitingBanner extends StatelessWidget {
-  const _MobileWaitingBanner({
-    required this.session,
-    required this.projectName,
-    required this.onOpen,
-  });
-
-  final TerminalSession session;
-  final String? projectName;
-  final VoidCallback onOpen;
-
-  @override
-  Widget build(BuildContext context) {
-    final colors = context.colors;
-    final tr = context.t.orkest.officeWorld;
-    final detail = session.officeWaitingSummary ?? tr.waitingInTerminal;
-    return Container(
-      padding: const EdgeInsets.fromLTRB(12, 10, 8, 10),
-      decoration: BoxDecoration(
-        color: colors.panel.withValues(alpha: 0.98),
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFFB340)),
-        boxShadow: const [BoxShadow(color: Color(0x55000000), blurRadius: 16)],
-      ),
-      child: Row(
-        children: [
-          const Text('✋', style: TextStyle(fontSize: 20)),
-          const SizedBox(width: 9),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Text(
-                  session.displayTitle,
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(
-                    color: colors.text,
-                    fontSize: 13,
-                    fontWeight: FontWeight.w700,
-                  ),
-                ),
-                Text(
-                  projectName == null || projectName!.isEmpty
-                      ? detail
-                      : '$detail · $projectName',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: TextStyle(color: colors.text2, fontSize: 11),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(width: 8),
-          PrimaryButton(onPressed: onOpen, child: Text(tr.respond)),
-        ],
-      ),
-    );
   }
 }
 
