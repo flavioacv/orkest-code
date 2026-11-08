@@ -77,7 +77,6 @@ export function layoutProjectRoom(room: RoomInput, theme: RoomTheme): AreaLayout
   area.side = side;
   const wall: WallStyle = theme.wall;
   const north = side === 'north';
-  const door = { lx: DOOR_X, w: DOOR_W };
 
   // ---- espelhamento (coordenadas locais pensadas com a ilha à esquerda)
   const mir = v.mirror;
@@ -101,41 +100,46 @@ export function layoutProjectRoom(room: RoomInput, theme: RoomTheme): AreaLayout
   // tapetinho na entrada
   rug(DOOR_X - 0.25, north ? 9.5 : 2, DOOR_W + 0.5, 1.25, shade(theme.carpet2, -0.1), room.seed + 1);
 
-  // ---- paredes
+  // ---- paredes e divisórias de coworking integrado (Open Space)
   if (north) {
     b.face(0.5, 15, wall);
-    b.south(0.5, 15, 11, wall, [door]);
+    b.south(0.5, 3.5, 11, wall);
+    b.south(12, 3.5, 11, wall);
+    for (const lx of [1, 2, 3, 12, 13, 14]) {
+      b.furn('glass_partition', lx, 11, 'h', { order: 0.15 });
+    }
   } else {
-    b.face(0.5, 15, wall, [door]);
+    b.face(0.5, 3.5, wall);
+    b.face(12, 3.5, wall);
+    for (const lx of [1, 2, 3, 12, 13, 14]) {
+      b.furn('glass_partition', lx, 1, 'h', { order: 0.15 });
+    }
     b.south(0.5, 15, 11, { ...wall, exterior: true });
-    // batente na passagem da porta (a face da parede norte mostra o vão)
-    b.wall('door_frame', DOOR_X + DOOR_W / 2, undefined, { order: 0.05 });
   }
-  b.cap(0, 0, 0.5, 12, wall);
-  b.cap(15.5, 0, 0.5, 12, wall);
+  b.cap(0, 0, 0.5, 12, { ...wall, pattern: 'glass' });
+  b.cap(15.5, 0, 0.5, 12, { ...wall, pattern: 'glass' });
 
-  // ---- caminhabilidade
-  b.walk(1, 2, 14, 9);
-  area.door = north ? { x: rect.x + DOOR_X, y: rect.y + 11, w: DOOR_W, h: 1 } : { x: rect.x + DOOR_X, y: rect.y, w: DOOR_W, h: 2 };
+  // ---- caminhabilidade integrada
+  b.walk(1, 1, 14, 10);
+  area.door = north ? { x: rect.x + 4, y: rect.y + 10, w: 8, h: 2 } : { x: rect.x + 4, y: rect.y, w: 8, h: 2 };
   b.walk(area.door.x - rect.x, area.door.y - rect.y, area.door.w, area.door.h);
 
   // ---- itens de parede
-  const signCx = north ? 8 : 10.5;
+  const signCx = north ? 8 : 13.5;
   area.signId = wallItem('sign', signCx, undefined, { order: 0.95 });
   if (north) {
     wallItem('whiteboard', 4.5, undefined, { order: 0.6 });
     wallItem('clock', 10, undefined, { order: 0.7 });
     wallItem('poster', 11.1, pick(POSTERS), { order: 0.5 });
     wallItem('window', 12.75, undefined, { order: 0.4 });
-    // interruptor ao lado da porta, na mureta (por dentro)
-    wallItem('light_switch', DOOR_X - 0.5, 'on', { ly: 12, on: 'south', order: 0.8 });
-    spot('switch', DOOR_X - 1, 10, 'down', { dy: -1 });
+    wallItem('light_switch', 3, 'on', { ly: 12, on: 'south', order: 0.8 });
+    spot('switch', 3, 10, 'down', { dy: -1 });
   } else {
-    wallItem('whiteboard', 2.5, undefined, { order: 0.6 });
-    wallItem('light_switch', DOOR_X - 0.5, 'on', { order: 0.8 });
-    wallItem('clock', 12.3, undefined, { order: 0.7 });
-    wallItem('poster', 13.35, pick(POSTERS), { order: 0.5 });
-    spot('switch', DOOR_X - 1, 2, 'up', { dy: -3 });
+    wallItem('whiteboard', 2, undefined, { order: 0.6 });
+    wallItem('light_switch', 3, 'on', { order: 0.8 });
+    wallItem('clock', 12.5, undefined, { order: 0.7 });
+    wallItem('poster', 14, pick(POSTERS), { order: 0.5 });
+    spot('switch', 3, 2, 'up', { dy: -3 });
   }
   spot('whiteboard', north ? 4 : 2, 2, 'up', { dx: 8, dy: 2 });
 

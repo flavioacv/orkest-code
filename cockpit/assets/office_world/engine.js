@@ -11820,12 +11820,15 @@
         break;
       }
       case "headphones": {
+        const led = "#38bdf8";
         if (v === "side") {
           for (let cx = 5; cx <= 9; cx++) put(cx, 2, cx === 7 ? it.lt : it.base);
           put(4, 3, it.base);
           put(10, 3, it.dk);
           for (let cy = 4; cy <= 8; cy++) put(7, cy, it.dk);
           for (let cy = 9; cy <= 12; cy++) for (let cx = 6; cx <= 9; cx++) put(cx, cy, cy === 9 || cx === 6 ? it.lt : it.base);
+          put(7, 10, led);
+          put(8, 10, led);
           put(9, 12, it.dk);
         } else {
           for (let cx = 3; cx <= 10; cx++) put(cx, 1, cx < 6 ? it.lt : it.base);
@@ -11841,6 +11844,8 @@
             put(12, cy, it.dk);
             put(13, cy, it.dk);
           }
+          put(0, 10, led);
+          put(13, 10, led);
         }
         break;
       }
@@ -12001,7 +12006,9 @@
       }
       b.rect(x, y1 + 1, 3, 1, sh.base);
       b.set(x, y1 + 1, sh.lt);
-      b.rect(x, y1 + 2, 3, 1, sh.dk);
+      b.set(x + 1, y1 + 1, "#f8fafc");
+      b.rect(x, y1 + 2, 3, 1, "#e2e8f0");
+      b.set(x + 2, y1 + 2, sh.dk);
     };
     const a1 = r.view === "up" ? r.legB.dy : r.legA.dy;
     const b1 = r.view === "up" ? r.legA.dy : r.legB.dy;
@@ -12060,7 +12067,9 @@
       const fx = Math.round(10 + dx);
       b.rect(fx - 1, y1 + 1, 4, 1, shc.base);
       b.set(fx - 1, y1 + 1, shc.lt);
-      b.rect(fx - 1, y1 + 2, 4, 1, shc.dk);
+      b.set(fx + 1, y1 + 1, "#f8fafc");
+      b.rect(fx - 1, y1 + 2, 4, 1, "#e2e8f0");
+      b.set(fx + 2, y1 + 2, shc.dk);
     };
     leg(r.legA.dx, -r.legA.dy, true);
     leg(r.legB.dx, -r.legB.dy, false);
@@ -23053,7 +23062,6 @@
     area.side = side;
     const wall = theme.wall;
     const north = side === "north";
-    const door = { lx: DOOR_X, w: DOOR_W };
     const mir = v.mirror;
     const fx = (lx, w = 1) => mir ? 16 - lx - w : lx;
     const fdir = (d) => mir && (d === "left" || d === "right") ? d === "left" ? "right" : "left" : d;
@@ -23069,32 +23077,39 @@
     rug(DOOR_X - 0.25, north ? 9.5 : 2, DOOR_W + 0.5, 1.25, shade2(theme.carpet2, -0.1), room.seed + 1);
     if (north) {
       b.face(0.5, 15, wall);
-      b.south(0.5, 15, 11, wall, [door]);
+      b.south(0.5, 3.5, 11, wall);
+      b.south(12, 3.5, 11, wall);
+      for (const lx of [1, 2, 3, 12, 13, 14]) {
+        b.furn("glass_partition", lx, 11, "h", { order: 0.15 });
+      }
     } else {
-      b.face(0.5, 15, wall, [door]);
+      b.face(0.5, 3.5, wall);
+      b.face(12, 3.5, wall);
+      for (const lx of [1, 2, 3, 12, 13, 14]) {
+        b.furn("glass_partition", lx, 1, "h", { order: 0.15 });
+      }
       b.south(0.5, 15, 11, { ...wall, exterior: true });
-      b.wall("door_frame", DOOR_X + DOOR_W / 2, void 0, { order: 0.05 });
     }
-    b.cap(0, 0, 0.5, 12, wall);
-    b.cap(15.5, 0, 0.5, 12, wall);
-    b.walk(1, 2, 14, 9);
-    area.door = north ? { x: rect.x + DOOR_X, y: rect.y + 11, w: DOOR_W, h: 1 } : { x: rect.x + DOOR_X, y: rect.y, w: DOOR_W, h: 2 };
+    b.cap(0, 0, 0.5, 12, { ...wall, pattern: "glass" });
+    b.cap(15.5, 0, 0.5, 12, { ...wall, pattern: "glass" });
+    b.walk(1, 1, 14, 10);
+    area.door = north ? { x: rect.x + 4, y: rect.y + 10, w: 8, h: 2 } : { x: rect.x + 4, y: rect.y, w: 8, h: 2 };
     b.walk(area.door.x - rect.x, area.door.y - rect.y, area.door.w, area.door.h);
-    const signCx = north ? 8 : 10.5;
+    const signCx = north ? 8 : 13.5;
     area.signId = wallItem("sign", signCx, void 0, { order: 0.95 });
     if (north) {
       wallItem("whiteboard", 4.5, void 0, { order: 0.6 });
       wallItem("clock", 10, void 0, { order: 0.7 });
       wallItem("poster", 11.1, pick4(POSTERS), { order: 0.5 });
       wallItem("window", 12.75, void 0, { order: 0.4 });
-      wallItem("light_switch", DOOR_X - 0.5, "on", { ly: 12, on: "south", order: 0.8 });
-      spot("switch", DOOR_X - 1, 10, "down", { dy: -1 });
+      wallItem("light_switch", 3, "on", { ly: 12, on: "south", order: 0.8 });
+      spot("switch", 3, 10, "down", { dy: -1 });
     } else {
-      wallItem("whiteboard", 2.5, void 0, { order: 0.6 });
-      wallItem("light_switch", DOOR_X - 0.5, "on", { order: 0.8 });
-      wallItem("clock", 12.3, void 0, { order: 0.7 });
-      wallItem("poster", 13.35, pick4(POSTERS), { order: 0.5 });
-      spot("switch", DOOR_X - 1, 2, "up", { dy: -3 });
+      wallItem("whiteboard", 2, void 0, { order: 0.6 });
+      wallItem("light_switch", 3, "on", { order: 0.8 });
+      wallItem("clock", 12.5, void 0, { order: 0.7 });
+      wallItem("poster", 14, pick4(POSTERS), { order: 0.5 });
+      spot("switch", 3, 2, "up", { dy: -3 });
     }
     spot("whiteboard", north ? 4 : 2, 2, "up", { dx: 8, dy: 2 });
     const deskV = theme.deskVariant;

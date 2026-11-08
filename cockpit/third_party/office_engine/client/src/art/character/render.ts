@@ -790,12 +790,15 @@ function drawAccessory(dc: Dc): void {
       break;
     }
     case 'headphones': {
+      const led = '#38bdf8';
       if (v === 'side') {
         for (let cx = 5; cx <= 9; cx++) put(cx, 2, cx === 7 ? it.lt : it.base);
         put(4, 3, it.base);
         put(10, 3, it.dk);
         for (let cy = 4; cy <= 8; cy++) put(7, cy, it.dk);
         for (let cy = 9; cy <= 12; cy++) for (let cx = 6; cx <= 9; cx++) put(cx, cy, cy === 9 || cx === 6 ? it.lt : it.base);
+        put(7, 10, led);
+        put(8, 10, led);
         put(9, 12, it.dk);
       } else {
         for (let cx = 3; cx <= 10; cx++) put(cx, 1, cx < 6 ? it.lt : it.base);
@@ -811,6 +814,8 @@ function drawAccessory(dc: Dc): void {
           put(12, cy, it.dk);
           put(13, cy, it.dk);
         }
+        put(0, 10, led);
+        put(13, 10, led);
       }
       break;
     }
@@ -982,10 +987,12 @@ function drawLegs(dc: Dc): void {
       b.set(x + 1, y, c.base);
       b.set(x + 2, y, shadeRight ? c.dk : c.base);
     }
-    // Sapato: duas linhas, ponta clara, sola escura.
+    // Tênis/Sneakers tech modernos: corpo estilizado, cadarço e entressola clara
     b.rect(x, y1 + 1, 3, 1, sh.base);
     b.set(x, y1 + 1, sh.lt);
-    b.rect(x, y1 + 2, 3, 1, sh.dk);
+    b.set(x + 1, y1 + 1, '#f8fafc');
+    b.rect(x, y1 + 2, 3, 1, '#e2e8f0');
+    b.set(x + 2, y1 + 2, sh.dk);
   };
   const a1 = r.view === 'up' ? r.legB.dy : r.legA.dy;
   const b1 = r.view === 'up' ? r.legA.dy : r.legB.dy;
@@ -1048,7 +1055,9 @@ function drawLegsSide(dc: Dc, pants: Ramp, sh: Ramp, skinLeg: boolean): void {
     const fx = Math.round(10 + dx);
     b.rect(fx - 1, y1 + 1, 4, 1, shc.base);
     b.set(fx - 1, y1 + 1, shc.lt);
-    b.rect(fx - 1, y1 + 2, 4, 1, shc.dk);
+    b.set(fx + 1, y1 + 1, '#f8fafc');
+    b.rect(fx - 1, y1 + 2, 4, 1, '#e2e8f0');
+    b.set(fx + 2, y1 + 2, shc.dk);
   };
   leg(r.legA.dx, -r.legA.dy, true);
   leg(r.legB.dx, -r.legB.dy, false);
