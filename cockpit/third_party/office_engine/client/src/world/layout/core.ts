@@ -9,14 +9,14 @@ export const RESTROOM_ID = 'core:banheiros';
 export const CAFE_ID = 'core:copa';
 export const LOUNGE_ID = 'core:lounge';
 
-/** Paredes do núcleo: tons claros e neutros (frios), com acabamentos diferentes por ambiente. */
+/** Paredes do núcleo: estética contemporânea tech studio em ardósia, nogueira e acabamentos refinados. */
 export const CORE_WALLS = {
-  reception: { base: '#e9e5dc', trim: '#a88e6c', pattern: 'wood_panel' } satisfies WallStyle,
-  restroom: { base: '#dce8ee', trim: '#8fb0c0', pattern: 'tiles' } satisfies WallStyle,
-  cafe: { base: '#eef0ee', trim: '#9aa6ad', pattern: 'plain' } satisfies WallStyle,
-  cafeSplash: { base: '#d9dcdf', trim: '#8d969e', pattern: 'marble' } satisfies WallStyle,
-  lounge: { base: '#e6e2ea', trim: '#8f8aa3', pattern: 'plain' } satisfies WallStyle,
-  glass: { base: '#cfe6f0', trim: '#9fb9c6', pattern: 'glass' } satisfies WallStyle,
+  reception: { base: '#343b48', trim: '#556073', pattern: 'wood_panel' } satisfies WallStyle,
+  restroom: { base: '#28313d', trim: '#414f63', pattern: 'tiles' } satisfies WallStyle,
+  cafe: { base: '#313946', trim: '#4d596e', pattern: 'plain' } satisfies WallStyle,
+  cafeSplash: { base: '#252b36', trim: '#3e485a', pattern: 'marble' } satisfies WallStyle,
+  lounge: { base: '#2f3643', trim: '#4b566b', pattern: 'plain' } satisfies WallStyle,
+  glass: { base: '#253547', trim: '#425b7a', pattern: 'glass' } satisfies WallStyle,
 };
 
 /** Centros (em tiles locais) dos dois elevadores na face norte da recepção. */
@@ -26,8 +26,8 @@ export function layoutReception(): AreaLayout {
   const b = new AreaBuilder(RECEPTION_ID, 'reception', { x: 0, y: NORTH_Y, w: 16, h: ROOM_H });
   const wall = CORE_WALLS.reception;
   b.floor('marble', 0, 0, 16, 12, 101);
-  b.rug(1.5, 2.2, 6.5, 2.6, '#3d5a80', 102);
-  b.rug(8.6, 6.4, 5.2, 3.2, '#b65f3a', 103);
+  b.rug(1.5, 2.2, 6.5, 2.6, '#212d3d', 102);
+  b.rug(8.6, 6.4, 5.2, 3.2, '#382e27', 103);
   b.face(0.5, 15, wall);
   b.cap(0, 0, 0.5, 12, wall);
   b.cap(15.5, 0, 0.5, 12, wall);
@@ -75,8 +75,8 @@ export function layoutRestroom(): AreaLayout {
   const b = new AreaBuilder(RESTROOM_ID, 'restroom', { x: 0, y: SOUTH_Y, w: 16, h: ROOM_H });
   const wall = CORE_WALLS.restroom;
   b.floor('tile_white', 0, 0, 16, 12, 201);
-  // tapetinho só na frente das pias (nada de tapete grande no meio do banheiro)
-  b.rug(2, 3.15, 3, 0.85, '#6fa3b8', 202);
+  // tapetinho só na frente das pias em tom ardósia moderno
+  b.rug(2, 3.15, 3, 0.85, '#2b3e47', 202);
   b.face(0.5, 15, wall, [{ lx: 7, w: 2 }]);
   b.wall('door_frame', 8, undefined, { order: 0.05 });
   b.south(0.5, 15, 11, { ...wall, exterior: true });

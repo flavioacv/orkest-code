@@ -694,29 +694,28 @@ export function sink(): BufFurniture {
 export function receptionDesk(seed: number): BufFurniture {
   const s = floorSheet(3, 1, 16);
   const b = s.buf;
-  const wood = M.oak;
-  const stone = ramp('#efede8', 0.04);
+  const wood = M.walnut;
+  const stone = ramp('#3a414f', 0.05);
   // Área de trabalho (atrás) com monitor de costas e planta.
-  topFace(b, 1, -10, 46, 6, M.white);
-  monitorBack(b, 8, -15, 13, 7);
+  topFace(b, 1, -10, 46, 6, ramp('#1e232d', 0.04));
+  monitorBack(b, 8, -15, 13, 7, 'mid');
   pot(b, 38, -13, 5, 4, M.ceramic);
   foliage(b, 40.5, -16, 3.5, 3, M.leaf, seed + 1);
-  // Balcão frontal com faixa de acento.
+  // Balcão frontal com ripas e friso LED Orkest cyan
   frontFace(b, 0, -2, 48, 18, wood);
   woodGrain(b, 1, -1, 46, 14, wood, seed, true);
-  b.rect(0, 5, 48, 3, '#3f7fd8');
-  b.hline(0, 47, 5, '#6aa0ec');
-  b.hline(0, 47, 7, '#2d62b3');
+  b.rect(0, 5, 48, 2, '#181b22');
+  b.hline(0, 47, 5, '#38bdf8');
   b.rect(0, 14, 48, 2, wood.dd);
-  // Tampo (prateleira de atendimento).
+  // Tampo em ardósia acetinada
   topFace(b, -1, -6, 50, 5, stone);
   b.hline(-1, 48, -2, stone.dk);
-  // Campainha, folhetos e caneta.
+  // Campainha, folhetos e caneta
   b.rect(30, -6, 4, 2, '#d9a42e');
   b.set(31, -7, '#f2c14e');
   b.set(32, -7, '#f2c14e');
   papers(b, 4, -5, 7, 3);
-  b.line(14, -4, 18, -5, '#3a3f4b');
+  b.line(14, -4, 18, -5, '#38bdf8');
   b.outline();
   contact(b, -1, 13, 50, 4, 0.24);
   return { base: s };

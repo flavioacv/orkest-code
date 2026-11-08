@@ -26,8 +26,7 @@ const sim = new OrkestSim(art, () => options, null);
 const soundBoard = new SoundBoard();
 const soundCues = new SoundCues(sim, camera);
 const renderer = new Renderer(canvas, art, sim, camera);
-const outdoorPeople = new OutdoorPeople(art);
-renderer.outdoorActors = dt => outdoorPeople.update(dt, sim.building.cols, exteriorSeasonFor(options.season, new Date()));
+renderer.outdoorActors = null;
 const overlay = new Overlay(renderer.ctx, sim, renderer, camera);
 let snapshotRev = 0;
 let selectedAgent: string | null = null;
@@ -110,8 +109,9 @@ function buildingRect() {
 }
 
 function updateBounds() {
-  const e = renderer.exterior.bounds;
-  const bounds = { x: e.x * TILE, y: e.y * TILE, w: e.w * TILE, h: e.h * TILE };
+  const b = buildingRect();
+  const pad = 2 * TILE;
+  const bounds = { x: b.x - pad, y: b.y - pad, w: b.w + pad * 2, h: b.h + pad * 2 };
   camera.bounds = bounds;
   camera.minZoom = Math.min(6, Math.max(
     (camera.viewW - camera.insets.left - camera.insets.right) / bounds.w,
@@ -122,10 +122,7 @@ function updateBounds() {
 
 function overview(animate: boolean, exterior = false) {
   const bounds = buildingRect();
-  const e = renderer.exterior.bounds;
-  const frame = exterior
-    ? { zoom: camera.minZoom, cx: (e.x + e.w / 2) * TILE, cy: (e.y + e.h / 2) * TILE, dy: 0 }
-    : overviewFrame(bounds, camera.viewW, camera.viewH, camera.insets);
+  const frame = overviewFrame(bounds, camera.viewW, camera.viewH, camera.insets);
   const fit = Math.max(camera.minZoom, frame.zoom);
   const snapped = camera.snapZoom(fit, 'down');
   const zoom = Math.min(4, snapped >= fit * 0.82 ? snapped : fit);

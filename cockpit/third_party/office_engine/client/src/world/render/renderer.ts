@@ -270,12 +270,11 @@ export class Renderer {
       tctx.fillStyle = `rgba(${vr},${vg},${vb},${VIGNETTE_ALPHA})`;
       tctx.fillRect(0, 0, 2 * s, 2 * s);
       this.grass = this.ctx.createPattern(tile, 'repeat');
-      // cor de fundo (antes do padrão carregar): a média já com o tom da vinheta
-      const k = VIGNETTE_ALPHA;
-      this.clearColor = `rgb(${Math.round((r / n) * (1 - k) + vr * k)},${Math.round((g / n) * (1 - k) + vg * k)},${Math.round((bl / n) * (1 - k) + vb * k)})`;
+      // cor de fundo: tom dark studio moderno
+      this.clearColor = '#18181b';
     } catch {
       this.grass = null;
-      this.clearColor = this.season === 'winter' ? '#c8d6e6' : this.season === 'autumn' ? '#8c8a52' : '#6f9a5a';
+      this.clearColor = '#18181b';
     }
     this.finishBase(ctx, cols);
     this.base = c;
@@ -370,11 +369,13 @@ export class Renderer {
     const vy0 = -oy / scale;
     const vx1 = vx0 + W / scale;
     const vy1 = vy0 + H / scale;
-    // Off-map journeys stay alive in the simulation, but never draw outside the terrain.
-    const bounds = this.exterior.bounds;
+    // Foco exclusivo no complexo de escritórios com margem limpa
+    const bw = this.sim.building.cols * COL_W * TILE;
+    const bh = BUILDING_H * TILE;
+    const pad = 2 * TILE;
     ctx.save();
     ctx.beginPath();
-    ctx.rect(bounds.x * TILE, bounds.y * TILE, bounds.w * TILE, bounds.h * TILE);
+    ctx.rect(-pad, -pad, bw + pad * 2, bh + pad * 2);
     ctx.clip();
     const visible = (x: number, y: number, w: number, h: number) => x < vx1 && x + w > vx0 && y < vy1 && y + h > vy0;
 
@@ -464,27 +465,7 @@ export class Renderer {
       }
       push(K.Char, ch.depth(), ch, null, 1);
     }
-    for (const original of this.exterior.props) {
-      const prop = this.exteriorSprites?.position?.(original, now) ?? original;
-      const art = this.exteriorSprites?.prop(prop, this.season);
-      if (!visible(prop.x - (art?.ax ?? 24), prop.y - (art?.ay ?? 56), art?.canvas.width ?? 48, art?.canvas.height ?? 60)) continue;
-      let alpha = 1;
-      if (prop.whenRoom !== undefined) {
-        // ex.: cerca viva diante do caminho do jardim — surge junto com a sala
-        const room = this.roomInSlot(prop.whenRoom);
-        if (!room) continue;
-        if (room.phase === 'building' || room.phase === 'dismantling') {
-          const pr = room.progress(now);
-          alpha = room.phase === 'building' ? Math.min(1, pr * 3) : 1 - Math.min(1, Math.max(0, (pr - 0.75) * 4));
-          if (alpha <= 0.02) continue;
-        }
-      }
-      const garden = (prop.kind as string) === 'garden_set';
-      const floorProp = garden || (prop.kind as string) === 'stream_lake' || (prop.kind as string) === 'pond' || (prop.kind as string) === 'station_track';
-      const raster = floorProp ? art : null;
-      push(K.Prop, floorProp && raster ? prop.y - raster.ay : prop.y, prop, null, alpha);
-      if (garden) push(K.PropFront, prop.y + .5, prop, null, alpha);
-    }
+    // Sem props externas para focar 100% no interior e complexo dos escritórios com alta performance
     for (const sh of this.shells) {
       const room = this.roomInSlot(sh.slot);
       let alpha = 1;
@@ -1207,16 +1188,7 @@ export class Renderer {
   }
 
   private updateCars(now: number, dt: number): void {
-    const b = this.exterior.bounds;
-    const x0 = b.x * TILE - 40;
-    const x1 = (b.x + b.w) * TILE + 40;
-    if (now >= this.nextCarAt) {
-      this.nextCarAt = now + 4000 + Math.random() * 9000;
-      const lane = this.exterior.lanes[Math.floor(Math.random() * this.exterior.lanes.length)];
-      if (lane) this.cars.push({ x: lane.dir > 0 ? x0 : x1, y: lane.y, dir: lane.dir, speed: 38 + Math.random() * 30, variant: this.exteriorSprites ? (5 + this.carSequence++) % 6 : Math.floor(Math.random() * 6) });
-    }
-    for (const c of this.cars) c.x += c.dir * c.speed * Math.min(dt, 0.1);
-    if (this.cars.length) this.cars = this.cars.filter((c) => c.x >= x0 - 10 && c.x <= x1 + 10);
+    if (this.cars.length) this.cars = [];
   }
 
   private drawPingPong(now: number): void {

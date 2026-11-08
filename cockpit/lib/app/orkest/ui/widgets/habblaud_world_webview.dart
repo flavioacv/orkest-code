@@ -97,7 +97,7 @@ class _HabblaudWorldWebViewState extends State<HabblaudWorldWebView> {
     return '''<!doctype html>
 <html><head><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta charset="utf-8"><style>
-html,body,#office{width:100%;height:100%;margin:0;overflow:hidden;background:#7fae62}
+html,body,#office{width:100%;height:100%;margin:0;overflow:hidden;background:#18181b}
 canvas{display:block;image-rendering:pixelated;outline:none}
 </style></head><body><canvas id="office" tabindex="0"></canvas>
 <script>$safeBundle</script></body></html>''';

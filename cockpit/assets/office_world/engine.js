@@ -114,6 +114,7 @@
     plant_tall: { mount: "floor", footprint: { w: 1, h: 1 }, blocks: true, variants: ["palm", "ficus", "monstera", "bonsai"] },
     glass_partition: { mount: "floor", footprint: { w: 1, h: 1 }, blocks: true, variants: ["h", "v", "end"] },
     binder_shelf: { mount: "floor", footprint: { w: 1, h: 1 }, blocks: true },
+    server_rack: { mount: "floor", footprint: { w: 1, h: 1 }, blocks: true },
     meeting_table: { mount: "floor", footprint: { w: 3, h: 2 }, blocks: true },
     stool: { mount: "floor", footprint: { w: 1, h: 1 }, blocks: false, seat: true },
     floor_lamp: { mount: "floor", footprint: { w: 1, h: 1 }, blocks: true },
@@ -13307,25 +13308,25 @@
 
   // third_party/office_engine/client/src/art/furniture/kit.ts
   var M = {
-    oak: ramp("#d9b88e", 0.06),
-    oakDark: ramp("#b88c5e", 0.06),
-    white: ramp("#e9e8e4", 0.045),
-    walnut: ramp("#7a5a45", 0.065),
-    steel: ramp("#b9c0ca", 0.06),
-    steelDark: ramp("#6d7583", 0.07),
-    graphite: ramp("#474d5c", 0.065),
-    plastic: ramp("#e4e6ea", 0.045),
-    stone: ramp("#e8e6e1", 0.04),
-    terracotta: ramp("#c9714a", 0.07),
-    ceramic: ramp("#eeebe4", 0.05),
-    leaf: ramp("#4c9a55", 0.08),
-    leafDark: ramp("#2f7044", 0.07),
-    cardboard: ramp("#c99a5e", 0.06),
-    blueFabric: ramp("#4f78b8", 0.07),
-    orange: ramp("#ec8a3c", 0.07)
+    oak: ramp("#785f47", 0.065),
+    oakDark: ramp("#4a3a2b", 0.07),
+    white: ramp("#e4e6ea", 0.04),
+    walnut: ramp("#48362a", 0.07),
+    steel: ramp("#959eab", 0.06),
+    steelDark: ramp("#434a58", 0.07),
+    graphite: ramp("#2a2f3a", 0.065),
+    plastic: ramp("#dce0e6", 0.045),
+    stone: ramp("#5a606d", 0.05),
+    terracotta: ramp("#a35438", 0.07),
+    ceramic: ramp("#e8ebf0", 0.045),
+    leaf: ramp("#3b8c56", 0.08),
+    leafDark: ramp("#205933", 0.07),
+    cardboard: ramp("#a8814d", 0.06),
+    blueFabric: ramp("#304463", 0.07),
+    orange: ramp("#ea7828", 0.07)
   };
-  var ACCENTS2 = ["#3f7fd8", "#ec8a3c", "#4cae6a", "#e05a5a", "#f2c14e", "#8d66cf", "#36b0b0", "#e47aa8"];
-  var SCREEN_BG = "#22324f";
+  var ACCENTS2 = ["#38bdf8", "#ea7828", "#10b981", "#f43f5e", "#f59e0b", "#a855f7", "#06b6d4", "#ec4899"];
+  var SCREEN_BG = "#131722";
   function rngOf(seed, salt = 0) {
     return mulberry32((seed * 2654435761 ^ salt * 40503 ^ 1540483477) >>> 0);
   }
@@ -14242,17 +14243,16 @@
   function receptionDesk(seed) {
     const s = floorSheet(3, 1, 16);
     const b = s.buf;
-    const wood = M.oak;
-    const stone = ramp("#efede8", 0.04);
-    topFace(b, 1, -10, 46, 6, M.white);
-    monitorBack(b, 8, -15, 13, 7);
+    const wood = M.walnut;
+    const stone = ramp("#3a414f", 0.05);
+    topFace(b, 1, -10, 46, 6, ramp("#1e232d", 0.04));
+    monitorBack(b, 8, -15, 13, 7, "mid");
     pot(b, 38, -13, 5, 4, M.ceramic);
     foliage(b, 40.5, -16, 3.5, 3, M.leaf, seed + 1);
     frontFace(b, 0, -2, 48, 18, wood);
     woodGrain(b, 1, -1, 46, 14, wood, seed, true);
-    b.rect(0, 5, 48, 3, "#3f7fd8");
-    b.hline(0, 47, 5, "#6aa0ec");
-    b.hline(0, 47, 7, "#2d62b3");
+    b.rect(0, 5, 48, 2, "#181b22");
+    b.hline(0, 47, 5, "#38bdf8");
     b.rect(0, 14, 48, 2, wood.dd);
     topFace(b, -1, -6, 50, 5, stone);
     b.hline(-1, 48, -2, stone.dk);
@@ -14260,7 +14260,7 @@
     b.set(31, -7, "#f2c14e");
     b.set(32, -7, "#f2c14e");
     papers(b, 4, -5, 7, 3);
-    b.line(14, -4, 18, -5, "#3a3f4b");
+    b.line(14, -4, 18, -5, "#38bdf8");
     b.outline();
     contact(b, -1, 13, 50, 4, 0.24);
     return { base: s };
@@ -14294,11 +14294,11 @@
   function deskMats(variant) {
     switch (variant) {
       case "white":
-        return { top: M.white, edge: ramp("#d7d6d1", 0.05), legs: M.steel, ped: ramp("#dcdbd6", 0.05) };
+        return { top: M.white, edge: ramp("#bac1cc", 0.05), legs: M.graphite, ped: ramp("#ccd2dc", 0.05) };
       case "dark":
-        return { top: M.walnut, edge: ramp("#5f4535", 0.06), legs: M.graphite, ped: ramp("#5a4334", 0.06) };
+        return { top: M.walnut, edge: ramp("#35261d", 0.06), legs: M.graphite, ped: ramp("#32241b", 0.06) };
       default:
-        return { top: M.oak, edge: M.oakDark, legs: ramp("#e9e8e4", 0.05), ped: ramp("#e6e4de", 0.05) };
+        return { top: M.oak, edge: M.oakDark, legs: M.graphite, ped: ramp("#5c4633", 0.05) };
     }
   }
   var MUG_COLORS = ["#e2604f", "#3f7fd8", "#f2c14e", "#4cae6a", "#f4f2ee", "#8d66cf"];
@@ -14446,11 +14446,11 @@
     return { base: s };
   }
   var CHAIR_COLORS = {
-    black: "#41465a",
-    blue: "#3f62a3",
-    red: "#b44a4a",
-    green: "#3f8a62",
-    gray: "#8b929e"
+    black: "#21252f",
+    blue: "#233854",
+    red: "#7e2d2d",
+    green: "#1f4e36",
+    gray: "#4a5160"
   };
   function chairRamp(variant) {
     return ramp(CHAIR_COLORS[variant ?? "black"] ?? CHAIR_COLORS.black, 0.07);
@@ -14625,6 +14625,33 @@
     });
     b.outline();
     contact(b, 0, 13, 16, 4, 0.22);
+    return { base: s };
+  }
+  function serverRack(seed) {
+    const s = floorSheet(1, 1, 28);
+    const b = s.buf;
+    const r = rngOf(seed, 99);
+    const metal = ramp("#2a2f3a", 0.06);
+    topFace(b, 0, -25, 16, 3, metal);
+    b.rect(0, -22, 16, 38, metal.dk);
+    b.vline(0, -22, 15, metal.lt);
+    b.vline(15, -22, 15, metal.dd);
+    b.rect(1, -21, 14, 36, "#13161c");
+    for (let y = -20; y < 14; y += 4) {
+      b.hline(2, 13, y, "#222733");
+      b.hline(2, 13, y + 1, "#1b1f29");
+      const led1 = r() > 0.4 ? "#38bdf8" : "#1e3a5f";
+      const led2 = r() > 0.3 ? "#10b981" : "#134e35";
+      b.set(3, y + 1, led1);
+      b.set(4, y + 1, led2);
+      b.rect(7, y + 1, 5, 1, "#3b4354");
+      b.set(8, y + 1, "#f59e0b");
+    }
+    for (let i = 0; i < 20; i++) {
+      b.set(12 - Math.floor(i * 0.4), -20 + i, "rgba(255,255,255,0.18)");
+    }
+    b.outline();
+    contact(b, 0, 13, 16, 4, 0.28);
     return { base: s };
   }
   function filingCabinet() {
@@ -14980,26 +15007,27 @@
   function whiteboard() {
     const s = wallSheet(3);
     const b = s.buf;
-    const frame = ramp("#c3cad4", 0.06);
     const x = 2;
     const y = -27;
     const w = 44;
     const h = 19;
-    b.rect(x, y, w, h, frame.base);
-    b.hline(x, x + w - 1, y, frame.hi);
-    b.vline(x, y, y + h - 1, frame.lt);
-    b.vline(x + w - 1, y, y + h - 1, frame.dk);
-    b.hline(x, x + w - 1, y + h - 1, frame.dk);
-    b.rect(x + 1, y + 1, w - 2, h - 2, "#fbfcfd");
-    b.line(x + 30, y + 1, x + 24, y + h - 2, "rgba(210,225,240,0.5)");
-    b.line(x + 33, y + 1, x + 27, y + h - 2, "rgba(210,225,240,0.35)");
-    b.rect(x + 3, y + h, w - 6, 2, frame.base);
-    b.hline(x + 3, x + w - 4, y + h, frame.lt);
-    for (const [i, c] of [[0, "#e05a5a"], [3, "#3f7fd8"], [6, "#2b2f3b"], [9, "#4cae6a"]]) {
-      b.rect(x + 8 + i, y + h - 1, 2, 1, c);
+    b.rect(x, y, w, h, "rgba(240,244,250,0.95)");
+    b.hline(x, x + w - 1, y, "#ffffff");
+    b.vline(x, y, y + h - 1, "rgba(255,255,255,0.8)");
+    b.vline(x + w - 1, y, y + h - 1, "#a8b4c2");
+    b.hline(x, x + w - 1, y + h - 1, "#a8b4c2");
+    for (const [fx, fy] of [[x + 1, y + 1], [x + w - 3, y + 1], [x + 1, y + h - 3], [x + w - 3, y + h - 3]]) {
+      b.rect(fx, fy, 2, 2, "#323742");
+      b.set(fx, fy, "#8b93a0");
     }
-    b.rect(x + w - 14, y + h - 2, 5, 2, "#3a3f4b");
-    b.hline(x + w - 14, x + w - 10, y + h - 2, "#f2efe6");
+    b.line(x + 28, y + 1, x + 22, y + h - 2, "rgba(255,255,255,0.6)");
+    b.line(x + 31, y + 1, x + 25, y + h - 2, "rgba(255,255,255,0.35)");
+    b.rect(x + 10, y + h, 24, 2, "#272b34");
+    b.hline(x + 10, x + 33, y + h, "#515867");
+    for (const [i, c] of [[0, "#f43f5e"], [3, "#38bdf8"], [6, "#10b981"], [9, "#181b22"]]) {
+      b.rect(x + 12 + i, y + h - 1, 2, 1, c);
+    }
+    b.rect(x + 27, y + h - 2, 4, 2, "#181b22");
     b.outline();
     wallShadow(b, x - 1, y - 1, w + 2, h + 3);
     s.rects = { board: rectAt(s, x + 2, y + 2, w - 4, h - 4) };
@@ -15369,6 +15397,7 @@
     desk_back: 4,
     bookshelf: 4,
     binder_shelf: 4,
+    server_rack: 4,
     meeting_table: 2,
     shelf_wall: 3,
     painting: 2,
@@ -15419,6 +15448,8 @@
         return glassPartition(variant);
       case "binder_shelf":
         return binderShelf(seed);
+      case "server_rack":
+        return serverRack(seed);
       case "meeting_table":
         return meetingTable(seed);
       case "stool":
@@ -16454,16 +16485,16 @@
 
   // third_party/office_engine/client/src/art/theme.ts
   var THEMES = [
-    { carpet: "#c9d1dc", carpet2: "#bdc6d3", wall: { base: "#eef1f4", trim: "#9fb0c4", pattern: "plain" }, accent: "#3f7fd8", deskVariant: "white", chairVariant: "blue" },
-    { carpet: "#dbcfba", carpet2: "#d0c2ab", wall: { base: "#f6f0e5", trim: "#b99f7a", pattern: "stripes" }, accent: "#ec8a3c", deskVariant: "wood", chairVariant: "black" },
-    { carpet: "#c4cfbb", carpet2: "#b8c5af", wall: { base: "#f1f3ea", trim: "#93a487", pattern: "wood_panel" }, accent: "#4cae6a", deskVariant: "wood", chairVariant: "green" },
-    { carpet: "#cdc8de", carpet2: "#c2bbd5", wall: { base: "#f3f1f8", trim: "#a59cc4", pattern: "plain" }, accent: "#8d66cf", deskVariant: "white", chairVariant: "gray" },
-    { carpet: "#e4cdbe", carpet2: "#dbc1b0", wall: { base: "#f8f1eb", trim: "#c99a83", pattern: "plain" }, accent: "#e2604f", deskVariant: "wood", chairVariant: "red" },
-    { carpet: "#bfd9d2", carpet2: "#b2cfc7", wall: { base: "#eef6f4", trim: "#7fb3a6", pattern: "stripes" }, accent: "#36b0b0", deskVariant: "white", chairVariant: "green" },
-    { carpet: "#aab1bd", carpet2: "#9fa7b4", wall: { base: "#e8eaee", trim: "#6d7583", pattern: "brick" }, accent: "#f2c14e", deskVariant: "dark", chairVariant: "black" },
-    { carpet: "#e0cad2", carpet2: "#d6bdc6", wall: { base: "#f9f2f4", trim: "#c08ea0", pattern: "stripes" }, accent: "#e47aa8", deskVariant: "white", chairVariant: "black" },
-    { carpet: "#c0d2e7", carpet2: "#b3c7e0", wall: { base: "#eef4fa", trim: "#8aa6c8", pattern: "wood_panel" }, accent: "#5b8fe0", deskVariant: "wood", chairVariant: "blue" },
-    { carpet: "#d1c5b8", carpet2: "#c5b8aa", wall: { base: "#f4efe8", trim: "#8a6a52", pattern: "wood_panel" }, accent: "#c9713f", deskVariant: "dark", chairVariant: "gray" }
+    { carpet: "#2a3342", carpet2: "#202733", wall: { base: "#3a4454", trim: "#56667d", pattern: "plain" }, accent: "#38bdf8", deskVariant: "dark", chairVariant: "blue" },
+    { carpet: "#342f2b", carpet2: "#282421", wall: { base: "#433c37", trim: "#6a5e56", pattern: "wood_panel" }, accent: "#f59e0b", deskVariant: "wood", chairVariant: "black" },
+    { carpet: "#24342d", carpet2: "#1b2823", wall: { base: "#32453c", trim: "#4c675a", pattern: "plain" }, accent: "#10b981", deskVariant: "dark", chairVariant: "green" },
+    { carpet: "#31293c", carpet2: "#262030", wall: { base: "#423752", trim: "#65547d", pattern: "plain" }, accent: "#a855f7", deskVariant: "white", chairVariant: "gray" },
+    { carpet: "#382b2d", carpet2: "#2b2123", wall: { base: "#4a393c", trim: "#73585d", pattern: "brick" }, accent: "#f43f5e", deskVariant: "dark", chairVariant: "red" },
+    { carpet: "#22353a", carpet2: "#1a292d", wall: { base: "#30474e", trim: "#486b76", pattern: "stripes" }, accent: "#06b6d4", deskVariant: "white", chairVariant: "green" },
+    { carpet: "#262a33", carpet2: "#1d2027", wall: { base: "#363c48", trim: "#555e71", pattern: "brick" }, accent: "#eab308", deskVariant: "dark", chairVariant: "black" },
+    { carpet: "#362832", carpet2: "#2a1f27", wall: { base: "#493643", trim: "#715468", pattern: "stripes" }, accent: "#ec4899", deskVariant: "white", chairVariant: "black" },
+    { carpet: "#253044", carpet2: "#1c2535", wall: { base: "#35435e", trim: "#526892", pattern: "wood_panel" }, accent: "#3b82f6", deskVariant: "wood", chairVariant: "blue" },
+    { carpet: "#322b27", carpet2: "#27211e", wall: { base: "#443a34", trim: "#6b5c53", pattern: "wood_panel" }, accent: "#f97316", deskVariant: "dark", chairVariant: "gray" }
   ];
   var THEME_COUNT = THEMES.length;
   function roomTheme(seed) {
@@ -18867,26 +18898,6 @@
       if (x >= Math.min(a.x, b.x) - padding && x <= Math.max(a.x, b.x) + padding && y >= Math.min(a.y, b.y) - padding && y <= Math.max(a.y, b.y) + padding) return true;
     }
     return false;
-  }
-  function sampleOutdoorRoute(route, seconds) {
-    const durations = route.stops.map((b, i) => {
-      const a = route.stops[(i + route.stops.length - 1) % route.stops.length];
-      return Math.hypot(b.x - a.x, b.y - a.y) / route.speed + b.pause;
-    });
-    const total = durations.reduce((sum, value) => sum + value, 0);
-    let t2 = ((seconds + route.offset) % total + total) % total;
-    for (let i = 0; i < route.stops.length; i++) {
-      const a = route.stops[(i + route.stops.length - 1) % route.stops.length], b = route.stops[i];
-      const travel = durations[i] - b.pause;
-      if (t2 < durations[i]) {
-        if (t2 >= travel || travel === 0) return { ...b, held: b.held ?? "none" };
-        const progress = t2 / travel;
-        const dir = Math.abs(b.x - a.x) >= Math.abs(b.y - a.y) ? b.x > a.x ? "right" : "left" : b.y > a.y ? "down" : "up";
-        return { x: a.x + (b.x - a.x) * progress, y: a.y + (b.y - a.y) * progress, pose: "walk", dir, held: "none" };
-      }
-      t2 -= durations[i];
-    }
-    return { ...route.stops[0], held: route.stops[0].held ?? "none" };
   }
 
   // third_party/office_engine/client/src/world/layout/exterior.ts
@@ -21528,11 +21539,10 @@
         tctx.fillStyle = `rgba(${vr},${vg},${vb},${VIGNETTE_ALPHA})`;
         tctx.fillRect(0, 0, 2 * s, 2 * s);
         this.grass = this.ctx.createPattern(tile, "repeat");
-        const k = VIGNETTE_ALPHA;
-        this.clearColor = `rgb(${Math.round(r / n * (1 - k) + vr * k)},${Math.round(g / n * (1 - k) + vg * k)},${Math.round(bl / n * (1 - k) + vb * k)})`;
+        this.clearColor = "#18181b";
       } catch {
         this.grass = null;
-        this.clearColor = this.season === "winter" ? "#c8d6e6" : this.season === "autumn" ? "#8c8a52" : "#6f9a5a";
+        this.clearColor = "#18181b";
       }
       this.finishBase(ctx, cols);
       this.base = c;
@@ -21617,10 +21627,12 @@
       const vy0 = -oy / scale;
       const vx1 = vx0 + W / scale;
       const vy1 = vy0 + H / scale;
-      const bounds = this.exterior.bounds;
+      const bw = this.sim.building.cols * COL_W * TILE;
+      const bh = BUILDING_H * TILE;
+      const pad = 2 * TILE;
       ctx.save();
       ctx.beginPath();
-      ctx.rect(bounds.x * TILE, bounds.y * TILE, bounds.w * TILE, bounds.h * TILE);
+      ctx.rect(-pad, -pad, bw + pad * 2, bh + pad * 2);
       ctx.clip();
       const visible = (x, y, w, h) => x < vx1 && x + w > vx0 && y < vy1 && y + h > vy0;
       if (this.base) {
@@ -21698,26 +21710,6 @@
           continue;
         }
         push(2 /* Char */, ch.depth(), ch, null, 1);
-      }
-      for (const original of this.exterior.props) {
-        const prop2 = this.exteriorSprites?.position?.(original, now) ?? original;
-        const art = this.exteriorSprites?.prop(prop2, this.season);
-        if (!visible(prop2.x - (art?.ax ?? 24), prop2.y - (art?.ay ?? 56), art?.canvas.width ?? 48, art?.canvas.height ?? 60)) continue;
-        let alpha = 1;
-        if (prop2.whenRoom !== void 0) {
-          const room = this.roomInSlot(prop2.whenRoom);
-          if (!room) continue;
-          if (room.phase === "building" || room.phase === "dismantling") {
-            const pr = room.progress(now);
-            alpha = room.phase === "building" ? Math.min(1, pr * 3) : 1 - Math.min(1, Math.max(0, (pr - 0.75) * 4));
-            if (alpha <= 0.02) continue;
-          }
-        }
-        const garden = prop2.kind === "garden_set";
-        const floorProp = garden || prop2.kind === "stream_lake" || prop2.kind === "pond" || prop2.kind === "station_track";
-        const raster = floorProp ? art : null;
-        push(3 /* Prop */, floorProp && raster ? prop2.y - raster.ay : prop2.y, prop2, null, alpha);
-        if (garden) push(6 /* PropFront */, prop2.y + 0.5, prop2, null, alpha);
       }
       for (const sh of this.shells) {
         const room = this.roomInSlot(sh.slot);
@@ -22377,16 +22369,7 @@
       this.ctx.drawImage(s.canvas, Math.round(car.x - s.ax), Math.round(car.y - s.ay));
     }
     updateCars(now, dt) {
-      const b = this.exterior.bounds;
-      const x0 = b.x * TILE - 40;
-      const x1 = (b.x + b.w) * TILE + 40;
-      if (now >= this.nextCarAt) {
-        this.nextCarAt = now + 4e3 + Math.random() * 9e3;
-        const lane = this.exterior.lanes[Math.floor(Math.random() * this.exterior.lanes.length)];
-        if (lane) this.cars.push({ x: lane.dir > 0 ? x0 : x1, y: lane.y, dir: lane.dir, speed: 38 + Math.random() * 30, variant: this.exteriorSprites ? (5 + this.carSequence++) % 6 : Math.floor(Math.random() * 6) });
-      }
-      for (const c of this.cars) c.x += c.dir * c.speed * Math.min(dt, 0.1);
-      if (this.cars.length) this.cars = this.cars.filter((c) => c.x >= x0 - 10 && c.x <= x1 + 10);
+      if (this.cars.length) this.cars = [];
     }
     drawPingPong(now) {
       const { ctx } = this;
@@ -22676,20 +22659,20 @@
   var CAFE_ID = "core:copa";
   var LOUNGE_ID = "core:lounge";
   var CORE_WALLS = {
-    reception: { base: "#e9e5dc", trim: "#a88e6c", pattern: "wood_panel" },
-    restroom: { base: "#dce8ee", trim: "#8fb0c0", pattern: "tiles" },
-    cafe: { base: "#eef0ee", trim: "#9aa6ad", pattern: "plain" },
-    cafeSplash: { base: "#d9dcdf", trim: "#8d969e", pattern: "marble" },
-    lounge: { base: "#e6e2ea", trim: "#8f8aa3", pattern: "plain" },
-    glass: { base: "#cfe6f0", trim: "#9fb9c6", pattern: "glass" }
+    reception: { base: "#343b48", trim: "#556073", pattern: "wood_panel" },
+    restroom: { base: "#28313d", trim: "#414f63", pattern: "tiles" },
+    cafe: { base: "#313946", trim: "#4d596e", pattern: "plain" },
+    cafeSplash: { base: "#252b36", trim: "#3e485a", pattern: "marble" },
+    lounge: { base: "#2f3643", trim: "#4b566b", pattern: "plain" },
+    glass: { base: "#253547", trim: "#425b7a", pattern: "glass" }
   };
   var ELEVATOR_CX = [3, 6.5];
   function layoutReception() {
     const b = new AreaBuilder(RECEPTION_ID, "reception", { x: 0, y: NORTH_Y, w: 16, h: ROOM_H });
     const wall = CORE_WALLS.reception;
     b.floor("marble", 0, 0, 16, 12, 101);
-    b.rug(1.5, 2.2, 6.5, 2.6, "#3d5a80", 102);
-    b.rug(8.6, 6.4, 5.2, 3.2, "#b65f3a", 103);
+    b.rug(1.5, 2.2, 6.5, 2.6, "#212d3d", 102);
+    b.rug(8.6, 6.4, 5.2, 3.2, "#382e27", 103);
     b.face(0.5, 15, wall);
     b.cap(0, 0, 0.5, 12, wall);
     b.cap(15.5, 0, 0.5, 12, wall);
@@ -22727,7 +22710,7 @@
     const b = new AreaBuilder(RESTROOM_ID, "restroom", { x: 0, y: SOUTH_Y, w: 16, h: ROOM_H });
     const wall = CORE_WALLS.restroom;
     b.floor("tile_white", 0, 0, 16, 12, 201);
-    b.rug(2, 3.15, 3, 0.85, "#6fa3b8", 202);
+    b.rug(2, 3.15, 3, 0.85, "#2b3e47", 202);
     b.face(0.5, 15, wall, [{ lx: 7, w: 2 }]);
     b.wall("door_frame", 8, void 0, { order: 0.05 });
     b.south(0.5, 15, 11, { ...wall, exterior: true });
@@ -23155,17 +23138,21 @@
     furn("plant_tall", 14, 2, tall, { order: 0.2 });
     if (north) spot("window", 12, 2, "up", { dx: 12, dy: 1 });
     else furn("plant_small", 1, 2, pick4(PLANTS_SMALL), { order: 0.22 });
-    const column = Math.floor(rng() * 3);
+    const column = Math.floor(rng() * 4);
     if (column === 0) {
-      furn("binder_shelf", 14, 4, void 0, { order: 0.3 });
+      furn("server_rack", 14, 4, void 0, { order: 0.3 });
       furn("printer", 14, 6, void 0, { order: 0.32 });
       furn("floor_lamp", 14, 8, void 0, { order: 0.34 });
     } else if (column === 1) {
-      furn("binder_shelf", 14, 4, void 0, { order: 0.3 });
+      furn("server_rack", 14, 4, void 0, { order: 0.3 });
       furn("binder_shelf", 14, 5, void 0, { order: 0.31 });
       furn("floor_lamp", 14, 8, void 0, { order: 0.34 });
+    } else if (column === 2) {
+      furn("binder_shelf", 14, 4, void 0, { order: 0.3 });
+      furn("printer", 14, 6, void 0, { order: 0.32 });
+      furn("floor_lamp", 14, 8, void 0, { order: 0.34 });
     } else {
-      furn("floor_lamp", 14, 4, void 0, { order: 0.3 });
+      furn("server_rack", 14, 4, void 0, { order: 0.3 });
       furn("filing_cabinet", 14, 6, void 0, { order: 0.32 });
       furn("plant_tall", 14, 8, pick4(PLANTS_TALL), { order: 0.34 });
     }
@@ -27767,120 +27754,6 @@
   // tool/office_world/assets.ts
   var __OFFICE_ASSETS__ = { "manifest.json": "eyJ2ZXJzaW9uIjogMSwgImlsbHVzdHJhdGlvbnMiOiB7ImVtcHR5T2ZmaWNlIjogeyJmaWxlIjogImlsbHVzdHJhdGlvbnMvZW1wdHktb2ZmaWNlLnBuZyIsICJ3IjogOTYwLCAiaCI6IDU0MCwgInNjYWxlIjogMn19LCAid2FsbEFydCI6IFt7ImlkIjogInBhaW50aW5nLW1vdW50YWlucyIsICJraW5kIjogInBhaW50aW5nIiwgImZpbGUiOiAiYXJ0L3BhaW50aW5nLW1vdW50YWlucy5wbmciLCAidyI6IDI2LCAiaCI6IDE2LCAidGlsZXMiOiAyLCAidGl0bGUiOiAiTW9udGFuaGFzIGFvIGFtYW5oZWNlciIsICJmcmFtZWQiOiB7ImZpbGUiOiAiYXJ0L2ZyYW1lZC9wYWludGluZy1tb3VudGFpbnMucG5nIiwgInciOiAzMiwgImgiOiAyMn19LCB7ImlkIjogInBhaW50aW5nLWJlYWNoIiwgImtpbmQiOiAicGFpbnRpbmciLCAiZmlsZSI6ICJhcnQvcGFpbnRpbmctYmVhY2gucG5nIiwgInciOiAyNiwgImgiOiAxNiwgInRpbGVzIjogMiwgInRpdGxlIjogIlByYWlhIHRyb3BpY2FsIiwgImZyYW1lZCI6IHsiZmlsZSI6ICJhcnQvZnJhbWVkL3BhaW50aW5nLWJlYWNoLnBuZyIsICJ3IjogMzIsICJoIjogMjJ9fSwgeyJpZCI6ICJwYWludGluZy1jaXR5LW5pZ2h0IiwgImtpbmQiOiAicGFpbnRpbmciLCAiZmlsZSI6ICJhcnQvcGFpbnRpbmctY2l0eS1uaWdodC5wbmciLCAidyI6IDI2LCAiaCI6IDE2LCAidGlsZXMiOiAyLCAidGl0bGUiOiAiQ2lkYWRlIFx1MDBlMCBub2l0ZSIsICJmcmFtZWQiOiB7ImZpbGUiOiAiYXJ0L2ZyYW1lZC9wYWludGluZy1jaXR5LW5pZ2h0LnBuZyIsICJ3IjogMzIsICJoIjogMjJ9fSwgeyJpZCI6ICJwYWludGluZy1hYnN0cmFjdCIsICJraW5kIjogInBhaW50aW5nIiwgImZpbGUiOiAiYXJ0L3BhaW50aW5nLWFic3RyYWN0LnBuZyIsICJ3IjogMjYsICJoIjogMTYsICJ0aWxlcyI6IDIsICJ0aXRsZSI6ICJGb3JtYXMgZSBjb3JlcyIsICJmcmFtZWQiOiB7ImZpbGUiOiAiYXJ0L2ZyYW1lZC9wYWludGluZy1hYnN0cmFjdC5wbmciLCAidyI6IDMyLCAiaCI6IDIyfX0sIHsiaWQiOiAicGFpbnRpbmctY2F0IiwgImtpbmQiOiAicGFpbnRpbmciLCAiZmlsZSI6ICJhcnQvcGFpbnRpbmctY2F0LnBuZyIsICJ3IjogMjYsICJoIjogMTYsICJ0aWxlcyI6IDIsICJ0aXRsZSI6ICJSZXRyYXRvIGRlIGdhdG8iLCAiZnJhbWVkIjogeyJmaWxlIjogImFydC9mcmFtZWQvcGFpbnRpbmctY2F0LnBuZyIsICJ3IjogMzIsICJoIjogMjJ9fSwgeyJpZCI6ICJwYWludGluZy13YXZlIiwgImtpbmQiOiAicGFpbnRpbmciLCAiZmlsZSI6ICJhcnQvcGFpbnRpbmctd2F2ZS5wbmciLCAidyI6IDI2LCAiaCI6IDE2LCAidGlsZXMiOiAyLCAidGl0bGUiOiAiQSBncmFuZGUgb25kYSIsICJmcmFtZWQiOiB7ImZpbGUiOiAiYXJ0L2ZyYW1lZC9wYWludGluZy13YXZlLnBuZyIsICJ3IjogMzIsICJoIjogMjJ9fSwgeyJpZCI6ICJwYWludGluZy1zdW5mbG93ZXJzIiwgImtpbmQiOiAicGFpbnRpbmciLCAiZmlsZSI6ICJhcnQvcGFpbnRpbmctc3VuZmxvd2Vycy5wbmciLCAidyI6IDI2LCAiaCI6IDE2LCAidGlsZXMiOiAyLCAidGl0bGUiOiAiR2lyYXNzXHUwMGYzaXMiLCAiZnJhbWVkIjogeyJmaWxlIjogImFydC9mcmFtZWQvcGFpbnRpbmctc3VuZmxvd2Vycy5wbmciLCAidyI6IDMyLCAiaCI6IDIyfX0sIHsiaWQiOiAicGFpbnRpbmctcmlvIiwgImtpbmQiOiAicGFpbnRpbmciLCAiZmlsZSI6ICJhcnQvcGFpbnRpbmctcmlvLnBuZyIsICJ3IjogMjYsICJoIjogMTYsICJ0aWxlcyI6IDIsICJ0aXRsZSI6ICJQXHUwMGUzbyBkZSBBXHUwMGU3XHUwMGZhY2FyIiwgImZyYW1lZCI6IHsiZmlsZSI6ICJhcnQvZnJhbWVkL3BhaW50aW5nLXJpby5wbmciLCAidyI6IDMyLCAiaCI6IDIyfX0sIHsiaWQiOiAicGFpbnRpbmctd2lkZS1mb3Jlc3QtbGFrZSIsICJraW5kIjogInBhaW50aW5nIiwgImZpbGUiOiAiYXJ0L3BhaW50aW5nLXdpZGUtZm9yZXN0LWxha2UucG5nIiwgInciOiA1OCwgImgiOiAyNCwgInRpbGVzIjogNCwgInRpdGxlIjogIkxhZ28gbmEgZmxvcmVzdGEiLCAiZnJhbWVkIjogeyJmaWxlIjogImFydC9mcmFtZWQvcGFpbnRpbmctd2lkZS1mb3Jlc3QtbGFrZS5wbmciLCAidyI6IDY0LCAiaCI6IDMwfX0sIHsiaWQiOiAicGFpbnRpbmctd2lkZS1jb2xvci1maWVsZHMiLCAia2luZCI6ICJwYWludGluZyIsICJmaWxlIjogImFydC9wYWludGluZy13aWRlLWNvbG9yLWZpZWxkcy5wbmciLCAidyI6IDU4LCAiaCI6IDI0LCAidGlsZXMiOiA0LCAidGl0bGUiOiAiQ2FtcG9zIGRlIGNvciIsICJmcmFtZWQiOiB7ImZpbGUiOiAiYXJ0L2ZyYW1lZC9wYWludGluZy13aWRlLWNvbG9yLWZpZWxkcy5wbmciLCAidyI6IDY0LCAiaCI6IDMwfX0sIHsiaWQiOiAicGFpbnRpbmctd2lkZS1hdXJvcmEiLCAia2luZCI6ICJwYWludGluZyIsICJmaWxlIjogImFydC9wYWludGluZy13aWRlLWF1cm9yYS5wbmciLCAidyI6IDU4LCAiaCI6IDI0LCAidGlsZXMiOiA0LCAidGl0bGUiOiAiQXVyb3JhIGJvcmVhbCIsICJmcmFtZWQiOiB7ImZpbGUiOiAiYXJ0L2ZyYW1lZC9wYWludGluZy13aWRlLWF1cm9yYS5wbmciLCAidyI6IDY0LCAiaCI6IDMwfX0sIHsiaWQiOiAicG9zdGVyLWNvZmZlZSIsICJraW5kIjogInBvc3RlciIsICJmaWxlIjogImFydC9wb3N0ZXItY29mZmVlLnBuZyIsICJ3IjogMTIsICJoIjogMTYsICJ0aWxlcyI6IDEsICJ0aXRsZSI6ICJDYWZcdTAwZTkiLCAidmFyaWFudCI6ICJjb2ZmZWUifSwgeyJpZCI6ICJwb3N0ZXItcm9ja2V0IiwgImtpbmQiOiAicG9zdGVyIiwgImZpbGUiOiAiYXJ0L3Bvc3Rlci1yb2NrZXQucG5nIiwgInciOiAxMiwgImgiOiAxNiwgInRpbGVzIjogMSwgInRpdGxlIjogIkZvZ3VldGUiLCAidmFyaWFudCI6ICJyb2NrZXQifSwgeyJpZCI6ICJwb3N0ZXItY29kZSIsICJraW5kIjogInBvc3RlciIsICJmaWxlIjogImFydC9wb3N0ZXItY29kZS5wbmciLCAidyI6IDEyLCAiaCI6IDE2LCAidGlsZXMiOiAxLCAidGl0bGUiOiAiQ1x1MDBmM2RpZ28iLCAidmFyaWFudCI6ICJjb2RlIn0sIHsiaWQiOiAicG9zdGVyLWNhdCIsICJraW5kIjogInBvc3RlciIsICJmaWxlIjogImFydC9wb3N0ZXItY2F0LnBuZyIsICJ3IjogMTIsICJoIjogMTYsICJ0aWxlcyI6IDEsICJ0aXRsZSI6ICJHYXRvIiwgInZhcmlhbnQiOiAiY2F0In0sIHsiaWQiOiAicG9zdGVyLWJ1ZyIsICJraW5kIjogInBvc3RlciIsICJmaWxlIjogImFydC9wb3N0ZXItYnVnLnBuZyIsICJ3IjogMTIsICJoIjogMTYsICJ0aWxlcyI6IDEsICJ0aXRsZSI6ICJTZW0gYnVncyIsICJ2YXJpYW50IjogImJ1ZyJ9LCB7ImlkIjogInBvc3Rlci1zaGlwLWl0IiwgImtpbmQiOiAicG9zdGVyIiwgImZpbGUiOiAiYXJ0L3Bvc3Rlci1zaGlwLWl0LnBuZyIsICJ3IjogMTIsICJoIjogMTYsICJ0aWxlcyI6IDEsICJ0aXRsZSI6ICJTaGlwIGl0ISIsICJ2YXJpYW50IjogInNoaXBfaXQifV0sICJvZyI6ICJvZy1pbWFnZS5wbmcifQ==", "art/painting-mountains.png": "iVBORw0KGgoAAAANSUhEUgAAABoAAAAQCAYAAAAI0W+oAAABdUlEQVR42mP8e6XhPwMUvLl0jYHaQERPi4GBgYGBBZsgOiDWASJ6WnC16GYxvlwW9p8aLiYEGLmKl/y/b7yJgYGBgcH5XA1cYq9RCwM1HcDIVbzk/6fuKAaDsis4NRFjqXDECoa3KyLw+wjGUWLUQ5G80KUDd8C9/5fg8he6dFDU4XIksn4WfK5EN+De/0tQcdKDklGn5NJ/dIOQfQdzFcwXfKXLGHCFAC5w7Xw0JNUhJwJkCz91R2HVyFe6DKecbqkuVnEW5MiGWSjP0A6VjsJqiDyaHJurPoO6wT8UtTcvMDGoG/xjuHmBCXc+UjzrB2cjLGVgeMhQCReDGUB0HDE56/7nMChn+HGhk4HDoBwuIeYryZAhI4NTY9P003D2jwudcDayL3BaxMDAwCBXOwFFQYaMDMOMJ09wWvhq83Os4jDznidrMkjOvY4/eTMwMOC1hIGBgaEu0xSrmkcXkKPhOgMTutdJBYQcAjMbIzDxxQslAABO+JIuWMskDwAAAABJRU5ErkJggg==", "art/painting-beach.png": "iVBORw0KGgoAAAANSUhEUgAAABoAAAAQCAYAAAAI0W+oAAABNElEQVR42q2Vv07DQAzGP18jlZbMiIWBl0BCYqwY+zgd+ggtFQ+CujB27XsAEgvqA6BWJWeG5C6+S+5PEJ7s5M4/+7OcULE6M/7NKPCcoYamYtaxtwAYzBVAbGMAKPqO335fAQDeJl91ndTWI/0+O87H1r94PbX3fOkMpM/ep4dsiA9Tf4XEJexa4Sdb7G5s/PJwcoqQsJSEUZCBrB4/O4BYt75Mx/nYmY8jnYRQMzUS0/uYHLKr9yEW5HfCzTow1XISt886m8NuQcENW86uGQDWm623cJyxiP658HkFAJv1FkoDSreX6tj4HN54LZNTsCj62d85WS7L56QMWtHwj5MEMUYgVElopQjUdCqhfpwNGtKpAUiY9DvSpYApqFZkZyq7o/P+Pus3YcB9RTBGKMun6P1flvGJxa/84ZQAAAAASUVORK5CYII=", "art/painting-city-night.png": "iVBORw0KGgoAAAANSUhEUgAAABoAAAAQCAYAAAAI0W+oAAABuklEQVR42r2Tu0vDUBjFf7mJBSl1kSJdu/ig4ORzUBAV/wAHdXDQwQcOgqCLb110Fh+Lg4h/hBRFEXzURSg+Fh0dOhYXtTcOadqbJrcWBw+Em9zvfufknHwxiI3blEMuB6ZZuP986QEg1HThreckkKdSzrv3QkvuXgpcEYDPx+6SJtshVUWU1QoUMk1FxNAQB5x1V1Uwv2/8Gp1CoDpyEao/8+2J3kUAZOYG0udeRyI8RHWii4/baVjbLnatzGv1Q/VnNM1uFZ6f01lkcpPvsX6H/PAUmQAekljkJJiC7/0JIjtPhNt2ycYbEa8pZLwFsZZSiOe0os/prOPi5DKwLkTNCOG2XSrCwLC2pLqwDk+9xebe4tRZkwdaEhlv8eUPFGJLt3YA0JCIBPcvLHvHOzvTWFZMjk75RCqFVelB8ZqCq3tEiSstcUl8HqHIzlORNGDVIXF3Xf4lt9YxqB20+QcYMhm3SwdBdkrv/7p4oiWoWl0q9mVuIBZFjk4hjvaczfeMfxj+iq/VDbh7Qy4sO1G5Im50R3sY9B3b4q1O7+g9Uz7/aLvPkQf5foO+4+BvFIv+KqKFK6b0/wD3Iqhmbt1lmAAAAABJRU5ErkJggg==", "art/painting-abstract.png": "iVBORw0KGgoAAAANSUhEUgAAABoAAAAQCAYAAAAI0W+oAAAA20lEQVR42mP8/PbqfwY0wJKuw0AM+DPrCoSBYgITAwPDPwy1LAyUgP/YBP9hVcrEQCdAko/4DgahCmjUMLy70UI9i/gPBTP8//8faxAJadQwcNfYMjAwMDA8jnHHaQZRQYdpCbJWhBGyS3aSbxH/oWA8spjacVk2sInhz8wrDIzQ1Ptfow5D/lLXehS+5Sdr8hMDLFYYGRmxxhEjI2k+IiroGNFMxWfJCf4S8ix6e72RaFfjsoTofPT2eiODsGY9PKn//4/qK3wWkFwyIPvs6eb1JKc6uiVvulkEAJ8OPVztcmbHAAAAAElFTkSuQmCC", "art/painting-cat.png": "iVBORw0KGgoAAAANSUhEUgAAABoAAAAQCAYAAAAI0W+oAAABtElEQVR42qWUv24TQRCHv907Ih0orUtkVylQeIWkdYGAewKaAxokSynTEEWOaECUSa6In8AFILmFKj0RBdVZLumRJduzm+K8G/v+5RA/6XR7s7vzzczunDq7/mo1CieDResQHWiWIvyrHgQBq+UCAIXCYtEoQud8UzrQ+VvnARhjWwGKsmu/BpuDNKoEAwhUDhz8Ogfg05PkLhitGNxcAvB5/3Vp72aVAMKioUnxaUyaRQAkvTnE/a2AmhTWRbCp6XjSbH/6FrHGA6t8lUKpKiFAN+6TZhFJb07Sm5NmEd11Rm2k76stQJpFtVmlWbSVTWtQUe9+nvtx0pvTGc3ojGYc//jt4YObS8Sa/wNNxxOGR4cl+59XjwEYHh16oFhTC6wEuUZ99v453bjPdDyhG/fpjGZ+TWc025p7cfISY2z+VJxzbUZLEX82TYfuYO7aty6dwSJGECN5rzRcbzfnIG5f69KJCLLOaPMaP/zyxq9x42K2Ii1AxdruXlwBcPzxu7cND/YYHuz5bze3e3FVCwFQH66/2SLo72JBWPGTbKOVCI92dko9Gd7XrG5zHXhVW6ptX7dRdcGyLkumdgAAAABJRU5ErkJggg==", "art/painting-wave.png": "iVBORw0KGgoAAAANSUhEUgAAABoAAAAQCAYAAAAI0W+oAAACTUlEQVR42p2Uz0sUYRjHP+/OYjRRm+sllQ5piodIcQ+yXqQ9JEQRipcS/wERIUGEmIWFXVlkYYMQb56C9TJkJ0EDYQ+5eBDcKIjox0E0OlSMxkbi7Nthdl53drZw+8LLMM/zvM93vs+PET8/v5BUILGphkDz2ap9jSBQe7n6aOEuguEeguEenm7+9vhqIaVESul7d4/wKKoEas2dDnFAI2sWPQlnxno5+fbe8QvhSf4vBKsD6xEYaRPsY1LGw7oqzgpx9GlVVpMAXOh/7AsMDQ4xG2tXqmTZxv7xsbEeac2diICmTml3gdLuAmhNvrK5ePL8DUIIEOWzEQVbulWp3HKpvtjHSs1esoOT7++Yjp1Dj8R5NHrjdCJFuT6haxdlxPxyTmY29wE8pdH75hxVQOvkGnupDpCAoHFICBhpk9lYO9Z2QdldRXrfHHokjrWV/38SQGvuchQZqRyhwSHlsLbyTn/sY6VKj8Q5fDnegIoAiDLBcA+ybCN+WW+lHol7J2wgypelO767eiTO4caEtx8ygLgSRX595SMKtnTTOrmGtV1AiGt3K1vqTFhpJ+mJz5pFz7RlzSLTt85z6fYzAI5eLwFw8eYkAIcbE1yNf/DksLbyjqLaxPWQ2dxnNtaOkTYJDUSV/WBxmLapdQ4Wh5WtbWrdP4DzyznfersKXNKZsV7c8oYGoljbBc/zTH+Gy+MZReSOdz0lAEYqhypzZcf8I9akPshDJK6PSvfrXJR2kjxIrLKSGCFrFjHSJvfv9QOwkhihdniqF/tv+AN77vZyVhhklAAAAABJRU5ErkJggg==", "art/painting-sunflowers.png": "iVBORw0KGgoAAAANSUhEUgAAABoAAAAQCAYAAAAI0W+oAAABp0lEQVR42rWUzUoCURzFf3ecRa2SxKSURFrVA7QrCoReoMAXkInAVm1cRESLNi2iIJReQLFN+3bteoBaRRha9IlCYQv1thjveMcZzYjO6n7855zz/7gjJpaLkmEgAWEvH45SAExtFhgWIrJUlFL43XTIgbmFXQCuL3ccER0DBTsGTV8RQLShemyTJkuzLsGsFQZgP/9ix2o1kUbXoGMYMFWQElR7JQJwsXbjMVKpN8haYfbzL4zE1wFo3OcQ7S6Xzmf2HuhQznX3CrGxUdf+dqsGpIhmCvSadwnp0LOp1Bse0l5RW6T7bTRTcPrTlhJDCAx+iZmDoLNWvVPZ6xVQMIRwZ6RNL9FMgepxSnP+4RAn4pAsTXpK7Je5Pmem36Ei1YdAd3943fQ4j42NekoKP/RodnHXIb8rPwKQiHfvr5pvzJsh3545/fF7sIN6okb3/DPse7/yujdUb38chq9yjq9yjr/C+CtBW8rh/3Vqsxfc6Bt4/9ZiNTLhOjt7emY6FOj7zXbtxCuUbln8B04DeW9G6ZbF7XvLfpjj/Z2qmIEPezzgiAB8A3wEl2LlCHiMAAAAAElFTkSuQmCC", "art/painting-rio.png": "iVBORw0KGgoAAAANSUhEUgAAABoAAAAQCAYAAAAI0W+oAAABYklEQVR42mP8X6X/n4EOgImBTgDFor9v5FEkRW6/INtgdLNY0AVgfPH3JxkYGBgYPP+zM2x5K0GxZSg+Yv7HzMD8j5lBf/VruNjpOw8ZfIRfwOWY/zEzoOtB1otLnAVdIwMDA8MLl3t4XYrLMmT2X6a/KOIYiUFnLfZ48RR9ysDAwMDwNVKY4WukMGpcvjvGIPLxGFwNNsewfH2vj+4faABjWvb1vT4DwzQom0GGQf7/dAYGZgYIRnPQmlteKHoZvwQ3wPOR+b6dEKscEUH34/lPDAs5JNmhzkaOeQhlqo5IAMiW4cxHP57/xLBE4YYmwhKY4X+x+x4jH8kzTYdzHmhcZ3igcR2rLxRuaBKVpE/feQhnh6htQ8TRS0Fzhh/hTxiKFimQZzhaojVVQc2X/MLWkDhiCNxFUlmnfaCepEx7I7QJYhFz2m6iLLKwwPTdiRPXGTRW1+E0HCXVEWvRkCm9ARLufnJwiUBJAAAAAElFTkSuQmCC", "art/painting-wide-forest-lake.png": "iVBORw0KGgoAAAANSUhEUgAAADoAAAAYCAYAAACr3+4VAAAD5klEQVR42uWXTWgTQRTH/7suqbEVFLXY2FqsUjVJJdBaQRA8CLUoKH6Ri9WD9CCUCGIVDyIeCioqRfAgBUEPFlFRqdSCFxE8iEK0MVGhkdrYD2uhYNvYanc8bHZ2Z3d2dmNVLD4I2cy8mfd+7715O5E+XltHkBNJkmAWQkhe4046hBCq62VtPnq8dbpNs33F/IPnEM9pqwNmXaegmPf2Au20j9UP3ph1DoAGyoMSRVmk52W9VUe0xqsNN3+UktI+/A8iG+iS9mHCwRmzhUyaPaD+2Cq+4xLRPiJAifwbJJyAm7kUeXkAkGTI5SV08FTfY2bBmbIts7NeJRn+I5WYvDsGSQltIABwvPWep7UzgVbjn9hyiiz7o5wFu4o0O6GAAWqGPX/1MI41XskLOvauCwDQurrOE+SvwpqrLdU7apvv6DoJANhe14IHFw9SUAVEBSStJ52N7WQye+vuHuzbddu2mW5gb682F1gy3wYsgnYDMQfQeox4cOlkFBXBdgoJgELSKlZCGwiIinD9FAAg2VcBADjWeAUPO7cCALbVP0KqdxQdXSexva7F0UkzsFUuZcPc8dOLUp4CoAOafUgno4yO7jutojf9ltIlKgAgXD9FlYNlaWaDYFmafutSEWzPC1hVv9HnhUWFQiCnkgSA8sWfUegfY+YTnT7I4VLDViJDK1W7GeUgDWUWjhct49mI6HhWO/hV1W3oH/4qBB8c+Y7BkVFhBrtfHqIw2t7FdK73SzGAYsY/4Ts0FNCugLpoGWWVEo/mQg65b6Y7lU5GMZ4tQlV1G52zgrtJOhlFoR8WML4YQc9w3q1G/1FEUIlOHwBVaIQX1UL/GNLJKDZuukPHLq/dwd2jKXWfPj97ujvv5qUfKXOZqokMA6smMlAgyaDlS1TXja0H3gwjkqbUfbRO1ji+TkSQnkqUqFDf9EMOBSCHSw1YmlERXE5J32DG980cpP5OjRW8sAUs/r6fu3ZiqMn5IqJD5VgKlAyyVhQluJ65rPojxnM2bh+zysqSKduYW5ZbJ2sYSCdxgraCa0dMkxWbffjw5IetQm2gZrDsK5kuEME6BaBnwIf9+27OqApEsFo6p/H8xgkDSpLtx1CS2WYk6lo8qYpc4BoGgMiaMsxzc/I3yMTwEYD4GJ/9EaMauV2XyWYcTGSq1p0D5DlCo5HKgPC3pwy+7XO00x0/CgBYusBneceyx4f6LjqjAFDbcA7PrzfbGlPtgfOeQK3l5gQc95pxdRrdr5u5kIOjU9oRc2mqXFAnqW1wz+pvL01Bt+0Z8HGzxwNVvP6BBVH/KuTEUBPGs0XMDalnwOf5D7e1If0Ekfnj1gHO7r8AAAAASUVORK5CYII=", "art/painting-wide-color-fields.png": "iVBORw0KGgoAAAANSUhEUgAAADoAAAAYCAYAAACr3+4VAAACyElEQVR42sVYO28UMRD+xrt31VWgiD4VR3URSYcIBSgNUv4BRIIeGsR/gCughyb5BUgUoKQgiC6HFImIUKUGKSCEtoAj66HYx9mOH/u6Y6TT2ree9Xzjz54ZEz+5ywAAQYBk/WmKzIaW74p+LoP+WtZgBsii/x9FQLW1AGmCkKyDL/qGJNMDJNMD92zM2W9eUnxbfebtGKSAKYCYKyYCq2O8T9KPVv1BdFU3ZBFgAUQMxOeo6aNsSFRgJiMAJHLiVR/0VudI3aagTLpbgNWV5O8EyXSyIKC2PemjqwlKtDyEGqhHFZRi6+rUoSkrxuUgDy+91YaOvm0E9hWwvNObGX6PkIJLACk4CEz9T9Ut/VeGl9bcyEEuvbG+Hn3dsK7W8nbP+cnjDw8zI9P2JtLg/k4nQAUD+9cfeccMN/f0yVPG5fXnXp0v+w/muEcbSAgkABy/ulkL5PwPozkKpVwLZFfOiH1UBABJer+tXHx8CABYWrCDY8E6GEk6KNFxEqPOV1X6L8fu+G07wi1xSvgASbIbJVuEStlVru8Mg2QNxnExsWqAucKyw0LkdLySh4tRpf13snUGyFB+6080ZJXDSPDsp/ZNWX//NGj0ldu7WkysHTpcWVeFhYhPxyutT9GZ7OLz61tOkHXlZOssTNcK2ZwQBPr984htxnNENQAaTIqojJnDzb1gZsMRYXjtmUFXdufTNVkgJYP+fP/ExWRdpFq1TtMXY5123DyxL/ep+Syoe2H7XQV+0qyQzds/7txoDrAIF2oxUDiZGgImP9i4VtWutCs5yOG0xBYqqF2ppunR+e8ET90IzWOLVZc5u0ngwI1Cx7sojkDWek+t6dS6UB3vqhdNkLY5Bv3V/LmmM0a5PfRetNlOXEc8lQV1IxBSwuyako1ClrILJtNgta06JwWXbS8jiOyOyO0or09z+ZUDF65wQ25H/AOpn0BSpu0kIQAAAABJRU5ErkJggg==", "art/painting-wide-aurora.png": "iVBORw0KGgoAAAANSUhEUgAAADoAAAAYCAYAAACr3+4VAAAEHUlEQVR42tWWQUhcRxjHf/N2a7pu9mAhm3Q1pYXSQnW32KTZJscKmksTcgw0ECSHEpTEU2gotAVpjxoMwUIpgZbklBZzqsLSY9kqEaN7aE8h6jYKxYOu9qBvcjDzOm/ezPNtbKD9QNw3833f/H/f983bFS1t3ZJnJoQHgJS+WiL9xwnibLDnMgAjixedPmYOFWOaymH677w9g5Q+QniBNvVZCI+rHd+xl4kDrxyTerDNpPRjgZXw0aV+zFzq2RWvQ48u9QOQ+v14BNRlSSAD0CSOSWF1wWa83mEfHw/PGmue5QJNCgkgrpXmpClMSp+hL4cY/eJGYlBbd12gtpE24/Su6qAqz9DR27E6xiq3Qs+ey3Hk85FwRYQXO0LmAa5qq5EWwmP7rd+cwtSejx+Jd0GOVW4Ff3T+FAXVRaVbCgjhBYLSLYXwXrGOKNafG1ZKn5cOdAR5XbnU+anik9Co2nIGcKZpsOJaaS64ozdXP6NZk/OF0LN595LkHMgPB0J18J35I6SKTxjIDyceUROQ2rndJpkH6pZEpBKmi20m3gUh5wukinXnvjpLjbbnuIVKX3ovEc10ebDnsr3CCcCU6FTQyTCkq3Ne7VwAq6B8KRFC7BbMryK8MiJ75CP5cuYwAJdyg1YBNlgVY4u7UbkJQPZE+JvLld/0N/1cxZPv/IgQgkz2DH9vrYR0bW5MIIRASomX+oC0Lvjb9bFIsku5QQbyw9a9pJA24ebb1AWpd9vMu+kovILU99LTC+O83/VJ0y+htuwsU9UqJ7tKXMzdDSCv9AzsOuTcnfPwEndbFcX039yYACCTPROJaT14lq3G/Wdvb/HPHZ1eGKe3XGat0Z0IcnphPPR8e/08AFd67nLP72eqWuWbk7WYLu844ZSvrds229yYoPXg2aD4a43uAFLZVuM+4s2u3Z+AU9UqgLO7bdlZ52HrjS0Afl14CEBvuRysAWxzyjny9/x+6r8cj4zyXpCqowC1R38Gn7veKNjfvgrUZmuN7mBEe8vl2C7rPmqkTdvmVFAwVVi9KLaC6NdE+QMsrzwO9tsPvxbyX155HLqje4LGwSTxBazAuuWymUhhctlMbN7O118N3T8pZQjWCpo5dCgEalZnP6YXRh9lE9Rl9dVFCvmj1j3VUfUVonTbIAFEaz4vpZShIPVfrbkOe9FWX10EiJyvYJRGszkqzgpqVsFcU0n1kfn54dILBe0rtiOEiJxzutQR8VU+tr3Yn4D6/NvW9aSmkAdztaah3nu305pDShnJZ2vM6VIHdyoz3KnMcP7DY5H9tNmhvmI7k/PLiQU+mKs9F5gtz37sq+8neVT/i+sX+qx3NG12Q4f8NwD2YzbBrvVPP+7l6x+m3LlGJ2cl/0G7fqEvNKoKQl9vxjz+B+bqbDP2FKyaGXVHch3hAAAAAElFTkSuQmCC", "art/poster-coffee.png": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAAQCAYAAAAiYZ4HAAAAsElEQVR42mPUNnL9z0ACYGFgYGDYF3MPuyzjPwaG/0xwrtMSJQYmFEl0gKQYxQa4JOM/BrEChG2v+lUwbGLBZvqrCUpQFhOGHIoNYoV3GBgYGLDbgq5BrPAOQ6CWEIrk+mvvGMQK70BsRHESkgJsQKzgHtyZTITCHeEfBuI0oAOCGuABgM0PeJ3EiGYDultxibEgxzKKgv9McFORncSELZGhxP5/JriBDAwMDIykJm8A2jI8vjzvvr8AAAAASUVORK5CYII=", "art/poster-rocket.png": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAAQCAYAAAAiYZ4HAAAA10lEQVR42mPUNnL9z0ACYGFgYGB48uIrUYplJLgZmGAcRkZGuMTLu3sZXt7diyIGA3AN////hyuGgRd39mB3EjJ4pa2HJiKK3QYGBgaGyxyvGRgYGBhMzbsYTM27sPqDiZBHYYbA/apt5PofOZTQFej+EEUJJRQ/dL98yiD25QaKhm4eDYZScWncToJ5+pW2Hpzd/fIppgaY4I6HvxgW8Wgw7Hj4C8U5OP3wdsNzFAXCAZLYY5pYgKEB2UQUp0CTCQt6Ovr//z+DSKAUkkIsSUNanItoJwEAso9Bdemnc80AAAAASUVORK5CYII=", "art/poster-code.png": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAAQCAYAAAAiYZ4HAAAA50lEQVR42pWSvw7BQBzHP20abWJQnfsGTQxWhhpYhJk+hgfxAiZLmQkSUwesEp5AIjEhBoOlZ/AnbdGcu+Hufvf7/vn97hSnWBX8MTSAwrkklbzJL1GjAYGI7V/zQ0Eg6Iy8VPZu0wdAcYpVcTzsYpej+Th2btYauLrH1lo+FABylsl+UQegwjAGsC0TrhFLru6xZopdnsh1Kbj55LImwFvlzZ4gUZMMdnnCpRdy6YVfFbVvsk5/9tOSKvvCwc3/D+Aa7UiXjDbBaZCOMBI1uJnW06QCoZCoQVUe66/kZ1wD2OZX0t/7Dh6FP1kjAHY7AAAAAElFTkSuQmCC", "art/poster-cat.png": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAAQCAYAAAAiYZ4HAAAAsklEQVR42pWSOQ7CMBBFny039EgUESegsEKZFuUicC5Ogmhpkc8QpUCiT4OSFGEsx3YK/8rzlxlv6nRuJwpgANz9CWrDMeE1e70sAS+ggTEf+kPLomqrvNlrUQDA1GlAOAmZUDzsj5i6I+ZCrCZ8vl0yQbj+0a8DOXNO0+E+B9cwuMaLYS0eTSEMwO+tMfXIzr58Z8DX4rG36JYEoTE7QTrk3kL4JLBliFFw6OVDqdLvPQMz9jqxhaKuWAAAAABJRU5ErkJggg==", "art/poster-bug.png": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAAQCAYAAAAiYZ4HAAABE0lEQVR42pWSu0rEQBSGv1kCO2yRvSCkEdMIW6QQk0LExiatxfa2PoJPYOVr+CI2Ir6DzUKaYWHZJGxI5bEwmUyIKfZ0Z/7vXOeoKE6FE8wD+Hx/sw9KqR4g0uW7vX9k4ootXPsBtR/8m8Bz4Raa5QaAqvF1YWwlz4VnueFHweoiBGCfG6r5XzVdmC7AhQHCpysAVmFI1nRQ+wFcp90MLZy8PNh+s0PN+ULb7EB/6LOmFYCP1y+SzXqw1skYfPd8g75cDDQbsN9ue7BrrdZbazUPyIBks0a3g34frGYtilMpSyM7hewUciyMTJdapkstx6J7L0sjUZyKraALQ+0HtpKbefBxreOub+yevDFhzNSp5/0L/Vp2aRpVRfsAAAAASUVORK5CYII=", "art/poster-ship-it.png": "iVBORw0KGgoAAAANSUhEUgAAAAwAAAAQCAYAAAAiYZ4HAAAA/0lEQVR42pWSsU4CQRCGvxlIDDGxJRor2zOBXEdhpWfiC1jyAtaEUFBZ8QDa2VhCbTSRjsJKQ+EjaLQkVlY7FOvuwXERmGQz8+/O7uw//0iSZsYWVgU4HNxvlPzRbfsLwZyBSu7NKSaOx2YfgEaoEBLAJ6k6H4tDBS6m13/nbRRATHELTMzluOir4aVgr6NZjNPLvRUeugjehj+lZAOHWEEFHhp9aPrN1vsEgBnwcnxCyIkVxucH7NTv/m1p5JikmVVE7FdZu5I0MwU4ffpeK9quSc7h+eqL2tF0A607y10q2tltvXyWspv9qIX4X0YczsSUzx7Ls1QUsQzLtuM9B3snYrknGMGDAAAAAElFTkSuQmCC", "art/framed/painting-mountains.png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAWCAYAAAChWZ5EAAACB0lEQVR42sWWP0gbURzHP4lFMjmoFQJHxYJERePDYkFKhyKOuhoiuLjY7okEYqGt0EYpdNPFVTJJaWfnDsX0OKKSwYgSEEq7OGXKdYjv5f68M9c2mO9093u/+30/v9+7O17EGH1h00U9APj2LtEV87nNShMA4PzkvHsTkHq+/Exd/7JOO242mJwA4OObzzwde+gH0CV7FRZsMDmhcoNq+QD+t2uv0V3GWoCR4yUunnwBYL6UV/Gjma1QAEENhJ4AwECqiMiWXbG/hRlIFfldTIWarA+gL3MAwONI0hU3tycR2TLzpTxV21Lr5vakK09ky1AqA3nt8wCrrAYDBMk7lapt3cY7+Bk6u5YGzrjs4mYnraYl87wTC2rg9McK9PfoAY5mttR+y4JV26JqW8rUOfKbnTR9mQO15tVUZsoXSwjgqid4C+RLJkGGeX+7ktYWH/as9S5MkxANV27FjJIQDSpmtBnop/07IEFGjnNq3C0YuCSnAHsXpn2GXuliPoD4/hkxsUHdLBATGyo+tBhn3TCAQ02JQ97ufld3dbPgGHcj0LjtBOpmgUebn9T9Xq3GumGwV6v5cocW4wD8/HrtAr8EYqIFdb02Tnz/LByATjpzp16/nNXmXJmtPy24AaK6zv9V7QB1te/coOa+3+N54IPjBwFAbplXnXDx1g0CkIeE+1Sk24fSP/mFsiTzAFGBAAAAAElFTkSuQmCC", "art/framed/painting-beach.png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAWCAYAAAChWZ5EAAABmElEQVR42sWWv07DMBDGv3MrQaEzQqJFAgkmVImdBQZG3oUBVqSOlIqXYENdQEKCgYGVN2CASh0KmSnQoTmG1I7t2E5bKnLTnRPl+/n+OKba1j6jQCsDQO/lsRDx+vZBAgAAUb9bXAakrV3V5vhp8qwz7hu32GnsAgDEXySY49BTAAzmEUCs4mAGXLbxtQIAeK28J/uilFn3XfZztKD8xZthfgl84gCw+b1qPHtbiiYWl7ELQkwibpstHi7FFE1oi5w+1FV8vTc04HSIvFLMBCDFzw97GeFQduya+1IfLIEuTuPGJa2Bu5Vo4h2GxJ0A9s55PM5MSVmI07XM5LMJOnUJpHir3QHh2Zrp9ICh4OzbR5Dj7X4gA+1WByIGRJyKJrH02SsuYl2UAqehJwPNs3U0P49VvFy9NOvlgIgFKdFYzHEKGCUMAjB60mkMlcJk46kBbPPBlIxSscpKLMiA8AGV/f+ykcqE9PNgXCC6n5sBRslbDh+cDiPXqtWLTK/4mtcAeBqczOUmcDf4mK0J5SXhP42KvpT+Ar83pTF9t9b4AAAAAElFTkSuQmCC", "art/framed/painting-city-night.png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAWCAYAAAChWZ5EAAACOklEQVR42sWWz2sTQRTHP5mNAQkRFFOMeDFg+oMFT21RsCVSxT9BPfTgRauCgmAp1Nqql3oO1V568FDwT7CUgo1obUQQYhpBWk8pkoOH0EvsTj1sNtndzGwSCubB8mZ25r3vd9737bChM+fSB3TRwgAjlwa7Ar6ezdkEAH7t/OxeBRz7WDwevNuywDDq4+qPywBEBt571y0J1JR17XfGqRPfOdlzGgDRkqJlNR6XOeAA1cKoL+jABnODu72uAkozDFdgSAOo2Ot4NxEFCdGWUE4SQ4BlEelda9pSLYwqTyjSU4j0FJhpryRBFRDR6xw1R9j7fBfmXjYWnj7Wcoz0rjHwcL4+L+YryNUX7N+6agMtrSBN4NtqAAFLgiHYf32bWGaL6PAClWQ/YjuHTA4i5nIuwEdaMsV8BQC5vN6yuB4JxLGbRIcX2vt+rt3QLrlPHV5a8S6eH2vdA+E7i9rkMtm4tMTYdH3slD8/dAGAPjOmjp+caa8JK/f7A0nI8Ykm8ENfRO2a2M7Bhy8IXxW0IH4Z2iEQy2w1wBReZ+bmp2Dy889IkVETkH8W2cva+juerD6ZrPnCuw5LeEpTAfn2a1MDyovS+6VOL2vzHpl90ogrb0AijhyfQLx5Zb/cLSMnZ+h70NPhTdiB/Z19Dps79W6vgzuAvnnYr08go90yxr0ren3jtSoM2blIqHMENqE8+9sXACTiTYHKnihvNIMl4kpgJYFUKaPOXDqEJqUO7gHnJ+F/WqjbP6X/APlFv3E4s4tAAAAAAElFTkSuQmCC", "art/framed/painting-abstract.png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAWCAYAAAChWZ5EAAABGklEQVR42mOUUXX8zzCAgIWBgYHBztZ0QCw/dPg0xAEMDAwMD+7fGbgQgIGda5oxFaTrEGXQn1lXIAyUCGViYGD4h6HW2C6ZQURMCtMBFAGsKekfQW1MDAMMyA4BvoNBqAIaNQzvbrTQ3gH8h4IZ/v//jzWohTRqGLhrbBkYGBgYHse4E2UeyVGAaTmyMQjjZJfspL4D+A8Fk2QUMY4Y/Inwz8wrDIzQXPZfow5D/lLXehS+5Sdr6idCWKwzMjJiTQOMjOSHAMlRwIhmGz7LT/CXUNcBb683Eq2WGMvJKgfeXm9kENash2fJ//9RQ4FYiykqCZFD4unm9RTlggHPhoOrHDC2SybDCDP80t3JxDsA1kigJ2Ac6EYpAC/zR5bP3HyVAAAAAElFTkSuQmCC", "art/framed/painting-cat.png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAWCAYAAAChWZ5EAAAB+klEQVR42sWWMW/TQBSAP5+DkCt1yZAJUCJUOiCY2VLYMqBS/wFYXFiQLDp2AaFILCDGth6apSORypKtgj/QgYoBFkdh6x+IRHp3DM4diZ24DhbNkyzf3Xt377v3fM/n3Fh7qFmiVAB+Hj9aivM7mycJAMCv05PlRcDIp9uvEDi2r9AIUUG4gpGUCy9+zXW5GP0GwMFBoxE4VI9Cmg9uZgGM00kRrkjeIgFTShdynBY9Xje9fgZA4GSMAFwnAQm/7wHw4W7wd45wCM8OAPh4b5tZaxZKQZ5hWvy3PlHsARA0huC3pkD/6RsoAtLv9vLH779AamVBLttULu6sVADU/RZR7BE0hgSNIVHsUR9HYFER+cosfRR7c6MQxd7U7ksDpOXltz3bDhpDap0Btc6A3a8/LFR4doDU6v8A9Ls92jsbmfHzZ7cAaO9sWBCpVSGQSwFMAXr8epO636Lf7VH3W9Q6A2tT6wymdE/ebKGUTh50+QiMpLS5z/vYDIQ5nqVToNBIJZFKJmc95xganXFu5pVOgZQSOY7A5HFb+fzc2ph2OjpSlgBI5251/xCA3fdf7Fi7uU67uW77Rre6f1jI+dxKOCkXUlIZ/1wMxDsL9XRmf3LudddN/qpzKmJlkSKUBpqlW7S0TwFUj8KMQfUqLyTmknCV4iz7UvoHL0LNZpXwwE4AAAAASUVORK5CYII=", "art/framed/painting-wave.png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAWCAYAAAChWZ5EAAACzUlEQVR42sWW30tTYRjHP+/OMFrgcInhtJtisYtg4hBzoUOhrgozdlNSf4CI0EAkOIPBBiaCURdddhPpzaw7QYWBBYqIoBERZSiVXUi/ZjRQPDtdHM/ZOWeb+QPcAy/nfd/nPe/zfb/Pj/cV9b52lTKKE6Cttaksxl+9XtAAAKytrpSPAV2mnt41+iqKZaFAKpgz6w4ijdceUF3jBcBRapFAsjTJ48Pp8eP0+Hmc3rLo7KKqKqqqFozt8wUM2DcBkKrOG3MjqWWj/yidJRoJsPPjgwZYiILN7eP/usD8g25YOCTDsDyYAmWbpHy7JOAjxYDdOICrYaBAP5xep7+jjpHUMtFIADWnoPz6dCgAjmLGhUMyWnZpiOzSEEgVlnXRSMDoP3zxFiEEiNzRADhPXzAo12k3/K5sA+AOhfmSOMfOz/f0dZzAFYxx7+bFfIaIXHEg+rxNZwEwklqmtmeC4fS6MY5GArgaBvJMaCkCuy7fnO5G+f1xb4Nmo+oeDMiDKfo76sjMzxVEvqthAFcwRmZ2RttEHK7wSFW+0kGYvB9BTo7iDoUNFjKzM5r/lW2yiwkNTDDG5nT3/q2qDhA5nB4/ak4pzUA0EgCpgsz8nNHcoTDZxUSefiC7mKDyynNtY5shceZy8XTz+KntmeBUU7w0A0bK7Ua8fmKzO/Tozy4mGEkt09d+ksqrzwD48+YJgAYO2Jy6w9mYfsesWIK5KADzKe2Vzzyn1wF5MMVwugV3c4tG59YG3t5J/i6YT2m95NyhMCyNFwdQzKB+Yl0XjQSQB1PI8+BubtHctPv19mr/eHsn9x0eot7Xrra1NrG2usI7b4uh6O+oK1kBAeTkaN5dNlrzIa+5UmdIl5qlcaprvHz++svKgPk08nw+4G7FXzIW7zJStfN6I503LjEW78IVjFmrpKlgHZiB7xvfju0hUpQB/ZFwnCLK/Sj9ByLSKzI3chuBAAAAAElFTkSuQmCC", "art/framed/painting-sunflowers.png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAWCAYAAAChWZ5EAAACCElEQVR42sWWv0tbURTHP/fFoU6KVqUmGkRaiDpLFyuW7F0q5B8IT1ri5CKhFEmLSwdRkITQPRCX7sXBsUPHCgUpSbWikqJQiIPJ6/B6X+7LzUtuqpgznXvfOef7PT/uu1dEHi859FD6AL5/et4T8Ccv9l0CAD+/7veuAlIWPq6YeTmAcNVf2wkAxlcLxqDvZtMsPp0AwFI/iKBpEA11ZmGDmWcbPnCpq+tA4u0q4IgA/Dqc7LjB48WYRwRg3R4BYDN3oSXhWE2gogMB6SyJyLUEB/i8fKgFOb6qsm6PsJm74EHUbWO1nEXU/UmJThVoZygzVbOVEhno962P1i6BBOFUQUvKiIAqavbHV1UNrJmMC97wDacKXv/rjoMl/Eys2xyh6Q+Dni5nQ1ZLrZgHJoRZBZRTRjhV4GQnoWT6xwOcikK8+EhrVatKCbpoQbNxvBjzDZ+a7da3G80/MtCvtQb+cwZi/858vBjjR+kUgKlo4/uXmwrzfcMtZ8Lr/20IHB689XR5xHxZK+AmgNpcdGN8XcpyXcre6V1g3WWwutP9zR7Ygszgq0CnvbMaL8dGm/bOeT/8OtDnzeWuOYFkzaZcac987+xc2ytXaoH2SWzyoZwZgXwoR7Jmc/TbDTg9FAoMLG3a/rCGQi3BNQKZubSyesikQQ8nDXudId2ZgHwk3KeIXj9K/wITb6ZKMZrSlgAAAABJRU5ErkJggg==", "art/framed/painting-rio.png": "iVBORw0KGgoAAAANSUhEUgAAACAAAAAWCAYAAAChWZ5EAAAB0UlEQVR42sVWS0sCURT+dATbRYySgaCLUqPAlVm0iKCNUTsl/A+tgpYV1MJF28h9yyxoEUIQtQjMcC3js7QHWlZDC0EXoy3m0bx0BgnnwDDnnnvP/b7zmDvX5Jxa7sJAsQDA/YHXEPCFnTxLAADK2bJxGeBlifkYCuhh0YQ5nx0AYIbB0pMA8+mSjG3F+sAg8r16lkC+kB+P0w8AgFDXissvxz+QeNbOANEhQHQI+BMNwZYpVbFG1oU5okMofMS+WnZFBuSTAFBfeewbWS8SYp0xM6p7azbh7Ll63UP2NwBAM0qiGSWlvfKdgu0nJazpFZhqBpq0Xx4/V0ClY5P2A8ecDidc3ThAgH1kRM8Kq7Kwn9QJiCV4c6UAb9XauKsV2MYE+x6ZsHJhijsOyOSrCHjZxgt7kkoSekogBm7V2hKbOzf9B84TZdSzpfsccJnjgl7xUaj4KAUwD65HMqWqoIc9Se0eeB8LorXxiq0T92Cgsl4LTErPlVFyEQAQoy/UCVgam8ARN3CcSpyzKufPzO1eXz4v1zJDRCMDhN2kK7Xz81w21hOCLZ2m4EvsKtbmIvv6/4Z6JZ2mVO1aYAN/BUO7D8TobWMJ8JeEYYrJ6EvpL+tmlNfBpugcAAAAAElFTkSuQmCC", "art/framed/painting-wide-forest-lake.png": "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAeCAYAAACc7RhZAAAEf0lEQVR42uWZX2gcVRTGfzMuG6cbQcFGsyYGtprW3UQWWgIKPghCGxSUqmV9qO2D+FCIqYixFOqDSsEGlVDwofRJHwxFi5XWNOBLERSiwmI2G1vIhpA1TWwLC026dmtmfJid/3f+mVIse2DZmXvv3Hu+73zn3jO7Utfjz2q0sCUAfv5wa0uCf+rIRZ0AgLmZudZVgGGZzIp5LUmSY6CmabHa/cZommaOjfJsnHGi54w17euPfy8zsG2zlwD7IJGjIjBux+xj/ciyzx2FDL953H6I2tx9gQrwAxsUlaBxUZ53jwlzOMoacfxxENDZtdgimd9jXsliqiT9E9Ymeu4uMw8ByvBjYkCSpn+CgEv/k5JCEAgHLr8UkB9NgyQj93Sabe8v/uB44IPu5+5O1UsyysFebp5e9SegbXe7ELTd7H0bIUMt/umUYv6RO8KDcqSXj5j3PwUAPh5+iffGvgVg9MQB3n3z81hkDF+cBGBs685I4I22uCTY159dqHn6z04eBuCFnUeB/RGOQU0FSfaQAHDq9Cvs2f21ZwJj4VcX9L705vs8RASREQbQTqxbmSLQlXKBTHbcBA/w3af7I9YBkgyaSt9gw4y+YSlllXMTu3h+8DyzCzXOTh5uMuu0pSvXPUS4yfiMvtCIBrUZwO0+VMoFBwmQsdIrl0adWYpWCAGUJpImCQDnJnaZ16MnDpDtrgAZx6KZ7HgkIgDeVkqo6t/m/QPtKaFzogjbpQ0w/dsbpJRVj/+yjWO1VDWVrc4sQTYoBQSTlBczTdDWvffaImOtrm+m/dtPmkQY5iZk+dotlq/VAlPBDlKfu8PsW7jaAXQ4/As893Np0EI2QYC+wQZlV2FYOn8vci58EcPZSrnAWr2d/u0nPcqIapVygZSCC7DYrGBUBbWBtb+FpoAIbGkiCaiBi4uikFJWqZQLPP3MN2bb8SdeFM4xNHvGvP7px5djb5rZ7opOgg2oWqo6SFBLVciFbILudAhnXDc7yCAbmj3D2M0dvsdeEPhIUtdU1Jkl5Fwaua/LIiFUAUGgbZuInEtvvAZvgjdqguG2Xz1EFi+Jd+4bK0P+BZYBtomlLVGlHud12FEZJiz51JtlvpL3yTGfyPmpwpD7GDsc4O2W77WItpOx6aHjkQjpefAv5i/IIDUJEQQ4kIB60QBsKaBeVK02l81dTnrbTr3Gls4Gc5eT7N3zlaffD7yIDD9FmISo6yAdMoHOX/jHq2xXGiSiv2GJd1HD+vOfCPS4rju/rZtNPs7fTrtx5SBoSYfPSl4PZLQ9wP3ikLeUYGey/8ljIN8TGrGg+yhW/GPRd53p4jsAPHx/0lUjNDwq5r/uAfUiDLx+jKniiKN96stDDOwbjQbCFXk/IoTyFoFX15n+fUQIfrnWcJ5kEVQcmgJTX4yIJ1LXA1Xgl6/FDaSCsdltMX+usKK9XGs0o63GmjMR2wuD4ZAUuK25vTLEWr3dURGKNtyg49tPFQ4CjuZuRffql7fu5M85wFrz2zCBr7n4MzsIMP4saCWTWv3P0X8B35oa7jFIUToAAAAASUVORK5CYII=", "art/framed/painting-wide-color-fields.png": "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAeCAYAAACc7RhZAAADQ0lEQVR42uVZvU8UQRT/vd3lqrORIIZoQ6LhjCEQoSOiBkNjcv8BIfEPwMbY2nsF9NKgvdFYcIEYMHRgcpUQTIiJhR8hFmYrZOdZ7O7tzNzs98Fh7iWXnb2dmZ3fb96b97F07cZ9Rh+LAwDfDj/0JfjrNx/4BADAr+9f+1cDQrny+rnfsAgQrF51ERz1le8DqVam/QYzQHShQL8bG8Ht8Ul/+coTGUMIXgcnWCUlvNfEPdmFe7Ibvwpm/3dWEs4tXw3vUzQAJIEMAeo7bKXspvbc9T4Zx1ftO+oCz4MEADYnEaCreJLqp4kMWNcgAK7YSxxeHZg6F3OwMoHIPBt1moQotsPu3z24J3s9JsBk80lqr4O1Sh5+BYbbOQc5qbuZR91ZWnQAvjXcVLpO/JxPsVtg9NVABOgxwQO3gXngVMDyf/LYfATo4LOQoYMfWu/o0hpuYuLHvHF3R9cGOv4bXG0BAPZ3nviv8Mofmju7X8wEXDqc645dMbB992ns89bVJmr1TZU7j4G1ldgxtZllHGwv9eAMKCBJ4EPZfzungB+bXelJUGShh0Ie5wJ/FiQ5WVUaAASp92Vl8Jlv30MXJRewWAUpSAVrdTlok9+XVSqrjRwei83+dLyebAImoILMixUlXL3oVo4U66EoNZhwTAuSF6ZrhOhiYnfcmAzc2kQm+z5aPAVEWvyfjFmUOQQtjn7yvS6zH1+kznXr0Ybi03O7uLgok0qcAceNydKneiQb+Pz+YSz4vHK0eJqu9hmiV0sjzskCim3KAVwFyja1fX6tvpkYyR1sL4FtQm1mWVN7zra1adGqRRBaH8cEhG1SFlom/CSPox1PmKfystHGeLQgHeCiQFYZ8qVfBXfYvELA5bWtDIgoKjAE7d8L9woT1HZrch4REkXxniw1J4kjoUggZKyySO1MxMWQ6ZrUmMqlxMo4Sp4nlxewUdwHGscy+5UfTqkAnWHVzNEXacq35Zxazsvl/nH5ug7e9I5qZSq4TqsaJlWTEwusJg8Qo/IizQRsEDxCVM5mrcBAfmFRByK3ZdI8cLudqEFEZoKCdbTL7IH8CQix4jwAZXORCgFvaiP4X2QL9e6bQPixoJ+E+v3j6D9mVl+mG7A0NAAAAABJRU5ErkJggg==", "art/framed/painting-wide-aurora.png": "iVBORw0KGgoAAAANSUhEUgAAAEAAAAAeCAYAAACc7RhZAAAEwUlEQVR42uVZXWhcRRT+5mabutnuQ2nd6GZTtNAEmmwlarJWaKEGEp9afCxYKKVQKQlJHy2CPgR9DJISIkgIKO1TLelTG1wEC4ZNltb8LIIUEvOzmo2Sh2Q3gtk7PqTnZmbuzL13U0VhDwzMnTnnzPm+OWfu3F2WOHGOo4olBABnz7RXJfjvH03vEgAAiwtPqzcDSLI/Ljh9xiwAAOf2nvLPHZ7OejuvAwAGly+bF1R8kI0q5EPVLzdnwbkNxiwnNuozZqE/MeoL+l75Go7G4gAAS5wg0OoYtXJzFjtNU0bHQ+lhAMCNxjHJF9kDcNkPpYedpltXJzQu6gQFr4plAmwSxqxAJPQnRo1E7DRNOQ0AbNiSLdnrCDPJfsC7CNA54dxG/yd9FTkVd9QvsJ2mKdhNWReBXlkpxsa57buGmGWqfysIoMGPB11BlZuzgYjwIkFMX3Gn1SDVTBHtbzSO+YJGy73gJSAGG6qNSyURqo3Lc8k8WDK/bxI4t3HgYMLxa/JF69ckf5Pi1PnU7TIAIwmWqZ4oqFBt3GnisxSggQi1tsn2wMGE00ioT2+FofSwtDb5MgHXZY4XcO1rUJSe2ID0fKvwkW/KEwk9sQFXMEHs1TWdTJmLoyaZN87TWkSSZahsZ5OOBCBAF1wQEOL7XbsjAQATmBoA5bmXXOBNO23l3nNIILA252CM7RJpZ8CslExK4sQ5fvZMOxYXnmLmp7/wQrgeAHA12qsNTEcC2ejsPk/fAgBEOuRPDpN/VV/VM5HKT34DxhjCkfP4c3tNiqu0NQ7GGDjnsGreQsORdRyNxbG0siFngAjky80h1yJXo73oiQ1o54KC1wFST3cTePVsEf2WDDgIvDy3ri+B6fkRtLd+UPFl4nDkCSYyGZxuPYXL0TsO+L7Onl2FqHmnLViBs4PIUvVLW+MAgHDkvMum7tAFbBfvP3ubMP9DcHp+BF2pFDaKbYHAT8+PSM9jmxcBAH2dd3DXvoKJTAZfnM55ZEXZCJp0ddmhk9LWOOoOXXA2ZaPY5oAn2S7eB+qO68+AwvovAICJTAYAjNlwOPLEGMRmcRsAMDk/CwDoSqWcMQDYwdvG0rlrX0H+uzddJeEHnjIAAHKLvzr91lfjWv3Ei8f1ZwBJVyr1DOje2EaxzUl1mtdJNBKWdKg09lLuB4cIIvLaZMsuASkg2vHISJRYbmKcpS137AAQjzVidW1Jm/qeGRBE/IhQdQFIRHiRJ+pFI2FPvy2vvCzVN+ccDfXHHB0dAWIGSDeG1bUlqXlJUPCibjQS9gREuqQn6uYLy1pdAsu5uzz8dt91CNK7kvrkQByLxxr39dkpEuZHgknyhWXX+mKM6u431B/TEud7FSbWRPaony8sS2zT+IPZlX/1p6vuZAMYYxj9dlIaf/dUwhUfxUJz+/oW0BGipplIEC2mEvF4Jlcx2Ndfa9H64Jy7/HHhqivGcjudxe10FhffecOzDEImsA9mV9CdbMDDudXAgT+eye0LsM7P88inXz3EYv4P3LzUXdkZoO6eCP6fAPY8YgKiG//w/S589vVE5b8K/9cgTXLzUrcWnDiukmKaC/SDyP9Z/FK6Yn/iRej3Qh7VItqrMP1ZUE3Cqv3P0b8BQLQ6oqDLgQAAAAAASUVORK5CYII=" };
 
-  // tool/office_world/outdoor_animation.ts
-  var cache3 = /* @__PURE__ */ new WeakMap();
-  function outdoorAnimation(base, action, frame, season) {
-    let frames = cache3.get(base.canvas);
-    if (!frames) cache3.set(base.canvas, frames = /* @__PURE__ */ new Map());
-    const key = `${action}:${frame}:${season}`;
-    const existing = frames.get(key);
-    if (existing) return existing;
-    const canvas3 = document.createElement("canvas");
-    canvas3.width = 72;
-    canvas3.height = 64;
-    const ctx = canvas3.getContext("2d");
-    ctx.imageSmoothingEnabled = false;
-    const ax = 32, ay = 56, swing = frame / 7;
-    const bob = action === "chop" && frame >= 4 ? 1 : 0;
-    ctx.drawImage(base.canvas, ax - base.ax, ay - base.ay + bob);
-    if (action === "chop" || action === "tend") {
-      ctx.save();
-      ctx.translate(ax + 6, ay - 14);
-      ctx.rotate(action === "chop" ? -1.7 + swing * 2.3 : -0.7 + Math.sin(swing * Math.PI * 2) * 0.5);
-      ctx.fillStyle = "#76513a";
-      ctx.fillRect(0, -1, 17, 3);
-      if (action === "chop") {
-        ctx.fillStyle = "#434f5c";
-        ctx.fillRect(13, -5, 5, 10);
-        ctx.fillStyle = "#d9e6e9";
-        ctx.fillRect(17, -5, 2, 10);
-      } else if (season === "winter") {
-        ctx.fillStyle = "#b1c7d8";
-        ctx.fillRect(14, -4, 8, 9);
-      } else if (season === "autumn") {
-        ctx.fillStyle = "#c39153";
-        ctx.fillRect(15, -6, 2, 12);
-        for (let y = -6; y <= 6; y += 3) ctx.fillRect(17, y, 4, 1);
-      } else {
-        ctx.fillStyle = "#5c9e7a";
-        ctx.fillRect(10, -4, 8, 7);
-        ctx.fillRect(18, -2, 5, 2);
-      }
-      ctx.restore();
-      if (frame >= 4) for (let i = 0; i < 4; i++) {
-        ctx.fillStyle = action === "chop" || season === "autumn" ? "#c3935b" : season === "winter" ? "#eff7ff" : "#8ed9ed";
-        ctx.fillRect(ax + 17 + i * 3 + frame % 2, ay - 7 - (i + frame) % 5, 2, 1);
-      }
-    } else if (action === "serve") {
-      ctx.fillStyle = "#d4b590";
-      ctx.fillRect(ax - 11, ay - 12, 10, 2);
-      ctx.fillStyle = "#f0eee0";
-      ctx.fillRect(ax - 9, ay - 17 - frame % 2, 4, 5);
-      if (season === "winter") {
-        ctx.fillStyle = "#dcecf1";
-        ctx.fillRect(ax - 8, ay - 20 - frame % 3, 1, 2);
-      }
-    } else if (action === "warm") {
-      ctx.fillStyle = "#d8e8ef";
-      for (let i = 0; i < 3; i++) ctx.fillRect(ax + 5 + i * 2 + frame % 3, ay - 24 - i - frame % 2, 2, 1);
-    }
-    const sprite2 = { canvas: canvas3, ax, ay };
-    frames.set(key, sprite2);
-    return sprite2;
-  }
-
-  // tool/office_world/outdoor_people.ts
-  function outdoorAppearance(base, season) {
-    if (season === "winter") return { ...base, topStyle: "jacket", bottomStyle: "pants", accessory: "beanie", accessoryColor: "#52778b", hairStyle: ["afro", "bun", "mohawk", "pigtails"].includes(base.hairStyle) ? "short" : base.hairStyle };
-    if (season === "autumn") return { ...base, topStyle: "sweater", bottomStyle: "pants" };
-    return { ...base, topStyle: season === "summer" ? "tshirt" : "hoodie", bottomStyle: "pants" };
-  }
-  var OutdoorPeople = class {
-    constructor(art) {
-      this.art = art;
-    }
-    art;
-    cols = -1;
-    elapsed = 0;
-    scale = 70;
-    season = "summer";
-    routes = [];
-    appearances = [];
-    actors = [];
-    setFurnitureScale(percent) {
-      if (this.scale !== percent) {
-        this.scale = percent;
-        this.cols = -1;
-      }
-    }
-    update(dt, cols, season = "summer") {
-      if (cols !== this.cols || season !== this.season) {
-        this.season = season;
-        this.cols = cols;
-        this.routes = outdoorLifeLayout(cols, this.scale, season).routes;
-        this.appearances = this.routes.map((route, index) => outdoorAppearance(this.art.appearanceFromSeed(route.seed, { look: index % 2 ? "f" : "m" }), season));
-        this.actors = [];
-      }
-      this.elapsed += Math.max(0, Math.min(0.1, dt));
-      this.actors.length = 0;
-      this.routes.forEach((route, index) => {
-        const position = sampleOutdoorRoute(route, this.elapsed);
-        if (position.hidden) return;
-        let sprite2 = this.art.characterSprite({
-          appearance: this.appearances[index],
-          pose: position.action === "chop" ? Math.floor(this.elapsed * 8) % 8 < 4 ? "raise_hand" : "use" : position.pose,
-          dir: position.dir,
-          held: position.held,
-          seated: position.seated,
-          frame: Math.floor(this.elapsed * 1e3 / this.art.poseFrameDuration(position.pose)) % this.art.poseFrameCount(position.pose)
-        });
-        if (position.action) sprite2 = outdoorAnimation(sprite2, position.action, Math.floor(this.elapsed * 8) % 8, season);
-        this.actors.push({ id: route.id, x: position.x, y: position.y, sprite: sprite2 });
-      });
-      return this.actors;
-    }
-  };
-
   // assets/sprites/layers/object/exterior/Oak tree_349141_bf1a0.png
   var Oak_tree_349141_bf1a0_default = "data:image/png;base64,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";
 
@@ -28343,8 +28216,8 @@
   var snowCache = /* @__PURE__ */ new WeakMap();
   var snowyGroundCache = /* @__PURE__ */ new WeakMap();
   function snowySprite(source, coverGrass = false) {
-    const cache4 = coverGrass ? snowyGroundCache : snowCache;
-    const cached = cache4.get(source.canvas);
+    const cache3 = coverGrass ? snowyGroundCache : snowCache;
+    const cached = cache3.get(source.canvas);
     if (cached) return cached;
     const { sprite: sprite2, ctx } = surface(source.canvas.width, source.canvas.height);
     sprite2.ax = source.ax;
@@ -28368,7 +28241,7 @@
       }
     }
     ctx.putImageData(pixels, 0, 0);
-    cache4.set(source.canvas, sprite2);
+    cache3.set(source.canvas, sprite2);
     return sprite2;
   }
 
@@ -28563,7 +28436,7 @@
     renderer2.exteriorSprites = exterior;
     exterior.setScales(scales.vegetation, scales.vehicles, scales.furniture);
     onFurnitureScale?.(scales.furniture);
-    const cache4 = /* @__PURE__ */ new Map();
+    const cache3 = /* @__PURE__ */ new Map();
     function alignSeats() {
       const factor = scales.furniture / 100;
       const anchors = {
@@ -28594,7 +28467,7 @@
     alignSeats();
     function furniture(index) {
       const key = String(index);
-      const hit = cache4.get(key);
+      const hit = cache3.get(key);
       if (hit) return hit;
       const base = scaledSprite(rasters[index], scales.furniture);
       const result = { base };
@@ -28606,12 +28479,12 @@
         ctx.drawImage(base.canvas, 0, top, front.width, front.height - top, 0, top, front.width, front.height - top);
         result.front = { canvas: front, ax: base.ax, ay: base.ay };
       }
-      cache4.set(key, result);
+      cache3.set(key, result);
       return result;
     }
     renderer2.furnitureOverride = (f) => f.kind === "coworking_set" ? furniture(27) : null;
     return () => {
-      cache4.clear();
+      cache3.clear();
       renderer2.exteriorSprites = previousExterior;
       renderer2.furnitureOverride = previousFurniture;
     };
@@ -28627,8 +28500,7 @@
   var soundBoard = new SoundBoard();
   var soundCues = new SoundCues(sim, camera);
   var renderer = new Renderer(canvas2, art_exports, sim, camera);
-  var outdoorPeople = new OutdoorPeople(art_exports);
-  renderer.outdoorActors = (dt) => outdoorPeople.update(dt, sim.building.cols, exteriorSeasonFor(options.season, /* @__PURE__ */ new Date()));
+  renderer.outdoorActors = null;
   var overlay = new Overlay(renderer.ctx, sim, renderer, camera);
   var selectedAgent = null;
   var hoveredAgent = null;
@@ -28704,8 +28576,9 @@
     return { x: 0, y: 0, w: sim.building.cols * COL_W * TILE, h: BUILDING_H * TILE };
   }
   function updateBounds() {
-    const e = renderer.exterior.bounds;
-    const bounds = { x: e.x * TILE, y: e.y * TILE, w: e.w * TILE, h: e.h * TILE };
+    const b = buildingRect2();
+    const pad = 2 * TILE;
+    const bounds = { x: b.x - pad, y: b.y - pad, w: b.w + pad * 2, h: b.h + pad * 2 };
     camera.bounds = bounds;
     camera.minZoom = Math.min(6, Math.max(
       (camera.viewW - camera.insets.left - camera.insets.right) / bounds.w,
@@ -28715,8 +28588,7 @@
   }
   function overview(animate, exterior = false) {
     const bounds = buildingRect2();
-    const e = renderer.exterior.bounds;
-    const frame = exterior ? { zoom: camera.minZoom, cx: (e.x + e.w / 2) * TILE, cy: (e.y + e.h / 2) * TILE, dy: 0 } : overviewFrame(bounds, camera.viewW, camera.viewH, camera.insets);
+    const frame = overviewFrame(bounds, camera.viewW, camera.viewH, camera.insets);
     const fit = Math.max(camera.minZoom, frame.zoom);
     const snapped = camera.snapZoom(fit, "down");
     const zoom = Math.min(4, snapped >= fit * 0.82 ? snapped : fit);

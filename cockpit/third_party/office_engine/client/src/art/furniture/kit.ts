@@ -6,30 +6,30 @@ import { ramp, shade, type Ramp } from '../core/color';
 import type { PixelBuf } from '../core/pixbuf';
 
 export const M = {
-  oak: ramp('#d9b88e', 0.06),
-  oakDark: ramp('#b88c5e', 0.06),
-  white: ramp('#e9e8e4', 0.045),
-  walnut: ramp('#7a5a45', 0.065),
-  steel: ramp('#b9c0ca', 0.06),
-  steelDark: ramp('#6d7583', 0.07),
-  graphite: ramp('#474d5c', 0.065),
-  plastic: ramp('#e4e6ea', 0.045),
-  stone: ramp('#e8e6e1', 0.04),
-  terracotta: ramp('#c9714a', 0.07),
-  ceramic: ramp('#eeebe4', 0.05),
-  leaf: ramp('#4c9a55', 0.08),
-  leafDark: ramp('#2f7044', 0.07),
-  cardboard: ramp('#c99a5e', 0.06),
-  blueFabric: ramp('#4f78b8', 0.07),
-  orange: ramp('#ec8a3c', 0.07),
+  oak: ramp('#785f47', 0.065),
+  oakDark: ramp('#4a3a2b', 0.07),
+  white: ramp('#e4e6ea', 0.04),
+  walnut: ramp('#48362a', 0.07),
+  steel: ramp('#959eab', 0.06),
+  steelDark: ramp('#434a58', 0.07),
+  graphite: ramp('#2a2f3a', 0.065),
+  plastic: ramp('#dce0e6', 0.045),
+  stone: ramp('#5a606d', 0.05),
+  terracotta: ramp('#a35438', 0.07),
+  ceramic: ramp('#e8ebf0', 0.045),
+  leaf: ramp('#3b8c56', 0.08),
+  leafDark: ramp('#205933', 0.07),
+  cardboard: ramp('#a8814d', 0.06),
+  blueFabric: ramp('#304463', 0.07),
+  orange: ramp('#ea7828', 0.07),
 } as const;
 
 /** Cores de acento saturadas (pastas, livros, objetos). */
-export const ACCENTS = ['#3f7fd8', '#ec8a3c', '#4cae6a', '#e05a5a', '#f2c14e', '#8d66cf', '#36b0b0', '#e47aa8'] as const;
+export const ACCENTS = ['#38bdf8', '#ea7828', '#10b981', '#f43f5e', '#f59e0b', '#a855f7', '#06b6d4', '#ec4899'] as const;
 
-/** Fundo padrão da tela no sprite (igual ao modo 'off': azul-marinho fosco, nunca quase preto). */
-export const SCREEN_BG = '#22324f';
-export const SCREEN_GLOW = '#4aa3f0';
+/** Fundo padrão da tela no sprite (azul-noite de IDE moderna). */
+export const SCREEN_BG = '#131722';
+export const SCREEN_GLOW = '#38bdf8';
 
 export type Rng = () => number;
 

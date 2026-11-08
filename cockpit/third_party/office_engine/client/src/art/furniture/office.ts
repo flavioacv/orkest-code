@@ -24,11 +24,11 @@ interface DeskMats {
 function deskMats(variant: string | undefined): DeskMats {
   switch (variant) {
     case 'white':
-      return { top: M.white, edge: ramp('#d7d6d1', 0.05), legs: M.steel, ped: ramp('#dcdbd6', 0.05) };
+      return { top: M.white, edge: ramp('#bac1cc', 0.05), legs: M.graphite, ped: ramp('#ccd2dc', 0.05) };
     case 'dark':
-      return { top: M.walnut, edge: ramp('#5f4535', 0.06), legs: M.graphite, ped: ramp('#5a4334', 0.06) };
+      return { top: M.walnut, edge: ramp('#35261d', 0.06), legs: M.graphite, ped: ramp('#32241b', 0.06) };
     default:
-      return { top: M.oak, edge: M.oakDark, legs: ramp('#e9e8e4', 0.05), ped: ramp('#e6e4de', 0.05) };
+      return { top: M.oak, edge: M.oakDark, legs: M.graphite, ped: ramp('#5c4633', 0.05) };
   }
 }
 
@@ -197,11 +197,11 @@ export function deskBack(variant: string | undefined, seed: number): BufFurnitur
 // ------------------------------------------------------------------ cadeiras
 
 const CHAIR_COLORS: Readonly<Record<string, string>> = {
-  black: '#41465a',
-  blue: '#3f62a3',
-  red: '#b44a4a',
-  green: '#3f8a62',
-  gray: '#8b929e',
+  black: '#21252f',
+  blue: '#233854',
+  red: '#7e2d2d',
+  green: '#1f4e36',
+  gray: '#4a5160',
 };
 
 function chairRamp(variant: string | undefined): Ramp {
@@ -397,6 +397,39 @@ export function binderShelf(seed: number): BufFurniture {
   });
   b.outline();
   contact(b, 0, 13, 16, 4, 0.22);
+  return { base: s };
+}
+
+export function serverRack(seed: number): BufFurniture {
+  const s = floorSheet(1, 1, 28);
+  const b = s.buf;
+  const r = rngOf(seed, 99);
+  const metal = ramp('#2a2f3a', 0.06);
+  // Topo do rack em metal usinado escuro
+  topFace(b, 0, -25, 16, 3, metal);
+  b.rect(0, -22, 16, 38, metal.dk);
+  b.vline(0, -22, 15, metal.lt);
+  b.vline(15, -22, 15, metal.dd);
+  // Interior dos servidores 1U/2U
+  b.rect(1, -21, 14, 36, '#13161c');
+  for (let y = -20; y < 14; y += 4) {
+    b.hline(2, 13, y, '#222733');
+    b.hline(2, 13, y + 1, '#1b1f29');
+    // LEDs de atividade pulsante
+    const led1 = r() > 0.4 ? '#38bdf8' : '#1e3a5f';
+    const led2 = r() > 0.3 ? '#10b981' : '#134e35';
+    b.set(3, y + 1, led1);
+    b.set(4, y + 1, led2);
+    // Portas RJ45 / slots
+    b.rect(7, y + 1, 5, 1, '#3b4354');
+    b.set(8, y + 1, '#f59e0b');
+  }
+  // Vidro fumê frontal com reflexo elegante
+  for (let i = 0; i < 20; i++) {
+    b.set(12 - Math.floor(i * 0.4), -20 + i, 'rgba(255,255,255,0.18)');
+  }
+  b.outline();
+  contact(b, 0, 13, 16, 4, 0.28);
   return { base: s };
 }
 

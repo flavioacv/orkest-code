@@ -12,6 +12,7 @@ export const SEED_VARIATIONS: Partial<Record<FurnitureKind, number>> = {
   desk_back: 4,
   bookshelf: 4,
   binder_shelf: 4,
+  server_rack: 4,
   meeting_table: 2,
   shelf_wall: 3,
   painting: 2,
@@ -61,6 +62,8 @@ function build(kind: FurnitureKind, variant: string | undefined, state: number, 
       return O.glassPartition(variant);
     case 'binder_shelf':
       return O.binderShelf(seed);
+    case 'server_rack':
+      return O.serverRack(seed);
     case 'meeting_table':
       return O.meetingTable(seed);
     case 'stool':

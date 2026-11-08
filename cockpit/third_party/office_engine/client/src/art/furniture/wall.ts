@@ -13,28 +13,31 @@ function wallShadow(b: import('../core/pixbuf').PixelBuf, x: number, y: number, 
 export function whiteboard(): BufFurniture {
   const s = wallSheet(3);
   const b = s.buf;
-  const frame = ramp('#c3cad4', 0.06);
   const x = 2;
   const y = -27;
   const w = 44;
   const h = 19;
-  b.rect(x, y, w, h, frame.base);
-  b.hline(x, x + w - 1, y, frame.hi);
-  b.vline(x, y, y + h - 1, frame.lt);
-  b.vline(x + w - 1, y, y + h - 1, frame.dk);
-  b.hline(x, x + w - 1, y + h - 1, frame.dk);
-  b.rect(x + 1, y + 1, w - 2, h - 2, '#fbfcfd');
-  // Reflexo sutil.
-  b.line(x + 30, y + 1, x + 24, y + h - 2, 'rgba(210,225,240,0.5)');
-  b.line(x + 33, y + 1, x + 27, y + h - 2, 'rgba(210,225,240,0.35)');
-  // Bandeja com pincéis e apagador.
-  b.rect(x + 3, y + h, w - 6, 2, frame.base);
-  b.hline(x + 3, x + w - 4, y + h, frame.lt);
-  for (const [i, c] of [[0, '#e05a5a'], [3, '#3f7fd8'], [6, '#2b2f3b'], [9, '#4cae6a']] as const) {
-    b.rect(x + 8 + i, y + h - 1, 2, 1, c);
+  // Placa de vidro temperado translúcido com reflexo moderno
+  b.rect(x, y, w, h, 'rgba(240,244,250,0.95)');
+  b.hline(x, x + w - 1, y, '#ffffff');
+  b.vline(x, y, y + h - 1, 'rgba(255,255,255,0.8)');
+  b.vline(x + w - 1, y, y + h - 1, '#a8b4c2');
+  b.hline(x, x + w - 1, y + h - 1, '#a8b4c2');
+  // Fixadores metálicos usinados nos cantos
+  for (const [fx, fy] of [[x + 1, y + 1], [x + w - 3, y + 1], [x + 1, y + h - 3], [x + w - 3, y + h - 3]]) {
+    b.rect(fx, fy, 2, 2, '#323742');
+    b.set(fx, fy, '#8b93a0');
   }
-  b.rect(x + w - 14, y + h - 2, 5, 2, '#3a3f4b');
-  b.hline(x + w - 14, x + w - 10, y + h - 2, '#f2efe6');
+  // Reflexo diagonal de vidro
+  b.line(x + 28, y + 1, x + 22, y + h - 2, 'rgba(255,255,255,0.6)');
+  b.line(x + 31, y + 1, x + 25, y + h - 2, 'rgba(255,255,255,0.35)');
+  // Suporte inferior metálico slim para canetas de diagramação
+  b.rect(x + 10, y + h, 24, 2, '#272b34');
+  b.hline(x + 10, x + 33, y + h, '#515867');
+  for (const [i, c] of [[0, '#f43f5e'], [3, '#38bdf8'], [6, '#10b981'], [9, '#181b22']] as const) {
+    b.rect(x + 12 + i, y + h - 1, 2, 1, c);
+  }
+  b.rect(x + 27, y + h - 2, 4, 2, '#181b22');
   b.outline();
   wallShadow(b, x - 1, y - 1, w + 2, h + 3);
   s.rects = { board: rectAt(s, x + 2, y + 2, w - 4, h - 4) };
