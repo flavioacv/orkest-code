@@ -944,6 +944,8 @@ export const ES: Readonly<Record<string, string>> = {
 
   // client/src/world/render/overlay.ts
   "Recepção": "Recepción",
+  "Cafeteria": "Cafetería",
+  "Coworking": "Coworking",
   "Banheiros": "Baños",
   "Copa": "Cocina",
   "Lounge": "Salón",

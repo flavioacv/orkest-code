@@ -2,14 +2,17 @@ import type { ArtModule, Sprite } from '../../art/api';
 import { COL_W, TILE } from '../constants';
 import type { Sim } from '../sim/sim';
 import { PLAN, benchPatches, expansionWidth, planX, planY, type CoworkingObject } from '../layout/floor-plan';
+import { getLocale, tr } from '../../../../shared/i18n';
 
 /** Procedural floor plus independent native sprites. The reference PNG is never rendered. */
 export class CoworkingSceneRenderer {
   private cache: HTMLCanvasElement | null = null;
   private columns = -1;
+  private locale = '';
 
   draw(ctx: CanvasRenderingContext2D, cols: number): void {
-    if (this.columns !== cols || !this.cache) {
+    const currentLocale = getLocale();
+    if (this.columns !== cols || this.locale !== currentLocale || !this.cache) {
       const canvas = document.createElement('canvas');
       canvas.width = cols * COL_W * TILE; canvas.height = PLAN.height;
       const c = canvas.getContext('2d')!, extra = expansionWidth(cols);
@@ -51,8 +54,8 @@ export class CoworkingSceneRenderer {
         c.fillStyle = '#232936'; c.fillRect(planX(x) + shift - w / 2, planY(y), w, 23);
         c.fillStyle = '#f5f0e8'; c.textAlign = 'center'; c.fillText(text, planX(x) + shift, planY(y) + 16); c.textAlign = 'left';
       };
-      sign('Recepção', 277, 271); sign('Cafeteria', 803, 203); sign('Games', 1100, 930, extra);
-      this.cache = canvas; this.columns = cols;
+      sign(tr('Recepção'), 277, 271); sign(tr('Cafeteria'), 803, 203); sign(tr('Games'), 1100, 930, extra);
+      this.cache = canvas; this.columns = cols; this.locale = currentLocale;
     }
     ctx.drawImage(this.cache, 0, 0);
   }
@@ -99,9 +102,10 @@ export class CoworkingSceneRenderer {
         box(node.color ?? '#543a29');
         for (let xx = x + 3; xx < x + w - 3; xx += 7) { rect(xx, y + 3, 2, h - 6, '#956039'); rect(xx + 2, y + 3, 1, h - 6, '#322c2b'); }
         if (node.label) {
+          const translated = tr(node.label);
           ctx.save(); ctx.textAlign = 'center'; ctx.fillStyle = '#ffdf93'; ctx.shadowColor = '#ffb435'; ctx.shadowBlur = 12;
           ctx.font = '600 25px system-ui'; ctx.fillText('◇', x + w / 2, y + h / 2 - 4);
-          ctx.font = '600 19px system-ui'; ctx.fillText(node.label, x + w / 2, y + h - 13); ctx.restore();
+          ctx.font = '600 19px system-ui'; ctx.fillText(translated, x + w / 2, y + h - 13); ctx.restore();
         }
         break;
       case 'counter':

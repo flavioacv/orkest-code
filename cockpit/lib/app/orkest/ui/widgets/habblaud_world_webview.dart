@@ -36,6 +36,7 @@ class HabblaudWorldWebView extends StatefulWidget {
     this.onCreateTerminal,
     this.onToggleTerminal,
     this.onToggleTerminalDock,
+    this.onOpenSettings,
     this.isTerminalVisible = false,
     this.isTerminalDocked = false,
   });
@@ -47,6 +48,7 @@ class HabblaudWorldWebView extends StatefulWidget {
   final VoidCallback? onCreateTerminal;
   final VoidCallback? onToggleTerminal;
   final VoidCallback? onToggleTerminalDock;
+  final VoidCallback? onOpenSettings;
   final bool isTerminalVisible;
   final bool isTerminalDocked;
 
@@ -1151,6 +1153,28 @@ canvas{display:block;image-rendering:pixelated;outline:none}
                                   widget.isTerminalDocked
                                       ? Icons.open_in_new
                                       : Icons.vertical_align_bottom,
+                                  size: 16,
+                                  color: colors.text2,
+                                ),
+                              ),
+                            ),
+                          ),
+                        ),
+                      ],
+                      // Configurações de Ambiente / Aparência (Paleta de Cores)
+                      if (widget.onOpenSettings != null) ...[
+                        const SizedBox(width: 4),
+                        Tooltip(
+                          message: labels.appearance,
+                          child: Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              borderRadius: BorderRadius.circular(14),
+                              onTap: widget.onOpenSettings,
+                              child: Padding(
+                                padding: const EdgeInsets.all(6),
+                                child: Icon(
+                                  Icons.palette_outlined,
                                   size: 16,
                                   color: colors.text2,
                                 ),

@@ -1267,6 +1267,8 @@
     "Sem atividade ainda": "No activity yet",
     // client/src/world/render/overlay.ts
     "Recep\xE7\xE3o": "Reception",
+    "Cafeteria": "Cafeteria",
+    "Coworking": "Coworking",
     "Banheiros": "Restrooms",
     "Copa": "Kitchen",
     "Lounge": "Lounge",
@@ -4424,6 +4426,8 @@
     "Sem atividade ainda": "Sin actividad a\xFAn",
     // client/src/world/render/overlay.ts
     "Recep\xE7\xE3o": "Recepci\xF3n",
+    "Cafeteria": "Cafeter\xEDa",
+    "Coworking": "Coworking",
     "Banheiros": "Ba\xF1os",
     "Copa": "Cocina",
     "Lounge": "Sal\xF3n",
@@ -7532,6 +7536,8 @@
     "Sem atividade ainda": "Pas encore d'activit\xE9",
     // client/src/world/render/overlay.ts
     "Recep\xE7\xE3o": "Accueil",
+    "Cafeteria": "Caf\xE9t\xE9ria",
+    "Coworking": "Coworking",
     "Banheiros": "Toilettes",
     "Copa": "Cuisine",
     "Lounge": "Salon",
@@ -21242,8 +21248,20 @@
       b.block(tx, ty, Math.ceil((r.x + r.w) / TILE) - tx, Math.ceil((r.y + r.h) / TILE) - ty);
     };
     const object = (b, shape, x, y, w, h, opts = {}) => {
+      const totalW = cols * COL_W * TILE;
       const r = { x: px(x, y, opts.dx), y: planY(y), w: Math.round(w * PLAN.width / PLAN.w), h: Math.round(h * PLAN.height / PLAN.h) };
-      if (shape === "wall" && w === 1447) r.w += extra;
+      if (shape === "wall") {
+        if (w === 1447) {
+          r.w = totalW - r.x;
+          if (y === 51) r.y = 0;
+          else if (y === 966) r.y = PLAN.height - r.h;
+        } else if (x === 1480) {
+          r.x = totalW - r.w;
+          r.h = PLAN.height - r.y;
+        } else if (x === 49 && y === 680) {
+          r.h = PLAN.height - 18 - r.y;
+        }
+      }
       const node = {
         ...r,
         id: `${b.area.id}:object:${objects.length}`,
@@ -21476,8 +21494,10 @@
   var CoworkingSceneRenderer = class {
     cache = null;
     columns = -1;
+    locale = "";
     draw(ctx, cols) {
-      if (this.columns !== cols || !this.cache) {
+      const currentLocale = getLocale();
+      if (this.columns !== cols || this.locale !== currentLocale || !this.cache) {
         const canvas3 = document.createElement("canvas");
         canvas3.width = cols * COL_W * TILE;
         canvas3.height = PLAN.height;
@@ -21548,11 +21568,12 @@
           c.fillText(text, planX(x) + shift, planY(y) + 16);
           c.textAlign = "left";
         };
-        sign2("Recep\xE7\xE3o", 277, 271);
-        sign2("Cafeteria", 803, 203);
-        sign2("Games", 1100, 930, extra);
+        sign2(tr("Recep\xE7\xE3o"), 277, 271);
+        sign2(tr("Cafeteria"), 803, 203);
+        sign2(tr("Games"), 1100, 930, extra);
         this.cache = canvas3;
         this.columns = cols;
+        this.locale = currentLocale;
       }
       ctx.drawImage(this.cache, 0, 0);
     }
@@ -21612,6 +21633,7 @@
             rect(xx + 2, y + 3, 1, h - 6, "#322c2b");
           }
           if (node.label) {
+            const translated = tr(node.label);
             ctx.save();
             ctx.textAlign = "center";
             ctx.fillStyle = "#ffdf93";
@@ -21620,7 +21642,7 @@
             ctx.font = "600 25px system-ui";
             ctx.fillText("\u25C7", x + w / 2, y + h / 2 - 4);
             ctx.font = "600 19px system-ui";
-            ctx.fillText(node.label, x + w / 2, y + h - 13);
+            ctx.fillText(translated, x + w / 2, y + h - 13);
             ctx.restore();
           }
           break;

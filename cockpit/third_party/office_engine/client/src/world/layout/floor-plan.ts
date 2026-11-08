@@ -38,8 +38,20 @@ export function coworkingScene(cols: number): CoworkingScene {
   };
   const object = (b: AreaBuilder, shape: ObjectShape, x: number, y: number, w: number, h: number,
     opts: { color?: string; label?: string; solid?: boolean; dx?: number } = {}) => {
+    const totalW = cols * COL_W * TILE;
     const r = { x: px(x, y, opts.dx), y: planY(y), w: Math.round(w * PLAN.width / PLAN.w), h: Math.round(h * PLAN.height / PLAN.h) };
-    if (shape === 'wall' && w === 1447) r.w += extra;
+    if (shape === 'wall') {
+      if (w === 1447) {
+        r.w = totalW - r.x;
+        if (y === 51) r.y = 0;
+        else if (y === 966) r.y = PLAN.height - r.h;
+      } else if (x === 1480) {
+        r.x = totalW - r.w;
+        r.h = PLAN.height - r.y;
+      } else if (x === 49 && y === 680) {
+        r.h = PLAN.height - 18 - r.y;
+      }
+    }
     const node: CoworkingObject = { ...r, id: `${b.area.id}:object:${objects.length}`, areaId: b.area.id, shape,
       scale: ACTOR_SCALE, depth: r.y + r.h, color: opts.color, label: opts.label, seatIds: [] };
     if (opts.solid !== false) {

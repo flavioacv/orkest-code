@@ -25,6 +25,7 @@ class OfficeWorldView extends StatelessWidget {
     this.onCreateTerminal,
     this.onToggleTerminal,
     this.onToggleTerminalDock,
+    this.onOpenSettings,
     this.isTerminalVisible = false,
     this.isTerminalDocked = false,
   });
@@ -37,6 +38,7 @@ class OfficeWorldView extends StatelessWidget {
   final VoidCallback? onCreateTerminal;
   final VoidCallback? onToggleTerminal;
   final VoidCallback? onToggleTerminalDock;
+  final VoidCallback? onOpenSettings;
   final bool isTerminalVisible;
   final bool isTerminalDocked;
 
@@ -60,6 +62,7 @@ class OfficeWorldView extends StatelessWidget {
       onCreateTerminal: onCreateTerminal,
       onToggleTerminal: onToggleTerminal,
       onToggleTerminalDock: onToggleTerminalDock,
+      onOpenSettings: onOpenSettings,
       isTerminalVisible: isTerminalVisible,
       isTerminalDocked: isTerminalDocked,
     );

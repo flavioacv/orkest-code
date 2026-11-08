@@ -890,6 +890,8 @@ export const FR: Readonly<Record<string, string>> = {
 
   // client/src/world/render/overlay.ts
   "Recepção": "Accueil",
+  "Cafeteria": "Cafétéria",
+  "Coworking": "Coworking",
   "Banheiros": "Toilettes",
   "Copa": "Cuisine",
   "Lounge": "Salon",

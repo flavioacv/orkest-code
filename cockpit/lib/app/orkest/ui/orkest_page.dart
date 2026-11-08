@@ -52,6 +52,7 @@ import 'package:orkest_code/app/orkest/ui/widgets/remote_disconnected_banner.dar
 import 'package:orkest_code/app/orkest/ui/widgets/terminal_key_bar.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/widgets.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/office_world_view.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/office_world_settings_dialog.dart';
 import 'package:orkest_code/app/core/data/diagnostics/performance_diagnostics.dart';
 import 'package:orkest_code/app/core/ui/automation_controller.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
@@ -1424,6 +1425,7 @@ class _CenterPanelState extends State<_CenterPanel> {
             onCreateTerminal: _createOfficeTerminal,
             onToggleTerminal: _toggleOfficeTerminal,
             onToggleTerminalDock: _toggleOfficeWorkspaceDock,
+            onOpenSettings: () => showOfficeWorldSettings(context),
             isTerminalVisible: _officeWorkspaceVisible,
             isTerminalDocked: _officeWorkspaceDocked,
           )
