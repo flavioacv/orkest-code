@@ -445,9 +445,7 @@ canvas{display:block;image-rendering:pixelated;outline:none}
     // harness may have started before Office was opened, so its current
     // activity cannot depend only on receiving a new output chunk.
     for (final session in widget.sessions.whereType<TerminalSession>()) {
-      if (!session.isDisposed && !session.isProcessExited) {
-        session.refreshOfficeActivityFromScreen();
-      }
+      session.refreshOfficeActivityFromScreen();
     }
     final signature = _snapshotSignature();
     if (signature == _lastSnapshotSignature) return;
