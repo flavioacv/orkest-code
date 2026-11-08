@@ -1142,20 +1142,23 @@ class _RailPanel extends StatelessWidget {
             vm.problemsForWorkspace(projectId).warningCount)
         : 0;
 
+    if (isMobilePlatform && !isOpen) return const SizedBox.shrink();
+
     return Row(
       mainAxisSize: MainAxisSize.min,
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        LeftToolStripe(
-          isRailOpen: isOpen,
-          onToggleRail: onToggleRail,
-          isBottomDockOpen: vm.bottomDockOpen,
-          bottomDockTab: vm.bottomDockTab,
-          onToggleBottomDock: vm.toggleBottomDock,
-          problemsCount: problemsCount,
-          isDebugging: isDebugging,
-          onOpenSettings: () => context.pushNamed(RoutePaths.settings),
-        ),
+        if (!isMobilePlatform)
+          LeftToolStripe(
+            isRailOpen: isOpen,
+            onToggleRail: onToggleRail,
+            isBottomDockOpen: vm.bottomDockOpen,
+            bottomDockTab: vm.bottomDockTab,
+            onToggleBottomDock: vm.toggleBottomDock,
+            problemsCount: problemsCount,
+            isDebugging: isDebugging,
+            onOpenSettings: () => context.pushNamed(RoutePaths.settings),
+          ),
         if (isOpen)
           Stack(
             children: [

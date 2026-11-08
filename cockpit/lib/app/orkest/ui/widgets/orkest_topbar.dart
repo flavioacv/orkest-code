@@ -6,6 +6,9 @@ import 'package:orkest_code/app/core/ui/menu/workspace_menu_bridge.dart';
 import 'package:orkest_code/app/core/ui/settings_controller.dart';
 import 'package:orkest_code/app/core/ui/widgets/window_controls.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
+import 'package:orkest_code/app/core/ui/widgets/app_tooltip.dart';
+import 'package:orkest_code/app/core/ui/widgets/hover_tap.dart';
+import 'package:orkest_code/app/core/utils/platform_kind.dart';
 import 'package:orkest_code/i18n/strings.g.dart';
 import 'package:flutter_modular/flutter_modular.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -63,11 +66,47 @@ class OrkestTopbar extends StatelessWidget {
           ),
           const SizedBox(width: 8),
         ],
+        // No Mobile: botão para abrir a gaveta de projetos (workspaces)
+        if (isMobilePlatform) ...[
+          AppTooltip(
+            message: 'Menu de projetos',
+            child: HoverTap(
+              key: const ValueKey('mobile-toggle-rail'),
+              onTap: onToggleRail,
+              padding: const EdgeInsets.all(6),
+              borderRadius: BorderRadius.circular(5),
+              child: Icon(
+                LucideIcons.panelLeft,
+                size: 18,
+                color: railVisible ? colors.accentText : colors.text2,
+              ),
+            ),
+          ),
+          const SizedBox(width: 8),
+        ],
         Text(
           projectName,
           style: context.typo.title.copyWith(fontSize: 14, color: colors.text),
         ),
         const Spacer(),
+        // No Mobile: botão para abrir a gaveta de arquivos/árvore
+        if (isMobilePlatform && filesEnabled) ...[
+          AppTooltip(
+            message: 'Arquivos do projeto',
+            child: HoverTap(
+              key: const ValueKey('mobile-toggle-tree'),
+              onTap: onToggleTree,
+              padding: const EdgeInsets.all(6),
+              borderRadius: BorderRadius.circular(5),
+              child: Icon(
+                LucideIcons.folderClosed,
+                size: 18,
+                color: treeVisible ? colors.accentText : colors.text2,
+              ),
+            ),
+          ),
+          const SizedBox(width: 6),
+        ],
         const WindowControlsTrailing(),
       ],
     );
