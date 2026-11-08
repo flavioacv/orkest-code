@@ -151,13 +151,17 @@ export function coworkingScene(cols: number): CoworkingScene {
   plant(meeting, 1287, 420); plant(meeting, 1450, 420);
   const restroom = zone('core:banheiros', 'restroom');
   for (const [x, y, w, h] of [[65, 704, 169, 8], [298, 704, 186, 8], [65, 704, 8, 260], [476, 704, 8, 260]]) object(restroom, 'wall', x, y, w, h);
+  // Bloqueia a passagem atrás das pias/espelhos e a brecha entre a pia 1 e a parede esquerda
+  block(restroom, { x: px(65, 704), y: planY(704), w: planX(236) - planX(65), h: planY(765) - planY(704) });
+  block(restroom, { x: px(65, 704), y: planY(704), w: planX(108) - planX(65), h: planY(795) - planY(704) });
   for (const x of [125, 173, 221]) {
     sprite(restroom, 'mirror', x, 753, undefined, false);
     const sink = sprite(restroom, 'sink', x, 791);
     interaction(restroom, 'sink', x, 815, 'up', sink).group = 'mirror:vanity';
   }
   object(restroom, 'hygiene', 80, 738, 24, 48, { solid: false });
-  sprite(restroom, 'trash_bin', 264, 846);
+  // Lixeira posicionada no canto oeste do banheiro (junto à parede), liberando totalmente o corredor central da porta
+  sprite(restroom, 'trash_bin', 88, 846);
   sprite(restroom, 'clock', 269, 741, undefined, false);
   for (const x of [325, 386, 447]) {
     const stall = sprite(restroom, 'toilet_stall', x, 803); interaction(restroom, 'stall', x, 827, 'up', stall);

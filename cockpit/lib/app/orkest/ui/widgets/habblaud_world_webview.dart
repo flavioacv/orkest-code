@@ -69,6 +69,7 @@ class _HabblaudWorldWebViewState extends State<HabblaudWorldWebView> {
   bool _readingSocial = false;
   bool _socialReadFailed = false;
   String? _socialSignature;
+  String? _lastMigratedSessionKeys;
   final Map<String, TerminalStatus> _lastStatuses = {};
   final Map<String, int> _statusSince = {};
 
@@ -77,7 +78,7 @@ class _HabblaudWorldWebViewState extends State<HabblaudWorldWebView> {
     super.initState();
     _htmlFuture = _loadHtml();
     _snapshotTimer = Timer.periodic(
-      const Duration(milliseconds: 250),
+      const Duration(milliseconds: 500),
       (_) => unawaited(_pushSnapshot()),
     );
     _panelRefreshTimer = Timer.periodic(const Duration(seconds: 1), (_) {
@@ -425,15 +426,28 @@ canvas{display:block;image-rendering:pixelated;outline:none}
     }
     final web = _web;
     if (!_loaded || web == null || _snapshotInFlight) return;
-    context.read<SettingsController>().migrateOfficeCharacterParts({
-      for (final session in _officeSessions)
-        session.projectId: _legacyAppearanceOwner(session),
-    });
+
+    // Limpeza de estado para evitar vazamento de memória com sessões encerradas
+    final activeIds = widget.sessions.map((s) => s.id).toSet();
+    _lastStatuses.removeWhere((id, _) => !activeIds.contains(id));
+    _statusSince.removeWhere((id, _) => !activeIds.contains(id));
+
+    final sessionKeys = _officeSessions.map((s) => '${s.projectId}:${s.id}').join(',');
+    if (sessionKeys != _lastMigratedSessionKeys) {
+      _lastMigratedSessionKeys = sessionKeys;
+      context.read<SettingsController>().migrateOfficeCharacterParts({
+        for (final session in _officeSessions)
+          session.projectId: _legacyAppearanceOwner(session),
+      });
+    }
+
     // Refresh the rendered PTY screen before computing the signature. A
     // harness may have started before Office was opened, so its current
     // activity cannot depend only on receiving a new output chunk.
     for (final session in widget.sessions.whereType<TerminalSession>()) {
-      session.refreshOfficeActivityFromScreen();
+      if (!session.isDisposed && !session.isProcessExited) {
+        session.refreshOfficeActivityFromScreen();
+      }
     }
     final signature = _snapshotSignature();
     if (signature == _lastSnapshotSignature) return;

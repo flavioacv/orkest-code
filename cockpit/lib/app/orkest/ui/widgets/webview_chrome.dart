@@ -103,6 +103,7 @@ class WebViewPointerRelay {
 
   static bool _routed = false;
   static int _mouseDevice = 0;
+  static final Set<int> _activeDevices = <int>{};
 
   /// Device id do mouse real: um hover sintético em OUTRO device não tira o
   /// widget do hover (qualquer device sobre ele o mantém). Observa a rota
@@ -111,8 +112,16 @@ class WebViewPointerRelay {
     if (_routed) return;
     _routed = true;
     GestureBinding.instance.pointerRouter.addGlobalRoute((event) {
-      if (event.kind == PointerDeviceKind.mouse && event is PointerHoverEvent) {
-        _mouseDevice = event.device;
+      if (event.kind == PointerDeviceKind.mouse) {
+        if (event is PointerAddedEvent) {
+          _activeDevices.add(event.device);
+          _mouseDevice = event.device;
+        } else if (event is PointerRemovedEvent) {
+          _activeDevices.remove(event.device);
+        } else if (event is PointerHoverEvent) {
+          _activeDevices.add(event.device);
+          _mouseDevice = event.device;
+        }
       }
     });
   }
@@ -132,17 +141,42 @@ class WebViewPointerRelay {
       handlerName: '__orkestPointer',
       callback: (args) {
         if (!context.mounted) return null;
+        final device = _mouseDevice;
+        if (device == 0) return null;
+
         final box = context.findRenderObject();
         if (box is! RenderBox || !box.hasSize) return null;
         final global = box.localToGlobal(box.size.center(Offset.zero));
-        GestureBinding.instance.handlePointerEvent(
-          PointerHoverEvent(
-            timeStamp: DateTime.now().difference(_epoch),
-            kind: PointerDeviceKind.mouse,
-            device: _mouseDevice,
-            position: global,
-          ),
-        );
+        final now = DateTime.now().difference(_epoch);
+
+        try {
+          // O Flutter macOS despacha PointerRemovedEvent quando o mouse entra
+          // em uma NSView nativa (AppKitView). O MouseTracker exige que o
+          // próximo evento para o device seja PointerAddedEvent antes de
+          // receber um PointerHoverEvent.
+          if (!_activeDevices.contains(device)) {
+            GestureBinding.instance.handlePointerEvent(
+              PointerAddedEvent(
+                timeStamp: now,
+                kind: PointerDeviceKind.mouse,
+                device: device,
+                position: global,
+              ),
+            );
+            _activeDevices.add(device);
+          }
+
+          GestureBinding.instance.handlePointerEvent(
+            PointerHoverEvent(
+              timeStamp: now,
+              kind: PointerDeviceKind.mouse,
+              device: device,
+              position: global,
+            ),
+          );
+        } catch (_) {
+          // Ignora falhas transitórias de despacho no pipeline de ponteiros.
+        }
         return null;
       },
     );
