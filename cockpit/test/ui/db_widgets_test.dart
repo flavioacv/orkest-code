@@ -14,6 +14,7 @@ import 'package:orkest_code/app/orkest/domain/services/db_query_service.dart';
 import 'package:orkest_code/app/orkest/domain/services/db_row_edit_service.dart';
 import 'package:orkest_code/app/orkest/ui/session/file_viewer_session.dart';
 import 'package:orkest_code/app/orkest/ui/viewmodels/database_viewmodel.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/code_editor.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/db_query_view.dart';
 import 'package:orkest_code/i18n/strings.g.dart';
 import 'package:shadcn_flutter/shadcn_flutter.dart';
@@ -182,6 +183,111 @@ void main() {
       ],
       elapsed: const Duration(milliseconds: 14),
     );
+
+    testWidgets('DbQueryView executa Explain sem ANALYZE e mantém resultado somente leitura', (tester) async {
+      final conn = DbConnection.sqlite('appdb', '/tmp/test.db');
+      String? executedSql;
+      final vm = _createTestDatabaseVm(
+        conn: conn,
+        onQuery: (c, sql, limit) async {
+          executedSql = sql;
+          return const DbResult(
+            columns: [DbColumn('detail', 'TEXT')],
+            rows: [['SCAN CONSTANT ROW']],
+            elapsed: Duration(milliseconds: 2),
+          );
+        },
+        onExecute: (c, sql) async => const DbResult(columns: [], rows: [], elapsed: Duration.zero),
+        onSchema: (c, table, schema) async => const DbResult(columns: [], rows: [], elapsed: Duration.zero),
+      );
+      final session = FileViewerSession(
+        id: 'session_explain',
+        projectId: 'proj-explain',
+        path: '/ws/explain.dbq',
+        view: const FileViewText('-- db: appdb\nSELECT 1;'),
+      );
+
+      await tester.pumpWidget(_wrapWithTheme(DbQueryView(
+        session: session,
+        active: true,
+        focused: true,
+        workspaceRoot: '/ws',
+        onSave: (content) async => true,
+        databaseViewModel: vm,
+        menuBridge: EditorMenuBridge(),
+      )));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('db-query-explain-button')));
+      await tester.pumpAndSettle();
+
+      expect(executedSql, 'EXPLAIN QUERY PLAN SELECT 1;');
+      expect(executedSql, isNot(contains('ANALYZE')));
+      expect(vm.tabStateFor(session.id).lastExecutedSql, isNull);
+      expect(vm.queryHistory(workspaceId: 'proj-explain', connName: 'appdb').single.sql, 'SELECT 1');
+    });
+
+    testWidgets('DbQueryView filtra histórico por workspace e restaura a consulta selecionada', (tester) async {
+      final conn = DbConnection.sqlite('appdb', '/tmp/test.db');
+      final capturedSql = <String>[];
+      final vm = _createTestDatabaseVm(
+        conn: conn,
+        onQuery: (c, sql, limit) async {
+          capturedSql.add(sql);
+          return const DbResult(
+            columns: [DbColumn('detail', 'TEXT')],
+            rows: [['SCAN CONSTANT ROW']],
+            elapsed: Duration(milliseconds: 2),
+          );
+        },
+        onExecute: (c, sql) async => const DbResult(columns: [], rows: [], elapsed: Duration.zero),
+        onSchema: (c, table, schema) async => const DbResult(columns: [], rows: [], elapsed: Duration.zero),
+      );
+      final entry = vm.recordQueryHistory(
+        workspaceId: 'proj-history',
+        connName: 'appdb',
+        sql: 'SELECT 42;',
+        elapsed: const Duration(milliseconds: 4),
+      );
+      vm.recordQueryHistory(
+        workspaceId: 'other-workspace',
+        connName: 'appdb',
+        sql: 'SELECT 99;',
+        elapsed: const Duration(milliseconds: 3),
+      );
+      final session = FileViewerSession(
+        id: 'session_history',
+        projectId: 'proj-history',
+        path: '/ws/history.dbq',
+        view: const FileViewText('-- db: appdb\nSELECT 1;'),
+      );
+
+      await tester.pumpWidget(_wrapWithTheme(DbQueryView(
+        session: session,
+        active: true,
+        focused: true,
+        workspaceRoot: '/ws',
+        onSave: (content) async {
+          session.adoptDisk(FileViewText(content));
+          return true;
+        },
+        databaseViewModel: vm,
+        menuBridge: EditorMenuBridge(),
+      )));
+      await tester.pumpAndSettle();
+      await tester.tap(find.byKey(const ValueKey('db-query-history-button')));
+      await tester.pumpAndSettle();
+
+      expect(find.byKey(ValueKey('db-query-history-entry:${entry.id}')), findsOneWidget);
+      expect(find.textContaining('SELECT 99;'), findsNothing);
+      await tester.tap(find.byKey(ValueKey('db-query-history-entry:${entry.id}')));
+      await tester.pumpAndSettle();
+      expect(find.text('Query history'), findsNothing);
+      expect(tester.widget<CodeEditor>(find.byType(CodeEditor)).controller.text, 'SELECT 42;');
+      await tester.tap(find.byKey(const ValueKey('db-query-explain-button')));
+      await tester.pumpAndSettle();
+
+      expect(capturedSql, ['EXPLAIN QUERY PLAN SELECT 42;']);
+    });
 
     test('DbExportService exporta CSV formatado com delimitador e escapamento', () {
       final csv = exportService.exportCsv(sampleResult);

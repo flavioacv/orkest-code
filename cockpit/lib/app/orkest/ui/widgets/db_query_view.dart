@@ -2,7 +2,9 @@ import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:orkest_code/app/orkest/domain/entities/db_connection.dart';
+import 'package:orkest_code/app/orkest/domain/entities/db_query_history_entry.dart';
 import 'package:orkest_code/app/orkest/domain/entities/db_result.dart';
+import 'package:orkest_code/app/orkest/domain/db_schema_sql.dart';
 import 'package:orkest_code/app/core/ui/file_operation_error_message.dart';
 import 'package:orkest_code/app/orkest/domain/entities/dbq_document.dart';
 import 'package:orkest_code/app/orkest/domain/entities/file_view.dart';
@@ -343,6 +345,7 @@ class _DbQueryViewState extends State<DbQueryView> {
       _discardRequested = false;
       _view.error = null;
     });
+    final elapsed = Stopwatch()..start();
     try {
       final result = await vm.service.runStatements(
         workspaceRoot: widget.workspaceRoot,
@@ -356,6 +359,17 @@ class _DbQueryViewState extends State<DbQueryView> {
       if (_discardRequested || gen != _executionGeneration) {
         // Descarte explícito: rejeita resultado tardio
         return;
+      }
+      elapsed.stop();
+      if (!auto) {
+        vm.recordQueryHistory(
+          workspaceId: widget.session.projectId,
+          connName: connName,
+          sql: toRun.map((statement) => statement.text).join('\n'),
+          elapsed: elapsed.elapsed,
+          rowCount: result.rows.length,
+          affectedRows: result.affectedRows,
+        );
       }
       setState(() {
         _view.lastExecutedSql = toRun.last.text;
@@ -371,6 +385,16 @@ class _DbQueryViewState extends State<DbQueryView> {
         // Erro tardio de operação descartada rejeitado
         return;
       }
+      elapsed.stop();
+      if (!auto && e.kind != 'cancelled') {
+        vm.recordQueryHistory(
+          workspaceId: widget.session.projectId,
+          connName: connName,
+          sql: toRun.map((statement) => statement.text).join('\n'),
+          elapsed: elapsed.elapsed,
+          error: e.message,
+        );
+      }
       setState(() => _view.error = e);
     } finally {
       if (gen == _executionGeneration) {
@@ -385,6 +409,205 @@ class _DbQueryViewState extends State<DbQueryView> {
         }
       }
     }
+  }
+
+  Future<void> _explain() async {
+    if (_running || _updating) return;
+    final vm = widget.databaseViewModel ?? context.read<DatabaseViewModel>();
+    final conn = _conn;
+    if (conn == null) return;
+    if (!conn.engine.isSql) {
+      setState(() {
+        _view.error = const DbQueryException(
+          'unsupported_engine',
+          'Explain plan is SQL-only.',
+        );
+      });
+      return;
+    }
+
+    if (!widget.session.scratch) {
+      if (_dirty && !await _save()) return;
+      if (!mounted) return;
+    }
+
+    final statements = splitSqlStatements(_sql.text);
+    final selection = _sql.selection;
+    final currentStatement = statementAt(
+      statements,
+      selection.isValid ? selection.baseOffset : 0,
+    );
+    final selectedStatements = selection.isValid && !selection.isCollapsed
+        ? statementsInRange(statements, selection.start, selection.end)
+        : currentStatement == null
+        ? const <SqlStatement>[]
+        : [currentStatement];
+    if (selectedStatements.length != 1) {
+      setState(() {
+        _view.error = const DbQueryException(
+          'explain_selection',
+          'Select exactly one SQL statement to explain.',
+        );
+      });
+      return;
+    }
+
+    final sql = selectedStatements.single.text;
+    final explainSql = dbExplainSql(conn.engine, sql);
+    final generation = ++_executionGeneration;
+    setState(() {
+      _running = true;
+      _discardRequested = false;
+      _view.error = null;
+    });
+    final elapsed = Stopwatch()..start();
+    try {
+      final result = await vm.service.query(
+        workspaceRoot: widget.workspaceRoot,
+        workspaceId: widget.session.projectId,
+        connName: conn.name,
+        sql: explainSql,
+        limit: _limit,
+      );
+      if (!mounted || generation != _executionGeneration || _discardRequested) {
+        return;
+      }
+      elapsed.stop();
+      vm.recordQueryHistory(
+        workspaceId: widget.session.projectId,
+        connName: conn.name,
+        sql: sql,
+        elapsed: elapsed.elapsed,
+        rowCount: result.rows.length,
+      );
+      setState(() {
+        _view.lastExecutedSql = null;
+        _view.executedConnName = conn.name;
+        _view.result = result;
+        _view.asJson = true;
+        _view.baseWidths = _computeWidths(result);
+        _view.manualWidths = null;
+        _view.selectedRow = null;
+      });
+    } on DbQueryException catch (e) {
+      if (!mounted || generation != _executionGeneration || _discardRequested) {
+        return;
+      }
+      elapsed.stop();
+      vm.recordQueryHistory(
+        workspaceId: widget.session.projectId,
+        connName: conn.name,
+        sql: sql,
+        elapsed: elapsed.elapsed,
+        error: e.message,
+      );
+      setState(() => _view.error = e);
+    } finally {
+      if (generation == _executionGeneration) {
+        if (mounted) {
+          setState(() {
+            _running = false;
+            _discardRequested = false;
+          });
+        } else {
+          _running = false;
+          _discardRequested = false;
+        }
+      }
+    }
+  }
+
+  Future<void> _showQueryHistory() async {
+    if (_running || _updating) return;
+    final vm = widget.databaseViewModel ?? context.read<DatabaseViewModel>();
+    final search = TextEditingController();
+    final selected = await showDialog<DbQueryHistoryEntry>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, setDialogState) {
+          final entries = vm.queryHistory(
+            workspaceId: widget.session.projectId,
+            connName: _connName,
+            search: search.text,
+          );
+          final colors = dialogContext.colors;
+          final typo = dialogContext.typo;
+          return AlertDialog(
+            title: const Text('Query history'),
+            content: SizedBox(
+              width: 560,
+              height: 380,
+              child: Column(
+                children: [
+                  TextField(
+                    key: const ValueKey('db-query-history-search'),
+                    controller: search,
+                    placeholder: const Text('Filter SQL history'),
+                    style: typo.mono.copyWith(fontSize: 12, color: colors.text),
+                    border: Border.all(color: colors.border),
+                    borderRadius: BorderRadius.circular(4),
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 6),
+                    onChanged: (_) => setDialogState(() {}),
+                  ),
+                  const SizedBox(height: 8),
+                  Expanded(
+                    child: entries.isEmpty
+                        ? Center(
+                            child: Text(
+                              'No matching queries in this workspace.',
+                              style: typo.label.copyWith(
+                                fontSize: 12,
+                                color: colors.text3,
+                              ),
+                            ),
+                          )
+                        : ListView.builder(
+                            itemCount: entries.length,
+                            itemBuilder: (context, index) {
+                              final entry = entries[index];
+                              return HoverTap(
+                                key: ValueKey('db-query-history-entry:${entry.id}'),
+                                onTap: () => Navigator.of(dialogContext).pop(entry),
+                                color: colors.panel2,
+                                hoverColor: colors.panel3,
+                                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 7),
+                                child: Column(
+                                  crossAxisAlignment: CrossAxisAlignment.start,
+                                  children: [
+                                    Text(
+                                      entry.sql.replaceAll('\n', ' '),
+                                      maxLines: 2,
+                                      overflow: TextOverflow.ellipsis,
+                                      style: typo.mono.copyWith(fontSize: 11, color: colors.text2),
+                                    ),
+                                    const SizedBox(height: 3),
+                                    Text(
+                                      '${entry.connName} · ${entry.timestamp.toLocal()}',
+                                      style: typo.label.copyWith(fontSize: 10, color: colors.text3),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
+                          ),
+                  ),
+                ],
+              ),
+            ),
+            actions: [
+              TextButton(
+                onPressed: () => Navigator.of(dialogContext).pop(),
+                child: const Text('Close'),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+    search.dispose();
+    if (selected == null || !mounted) return;
+    _sql.text = selected.sql;
+    _focus.requestFocus();
   }
 
   Future<void> _pickConnection(BuildContext anchor) async {
@@ -577,8 +800,41 @@ class _DbQueryViewState extends State<DbQueryView> {
               ),
             ),
           ],
+          HoverTap(
+            key: const ValueKey('db-query-history-button'),
+            onTap: _running || _updating ? null : _showQueryHistory,
+            color: colors.panel3,
+            borderRadius: const BorderRadius.all(Radius.circular(5)),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.history, size: 13, color: colors.text2),
+                const SizedBox(width: 4),
+                Text('History', style: typo.label.copyWith(fontSize: 11, color: colors.text2)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
+          HoverTap(
+            key: const ValueKey('db-query-explain-button'),
+            onTap: _running || _updating || _connName == null ? null : _explain,
+            color: colors.panel3,
+            borderRadius: const BorderRadius.all(Radius.circular(5)),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(Icons.account_tree_outlined, size: 13, color: colors.text2),
+                const SizedBox(width: 4),
+                Text('Explain', style: typo.label.copyWith(fontSize: 11, color: colors.text2)),
+              ],
+            ),
+          ),
+          const SizedBox(width: 6),
           const Spacer(),
           HoverTap(
+            key: const ValueKey('db-query-run-button'),
             onTap: _running || _updating || _connName == null ? null : _run,
             color: runBg,
             hoverColor: colors.accent.withValues(alpha: 0.85),

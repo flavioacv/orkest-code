@@ -34,8 +34,8 @@ enum DbEngine {
     DbEngine.mongo => 27017,
   };
 
-  /// Engines SQL (query tabular + `.dbq` + árvore de schema no painel). Os
-  /// não-SQL (Redis/Mongo) são **CLI-only** por ora — sem tab nem browse.
+  /// Engines SQL (query tabular + `.dbq` + árvore de schema no painel).
+  /// Redis/Mongo têm painéis próprios de navegação, sem console `.dbq` SQL.
   bool get isSql => switch (this) {
     DbEngine.sqlite ||
     DbEngine.postgres ||

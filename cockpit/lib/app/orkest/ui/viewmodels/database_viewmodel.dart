@@ -9,7 +9,9 @@ import 'package:orkest_code/app/orkest/domain/contracts/db_connection_store.dart
 import 'package:orkest_code/app/orkest/domain/contracts/remote_db_writer.dart';
 import 'package:orkest_code/app/orkest/domain/db_schema_sql.dart';
 import 'package:orkest_code/app/orkest/domain/entities/db_connection.dart';
+import 'package:orkest_code/app/orkest/domain/entities/db_query_history_entry.dart';
 import 'package:orkest_code/app/orkest/domain/entities/db_result.dart';
+import 'package:orkest_code/app/orkest/domain/services/db_query_history_service.dart';
 import 'package:orkest_code/app/orkest/domain/entities/db_schema_entities.dart';
 import 'package:orkest_code/app/orkest/domain/services/db_ddl_generator.dart';
 import 'package:flutter/foundation.dart';
@@ -118,6 +120,52 @@ class DatabaseViewModel extends ChangeNotifier {
 
   List<DbConnection> get connections => _connections;
   String? get workspaceRoot => _workspaceRoot;
+
+  final _queryHistoryByWorkspace = <String, DbQueryHistoryService>{};
+
+  DbQueryHistoryService _queryHistoryFor(String workspaceId) =>
+      _queryHistoryByWorkspace.putIfAbsent(
+        workspaceId,
+        DbQueryHistoryService.new,
+      );
+
+  /// Consultas recentes em memória, isoladas por workspace e conexão.
+  List<DbQueryHistoryEntry> queryHistory({
+    required String workspaceId,
+    String? connName,
+    String? search,
+  }) =>
+      _queryHistoryFor(workspaceId).entries(
+        connName: connName,
+        search: search,
+      );
+
+  /// Registra uma execução sem persistir SQL no arquivo de conexões.
+  DbQueryHistoryEntry recordQueryHistory({
+    required String workspaceId,
+    required String connName,
+    required String sql,
+    required Duration elapsed,
+    int rowCount = 0,
+    int? affectedRows,
+    String? error,
+  }) {
+    final entry = _queryHistoryFor(workspaceId).record(
+      connName: connName,
+      sql: sql,
+      elapsed: elapsed,
+      rowCount: rowCount,
+      affectedRows: affectedRows,
+      error: error,
+    );
+    if (!_disposed && workspaceId == _workspaceId) notifyListeners();
+    return entry;
+  }
+
+  void clearQueryHistory({required String workspaceId, String? connName}) {
+    _queryHistoryFor(workspaceId).clear(connName: connName);
+    if (!_disposed && workspaceId == _workspaceId) notifyListeners();
+  }
 
   /// Side-car de estado de view por tab `.dbq` (chave = session id). Cap
   /// simples por inserção — tab fechada some do mapa quando ele gira.

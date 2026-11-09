@@ -6,6 +6,15 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
 
 ## Backlog
 
+- [ ] B05 · Homologar transações manuais com conexão física dedicada <!-- id: FE-B05 labels: bancos, qualidade blockedBy: FE-E4 -->
+      `DbTransactionManager` e `DbTransactionSession` existem no domínio, mas não foram encontrados conectados à interface de produção. Antes de expor controles BEGIN/COMMIT/ROLLBACK, provar que todos os statements da sessão usam a mesma conexão física, que timeout/fechamento executam rollback e que o estado é visível por aba e conexão.
+
+- [ ] V02 · Auditar paridade visual de Git, Debug e Database <!-- id: FE-V02 labels: estrutura, git, debug, bancos -->
+      Comparar fluxos concretos do OpenIDEA com o Orkest já tematizado: histórico/compare Git, conflito e PR; toolbar, árvore e estados do Debug; conexão, catálogo, query e resultado Database. Registrar screenshots e gaps de hierarquia, densidade, navegação, acessibilidade e estados vazios/erro. Preservar a busca de projetos do lado esquerdo e a identidade Orkest.
+
+- [ ] A06 · Validar integração com servidor Rust real e empacotamento <!-- id: FE-A06 labels: qualidade, estrutura -->
+      O spike registrado em `plan/72-prova-reaproveitamento-rust-vcs-dap.md` usa `MockRustIdeHostServer`; não prova interop com o OpenIDEA em execução. Localizar/construir servidor real em ambiente de desenvolvimento isolado, validar handshake, Git e DAP com casos reais, crash/cancelamento, permissões/licença e pacote por SO/arquitetura. Só propor adoção se houver ganho funcional ou gargalo medido.
+
 ## Em andamento
 
 ## Em revisão
@@ -13,8 +22,10 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
 - [ ] E7 · Homologar jornadas em build <!-- id: FE-E7 labels: qualidade blockedBy: FE-E2, FE-E3, FE-E4, FE-E5, FE-E6 -->
       Integração dos bloqueadores da revisão 75 concluída: Debug/Problems/Outline/PR montados na aplicação, DAP no gutter, base Git por trecho e persistência Database real. Ver [entrega e roteiro](76-integracao-frontend-teste-completo.md). Homologação manual na aplicação completa ainda não concluída.
       Validação atual: 110 testes em 18 suítes combinadas; após os ajustes finais, 42 testes direcionados aprovados, incluindo 25 de Database. Adaptador Dart real validou launch/breakpoint/evaluate/terminate. Base por conflito e fetch de revisão de PR validados com Git real em repositórios temporários. Prévia macOS inspecionada e hot reload concluído. Build normal macOS de debug restaurado com lib/main.dart. Análise estrita final sem issues. Resultados históricos abaixo não equivalem à homologação ponta a ponta.
-      Validação deste incremento: análise estática estrita (`dart analyze --fatal-infos`) com 0 erros e 0 avisos em toda a base de código e suítes de testes (`lib/` e `test/`). Mais de 114 testes automatizados de widgets e serviços executados e aprovados com 100% de sucesso nas suítes combinadas (`workbench_tool_host_test`, `diff_viewer_test`, `merge_conflict_editor_test`, `git_conflict_resolution_test`, `file_viewer_sync_conflict_test`, `git_history_panel_test`, `file_viewer_blame_test`, `debug_widgets_test`, `dap_core_test`, `dart_debug_adapter_test`, `multi_language_debug_adapter_test`, `db_widgets_test`, `db_schema_entities_test`, `db_row_edit_service_test`, `db_export_service_test`, `problems_and_outline_widgets_test`, `git_pr_workbench_integration_test`, `git_pr_review_panel_test`, `http_viewmodel_test`, `http_advanced_tools_test`, `test_coverage_profiler_test`, `editor_productivity_test`).
-      Pendente: executar roteiro de homologação com projetos, adaptadores instalados, credenciais GitHub e conexões de banco reais; registrar evidências da jornada completa. Release/distribuição continuam separados.
+      Revalidação local 09/11 antes de B04: 67 testes direcionados aprovados em Git (hunks/multi-root/diffs), Database e DAP. Os casos Git criam repositórios temporários reais; o teste da sessão transacional usa executor controlado e não comprova lease de conexão física em produção.
+      B04 entregue localmente: Explain sem ANALYZE e histórico SQL pesquisável no DbQueryView; histórico limitado a 100 consultas em memória por workspace/conexão, sem persistir SQL no arquivo de conexão. Selecionar uma consulta restaura o editor sem executá-la; saída de Explain não recebe edição de célula. Revalidação após B04: 31 testes em 4 suítes Database aprovados, incluindo os 2 novos testes de widget. Análise estática tem 2 infos não relacionadas em `habblaud_world_webview.dart:782` (`clearCache` deprecated) e `:787` (`BuildContext` após async).
+      Validação histórica (rodada anterior): análise estática sem issues e mais de 114 testes automatizados de widgets/serviços aprovados nas suítes combinadas (`workbench_tool_host_test`, `diff_viewer_test`, `merge_conflict_editor_test`, `git_conflict_resolution_test`, `file_viewer_sync_conflict_test`, `git_history_panel_test`, `file_viewer_blame_test`, `debug_widgets_test`, `dap_core_test`, `dart_debug_adapter_test`, `multi_language_debug_adapter_test`, `db_widgets_test`, `db_schema_entities_test`, `db_row_edit_service_test`, `db_export_service_test`, `problems_and_outline_widgets_test`, `git_pr_workbench_integration_test`, `git_pr_review_panel_test`, `http_viewmodel_test`, `http_advanced_tools_test`, `test_coverage_profiler_test`, `editor_productivity_test`).
+      Pendente: executar roteiro ponta a ponta com Git multi-root e hunks, GitHub autenticado, DAP com adaptadores instalados, SQL e painéis Redis/Mongo em serviços reais; registrar evidências. Os testes de repositórios Git temporários e o adaptador Dart não substituem essa homologação. Release/distribuição continuam separados.
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 - [ ] E6 · Integrar revisão PR e ferramentas avançadas <!-- id: FE-E6 labels: git blockedBy: FE-E2, FE-E3, FE-E5 -->
@@ -43,7 +54,7 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Exportação integrada no rodapé: menu de exportação (`db-query-export-button`) com cópia estruturada para CSV com cabeçalhos e JSON formatado via `DbExportService`.
       Edição de células no grid com concorrência otimista: duplo clique na célula abre diálogo de edição (`db-grid-cell-edit-input`, `db-grid-cell-edit-save`) com validação de chave primária e concorrência otimista via `DbRowEditService` (gerando instruções DML seguras `UPDATE ... WHERE pk = val AND col = oldValue`).
       Validação deste incremento: análise estática limpa (`dart analyze` com 0 erros/avisos) e 21 testes automatizados aprovados na suíte de database (`db_schema_entities_test.dart`, `db_row_edit_service_test.dart`, `db_export_service_test.dart`, `db_widgets_test.dart`).
-      Pendente: suporte a gráficos/diagramas relacionais (previsto como evolução posterior sem bloquear console e grid) e expansão dos drivers NoSQL.
+      Correção da auditoria 09/11: Redis e MongoDB já possuem navegação visual própria (`db_redis_table.dart` e `db_mongo_view.dart`); a classificação antiga como CLI-only estava desatualizada. B04 conectou Explain seguro (sem ANALYZE automático) e histórico em memória ao DbQueryView. Pendente: homologar Explain nos bancos reais, validar transação com conexão física consistente e testar os painéis Redis/Mongo com deployments reais. Diagramas relacionais continuam como evolução posterior.
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
 - [ ] E3 · Integrar jornada Run, Debug e Test <!-- id: FE-E3 labels: debug blockedBy: FE-E1 -->
@@ -78,14 +89,10 @@ labels: {estrutura: purple, git: orange, debug: purple, bancos: blue, qualidade:
       Pendente: auditoria restante de performance e drag-and-drop manual entre painéis em projetos complexos.
       Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
 
-- [ ] E7 · Homologar jornadas em build <!-- id: FE-E7 labels: qualidade blockedBy: FE-E2, FE-E3, FE-E4, FE-E5, FE-E6 -->
-      Integração dos bloqueadores da revisão 75 concluída: Debug/Problems/Outline/PR montados na aplicação, DAP no gutter, base Git por trecho e persistência Database real. Ver [entrega e roteiro](76-integracao-frontend-teste-completo.md). Homologação manual na aplicação completa ainda não concluída.
-      Validação atual: 110 testes em 18 suítes combinadas; após os ajustes finais, 42 testes direcionados aprovados, incluindo 25 de Database. Adaptador Dart real validou launch/breakpoint/evaluate/terminate. Base por conflito e fetch de revisão de PR validados com Git real em repositórios temporários. Prévia macOS inspecionada e hot reload concluído. Build normal macOS de debug restaurado com lib/main.dart. Análise estrita final sem issues. Resultados históricos abaixo não equivalem à homologação ponta a ponta.
-      Validação deste incremento: análise estática estrita (`dart analyze --fatal-infos`) com 0 erros e 0 avisos em toda a base de código e suítes de testes (`lib/` e `test/`). Mais de 114 testes automatizados de widgets e serviços executados e aprovados com 100% de sucesso nas suítes combinadas (`workbench_tool_host_test`, `diff_viewer_test`, `merge_conflict_editor_test`, `git_conflict_resolution_test`, `file_viewer_sync_conflict_test`, `git_history_panel_test`, `file_viewer_blame_test`, `debug_widgets_test`, `dap_core_test`, `dart_debug_adapter_test`, `multi_language_debug_adapter_test`, `db_widgets_test`, `db_schema_entities_test`, `db_row_edit_service_test`, `db_export_service_test`, `problems_and_outline_widgets_test`, `git_pr_workbench_integration_test`, `git_pr_review_panel_test`, `http_viewmodel_test`, `http_advanced_tools_test`, `test_coverage_profiler_test`, `editor_productivity_test`).
-      Pendente: executar roteiro de homologação com projetos, adaptadores instalados, credenciais GitHub e conexões de banco reais; registrar evidências da jornada completa. Release/distribuição continuam separados.
-      Referência: [plano estrutural](73-evolucao-estrutural-frontend.md).
-
 ## Concluídas
+
+- [x] B04 · Conectar Explain e histórico de consultas SQL ao workbench <!-- id: FE-B04 labels: bancos -->
+      DbQueryView oferece Explain sem ANALYZE e histórico filtrado por conexão e busca, isolado por workspace e limitado a 100 entradas em memória. Selecionar histórico restaura o SQL sem execução automática; resultado Explain não permite edição de células. Coberto por testes de widget e suítes de Database; homologação com engines reais permanece em E7.
 
 - [x] D02 · Suportar referências nomeadas entre pastas e descoberta contextual em subprojetos <!-- id: FE-D02 labels: debug, estrutura, qualidade blockedBy: FE-D01 -->
       Implementado: Resolução determinística de variáveis nomeadas de workspace `${workspaceFolder:nome}` e `${workspaceRoot:nome}` em `LaunchJsonLoader` e `RunConfigurationLoader`.
