@@ -40,6 +40,11 @@ int _resolveColorArgb(CellColor color, Uint32List palette, int defaultArgb) {
     foreground = (state.faintAlpha << 24) | (foreground & 0x00FFFFFF);
   }
 
+  if (style.inverse || style.background is! DefaultColor) {
+    background = state.backgroundContrast
+        .resolve(Color(background), Color(state.terminalBackgroundArgb))
+        .toARGB32();
+  }
   foreground = state.foregroundContrast
       .resolve(Color(foreground), Color(background))
       .toARGB32();

@@ -20,6 +20,9 @@ class TerminalPainter {
   late var _foregroundContrast = TerminalForegroundContrast(
     minimumRatio: _theme.background.computeLuminance() > .5 ? 4.5 : 1,
   );
+  late var _backgroundContrast = TerminalForegroundContrast(
+    minimumRatio: _theme.background.computeLuminance() > .5 ? 1.5 : 1,
+  );
 
   /// Size of each character in the terminal.
   late var _cellSize = _measureCharSize();
@@ -54,6 +57,9 @@ class TerminalPainter {
     _theme = value;
     _foregroundContrast = TerminalForegroundContrast(
       minimumRatio: value.background.computeLuminance() > .5 ? 4.5 : 1,
+    );
+    _backgroundContrast = TerminalForegroundContrast(
+      minimumRatio: value.background.computeLuminance() > .5 ? 1.5 : 1,
     );
     _colorPalette = PaletteBuilder(value).build();
     _paragraphCache.clear();
@@ -233,27 +239,31 @@ class TerminalPainter {
     if (cellFlags & CellFlags.faint != 0) {
       color = color.withValues(alpha: 0.5);
     }
-    final background = cellFlags & CellFlags.inverse == 0
-        ? resolveBackgroundColor(cellData.background)
-        : resolveForegroundColor(cellData.foreground);
+    final background = _resolveCellBackground(cellData);
     return _foregroundContrast.resolve(color, background);
+  }
+
+  Color _resolveCellBackground(CellData cellData) {
+    final inverse = cellData.flags & CellFlags.inverse != 0;
+    if (!inverse &&
+        cellData.background & CellColor.typeMask == CellColor.normal) {
+      return _theme.background;
+    }
+    final raw = inverse
+        ? resolveForegroundColor(cellData.foreground)
+        : resolveBackgroundColor(cellData.background);
+    return _backgroundContrast.resolve(raw, _theme.background);
   }
 
   /// Paints the background of a cell represented by [cellData] to [canvas] at
   /// [offset].
   @pragma('vm:prefer-inline')
   void paintCellBackground(Canvas canvas, Offset offset, CellData cellData) {
-    late Color color;
-    final colorType = cellData.background & CellColor.typeMask;
-
-    if (cellData.flags & CellFlags.inverse != 0) {
-      color = resolveForegroundColor(cellData.foreground);
-    } else if (colorType == CellColor.normal) {
+    if (cellData.flags & CellFlags.inverse == 0 &&
+        cellData.background & CellColor.typeMask == CellColor.normal) {
       return;
-    } else {
-      color = resolveBackgroundColor(cellData.background);
     }
-
+    final color = _resolveCellBackground(cellData);
     final paint = Paint()..color = color;
     final doubleWidth = cellData.content >> CellContent.widthShift == 2;
     final widthScale = doubleWidth ? 2 : 1;

@@ -9,7 +9,7 @@ import 'package:orkest_code/app/core/ui/themes/color_contrast.dart';
 
 void main() {
   testWidgets(
-    'Ghostty paints RGB and default white text legibly on a light surface',
+    'Ghostty preserves agent glyphs and distinguishes explicit logo/input backgrounds',
     (tester) async {
       final controller = ghost.TerminalController();
       final boundary = GlobalKey();
@@ -32,11 +32,14 @@ void main() {
         ),
       );
       await tester.pumpAndSettle();
-      for (final prefix in [
-        '\x1b[38;2;255;255;255m',
-        '\x1b]10;#ffffff\x07\x1b[0m',
+      for (final (content, minimum) in [
+        ('\x1b[38;2;255;255;255m█', 4.5),
+        ('\x1b]10;#ffffff\x07\x1b[0m█', 4.5),
+        ('\x1b[0m\x1b[48;2;250;250;250m ', 1.5),
+        ('\x1b[0m\x1b[48;5;255m ', 1.5),
+        ('\x1b[0m\x1b[48;2;255;255;170m ', 1.5),
       ]) {
-        controller.write(utf8.encode('\x1b[H\x1b[2J$prefix█\x1b[?25l'));
+        controller.write(utf8.encode('\x1b[0m\x1b[H\x1b[2J$content\x1b[?25l'));
         await tester.pumpAndSettle();
         final pixel = await tester.runAsync(() async {
           final render =
@@ -58,7 +61,7 @@ void main() {
         });
         expect(
           contrastRatio(pixel!, ghost.TerminalTheme.light().background),
-          greaterThanOrEqualTo(4.5),
+          greaterThanOrEqualTo(minimum),
         );
       }
       await tester.pumpWidget(const SizedBox.shrink());

@@ -20,6 +20,9 @@ final class PaintState {
   late var foregroundContrast = TerminalForegroundContrast(
     minimumRatio: theme.minimumContrast,
   );
+  late var backgroundContrast = TerminalForegroundContrast(
+    minimumRatio: theme.minimumContrast > 1 ? 1.5 : 1,
+  );
   CellMetrics metrics;
 
   var rows = 0;
@@ -63,6 +66,9 @@ final class PaintState {
     theme = newTheme;
     foregroundContrast = TerminalForegroundContrast(
       minimumRatio: newTheme.minimumContrast,
+    );
+    backgroundContrast = TerminalForegroundContrast(
+      minimumRatio: newTheme.minimumContrast > 1 ? 1.5 : 1,
     );
     faintAlpha = (newTheme.faintOpacity * 255).ceil();
     _updateThemePalette();
