@@ -103,6 +103,7 @@ class _Translations$orkest$es extends Translations$orkest$en {
 	final TranslationsEs _root; // ignore: unused_field
 
 	// Translations
+	@override late final _Translations$orkest$gitDesktop$es gitDesktop = _Translations$orkest$gitDesktop$es._(_root);
 	@override late final _Translations$orkest$gitBranches$es gitBranches = _Translations$orkest$gitBranches$es._(_root);
 	@override late final _Translations$orkest$gitEvolution$es gitEvolution = _Translations$orkest$gitEvolution$es._(_root);
 	@override late final _Translations$orkest$officeWorld$es officeWorld = _Translations$orkest$officeWorld$es._(_root);
@@ -306,6 +307,35 @@ class _Translations$core$menu$es extends Translations$core$menu$en {
 	@override String get quit => 'Salir';
 	@override String get minimize => 'Minimizar';
 	@override String get zoom => 'Zoom';
+}
+
+// Path: orkest.gitDesktop
+class _Translations$orkest$gitDesktop$es extends Translations$orkest$gitDesktop$en {
+	_Translations$orkest$gitDesktop$es._(TranslationsEs root) : this._root = root, super.internal(root);
+
+	final TranslationsEs _root; // ignore: unused_field
+
+	// Translations
+	@override String get log => 'Log';
+	@override String get console => 'Consola';
+	@override String get worktrees => 'Worktrees';
+	@override String get filters => 'Filtros del historial';
+	@override String get author => 'Autor';
+	@override String get date => 'Fecha';
+	@override String get anyDate => 'Cualquier fecha';
+	@override String lastDays({required Object count}) => 'Últimos ${count} días';
+	@override String get apply => 'Aplicar';
+	@override String get selectCommit => 'Selecciona un commit para ver los cambios';
+	@override String get head => 'HEAD (Rama actual)';
+	@override String get tags => 'Tags';
+	@override String get branchOrTag => 'Rama o tag';
+	@override String get clearConsole => 'Limpiar consola';
+	@override String get consoleEmpty => 'Las operaciones Git de esta interfaz aparecerán aquí.';
+	@override String get running => 'Ejecutando…';
+	@override String exitCode({required Object code}) => 'Salida ${code}';
+	@override String get worktreesEmpty => 'No hay worktrees vinculados en este repositorio.';
+	@override String get openWorktree => 'Abrir worktree';
+	@override String loadError({required Object detail}) => 'No se pudo cargar: ${detail}';
 }
 
 // Path: orkest.gitBranches
@@ -2267,6 +2297,26 @@ extension on TranslationsEs {
 			'common.copyCode' => 'Copiar código',
 			'common.search' => 'Buscar',
 			'common.noResults' => 'Sin resultados',
+			'orkest.gitDesktop.log' => 'Log',
+			'orkest.gitDesktop.console' => 'Consola',
+			'orkest.gitDesktop.worktrees' => 'Worktrees',
+			'orkest.gitDesktop.filters' => 'Filtros del historial',
+			'orkest.gitDesktop.author' => 'Autor',
+			'orkest.gitDesktop.date' => 'Fecha',
+			'orkest.gitDesktop.anyDate' => 'Cualquier fecha',
+			'orkest.gitDesktop.lastDays' => ({required Object count}) => 'Últimos ${count} días',
+			'orkest.gitDesktop.apply' => 'Aplicar',
+			'orkest.gitDesktop.selectCommit' => 'Selecciona un commit para ver los cambios',
+			'orkest.gitDesktop.head' => 'HEAD (Rama actual)',
+			'orkest.gitDesktop.tags' => 'Tags',
+			'orkest.gitDesktop.branchOrTag' => 'Rama o tag',
+			'orkest.gitDesktop.clearConsole' => 'Limpiar consola',
+			'orkest.gitDesktop.consoleEmpty' => 'Las operaciones Git de esta interfaz aparecerán aquí.',
+			'orkest.gitDesktop.running' => 'Ejecutando…',
+			'orkest.gitDesktop.exitCode' => ({required Object code}) => 'Salida ${code}',
+			'orkest.gitDesktop.worktreesEmpty' => 'No hay worktrees vinculados en este repositorio.',
+			'orkest.gitDesktop.openWorktree' => 'Abrir worktree',
+			'orkest.gitDesktop.loadError' => ({required Object detail}) => 'No se pudo cargar: ${detail}',
 			'orkest.gitBranches.fetchFailed' => ({required Object detail}) => 'No se pudieron obtener las referencias remotas: ${detail}',
 			'orkest.gitBranches.current' => 'Rama actual',
 			'orkest.gitBranches.local' => 'Ramas locales',
@@ -2678,6 +2728,8 @@ extension on TranslationsEs {
 			'orkest.fileTreePanel.branchMenu' => 'Rama',
 			'orkest.fileTreePanel.mergeBranch' => 'Fusionar rama…',
 			'orkest.fileTreePanel.rebaseBranch' => 'Rebase de rama…',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.fileTreePanel.renameBranch' => 'Renombrar rama…',
 			'orkest.fileTreePanel.deleteBranch' => 'Eliminar rama…',
 			'orkest.fileTreePanel.publishBranch' => 'Publicar rama',
@@ -2698,8 +2750,6 @@ extension on TranslationsEs {
 			'orkest.fileTreePanel.diffNextChange' => 'Siguiente cambio (Alt+↓)',
 			'orkest.fileTreePanel.diffPreviousChange' => 'Cambio anterior (Alt+↑)',
 			'orkest.fileTreePanel.diffOverview' => 'Ir al inicio del diff',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.fileTreePanel.diffUnified' => 'Diff unificado',
 			'orkest.fileTreePanel.diffSplit' => 'Diff lado a lado',
 			'orkest.fileTreePanel.diffBinaryFile' => 'Archivo binario - sin diff de texto.',
@@ -3192,6 +3242,8 @@ extension on TranslationsEs {
 			'orkest.telemetry.blameUncommitted' => 'cambiado en el working tree',
 			'orkest.telemetry.blameCommit' => ({required Object ago, required Object sha}) => 'cambiado ${ago} (${sha})',
 			'orkest.telemetry.justNow' => 'ahora',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.telemetry.minutesAgo' => ({required Object n}) => 'hace ${n} min',
 			'orkest.telemetry.hoursAgo' => ({required Object n}) => 'hace ${n} h',
 			'orkest.telemetry.daysAgo' => ({required Object n}) => 'hace ${n} d',
@@ -3212,8 +3264,6 @@ extension on TranslationsEs {
 			'settings.language.portugueseBr' => 'Portugués (BR)',
 			'settings.language.spanish' => 'Español',
 			'settings.page.header.back' => 'Atrás',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.header.title' => 'Configuración',
 			'settings.page.nav.general' => 'General',
 			'settings.page.nav.appearance' => 'Apariencia',

@@ -99,6 +99,28 @@
     "noResults": "Sin resultados"
   },
   "orkest": {
+    "gitDesktop": {
+      "log": "Log",
+      "console": "Consola",
+      "worktrees": "Worktrees",
+      "filters": "Filtros del historial",
+      "author": "Autor",
+      "date": "Fecha",
+      "anyDate": "Cualquier fecha",
+      "lastDays": "Últimos $count días",
+      "apply": "Aplicar",
+      "selectCommit": "Selecciona un commit para ver los cambios",
+      "head": "HEAD (Rama actual)",
+      "tags": "Tags",
+      "branchOrTag": "Rama o tag",
+      "clearConsole": "Limpiar consola",
+      "consoleEmpty": "Las operaciones Git de esta interfaz aparecerán aquí.",
+      "running": "Ejecutando…",
+      "exitCode": "Salida $code",
+      "worktreesEmpty": "No hay worktrees vinculados en este repositorio.",
+      "openWorktree": "Abrir worktree",
+      "loadError": "No se pudo cargar: $detail"
+    },
     "gitBranches": {
       "fetchFailed": "No se pudieron obtener las referencias remotas: $detail",
       "current": "Rama actual",

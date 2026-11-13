@@ -8,6 +8,7 @@ class GitHistoryQuery {
     this.query,
     this.revisionRange,
     this.all = false,
+    this.since,
   });
 
   /// Quantidade máxima de commits a retornar por página.
@@ -31,6 +32,7 @@ class GitHistoryQuery {
 
   /// Se verdadeiro, lista commits de todas as branches e tags (`--all`).
   final bool all;
+  final DateTime? since;
 
   /// Gera os argumentos correspondentes da linha de comando Git.
   List<String> toGitArgs() {
@@ -41,6 +43,7 @@ class GitHistoryQuery {
       if (author != null && author!.isNotEmpty) '--author=$author',
       if (query != null && query!.isNotEmpty) '--grep=$query',
       if (all) '--all',
+      if (since != null) '--since=${since!.toUtc().toIso8601String()}',
       if (revisionRange != null && revisionRange!.isNotEmpty) revisionRange!,
       if (filePath != null && filePath!.isNotEmpty) ...['--follow', '--', filePath!],
     ];

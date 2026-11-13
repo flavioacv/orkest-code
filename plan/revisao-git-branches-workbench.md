@@ -45,3 +45,17 @@ Cobertura nova: atualização manual/periódica da lista; origem da criação se
 Análise estática dos arquivos alterados com `--fatal-infos` sem issues; `git diff --check` limpo. Build macOS e inicialização realizados. A primeira recarga incremental manteve definições anteriores do enum/traduções; após invalidar os timestamps desses arquivos, hot restart e hot reload concluíram com sucesso. A consulta de runtime após a recarga não encontrou erros. Não foi executado E2E completo por automação da interface desktop; os fluxos interativos foram verificados por testes de widget e Git real em diretórios temporários.
 
 Nenhuma dependência adicionada. Sem push, PR ou merge em main nesta revisão.
+
+## Evolução aprovada a partir da referência visual do OpenIDE
+
+O painel passou a oferecer as abas Log, Console e Worktrees. O Log mantém a árvore de referências à esquerda, o grafo no centro e a área de detalhes à direita, inclusive antes da seleção de um commit. As divisórias permitem redimensionar as colunas. Branches remotas e nomes com prefixos aparecem em pastas recolhíveis; HEAD e tags podem restringir o histórico.
+
+Filtros de autor e período são enviados à consulta Git, com chips removíveis. A busca textual continua filtrando a janela de commits carregada. Aba, referência, busca, autor, período, commit selecionado, colunas e pastas recolhidas são salvos no layout existente do workspace. O dock mantém as ferramentas visitadas montadas quando fechado ou quando outra aba é selecionada; ferramentas ocultas suspendem polling e foco.
+
+O Console registra as operações iniciadas por `GitController.run`, `sync` e `collect`, preservando a saída entregue aos consumidores. Consultas de leitura via `output` não poluem o console. Há limite de 60 operações e 500 linhas por operação, remoção de credenciais de URLs HTTP(S) e limpeza por repositório. Os registros ficam em memória; não representam um terminal de execução arbitrária.
+
+Worktrees reutiliza o gerenciador existente para listar worktrees vinculadas, abrir um projeto já cadastrado ou adicionar sua pasta, e acionar o fluxo existente de criação. A listagem rejeita resultados atrasados de outra raiz. O contrato legado do gerenciador retorna lista vazia quando indisponível; não foi alterado nesta entrega. Escrita de branches e Worktrees continua desabilitada no histórico SSH.
+
+Validação adicional: testes de serialização e dados malformados, filtros enviados ao backend, detalhes vazios, redimensionamento persistido, resposta atrasada de Worktrees, captura e redação do Console, árvore recolhida com busca e tags, e retenção de entrada ao alternar/recolher o dock. Regressão dos controladores, histórico e editor de conflitos executada. Build macOS debug e hot reload concluídos; consulta do runtime sem erros. Automação desktop indisponível neste entrypoint (sem extensão Flutter Driver/Marionette); não foi alegado E2E completo.
+
+Continuam fora do escopo favoritos, paginação adicional e alteração automática da política de pull. A organização visual não altera a estratégia de integração configurada no Git.

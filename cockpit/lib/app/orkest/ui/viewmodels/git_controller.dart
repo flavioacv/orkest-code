@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/orkest/domain/entities/git_command_log.dart';
 import 'dart:async';
 import 'dart:collection';
 import 'dart:io'
@@ -244,8 +245,14 @@ class GitController extends ChangeNotifier {
   // ---- comandos -------------------------------------------------------------
 
   /// Sync = `git pull` e, se OK, `git push` no repo em [repoPath]. Stream ao vivo.
-  GitRun sync(String repoPath) =>
-      _observeRun(repoPath, _runner.syncPullPush(repoPath));
+  GitRun sync(String repoPath) => _observeRun(
+    repoPath,
+    _loggedRun(repoPath, const [
+      'pull',
+      '→',
+      'push',
+    ], () => _runner.syncPullPush(repoPath)),
+  );
 
   /// `git pull` no repo em [repoPath].
   GitRun pull(String repoPath) => run(repoPath, const ['pull']);
@@ -258,8 +265,106 @@ class GitController extends ChangeNotifier {
       run(repoPath, const ['fetch', '--all', '--prune']);
 
   /// Executa uma operação Git estruturada pela interface avançada.
-  GitRun run(String repoPath, List<String> args) =>
-      _observeRun(repoPath, _runner.run(repoPath, args));
+  GitRun run(String repoPath, List<String> args) => _observeRun(
+    repoPath,
+    _loggedRun(repoPath, args, () => _runner.run(repoPath, args)),
+  );
+
+  final List<GitCommandLog> _commandLogs = [];
+  int _nextCommandId = 0;
+  Timer? _consoleNotify;
+  List<GitCommandLog> get commandLogs => List.unmodifiable(_commandLogs);
+
+  void clearCommandLogs({String? root}) {
+    if (root == null) {
+      _commandLogs.clear();
+    } else {
+      _commandLogs.removeWhere((entry) => entry.root == root);
+    }
+    notifyListeners();
+  }
+
+  String _redactGitLog(String value) => value.replaceAllMapped(
+    RegExp(r'(https?://)[^/\s@]+@'),
+    (match) => '${match[1]}***@',
+  );
+
+  void _updateCommand(int id, GitCommandLog Function(GitCommandLog) update) {
+    if (_closed) return;
+    final index = _commandLogs.indexWhere((entry) => entry.id == id);
+    if (index < 0) return;
+    _commandLogs[index] = update(_commandLogs[index]);
+    _consoleNotify ??= Timer(const Duration(milliseconds: 100), () {
+      _consoleNotify = null;
+      if (!_closed) notifyListeners();
+    });
+  }
+
+  GitRun _loggedRun(String root, List<String> args, GitRun Function() start) {
+    final id = ++_nextCommandId;
+    if (_commandLogs.length >= 60) _commandLogs.removeAt(0);
+    _commandLogs.add(
+      GitCommandLog(
+        id: id,
+        root: root,
+        command: _redactGitLog('git ${args.join(' ')}'),
+        startedAt: DateTime.now(),
+      ),
+    );
+    final forwarded = StreamController<String>();
+    try {
+      final process = start();
+      process.output.listen(
+        (line) {
+          _updateCommand(
+            id,
+            (entry) => entry.copyWith(
+              lines: [
+                ...entry.lines.skip(entry.lines.length >= 500 ? 1 : 0),
+                _redactGitLog(line),
+              ],
+            ),
+          );
+          forwarded.add(line);
+        },
+        onError: (Object error, StackTrace stack) {
+          forwarded.addError(error, stack);
+        },
+        onDone: forwarded.close,
+      );
+      final completed = process.exitCode.then(
+        (code) {
+          _updateCommand(
+            id,
+            (entry) =>
+                entry.copyWith(exitCode: code, finishedAt: DateTime.now()),
+          );
+          return code;
+        },
+        onError: (Object error, StackTrace stack) {
+          _updateCommand(
+            id,
+            (entry) => entry.copyWith(
+              exitCode: -1,
+              finishedAt: DateTime.now(),
+              lines: [...entry.lines, _redactGitLog(error.toString())],
+            ),
+          );
+          return -1;
+        },
+      );
+      _updateCommand(id, (entry) => entry);
+      return GitRun(output: forwarded.stream, exitCode: completed);
+    } on Exception catch (error) {
+      forwarded.add(error.toString());
+      unawaited(forwarded.close());
+      _updateCommand(
+        id,
+        (entry) => entry.copyWith(exitCode: -1, finishedAt: DateTime.now()),
+      );
+      return GitRun(output: forwarded.stream, exitCode: Future.value(-1));
+    }
+  }
 
   GitRun _observeRun(String root, GitRun process) {
     // Refresh on completion, including conflicts, without waiting for the log dialog.
@@ -290,7 +395,7 @@ class GitController extends ChangeNotifier {
 
   /// Roda um git rápido e devolve `null` (exit 0) ou a saída como erro.
   Future<String?> collect(String root, List<String> args) async {
-    final run = _runner.run(root, args);
+    final run = _loggedRun(root, args, () => _runner.run(root, args));
     final lines = <String>[];
     final sub = run.output.listen(lines.add);
     final code = await run.exitCode;
@@ -1106,6 +1211,7 @@ class GitController extends ChangeNotifier {
   @override
   void dispose() {
     _closed = true;
+    _consoleNotify?.cancel();
     _activity.removeListener(_onActivityChanged);
     _cancelWatch();
     _gitPoll?.cancel();

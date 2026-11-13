@@ -151,6 +151,7 @@ class Translations$orkest$en {
 	final Translations _root; // ignore: unused_field
 
 	// Translations
+	late final Translations$orkest$gitDesktop$en gitDesktop = Translations$orkest$gitDesktop$en.internal(_root);
 	late final Translations$orkest$gitBranches$en gitBranches = Translations$orkest$gitBranches$en.internal(_root);
 	late final Translations$orkest$gitEvolution$en gitEvolution = Translations$orkest$gitEvolution$en.internal(_root);
 	late final Translations$orkest$officeWorld$en officeWorld = Translations$orkest$officeWorld$en.internal(_root);
@@ -470,6 +471,75 @@ class Translations$core$menu$en {
 
 	/// en: 'Zoom'
 	String get zoom => 'Zoom';
+}
+
+// Path: orkest.gitDesktop
+class Translations$orkest$gitDesktop$en {
+	Translations$orkest$gitDesktop$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Log'
+	String get log => 'Log';
+
+	/// en: 'Console'
+	String get console => 'Console';
+
+	/// en: 'Worktrees'
+	String get worktrees => 'Worktrees';
+
+	/// en: 'History filters'
+	String get filters => 'History filters';
+
+	/// en: 'Author'
+	String get author => 'Author';
+
+	/// en: 'Date'
+	String get date => 'Date';
+
+	/// en: 'Any date'
+	String get anyDate => 'Any date';
+
+	/// en: 'Last $count days'
+	String lastDays({required Object count}) => 'Last ${count} days';
+
+	/// en: 'Apply'
+	String get apply => 'Apply';
+
+	/// en: 'Select a commit to view changes'
+	String get selectCommit => 'Select a commit to view changes';
+
+	/// en: 'HEAD (Current branch)'
+	String get head => 'HEAD (Current branch)';
+
+	/// en: 'Tags'
+	String get tags => 'Tags';
+
+	/// en: 'Branch or tag'
+	String get branchOrTag => 'Branch or tag';
+
+	/// en: 'Clear console'
+	String get clearConsole => 'Clear console';
+
+	/// en: 'Git operations from this interface will appear here.'
+	String get consoleEmpty => 'Git operations from this interface will appear here.';
+
+	/// en: 'Running…'
+	String get running => 'Running…';
+
+	/// en: 'Exit $code'
+	String exitCode({required Object code}) => 'Exit ${code}';
+
+	/// en: 'No linked worktrees in this repository.'
+	String get worktreesEmpty => 'No linked worktrees in this repository.';
+
+	/// en: 'Open worktree'
+	String get openWorktree => 'Open worktree';
+
+	/// en: 'Could not load: $detail'
+	String loadError({required Object detail}) => 'Could not load: ${detail}';
 }
 
 // Path: orkest.gitBranches
@@ -4814,6 +4884,26 @@ extension on Translations {
 			'common.copyCode' => 'Copy code',
 			'common.search' => 'Search',
 			'common.noResults' => 'No results',
+			'orkest.gitDesktop.log' => 'Log',
+			'orkest.gitDesktop.console' => 'Console',
+			'orkest.gitDesktop.worktrees' => 'Worktrees',
+			'orkest.gitDesktop.filters' => 'History filters',
+			'orkest.gitDesktop.author' => 'Author',
+			'orkest.gitDesktop.date' => 'Date',
+			'orkest.gitDesktop.anyDate' => 'Any date',
+			'orkest.gitDesktop.lastDays' => ({required Object count}) => 'Last ${count} days',
+			'orkest.gitDesktop.apply' => 'Apply',
+			'orkest.gitDesktop.selectCommit' => 'Select a commit to view changes',
+			'orkest.gitDesktop.head' => 'HEAD (Current branch)',
+			'orkest.gitDesktop.tags' => 'Tags',
+			'orkest.gitDesktop.branchOrTag' => 'Branch or tag',
+			'orkest.gitDesktop.clearConsole' => 'Clear console',
+			'orkest.gitDesktop.consoleEmpty' => 'Git operations from this interface will appear here.',
+			'orkest.gitDesktop.running' => 'Running…',
+			'orkest.gitDesktop.exitCode' => ({required Object code}) => 'Exit ${code}',
+			'orkest.gitDesktop.worktreesEmpty' => 'No linked worktrees in this repository.',
+			'orkest.gitDesktop.openWorktree' => 'Open worktree',
+			'orkest.gitDesktop.loadError' => ({required Object detail}) => 'Could not load: ${detail}',
 			'orkest.gitBranches.fetchFailed' => ({required Object detail}) => 'Could not fetch remote references: ${detail}',
 			'orkest.gitBranches.current' => 'Current branch',
 			'orkest.gitBranches.local' => 'Local branches',
@@ -5225,6 +5315,8 @@ extension on Translations {
 			'orkest.fileTreePanel.branchMenu' => 'Branch',
 			'orkest.fileTreePanel.mergeBranch' => 'Merge branch…',
 			'orkest.fileTreePanel.rebaseBranch' => 'Rebase branch…',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.fileTreePanel.renameBranch' => 'Rename branch…',
 			'orkest.fileTreePanel.deleteBranch' => 'Delete branch…',
 			'orkest.fileTreePanel.publishBranch' => 'Publish branch',
@@ -5245,8 +5337,6 @@ extension on Translations {
 			'orkest.fileTreePanel.diffNextChange' => 'Next change (Alt+↓)',
 			'orkest.fileTreePanel.diffPreviousChange' => 'Previous change (Alt+↑)',
 			'orkest.fileTreePanel.diffOverview' => 'Go to start of diff',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.fileTreePanel.diffUnified' => 'Unified diff',
 			'orkest.fileTreePanel.diffSplit' => 'Side-by-side diff',
 			'orkest.fileTreePanel.diffBinaryFile' => 'Binary file - no text diff.',
@@ -5739,6 +5829,8 @@ extension on Translations {
 			'orkest.telemetry.blameUncommitted' => 'changed in working tree',
 			'orkest.telemetry.blameCommit' => ({required Object ago, required Object sha}) => 'changed ${ago} (${sha})',
 			'orkest.telemetry.justNow' => 'just now',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.telemetry.minutesAgo' => ({required Object n}) => '${n}m ago',
 			'orkest.telemetry.hoursAgo' => ({required Object n}) => '${n}h ago',
 			'orkest.telemetry.daysAgo' => ({required Object n}) => '${n}d ago',
@@ -5759,8 +5851,6 @@ extension on Translations {
 			'settings.language.portugueseBr' => 'Português (BR)',
 			'settings.language.spanish' => 'Español',
 			'settings.page.header.back' => 'Back',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.header.title' => 'Settings',
 			'settings.page.nav.general' => 'General',
 			'settings.page.nav.appearance' => 'Appearance',

@@ -2654,6 +2654,7 @@ class _WorkspaceGitHistoryPanel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final workspaceId = vm.selectedProjectId;
     final roots = [
       for (final r in vm.treeRoots)
         if (vm.gitInfoForRoot(r) != null)
@@ -2677,7 +2678,7 @@ class _WorkspaceGitHistoryPanel extends StatelessWidget {
     }
 
     return GitWorkbenchPanel(
-      key: ValueKey('git-log-${vm.selectedProjectId}'),
+      key: ValueKey('git-log-$workspaceId'),
       roots: roots,
       git: vm.selectedProject?.isRemoteTerminal == true ? null : vm.git,
       loadHistory: (root, ref) =>
@@ -2685,6 +2686,34 @@ class _WorkspaceGitHistoryPanel extends StatelessWidget {
       loadFiles: vm.loadGitHistoryFiles,
       onOpenFileDiff: vm.openCommitDiff,
       refreshToken: vm.git.revision,
+      initialState: vm.workbenchLayout(workspaceId!).gitView,
+      onStateChanged: (view) {
+        if (vm.selectedProjectId == workspaceId) {
+          vm.setWorkbenchLayout(
+            workspaceId,
+            vm.workbenchLayout(workspaceId).copyWith(gitView: view),
+          );
+        }
+      },
+      loadFilteredHistory: (root, query) => vm.loadGitHistory(
+        root,
+        all: query.all,
+        revision: query.revisionRange,
+        author: query.author,
+        since: query.since,
+      ),
+      loadWorktrees: vm.selectedProject?.isRemoteTerminal == true
+          ? null
+          : vm.listGitWorktrees,
+      onOpenWorktree: vm.selectedProject?.isRemoteTerminal == true
+          ? null
+          : vm.openGitWorktree,
+      onCreateWorktree: vm.selectedProject?.isRemoteTerminal == true
+          ? null
+          : (root) async {
+              final project = vm.selectedProject;
+              if (project != null) await createWorktree(context, project, root);
+            },
       historyBuilder: (_, root) => GitHistoryPanel(
         roots: roots.where((candidate) => candidate.path == root).toList(),
         loadHistory: vm.loadGitHistory,

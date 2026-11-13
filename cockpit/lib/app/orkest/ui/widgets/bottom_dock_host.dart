@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/orkest/ui/widgets/workbench_tool_host.dart';
 import 'package:flutter/material.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
 import 'package:orkest_code/app/core/ui/widgets/app_tooltip.dart';
@@ -50,12 +51,14 @@ class BottomDockHost extends StatefulWidget {
 
 class _BottomDockHostState extends State<BottomDockHost> {
   bool _isMaximized = false;
+  final Set<BottomDockTab> _visited = {};
   double _dragStartY = 0;
   double _initialHeight = 280;
 
   @override
   Widget build(BuildContext context) {
     final colors = context.colors;
+    if (widget.isOpen) _visited.add(widget.selectedTab);
     final currentHeight = _isMaximized
         ? (MediaQuery.of(context).size.height * 0.75).clamp(300.0, 800.0)
         : widget.height.clamp(140.0, 600.0);
@@ -73,179 +76,203 @@ class _BottomDockHostState extends State<BottomDockHost> {
         ),
       ),
       child: ClipRect(
-        child: widget.isOpen
-            ? Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  // Alça de Redimensionamento Superior
-                  MouseRegion(
-                    cursor: SystemMouseCursors.resizeUpDown,
-                    child: GestureDetector(
-                      behavior: HitTestBehavior.opaque,
-                      onVerticalDragStart: (details) {
-                        _dragStartY = details.globalPosition.dy;
-                        _initialHeight = widget.height;
-                      },
-                      onVerticalDragUpdate: (details) {
-                        final delta = _dragStartY - details.globalPosition.dy;
-                        widget.onHeightChanged?.call(_initialHeight + delta);
-                      },
-                      child: Container(
-                        height: 5,
-                        color: Colors.transparent,
+        child: OverflowBox(
+          alignment: Alignment.topCenter,
+          minHeight: currentHeight,
+          maxHeight: currentHeight,
+          child: ExcludeFocus(
+            excluding: !widget.isOpen,
+            child: IgnorePointer(
+              ignoring: !widget.isOpen,
+              child: TickerMode(
+                enabled: widget.isOpen,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    // Alça de Redimensionamento Superior
+                    MouseRegion(
+                      cursor: SystemMouseCursors.resizeUpDown,
+                      child: GestureDetector(
+                        behavior: HitTestBehavior.opaque,
+                        onVerticalDragStart: (details) {
+                          _dragStartY = details.globalPosition.dy;
+                          _initialHeight = widget.height;
+                        },
+                        onVerticalDragUpdate: (details) {
+                          final delta = _dragStartY - details.globalPosition.dy;
+                          widget.onHeightChanged?.call(_initialHeight + delta);
+                        },
+                        child: Container(height: 5, color: Colors.transparent),
                       ),
                     ),
-                  ),
 
-                  // Cabeçalho do Dock (Tabs estilo Open IDEA)
-                  Container(
-                    height: 32,
-                    padding: const EdgeInsets.symmetric(horizontal: 8),
-                    decoration: BoxDecoration(
-                      color: colors.panel2,
-                      border: Border(
-                        bottom: BorderSide(color: colors.border),
+                    // Cabeçalho do Dock (Tabs estilo Open IDEA)
+                    Container(
+                      height: 32,
+                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      decoration: BoxDecoration(
+                        color: colors.panel2,
+                        border: Border(
+                          bottom: BorderSide(color: colors.border),
+                        ),
                       ),
-                    ),
-                    child: Row(
-                      children: [
-                        for (final tab in BottomDockTab.values)
-                          Padding(
-                            padding: const EdgeInsets.only(right: 4),
-                            child: HoverTap(
-                              key: ValueKey('bottom-dock-tab-${tab.name}'),
-                              onTap: () => widget.onTabSelected(tab),
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 10,
-                                vertical: 4,
-                              ),
-                              borderRadius: BorderRadius.circular(4),
-                              color: widget.selectedTab == tab
-                                  ? colors.accent.withValues(alpha: 0.15)
-                                  : Colors.transparent,
-                              child: Row(
-                                mainAxisSize: MainAxisSize.min,
-                                children: [
-                                  Icon(
-                                    tab.icon,
-                                    size: 13,
-                                    color: widget.selectedTab == tab
-                                        ? (tab == BottomDockTab.debug && widget.isDebugging
-                                            ? colors.warn
-                                            : colors.accent)
-                                        : colors.text3,
-                                  ),
-                                  const SizedBox(width: 6),
-                                  Text(
-                                    tab.label,
-                                    style: context.typo.label.copyWith(
-                                      fontSize: 11,
-                                      fontWeight: widget.selectedTab == tab
-                                          ? FontWeight.w600
-                                          : FontWeight.normal,
+                      child: Row(
+                        children: [
+                          for (final tab in BottomDockTab.values)
+                            Padding(
+                              padding: const EdgeInsets.only(right: 4),
+                              child: HoverTap(
+                                key: ValueKey('bottom-dock-tab-${tab.name}'),
+                                onTap: () => widget.onTabSelected(tab),
+                                padding: const EdgeInsets.symmetric(
+                                  horizontal: 10,
+                                  vertical: 4,
+                                ),
+                                borderRadius: BorderRadius.circular(4),
+                                color: widget.selectedTab == tab
+                                    ? colors.accent.withValues(alpha: 0.15)
+                                    : Colors.transparent,
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    Icon(
+                                      tab.icon,
+                                      size: 13,
                                       color: widget.selectedTab == tab
-                                          ? colors.text
+                                          ? (tab == BottomDockTab.debug &&
+                                                    widget.isDebugging
+                                                ? colors.warn
+                                                : colors.accent)
                                           : colors.text3,
                                     ),
-                                  ),
-                                  if (tab == BottomDockTab.problems &&
-                                      widget.problemsCount > 0) ...[
                                     const SizedBox(width: 6),
-                                    Container(
-                                      padding: const EdgeInsets.symmetric(
-                                        horizontal: 5,
-                                        vertical: 1,
-                                      ),
-                                      decoration: BoxDecoration(
-                                        color: colors.warn.withValues(alpha: 0.2),
-                                        borderRadius: BorderRadius.circular(8),
-                                      ),
-                                      child: Text(
-                                        '${widget.problemsCount}',
-                                        style: context.typo.mono.copyWith(
-                                          fontSize: 9,
-                                          fontWeight: FontWeight.bold,
-                                          color: colors.warn,
-                                        ),
+                                    Text(
+                                      tab.label,
+                                      style: context.typo.label.copyWith(
+                                        fontSize: 11,
+                                        fontWeight: widget.selectedTab == tab
+                                            ? FontWeight.w600
+                                            : FontWeight.normal,
+                                        color: widget.selectedTab == tab
+                                            ? colors.text
+                                            : colors.text3,
                                       ),
                                     ),
+                                    if (tab == BottomDockTab.problems &&
+                                        widget.problemsCount > 0) ...[
+                                      const SizedBox(width: 6),
+                                      Container(
+                                        padding: const EdgeInsets.symmetric(
+                                          horizontal: 5,
+                                          vertical: 1,
+                                        ),
+                                        decoration: BoxDecoration(
+                                          color: colors.warn.withValues(
+                                            alpha: 0.2,
+                                          ),
+                                          borderRadius: BorderRadius.circular(
+                                            8,
+                                          ),
+                                        ),
+                                        child: Text(
+                                          '${widget.problemsCount}',
+                                          style: context.typo.mono.copyWith(
+                                            fontSize: 9,
+                                            fontWeight: FontWeight.bold,
+                                            color: colors.warn,
+                                          ),
+                                        ),
+                                      ),
+                                    ],
                                   ],
-                                ],
+                                ),
+                              ),
+                            ),
+
+                          const Spacer(),
+
+                          // Botão Maximizar / Restaurar
+                          AppTooltip(
+                            message: _isMaximized
+                                ? 'Restaurar Altura'
+                                : 'Maximizar Painel',
+                            child: HoverTap(
+                              key: const ValueKey('bottom-dock-maximize'),
+                              onTap: () =>
+                                  setState(() => _isMaximized = !_isMaximized),
+                              padding: const EdgeInsets.all(4),
+                              borderRadius: BorderRadius.circular(3),
+                              child: Icon(
+                                _isMaximized
+                                    ? sc.LucideIcons.minimize2
+                                    : sc.LucideIcons.maximize2,
+                                size: 12,
+                                color: colors.text3,
                               ),
                             ),
                           ),
+                          const SizedBox(width: 4),
 
-                        const Spacer(),
-
-                        // Botão Maximizar / Restaurar
-                        AppTooltip(
-                          message: _isMaximized ? 'Restaurar Altura' : 'Maximizar Painel',
-                          child: HoverTap(
-                            key: const ValueKey('bottom-dock-maximize'),
-                            onTap: () => setState(() => _isMaximized = !_isMaximized),
-                            padding: const EdgeInsets.all(4),
-                            borderRadius: BorderRadius.circular(3),
-                            child: Icon(
-                              _isMaximized
-                                  ? sc.LucideIcons.minimize2
-                                  : sc.LucideIcons.maximize2,
-                              size: 12,
-                              color: colors.text3,
+                          // Botão Fechar Dock
+                          AppTooltip(
+                            message: 'Fechar Painel Inferior',
+                            child: HoverTap(
+                              key: const ValueKey('bottom-dock-close'),
+                              onTap: widget.onClose,
+                              padding: const EdgeInsets.all(4),
+                              borderRadius: BorderRadius.circular(3),
+                              child: Icon(
+                                sc.LucideIcons.x,
+                                size: 14,
+                                color: colors.text3,
+                              ),
                             ),
                           ),
-                        ),
-                        const SizedBox(width: 4),
-
-                        // Botão Fechar Dock
-                        AppTooltip(
-                          message: 'Fechar Painel Inferior',
-                          child: HoverTap(
-                            key: const ValueKey('bottom-dock-close'),
-                            onTap: widget.onClose,
-                            padding: const EdgeInsets.all(4),
-                            borderRadius: BorderRadius.circular(3),
-                            child: Icon(
-                              sc.LucideIcons.x,
-                              size: 14,
-                              color: colors.text3,
-                            ),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
-                  ),
 
-                  // Conteúdo do Painel Ativo
-                  Expanded(
-                    child: switch (widget.selectedTab) {
-                      BottomDockTab.git =>
-                        widget.gitContent ??
-                            Center(
-                              child: Text(
-                                'Git Log indisponível',
-                                style: context.typo.body.copyWith(
-                                  color: colors.text4,
-                                  fontSize: 12,
+                    // Conteúdo do Painel Ativo
+                    Expanded(
+                      child: Stack(
+                        fit: StackFit.expand,
+                        children: [
+                          for (final tab in BottomDockTab.values)
+                            if (_visited.contains(tab))
+                              WorkbenchToolVisibility(
+                                active:
+                                    widget.isOpen && widget.selectedTab == tab,
+                                child: Offstage(
+                                  offstage: widget.selectedTab != tab,
+                                  child: ExcludeFocus(
+                                    excluding: widget.selectedTab != tab,
+                                    child: TickerMode(
+                                      enabled:
+                                          widget.isOpen &&
+                                          widget.selectedTab == tab,
+                                      child: switch (tab) {
+                                        BottomDockTab.git =>
+                                          widget.gitContent ??
+                                              const SizedBox.shrink(),
+                                        BottomDockTab.debug =>
+                                          widget.debugContent,
+                                        BottomDockTab.problems =>
+                                          widget.problemsContent ??
+                                              const SizedBox.shrink(),
+                                      },
+                                    ),
+                                  ),
                                 ),
                               ),
-                            ),
-                      BottomDockTab.debug => widget.debugContent,
-                      BottomDockTab.problems =>
-                        widget.problemsContent ??
-                            Center(
-                              child: Text(
-                                'Nenhum problema detectado',
-                                style: context.typo.body.copyWith(
-                                  color: colors.text4,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                    },
-                  ),
-                ],
-              )
-            : const SizedBox.shrink(),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ),
       ),
     );
   }
@@ -280,9 +307,7 @@ class BottomStripeBar extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
         color: colors.panel2,
-        border: Border(
-          top: BorderSide(color: colors.border),
-        ),
+        border: Border(top: BorderSide(color: colors.border)),
       ),
       child: Row(
         children: [
@@ -305,8 +330,8 @@ class BottomStripeBar extends StatelessWidget {
                     color: isOpen && selectedTab == tab
                         ? colors.accent
                         : (tab == BottomDockTab.debug && isDebugging
-                            ? colors.warn
-                            : colors.text3),
+                              ? colors.warn
+                              : colors.text3),
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -374,9 +399,7 @@ class RailBottomDockTools extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 6),
       decoration: BoxDecoration(
         color: colors.panel2,
-        border: Border(
-          top: BorderSide(color: colors.border),
-        ),
+        border: Border(top: BorderSide(color: colors.border)),
       ),
       child: Row(
         children: [
@@ -400,8 +423,8 @@ class RailBottomDockTools extends StatelessWidget {
                       size: 14,
                       color: isOpen && selectedTab == tab
                           ? (tab == BottomDockTab.debug && isDebugging
-                              ? colors.warn
-                              : colors.accent)
+                                ? colors.warn
+                                : colors.accent)
                           : colors.text3,
                     ),
                     if (tab == BottomDockTab.problems && problemsCount > 0)
@@ -471,9 +494,7 @@ class LeftToolStripe extends StatelessWidget {
       width: 42,
       decoration: BoxDecoration(
         color: colors.panel2,
-        border: Border(
-          right: BorderSide(color: colors.border),
-        ),
+        border: Border(right: BorderSide(color: colors.border)),
       ),
       child: Column(
         children: [
@@ -504,7 +525,8 @@ class LeftToolStripe extends StatelessWidget {
             key: const ValueKey('left-stripe-debug'),
             icon: sc.LucideIcons.bug,
             tooltip: 'Debug (F5)',
-            isSelected: isBottomDockOpen && bottomDockTab == BottomDockTab.debug,
+            isSelected:
+                isBottomDockOpen && bottomDockTab == BottomDockTab.debug,
             highlightColor: isDebugging ? colors.warn : null,
             onTap: () => onToggleBottomDock(BottomDockTab.debug),
           ),
@@ -515,7 +537,8 @@ class LeftToolStripe extends StatelessWidget {
             key: const ValueKey('left-stripe-problems'),
             icon: sc.LucideIcons.circleAlert,
             tooltip: 'Problems & Diagnostics',
-            isSelected: isBottomDockOpen && bottomDockTab == BottomDockTab.problems,
+            isSelected:
+                isBottomDockOpen && bottomDockTab == BottomDockTab.problems,
             badgeCount: problemsCount,
             onTap: () => onToggleBottomDock(BottomDockTab.problems),
           ),
@@ -584,7 +607,10 @@ class _StripeIconButton extends StatelessWidget {
                 top: -5,
                 right: -7,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 4,
+                    vertical: 1,
+                  ),
                   decoration: BoxDecoration(
                     color: colors.warn,
                     borderRadius: BorderRadius.circular(6),

@@ -794,6 +794,23 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
     _scheduleSave(rootId);
   }
 
+  Future<List<Worktree>> listGitWorktrees(String root) =>
+      _worktreeMgr.list(root);
+
+  Future<void> openGitWorktree(String path) async {
+    final canonical = await Directory(path).resolveSymbolicLinks();
+    for (final project in _projectList) {
+      if (project.isRemoteTerminal || !Directory(project.path).existsSync()) {
+        continue;
+      }
+      if (await Directory(project.path).resolveSymbolicLinks() == canonical) {
+        selectProject(project.id);
+        return;
+      }
+    }
+    await addProject(path);
+  }
+
   WorkbenchLayoutState workbenchLayout(String projectId) =>
       WorkbenchLayoutState.fromJson(_savedLayouts[projectId]?['workbench']);
 
@@ -4406,6 +4423,8 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
     int limit = 100,
     bool all = false,
     String? revision,
+    String? author,
+    DateTime? since,
   }) async {
     if (revision != null && revision.startsWith('-')) {
       return const Failure(GitHistoryError(GitHistoryErrorKind.commandFailed));
@@ -4417,6 +4436,8 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
           limit: limit,
           all: all && revision == null,
           revisionRange: revision,
+          author: author,
+          since: since,
         ),
       );
     }
@@ -4428,6 +4449,8 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
         '--decorate=short',
         '--topo-order',
         if (all && revision == null) '--all',
+        if (author != null && author.isNotEmpty) '--author=$author',
+        if (since != null) '--since=${since.toUtc().toIso8601String()}',
         ?revision,
         '--date=iso-strict',
         '--format=%H%x1f%P%x1f%D%x1f%an%x1f%aI%x1f%s%x1e',

@@ -1,3 +1,10 @@
+import 'dart:async';
+import 'dart:math' as math;
+import 'package:orkest_code/app/orkest/domain/entities/git_workbench_view_state.dart';
+import 'package:orkest_code/app/orkest/domain/entities/git_history_query.dart';
+import 'package:orkest_code/app/orkest/domain/entities/worktree.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/git_console_panel.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/git_worktrees_panel.dart';
 import 'package:flutter/material.dart' as m show TextField, InputDecoration;
 import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:orkest_code/app/core/ui/activity_periodic_timer.dart';
@@ -29,11 +36,27 @@ class GitWorkbenchPanel extends StatefulWidget {
     required this.refreshToken,
     this.git,
     this.historyBuilder,
+    this.initialState = const GitWorkbenchViewState(),
+    this.onStateChanged,
+    this.loadFilteredHistory,
+    this.loadWorktrees,
+    this.onOpenWorktree,
+    this.onCreateWorktree,
   });
   final List<GitHistoryRoot> roots;
   final GitController? git;
   final Widget Function(BuildContext context, String root)? historyBuilder;
   final int refreshToken;
+  final GitWorkbenchViewState initialState;
+  final ValueChanged<GitWorkbenchViewState>? onStateChanged;
+  final Future<Result<List<GitHistoryCommit>, GitHistoryError>> Function(
+    String root,
+    GitHistoryQuery query,
+  )?
+  loadFilteredHistory;
+  final Future<List<Worktree>> Function(String root)? loadWorktrees;
+  final Future<void> Function(String path)? onOpenWorktree;
+  final Future<void> Function(String root)? onCreateWorktree;
   final Future<Result<List<GitHistoryCommit>, GitHistoryError>> Function(
     String root,
     String? ref,
@@ -56,7 +79,7 @@ class GitWorkbenchPanel extends StatefulWidget {
 
 class _GitWorkbenchPanelState extends State<GitWorkbenchPanel> {
   final _search = TextEditingController();
-  final _loads = CoalescingSingleFlight<(String, String?)>();
+  final _loads = CoalescingSingleFlight<(String, String?, String, int)>();
   List<GitHistoryCommit> _commits = const [];
   List<GitHistoryFileChange>? _files;
   GitHistoryError? _error;
@@ -69,6 +92,12 @@ class _GitWorkbenchPanelState extends State<GitWorkbenchPanel> {
   bool _loading = false;
   bool _loadingFiles = false;
   bool _showBranches = true;
+  late GitWorkbenchViewState _view;
+  late GitWorkbenchTab _tab;
+  final _visitedTabs = <GitWorkbenchTab>{GitWorkbenchTab.log};
+  String _author = '';
+  int _sinceDays = 0;
+  String _restoreSelectedHash = '';
   bool _showHistory = false;
   ActivityPeriodicTimer? _poll;
   WindowActivityController? _fallback;
@@ -76,7 +105,21 @@ class _GitWorkbenchPanelState extends State<GitWorkbenchPanel> {
   @override
   void initState() {
     super.initState();
-    _root = widget.roots.firstOrNull?.path;
+    _view = widget.initialState;
+    _root = widget.roots.any((r) => r.path == _view.root)
+        ? _view.root
+        : widget.roots.firstOrNull?.path;
+    _ref = _root == _view.root && _view.ref.isNotEmpty ? _view.ref : null;
+    _author = _view.author;
+    _sinceDays = _view.sinceDays;
+    _search.text = _view.query;
+    _restoreSelectedHash = _view.selectedHash;
+    _tab = _view.tab;
+    if ((_tab == GitWorkbenchTab.console && widget.git == null) ||
+        (_tab == GitWorkbenchTab.worktrees && widget.loadWorktrees == null)) {
+      _tab = GitWorkbenchTab.log;
+    }
+    _visitedTabs.add(_tab);
     _load();
   }
 
@@ -92,7 +135,8 @@ class _GitWorkbenchPanelState extends State<GitWorkbenchPanel> {
         activity: activity,
         interval: const Duration(seconds: 5),
         onTick: _load,
-      )..start();
+      );
+      if (_tab == GitWorkbenchTab.log && !_showHistory) _poll!.start();
     }
   }
 
@@ -123,6 +167,7 @@ class _GitWorkbenchPanelState extends State<GitWorkbenchPanel> {
 
   void _clearSelection() {
     _fileGeneration++;
+    _restoreSelectedHash = '';
     _selected = null;
     _files = null;
     _fileError = null;
@@ -132,48 +177,77 @@ class _GitWorkbenchPanelState extends State<GitWorkbenchPanel> {
   Future<void> _load() {
     final requestRoot = _root;
     final requestRef = _ref;
+    final requestAuthor = _author;
+    final requestDays = _sinceDays;
     if (requestRoot == null) return Future<void>.value();
-    return _loads.run((requestRoot, requestRef), () async {
-      if (!mounted || requestRoot != _root || requestRef != _ref) return;
-      final root = requestRoot;
-      final ref = requestRef;
-      final generation = ++_generation;
-      setState(() {
-        _loading = true;
-        _error = null;
-      });
-      try {
-        final result = await widget
-            .loadHistory(root, ref)
-            .timeout(const Duration(seconds: 20));
+    return _loads.run(
+      (requestRoot, requestRef, requestAuthor, requestDays),
+      () async {
         if (!mounted ||
-            generation != _generation ||
-            root != _root ||
-            ref != _ref) {
+            requestRoot != _root ||
+            requestRef != _ref ||
+            requestAuthor != _author ||
+            requestDays != _sinceDays) {
           return;
         }
+        final root = requestRoot;
+        final ref = requestRef;
+        final generation = ++_generation;
         setState(() {
-          _loading = false;
-          result.fold((commits) {
-            _commits = commits;
-            if (_selected != null &&
-                !commits.any((c) => c.hash == _selected!.hash)) {
-              _clearSelection();
-            }
-          }, (error) => _error = error);
+          _loading = true;
+          _error = null;
         });
-      } on Exception catch (error) {
-        if (mounted && generation == _generation) {
+        try {
+          final query = GitHistoryQuery(
+            all: ref == null,
+            revisionRange: ref,
+            author: requestAuthor.isEmpty ? null : requestAuthor,
+            since: requestDays == 0
+                ? null
+                : DateTime.now().subtract(Duration(days: requestDays)),
+          );
+          final result =
+              await (widget.loadFilteredHistory?.call(root, query) ??
+                      widget.loadHistory(root, ref))
+                  .timeout(const Duration(seconds: 20));
+          if (!mounted ||
+              generation != _generation ||
+              root != _root ||
+              ref != _ref ||
+              requestAuthor != _author ||
+              requestDays != _sinceDays) {
+            return;
+          }
           setState(() {
             _loading = false;
-            _error = GitHistoryError(
-              GitHistoryErrorKind.commandFailed,
-              detail: error.toString(),
-            );
+            result.fold((commits) {
+              _commits = commits;
+              if (_selected != null &&
+                  !commits.any((c) => c.hash == _selected!.hash)) {
+                _clearSelection();
+              }
+            }, (error) => _error = error);
           });
+          if (_selected == null && _restoreSelectedHash.isNotEmpty) {
+            final restored = _commits
+                .where((c) => c.hash == _restoreSelectedHash)
+                .firstOrNull;
+            _restoreSelectedHash = '';
+            if (restored != null) unawaited(_select(restored));
+          }
+        } on Exception catch (error) {
+          if (mounted && generation == _generation) {
+            setState(() {
+              _loading = false;
+              _error = GitHistoryError(
+                GitHistoryErrorKind.commandFailed,
+                detail: error.toString(),
+              );
+            });
+          }
         }
-      }
-    });
+      },
+    );
   }
 
   Future<void> _select(GitHistoryCommit commit) async {
@@ -186,6 +260,7 @@ class _GitWorkbenchPanelState extends State<GitWorkbenchPanel> {
       _fileError = null;
       _loadingFiles = true;
     });
+    _persist();
     try {
       final result = await widget
           .loadFiles(root, commit.hash)
@@ -215,6 +290,7 @@ class _GitWorkbenchPanelState extends State<GitWorkbenchPanel> {
       _clearSelection();
       _generation++;
     });
+    _persist();
     _load();
   }
 
@@ -235,12 +311,244 @@ class _GitWorkbenchPanelState extends State<GitWorkbenchPanel> {
     }
   }
 
+  void _persist() {
+    final next = _view.copyWith(
+      tab: _tab,
+      root: _root ?? '',
+      ref: _ref ?? '',
+      query: _search.text,
+      author: _author,
+      sinceDays: _sinceDays,
+      selectedHash: _selected?.hash ?? _restoreSelectedHash,
+    );
+    if (next != widget.initialState) widget.onStateChanged?.call(next);
+    _view = next;
+  }
+
+  void _selectTab(GitWorkbenchTab tab) {
+    setState(() {
+      _tab = tab;
+      _visitedTabs.add(tab);
+    });
+    if (tab == GitWorkbenchTab.log && !_showHistory) {
+      _poll?.start();
+    } else {
+      _poll?.stop();
+    }
+    _persist();
+  }
+
+  void _applyFilters(String author, int days) {
+    setState(() {
+      _author = author;
+      _sinceDays = days;
+      _generation++;
+      _clearSelection();
+    });
+    _persist();
+    _load();
+  }
+
+  Future<void> _editFilters() async {
+    final tr = context.t.orkest.gitDesktop;
+    final author = TextEditingController(text: _author);
+    var days = _sinceDays;
+    final result = await showDialog<(String, int)>(
+      context: context,
+      barrierColor: context.colors.scrim,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (dialogContext, update) => AlertDialog(
+          title: Text(tr.filters),
+          content: SizedBox(
+            width: 400,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.stretch,
+              children: [
+                TextField(
+                  key: const ValueKey('git-author-input'),
+                  controller: author,
+                  placeholder: Text(tr.author),
+                ),
+                const SizedBox(height: 12),
+                Text(tr.date),
+                const SizedBox(height: 6),
+                Wrap(
+                  spacing: 6,
+                  runSpacing: 6,
+                  children: [
+                    for (final value in [0, 7, 30, 90, 365])
+                      OutlineButton(
+                        key: ValueKey('git-date-$value'),
+                        onPressed: () => update(() => days = value),
+                        child: Text(
+                          value == 0 ? tr.anyDate : tr.lastDays(count: value),
+                          style: context.typo.label.copyWith(
+                            color: value == days
+                                ? context.colors.accent
+                                : context.colors.text2,
+                          ),
+                        ),
+                      ),
+                  ],
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            GhostButton(
+              onPressed: () => Navigator.of(dialogContext).pop(),
+              child: Text(context.t.common.cancel),
+            ),
+            PrimaryButton(
+              key: const ValueKey('git-filters-apply'),
+              onPressed: () =>
+                  Navigator.of(dialogContext).pop((author.text.trim(), days)),
+              child: Text(tr.apply),
+            ),
+          ],
+        ),
+      ),
+    );
+    author.dispose();
+    if (mounted && result != null) _applyFilters(result.$1, result.$2);
+  }
+
+  Widget _chip(String key, String label, VoidCallback clear) => Container(
+    padding: const EdgeInsets.only(left: 7),
+    margin: const EdgeInsets.only(right: 6),
+    decoration: BoxDecoration(
+      color: context.colors.accentSoft,
+      borderRadius: BorderRadius.circular(4),
+    ),
+    child: Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        ConstrainedBox(
+          constraints: const BoxConstraints(maxWidth: 200),
+          child: Text(
+            label,
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+            style: context.typo.label.copyWith(
+              fontSize: 10,
+              color: context.colors.accent,
+            ),
+          ),
+        ),
+        GhostButton(
+          key: ValueKey(key),
+          onPressed: clear,
+          child: const Icon(Icons.close, size: 12),
+        ),
+      ],
+    ),
+  );
+
+  Widget _divider(
+    String key,
+    VoidCallback? onEnd,
+    ValueChanged<double> onDelta,
+  ) => MouseRegion(
+    cursor: SystemMouseCursors.resizeColumn,
+    child: GestureDetector(
+      key: ValueKey(key),
+      behavior: HitTestBehavior.opaque,
+      onHorizontalDragUpdate: (details) => onDelta(details.delta.dx),
+      onHorizontalDragEnd: (_) => onEnd?.call(),
+      child: Container(
+        width: 6,
+        decoration: BoxDecoration(
+          border: Border(left: BorderSide(color: context.colors.border)),
+        ),
+      ),
+    ),
+  );
+
   @override
   Widget build(BuildContext context) {
     final tr = context.t.orkest;
     if (_root == null) {
       return Center(child: Text(tr.fileTreePanel.historyNoRepository));
     }
+    return Column(
+      children: [
+        SizedBox(
+          height: 30,
+          child: Row(
+            children: [
+              Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 8),
+                child: Text('Git', style: context.typo.label),
+              ),
+              for (final tab in GitWorkbenchTab.values)
+                GhostButton(
+                  key: ValueKey('git-tab-${tab.name}'),
+                  onPressed:
+                      tab == GitWorkbenchTab.console && widget.git == null ||
+                          tab == GitWorkbenchTab.worktrees &&
+                              (widget.loadWorktrees == null ||
+                                  widget.onOpenWorktree == null)
+                      ? null
+                      : () => _selectTab(tab),
+                  child: Text(
+                    switch (tab) {
+                      GitWorkbenchTab.log => tr.gitDesktop.log,
+                      GitWorkbenchTab.console => tr.gitDesktop.console,
+                      GitWorkbenchTab.worktrees => tr.gitDesktop.worktrees,
+                    },
+                    style: context.typo.label.copyWith(
+                      fontSize: 11,
+                      color: _tab == tab
+                          ? context.colors.accent
+                          : context.colors.text3,
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+        Expanded(
+          child: Stack(
+            fit: StackFit.expand,
+            children: [
+              for (final tab in _visitedTabs)
+                WorkbenchToolVisibility(
+                  active:
+                      WorkbenchToolVisibility.isActive(context) && _tab == tab,
+                  child: Offstage(
+                    offstage: _tab != tab,
+                    child: ExcludeFocus(
+                      excluding: _tab != tab,
+                      child: TickerMode(
+                        enabled: _tab == tab,
+                        child: switch (tab) {
+                          GitWorkbenchTab.log => _logView(context),
+                          GitWorkbenchTab.console => GitConsolePanel(
+                            git: widget.git!,
+                            root: _root!,
+                          ),
+                          GitWorkbenchTab.worktrees => GitWorktreesPanel(
+                            key: ValueKey('git-worktrees-$_root'),
+                            root: _root!,
+                            load: widget.loadWorktrees!,
+                            onOpen: widget.onOpenWorktree!,
+                            onCreate: widget.onCreateWorktree,
+                          ),
+                        },
+                      ),
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _logView(BuildContext context) {
+    final tr = context.t.orkest;
     if (_showHistory && widget.historyBuilder != null) {
       return Column(
         children: [
@@ -248,7 +556,10 @@ class _GitWorkbenchPanelState extends State<GitWorkbenchPanel> {
             alignment: Alignment.centerLeft,
             child: GhostButton(
               key: const ValueKey('git-log-back'),
-              onPressed: () => setState(() => _showHistory = false),
+              onPressed: () {
+                setState(() => _showHistory = false);
+                _poll?.start();
+              },
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -265,12 +576,22 @@ class _GitWorkbenchPanelState extends State<GitWorkbenchPanel> {
     }
     return LayoutBuilder(
       builder: (context, constraints) {
-        final wide = constraints.maxWidth >= 850;
+        final width = constraints.maxWidth;
+        final wide = width >= 850;
         final sidebar =
             wide &&
             _showBranches &&
             widget.git != null &&
-            constraints.maxHeight >= 230;
+            constraints.maxHeight >= 190;
+        final double branchWidth = sidebar
+            ? (width * _view.branchFraction).clamp(150.0, width * .35)
+            : 0.0;
+        final double detailsWidth = wide
+            ? (width * _view.detailsFraction).clamp(
+                200.0,
+                math.max(200.0, width - branchWidth - 272),
+              )
+            : 0.0;
         return Column(
           children: [
             SizedBox(
@@ -282,11 +603,7 @@ class _GitWorkbenchPanelState extends State<GitWorkbenchPanel> {
                       key: const ValueKey('git-log-toggle-branches'),
                       onPressed: () =>
                           setState(() => _showBranches = !_showBranches),
-                      child: Icon(
-                        Icons.account_tree_outlined,
-                        size: 15,
-                        semanticLabel: tr.branchPicker.title,
-                      ),
+                      child: const Icon(Icons.account_tree_outlined, size: 14),
                     ),
                   GhostButton(
                     key: const ValueKey('git-log-repository'),
@@ -310,19 +627,13 @@ class _GitWorkbenchPanelState extends State<GitWorkbenchPanel> {
                               _clearSelection();
                               _generation++;
                             });
+                            _persist();
                             _load();
                           },
-                    child: constraints.maxWidth < 600
-                        ? Icon(
-                            Icons.folder_outlined,
-                            size: 14,
-                            semanticLabel: widget.roots
-                                .where((r) => r.path == _root)
-                                .firstOrNull
-                                ?.name,
-                          )
+                    child: width < 600
+                        ? const Icon(Icons.folder_outlined, size: 14)
                         : SizedBox(
-                            width: 130,
+                            width: 100,
                             child: Text(
                               widget.roots
                                       .where((r) => r.path == _root)
@@ -337,19 +648,18 @@ class _GitWorkbenchPanelState extends State<GitWorkbenchPanel> {
                   if (widget.git != null && !sidebar)
                     GhostButton(
                       onPressed: () => showGitBranchPicker(context, _root!),
-                      child: Icon(
-                        Icons.account_tree_outlined,
-                        size: 15,
-                        semanticLabel: tr.branchPicker.title,
-                      ),
+                      child: const Icon(Icons.account_tree_outlined, size: 14),
                     ),
                   Expanded(
                     child: Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 8),
+                      padding: const EdgeInsets.symmetric(horizontal: 6),
                       child: m.TextField(
                         key: const ValueKey('git-log-search'),
                         controller: _search,
-                        onChanged: (_) => setState(() {}),
+                        onChanged: (_) {
+                          setState(() {});
+                          _persist();
+                        },
                         style: context.typo.label.copyWith(fontSize: 11),
                         decoration: m.InputDecoration.collapsed(
                           hintText: tr.fileTreePanel.historyFilterPlaceholder,
@@ -358,28 +668,27 @@ class _GitWorkbenchPanelState extends State<GitWorkbenchPanel> {
                     ),
                   ),
                   GhostButton(
-                    key: const ValueKey('git-log-scope'),
-                    onPressed: _ref == null ? null : () => _selectRef(null),
-                    child: SizedBox(
-                      width: constraints.maxWidth < 600 ? 85 : 140,
-                      child: Text(
-                        _ref == null
-                            ? tr.gitBranches.all
-                            : _ref!.replaceFirst(
-                                RegExp(r'^refs/(heads|remotes)/'),
-                                '',
-                              ),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: context.typo.label.copyWith(fontSize: 10),
-                      ),
-                    ),
+                    key: const ValueKey('git-log-filters'),
+                    onPressed: _editFilters,
+                    child: width < 600
+                        ? Icon(
+                            Icons.filter_list,
+                            size: 14,
+                            semanticLabel: tr.gitDesktop.filters,
+                          )
+                        : Text(
+                            '${tr.gitDesktop.author} · ${tr.gitDesktop.date}',
+                            style: context.typo.label.copyWith(fontSize: 10),
+                          ),
                   ),
                   if (_loading) const CircularProgressIndicator(size: 12),
                   if (widget.historyBuilder != null)
                     GhostButton(
                       key: const ValueKey('git-log-history'),
-                      onPressed: () => setState(() => _showHistory = true),
+                      onPressed: () {
+                        setState(() => _showHistory = true);
+                        _poll?.stop();
+                      },
                       child: Icon(
                         Icons.history,
                         size: 14,
@@ -398,47 +707,109 @@ class _GitWorkbenchPanelState extends State<GitWorkbenchPanel> {
                 ],
               ),
             ),
+            if (_ref != null || _author.isNotEmpty || _sinceDays > 0)
+              SizedBox(
+                height: 28,
+                child: SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: Row(
+                    children: [
+                      if (_ref != null)
+                        _chip(
+                          'git-filter-ref-clear',
+                          '${tr.branchPicker.title}: ${_ref!.replaceFirst(RegExp(r'^refs/(heads|remotes|tags)/'), '')}',
+                          () => _selectRef(null),
+                        ),
+                      if (_author.isNotEmpty)
+                        _chip(
+                          'git-filter-author-clear',
+                          '${tr.gitDesktop.author}: $_author',
+                          () => _applyFilters('', _sinceDays),
+                        ),
+                      if (_sinceDays > 0)
+                        _chip(
+                          'git-filter-date-clear',
+                          tr.gitDesktop.lastDays(count: _sinceDays),
+                          () => _applyFilters(_author, 0),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
             Expanded(
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
-                  if (sidebar)
+                  if (sidebar) ...[
                     SizedBox(
-                      width: 230,
+                      width: branchWidth,
                       child: Padding(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(6),
                         child: GitBranchesPanel(
                           key: ValueKey(_root),
                           root: _root!,
                           git: widget.git!,
                           onSelectRef: _selectRef,
+                          includeTags: true,
+                          initialCollapsed: _view.collapsed,
+                          onCollapsedChanged: (collapsed) {
+                            _view = _view.copyWith(collapsed: collapsed);
+                            _persist();
+                          },
                         ),
                       ),
                     ),
-                  if (sidebar)
-                    Container(width: 1, color: context.colors.border),
+                    _divider(
+                      'git-resize-branches',
+                      _persist,
+                      (delta) => setState(
+                        () => _view = _view.copyWith(
+                          branchFraction:
+                              ((branchWidth + delta).clamp(150.0, width * .35) /
+                              width),
+                        ),
+                      ),
+                    ),
+                  ],
                   Expanded(
                     child:
                         _selected != null &&
                             !wide &&
-                            constraints.maxHeight < 260
+                            constraints.maxHeight < 230
                         ? _details(context)
                         : LayoutBuilder(
-                            builder: (context, tableConstraints) => _table(
+                            builder: (context, table) => _table(
                               context,
-                              showAuthor: tableConstraints.maxWidth >= 650,
-                              availableWidth: tableConstraints.maxWidth,
+                              showAuthor: table.maxWidth >= 650,
+                              availableWidth: table.maxWidth,
                             ),
                           ),
                   ),
-                  if (_selected != null && wide) ...[
-                    Container(width: 1, color: context.colors.border),
-                    SizedBox(width: 270, child: _details(context)),
+                  if (wide) ...[
+                    _divider(
+                      'git-resize-details',
+                      _persist,
+                      (delta) => setState(
+                        () => _view = _view.copyWith(
+                          detailsFraction:
+                              ((detailsWidth - delta).clamp(
+                                200.0,
+                                math.max(200.0, width - branchWidth - 272),
+                              ) /
+                              width),
+                        ),
+                      ),
+                    ),
+                    SizedBox(
+                      key: const ValueKey('git-details-pane'),
+                      width: detailsWidth,
+                      child: _details(context),
+                    ),
                   ],
                 ],
               ),
             ),
-            if (_selected != null && !wide && constraints.maxHeight >= 260)
+            if (_selected != null && !wide && constraints.maxHeight >= 230)
               SizedBox(height: 100, child: _details(context)),
           ],
         );
@@ -466,10 +837,22 @@ class _GitWorkbenchPanelState extends State<GitWorkbenchPanel> {
     final commits = _commits
         .where(
           (c) =>
-              query.isEmpty ||
-              '${c.subject} ${c.author} ${c.hash} ${c.refs.join(' ')}'
-                  .toLowerCase()
-                  .contains(query),
+              (widget.loadFilteredHistory != null ||
+                  ((_author.isEmpty ||
+                          c.author.toLowerCase().contains(
+                            _author.toLowerCase(),
+                          )) &&
+                      (_sinceDays == 0 ||
+                          c.authoredAt != null &&
+                              c.authoredAt!.isAfter(
+                                DateTime.now().subtract(
+                                  Duration(days: _sinceDays),
+                                ),
+                              )))) &&
+              (query.isEmpty ||
+                  '${c.subject} ${c.author} ${c.hash} ${c.refs.join(' ')}'
+                      .toLowerCase()
+                      .contains(query)),
         )
         .toList();
     if (commits.isEmpty) {
@@ -633,8 +1016,21 @@ class _GitWorkbenchPanelState extends State<GitWorkbenchPanel> {
   }
 
   Widget _details(BuildContext context) {
-    final commit = _selected!;
     final tr = context.t.orkest;
+    if (_selected == null) {
+      return Center(
+        key: const ValueKey('git-details-empty'),
+        child: Padding(
+          padding: const EdgeInsets.all(16),
+          child: Text(
+            tr.gitDesktop.selectCommit,
+            textAlign: TextAlign.center,
+            style: context.typo.label.copyWith(color: context.colors.text3),
+          ),
+        ),
+      );
+    }
+    final commit = _selected!;
     return Padding(
       padding: const EdgeInsets.all(8),
       child: Column(
@@ -652,7 +1048,10 @@ class _GitWorkbenchPanelState extends State<GitWorkbenchPanel> {
               ),
               GhostButton(
                 key: const ValueKey('git-log-close-details'),
-                onPressed: () => setState(_clearSelection),
+                onPressed: () {
+                  setState(_clearSelection);
+                  _persist();
+                },
                 child: const Icon(Icons.close, size: 13),
               ),
             ],

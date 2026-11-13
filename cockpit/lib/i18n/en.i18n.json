@@ -99,6 +99,28 @@
     "noResults": "No results"
   },
   "orkest": {
+    "gitDesktop": {
+      "log": "Log",
+      "console": "Console",
+      "worktrees": "Worktrees",
+      "filters": "History filters",
+      "author": "Author",
+      "date": "Date",
+      "anyDate": "Any date",
+      "lastDays": "Last $count days",
+      "apply": "Apply",
+      "selectCommit": "Select a commit to view changes",
+      "head": "HEAD (Current branch)",
+      "tags": "Tags",
+      "branchOrTag": "Branch or tag",
+      "clearConsole": "Clear console",
+      "consoleEmpty": "Git operations from this interface will appear here.",
+      "running": "Running…",
+      "exitCode": "Exit $code",
+      "worktreesEmpty": "No linked worktrees in this repository.",
+      "openWorktree": "Open worktree",
+      "loadError": "Could not load: $detail"
+    },
     "gitBranches": {
       "fetchFailed": "Could not fetch remote references: $detail",
       "current": "Current branch",
