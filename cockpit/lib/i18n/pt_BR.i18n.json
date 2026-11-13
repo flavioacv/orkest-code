@@ -99,6 +99,20 @@
     "noResults": "Nenhum resultado"
   },
   "orkest": {
+    "gitEvolution": {
+      "createFromHead": "Criar a partir do HEAD atual",
+      "showBase": "Mostrar base",
+      "hideBase": "Ocultar base",
+      "operationPending": "$operation em andamento",
+      "remainingFiles": "$count arquivos não resolvidos",
+      "saveAndStage": "Salvar e marcar como resolvido",
+      "stageResolution": "Marcar como resolvido",
+      "resolutionError": "Não foi possível concluir a operação Git: $detail",
+      "abortTitle": "Abortar $operation?",
+      "abortMessage": "O Git desfará a integração pendente. Revise e salve suas edições antes de abortar.",
+      "pullRebase": "Pull com rebase",
+      "pullFastForward": "Pull (somente fast-forward)"
+    },
     "officeWorld": {
       "vcsPrOpened": "Pull request criado",
       "vcsPrMerged": "Pull request mergeado",

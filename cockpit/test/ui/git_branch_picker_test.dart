@@ -42,8 +42,9 @@ class _Git extends Fake implements GitController {
   @override
   Future<Result<void, GitBranchError>> createBranch(
     String root,
-    String name,
-  ) async {
+    String name, {
+    String? startPoint,
+  }) async {
     roots.add(root);
     created = name;
     return const Success(null);

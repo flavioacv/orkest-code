@@ -21,6 +21,14 @@ enum ConflictResolution {
 /// Operações do Git que podem estar em andamento no repositório.
 enum GitOngoingOperation { none, merge, rebase, cherryPick, revert }
 
+enum GitResolutionErrorKind { stale, markers, commandFailed }
+
+class GitResolutionError {
+  const GitResolutionError(this.kind, {this.detail});
+  final GitResolutionErrorKind kind;
+  final String? detail;
+}
+
 /// Representa um bloco delimitado de conflito no arquivo:
 /// <<<<<<< [oursLabel]
 /// [ours]
@@ -315,26 +323,70 @@ class GitConflictService {
 
   /// Detecta se há uma operação Git em andamento (merge, rebase, cherry-pick ou revert).
   GitOngoingOperation detectOngoingOperation(String repoRoot) {
-    try {
-      final gitDir = Directory('$repoRoot/.git');
-      if (!gitDir.existsSync()) return GitOngoingOperation.none;
-
-      if (File('$repoRoot/.git/MERGE_HEAD').existsSync()) {
-        return GitOngoingOperation.merge;
+    final marker = p.join(repoRoot, '.git');
+    var gitPath = marker;
+    if (File(marker).existsSync()) {
+      final pointer = File(marker).readAsStringSync().trim();
+      if (!pointer.startsWith('gitdir: ')) {
+        throw const FormatException('Invalid gitdir pointer');
       }
-      if (Directory('$repoRoot/.git/rebase-merge').existsSync() ||
-          Directory('$repoRoot/.git/rebase-apply').existsSync()) {
-        return GitOngoingOperation.rebase;
-      }
-      if (File('$repoRoot/.git/CHERRY_PICK_HEAD').existsSync()) {
-        return GitOngoingOperation.cherryPick;
-      }
-      if (File('$repoRoot/.git/REVERT_HEAD').existsSync()) {
-        return GitOngoingOperation.revert;
-      }
-    } catch (_) {}
-
+      gitPath = p.normalize(p.join(repoRoot, pointer.substring(8).trim()));
+    }
+    if (!Directory(gitPath).existsSync()) return GitOngoingOperation.none;
+    if (File(p.join(gitPath, 'MERGE_HEAD')).existsSync()) {
+      return GitOngoingOperation.merge;
+    }
+    if (Directory(p.join(gitPath, 'rebase-merge')).existsSync() ||
+        Directory(p.join(gitPath, 'rebase-apply')).existsSync()) {
+      return GitOngoingOperation.rebase;
+    }
+    if (File(p.join(gitPath, 'CHERRY_PICK_HEAD')).existsSync()) {
+      return GitOngoingOperation.cherryPick;
+    }
+    if (File(p.join(gitPath, 'REVERT_HEAD')).existsSync()) {
+      return GitOngoingOperation.revert;
+    }
     return GitOngoingOperation.none;
+  }
+
+  Future<Result<void, GitResolutionError>> markResolved({
+    required String repoRoot,
+    required String relativePath,
+    required String expectedText,
+  }) async {
+    try {
+      final disk = await File(p.join(repoRoot, relativePath)).readAsString();
+      if (disk.replaceAll('\r\n', '\n') !=
+          expectedText.replaceAll('\r\n', '\n')) {
+        return const Failure(GitResolutionError(GitResolutionErrorKind.stale));
+      }
+      if (hasUnresolvedMarkers(disk)) {
+        return const Failure(
+          GitResolutionError(GitResolutionErrorKind.markers),
+        );
+      }
+      final result = await _runGit(repoRoot, 'git', [
+        'add',
+        '--',
+        p.posix.joinAll(p.split(relativePath)),
+      ]);
+      return result.fold<Result<void, GitResolutionError>>(
+        (_) => const Success(null),
+        (detail) => Failure(
+          GitResolutionError(
+            GitResolutionErrorKind.commandFailed,
+            detail: detail,
+          ),
+        ),
+      );
+    } on FileSystemException catch (error) {
+      return Failure(
+        GitResolutionError(
+          GitResolutionErrorKind.commandFailed,
+          detail: error.toString(),
+        ),
+      );
+    }
   }
 
   /// Continua a operação Git em andamento (`git <op> --continue`).
@@ -347,6 +399,16 @@ class GitConflictService {
       return const Failure('Nenhuma operação Git em andamento para continuar.');
     }
 
+    final pending = await Process.run(gitExecutable, [
+      'diff',
+      '--name-only',
+      '--diff-filter=U',
+      '-z',
+    ], workingDirectory: repoRoot);
+    if (pending.exitCode != 0) return Failure(pending.stderr.toString());
+    if (pending.stdout.toString().isNotEmpty) {
+      return Failure(pending.stdout.toString().replaceAll('\u0000', '\n'));
+    }
     final cmd = _operationCommandName(op);
     return _runGit(repoRoot, gitExecutable, [cmd, '--continue']);
   }
@@ -390,6 +452,7 @@ class GitConflictService {
         gitExecutable,
         args,
         workingDirectory: repoRoot,
+        environment: {'GIT_EDITOR': 'true', 'GIT_SEQUENCE_EDITOR': 'true'},
       );
       if (res.exitCode == 0) {
         return const Success(null);

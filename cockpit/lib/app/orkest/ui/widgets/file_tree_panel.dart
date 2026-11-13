@@ -1,5 +1,6 @@
 import 'package:orkest_code/app/orkest/domain/entities/git_comparison.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/source_control_panel.dart';
+import 'package:orkest_code/app/orkest/ui/widgets/git_operation_panel.dart';
 import 'package:orkest_code/app/orkest/domain/entities/workbench_layout_state.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/workbench_tool_host.dart';
 import 'dart:io' show Platform;
@@ -953,6 +954,18 @@ class _FileTreePanelState extends State<FileTreePanel> {
               Icons.cloud_download_outlined,
             ),
           ],
+        if (gitRoots.isNotEmpty && widget.onGitCommand != null) ...[
+          rootAction(
+            'pull-rebase',
+            context.t.orkest.gitEvolution.pullRebase,
+            Icons.arrow_downward,
+          ),
+          rootAction(
+            'pull-ff',
+            context.t.orkest.gitEvolution.pullFastForward,
+            Icons.arrow_downward,
+          ),
+        ],
         if (gitRoots.isNotEmpty && widget.onCheckoutBranch != null)
           rootAction(
             'checkout',
@@ -1015,6 +1028,8 @@ class _FileTreePanelState extends State<FileTreePanel> {
         await widget.onCheckoutBranch?.call(root);
       } else if (widget.onGitCommand != null &&
           {
+            'pull-rebase',
+            'pull-ff',
             'merge',
             'rebase',
             'rename-branch',
@@ -1106,8 +1121,18 @@ class _FileTreePanelState extends State<FileTreePanel> {
             confirmLabel: prompt.$3,
             allowEmpty: prompt.$4,
           );
-    if (!mounted || input == null) return;
+    if (!mounted || !context.mounted || input == null) return;
+    if (input.startsWith('-')) {
+      await showInfoDialog(
+        context,
+        title: tr.branchMenu,
+        message: context.t.orkest.branchPicker.invalidName,
+      );
+      return;
+    }
     final args = switch (action) {
+      'pull-rebase' => ['pull', '--rebase'],
+      'pull-ff' => ['pull', '--ff-only'],
       'merge' => ['merge', input],
       'rebase' => ['rebase', input],
       'rename-branch' => ['branch', '-m', input],
@@ -1125,6 +1150,8 @@ class _FileTreePanelState extends State<FileTreePanel> {
     };
     if (args.isEmpty) return;
     await widget.onGitCommand!(root, args, switch (action) {
+      'pull-rebase' => context.t.orkest.gitEvolution.pullRebase,
+      'pull-ff' => context.t.orkest.gitEvolution.pullFastForward,
       'merge' => tr.mergeBranch,
       'rebase' => tr.rebaseBranch,
       'rename-branch' => tr.renameBranch,
@@ -1596,6 +1623,35 @@ class _FileTreePanelState extends State<FileTreePanel> {
       onSectionChanged: _selectSourceControlSection,
       onMenuRequested: _showSourceControlMenu,
       changeCount: sourceControlChangeCount,
+      onCheckoutBranch: widget.onCheckoutBranch == null
+          ? null
+          : () {
+              final roots = widget.roots
+                  .where((root) => root.git != null)
+                  .toList();
+              if (roots.length == 1) {
+                widget.onCheckoutBranch!(roots.single.path);
+              } else {
+                _showSourceControlMenu(context);
+              }
+            },
+      operationBanner: widget.onGitCommand == null
+          ? null
+          : Column(
+              children: [
+                for (final root in widget.roots.where(
+                  (root) => root.git != null,
+                ))
+                  GitOperationPanel(
+                    key: ValueKey('git-operation-${root.path}'),
+                    root: root.path,
+                    info: root.git!,
+                    onCommand: (args, title) =>
+                        widget.onGitCommand!(root.path, args, title),
+                    onOpenFile: widget.onOpenFile,
+                  ),
+              ],
+            ),
       repositoryLabel: () {
         final gitRoots = widget.roots.where((r) => r.git != null).toList();
         if (gitRoots.length == 1) {
@@ -1606,9 +1662,11 @@ class _FileTreePanelState extends State<FileTreePanel> {
         }
         if (gitRoots.length > 1) {
           final summary = gitRoots
-              .map((r) => r.git?.branch.isNotEmpty == true
-                  ? '${r.name}:${r.git!.branch}'
-                  : r.name)
+              .map(
+                (r) => r.git?.branch.isNotEmpty == true
+                    ? '${r.name}:${r.git!.branch}'
+                    : r.name,
+              )
               .join(', ');
           return '${gitRoots.length} repos · $summary';
         }
@@ -3002,9 +3060,6 @@ class _NameFieldState extends State<_NameField> {
 
 /// Aliases de compatibilidade para componentes de Source Control desacoplados para source_control_changes_view.dart.
 typedef _ChangedTree = SourceControlChangesTree;
-
-
-
 
 /// Cor do nome conforme o status git da linha (delegado para gitStatusColor).
 Color? _gitColor(AppColors colors, GitFileStatus? status) =>

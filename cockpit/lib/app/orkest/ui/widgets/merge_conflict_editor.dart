@@ -18,6 +18,7 @@ Future<String?> showMergeDocumentEditor(
   String? language,
   String? fileName,
   List<ConflictBlock>? blocks,
+  GitConflictStages? stages,
 }) => showDialog<String>(
   context: context,
   barrierDismissible: false,
@@ -25,6 +26,7 @@ Future<String?> showMergeDocumentEditor(
   builder: (_) => MergeDocumentEditor(
     text: text,
     blocks: blocks,
+    stages: stages,
     initialConflictIndex: initialConflictIndex,
     language: language,
     fileName: fileName,
@@ -36,6 +38,7 @@ class MergeDocumentEditor extends StatefulWidget {
     super.key,
     required this.text,
     this.blocks,
+    this.stages,
     this.initialConflictIndex = 0,
     this.language,
     this.fileName,
@@ -43,6 +46,7 @@ class MergeDocumentEditor extends StatefulWidget {
 
   final String text;
   final List<ConflictBlock>? blocks;
+  final GitConflictStages? stages;
   final int initialConflictIndex;
   final String? language;
   final String? fileName;
@@ -381,6 +385,26 @@ class _MergeDocumentEditorState extends State<MergeDocumentEditor> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
+        if (widget.stages case final stages?) ...[
+          Expanded(
+            child: _MergeInputs(
+              block: ConflictBlock(
+                from: 0,
+                to: 0,
+                startLine: 1,
+                endLine: 1,
+                ours: stages.ours ?? '',
+                theirs: stages.theirs ?? '',
+                base: stages.base,
+                oursLabel: _blocks.first.oursLabel,
+                theirsLabel: _blocks.first.theirsLabel,
+              ),
+              language: widget.language,
+            ),
+          ),
+          const SizedBox(height: 8),
+          Text(tr.mergeResult, style: context.typo.label),
+        ],
         Expanded(
           child: Container(
             decoration: BoxDecoration(
@@ -553,81 +577,17 @@ class MergeConflictComparison extends StatefulWidget {
 }
 
 class _MergeConflictComparisonState extends State<MergeConflictComparison> {
-  int _source = 0;
-  @override
-  void didUpdateWidget(MergeConflictComparison oldWidget) {
-    super.didUpdateWidget(oldWidget);
-    if (!identical(oldWidget.block, widget.block)) _source = 0;
-  }
-
   @override
   Widget build(BuildContext context) {
     final tr = context.t.orkest.fileTreePanel;
-    final labels = [
-      '${tr.mergeOurs}: ${widget.block.oursLabel}',
-      if (widget.block.base != null) tr.mergeBase,
-      '${tr.mergeTheirs}: ${widget.block.theirsLabel}',
-    ];
-    final contents = [
-      widget.block.ours,
-      if (widget.block.base != null) widget.block.base!,
-      widget.block.theirs,
-    ];
-    final sections = [
-      tr.mergeOurs,
-      if (widget.block.base != null) tr.mergeBase,
-      tr.mergeTheirs,
-    ];
     final invalid = const GitConflictService().hasUnresolvedMarkers(
       widget.result.text,
-    );
-    Widget source(int index) => _MergeSource(
-      title: labels[index],
-      text: contents[index],
-      language: widget.language,
     );
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Expanded(
-          child: LayoutBuilder(
-            builder: (context, constraints) {
-              if (constraints.maxWidth >= 720) {
-                return Row(
-                  crossAxisAlignment: CrossAxisAlignment.stretch,
-                  children: [
-                    for (var i = 0; i < labels.length; i++) ...[
-                      if (i > 0) const SizedBox(width: 8),
-                      Expanded(child: source(i)),
-                    ],
-                  ],
-                );
-              }
-              return Column(
-                children: [
-                  Wrap(
-                    spacing: 6,
-                    children: [
-                      for (var i = 0; i < labels.length; i++)
-                        OutlineButton(
-                          onPressed: () => setState(() => _source = i),
-                          child: Text(
-                            sections[i],
-                            style: context.typo.label.copyWith(
-                              color: _source == i
-                                  ? context.colors.accent
-                                  : context.colors.text3,
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-                  const SizedBox(height: 6),
-                  Expanded(child: source(_source)),
-                ],
-              );
-            },
-          ),
+          child: _MergeInputs(block: widget.block, language: widget.language),
         ),
         const SizedBox(height: 10),
         Wrap(
@@ -689,9 +649,15 @@ class _MergeConflictComparisonState extends State<MergeConflictComparison> {
 }
 
 class _MergeSource extends StatelessWidget {
-  const _MergeSource({required this.title, required this.text, this.language});
+  const _MergeSource({
+    required this.title,
+    required this.text,
+    this.language,
+    this.accent,
+  });
   final String title;
   final String text;
+  final Color? accent;
   final String? language;
   @override
   Widget build(BuildContext context) => Container(
@@ -702,8 +668,9 @@ class _MergeSource extends StatelessWidget {
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
+        Container(
           padding: const EdgeInsets.all(8),
+          color: accent?.withValues(alpha: .12),
           child: Text(
             title,
             maxLines: 1,
@@ -720,24 +687,43 @@ class _MergeSource extends StatelessWidget {
               scrollDirection: Axis.horizontal,
               child: Padding(
                 padding: const EdgeInsets.all(8),
-                child: SelectionArea(
-                  child: Text.rich(
-                    buildCodeSpan(
-                          context,
-                          source: text,
-                          language: language,
-                          baseStyle: context.typo.mono.copyWith(
-                            fontSize: 12,
-                            color: context.colors.text,
-                          ),
-                        ) ??
-                        TextSpan(text: text),
-                    softWrap: false,
-                    style: context.typo.mono.copyWith(
-                      fontSize: 12,
-                      color: context.colors.text,
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Padding(
+                      padding: const EdgeInsets.only(right: 12),
+                      child: Text(
+                        List.generate(
+                          text.split('\n').length,
+                          (i) => '${i + 1}',
+                        ).join('\n'),
+                        textAlign: TextAlign.right,
+                        style: context.typo.mono.copyWith(
+                          fontSize: 12,
+                          color: context.colors.text4,
+                        ),
+                      ),
                     ),
-                  ),
+                    SelectionArea(
+                      child: Text.rich(
+                        buildCodeSpan(
+                              context,
+                              source: text,
+                              language: language,
+                              baseStyle: context.typo.mono.copyWith(
+                                fontSize: 12,
+                                color: context.colors.text,
+                              ),
+                            ) ??
+                            TextSpan(text: text),
+                        softWrap: false,
+                        style: context.typo.mono.copyWith(
+                          fontSize: 12,
+                          color: context.colors.text,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -746,4 +732,101 @@ class _MergeSource extends StatelessWidget {
       ],
     ),
   );
+}
+
+/// Two immutable inputs above the result; the common ancestor is optional.
+class _MergeInputs extends StatefulWidget {
+  const _MergeInputs({required this.block, this.language});
+  final ConflictBlock block;
+  final String? language;
+  @override
+  State<_MergeInputs> createState() => _MergeInputsState();
+}
+
+class _MergeInputsState extends State<_MergeInputs> {
+  bool _showBase = false;
+  int _source = 0;
+  @override
+  Widget build(BuildContext context) {
+    final tr = context.t.orkest.fileTreePanel;
+    final labels = [
+      '${tr.mergeOurs}: ${widget.block.oursLabel}',
+      '${tr.mergeTheirs}: ${widget.block.theirsLabel}',
+      if (_showBase && widget.block.base != null) tr.mergeBase,
+    ];
+    final contents = [
+      widget.block.ours,
+      widget.block.theirs,
+      if (_showBase && widget.block.base != null) widget.block.base!,
+    ];
+    Widget source(int i) => _MergeSource(
+      title: labels[i],
+      text: contents[i],
+      language: widget.language,
+      accent: i == 0
+          ? context.colors.accent
+          : i == 1
+          ? context.colors.gitStaged
+          : context.colors.text3,
+    );
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        if (widget.block.base != null)
+          Align(
+            alignment: Alignment.centerRight,
+            child: GhostButton(
+              key: const ValueKey('merge-toggle-base'),
+              onPressed: () => setState(() {
+                _showBase = !_showBase;
+                _source = 0;
+              }),
+              child: Text(
+                _showBase
+                    ? context.t.orkest.gitEvolution.hideBase
+                    : context.t.orkest.gitEvolution.showBase,
+              ),
+            ),
+          ),
+        Expanded(
+          child: LayoutBuilder(
+            builder: (context, constraints) {
+              if (constraints.maxWidth >= 720) {
+                return Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var i = 0; i < labels.length; i++) ...[
+                      if (i > 0) const SizedBox(width: 8),
+                      Expanded(child: source(i)),
+                    ],
+                  ],
+                );
+              }
+              return Column(
+                children: [
+                  Wrap(
+                    spacing: 6,
+                    children: [
+                      for (var i = 0; i < labels.length; i++)
+                        GhostButton(
+                          onPressed: () => setState(() => _source = i),
+                          child: Text(
+                            i == 0
+                                ? tr.mergeOurs
+                                : i == 1
+                                ? tr.mergeTheirs
+                                : tr.mergeBase,
+                          ),
+                        ),
+                    ],
+                  ),
+                  Expanded(child: source(_source.clamp(0, labels.length - 1))),
+                ],
+              );
+            },
+          ),
+        ),
+      ],
+    );
+  }
 }

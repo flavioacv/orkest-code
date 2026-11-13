@@ -23,6 +23,7 @@ class GitConflictBanner extends StatelessWidget {
     this.onContinueOperation,
     this.onAbortOperation,
     this.onReviewConflict,
+    this.onStageResolved,
   });
 
   final int conflictCount;
@@ -36,6 +37,7 @@ class GitConflictBanner extends StatelessWidget {
   final VoidCallback? onContinueOperation;
   final VoidCallback? onAbortOperation;
   final VoidCallback? onReviewConflict;
+  final VoidCallback? onStageResolved;
 
   @override
   Widget build(BuildContext context) {
@@ -99,6 +101,12 @@ class GitConflictBanner extends StatelessWidget {
                 ],
               ],
             ),
+            if (onStageResolved != null)
+              _ConflictActionButton(
+                label: context.t.orkest.gitEvolution.saveAndStage,
+                icon: sc.LucideIcons.check,
+                onPressed: onStageResolved!,
+              ),
             // Navegação entre blocos de conflito
             if (onReviewConflict != null)
               _ConflictActionButton(
@@ -106,50 +114,52 @@ class GitConflictBanner extends StatelessWidget {
                 icon: sc.LucideIcons.columns3,
                 onPressed: onReviewConflict!,
               ),
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _ConflictIconButton(
-                  icon: sc.LucideIcons.arrowUp,
-                  tooltip: tr.prevConflict,
-                  onTap: onPrev,
-                ),
-                const SizedBox(width: 4),
-                _ConflictIconButton(
-                  icon: sc.LucideIcons.arrowDown,
-                  tooltip: tr.nextConflict,
-                  onTap: onNext,
-                ),
-              ],
-            ),
+            if (conflictCount > 0)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _ConflictIconButton(
+                    icon: sc.LucideIcons.arrowUp,
+                    tooltip: tr.prevConflict,
+                    onTap: onPrev,
+                  ),
+                  const SizedBox(width: 4),
+                  _ConflictIconButton(
+                    icon: sc.LucideIcons.arrowDown,
+                    tooltip: tr.nextConflict,
+                    onTap: onNext,
+                  ),
+                ],
+              ),
             // Ações de resolução
-            Row(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                _ConflictActionButton(
-                  label: tr.acceptAllOurs,
-                  icon: sc.LucideIcons.check,
-                  tooltip: 'HEAD / Atual',
-                  accentColor: colors.accent,
-                  onPressed: onAcceptOurs,
-                ),
-                const SizedBox(width: 6),
-                _ConflictActionButton(
-                  label: tr.acceptAllTheirs,
-                  icon: sc.LucideIcons.download,
-                  tooltip: 'Incoming / Entrante',
-                  accentColor: colors.gitStaged,
-                  onPressed: onAcceptTheirs,
-                ),
-                const SizedBox(width: 6),
-                _ConflictActionButton(
-                  label: tr.acceptBoth,
-                  icon: sc.LucideIcons.copy,
-                  tooltip: 'Concatenar Atual + Entrante',
-                  onPressed: onAcceptBoth,
-                ),
-              ],
-            ),
+            if (conflictCount > 0)
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  _ConflictActionButton(
+                    label: tr.acceptAllOurs,
+                    icon: sc.LucideIcons.check,
+                    tooltip: 'HEAD / Atual',
+                    accentColor: colors.accent,
+                    onPressed: onAcceptOurs,
+                  ),
+                  const SizedBox(width: 6),
+                  _ConflictActionButton(
+                    label: tr.acceptAllTheirs,
+                    icon: sc.LucideIcons.download,
+                    tooltip: 'Incoming / Entrante',
+                    accentColor: colors.gitStaged,
+                    onPressed: onAcceptTheirs,
+                  ),
+                  const SizedBox(width: 6),
+                  _ConflictActionButton(
+                    label: tr.acceptBoth,
+                    icon: sc.LucideIcons.copy,
+                    tooltip: 'Concatenar Atual + Entrante',
+                    onPressed: onAcceptBoth,
+                  ),
+                ],
+              ),
             // Operação Git em andamento (Continue / Abort)
             if (hasOperation) ...[
               Container(width: 1, height: 16, color: colors.border),

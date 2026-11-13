@@ -46,11 +46,12 @@ class GitController extends ChangeNotifier {
     this._watchRetryDelay = const Duration(milliseconds: 500),
     this._fileTreeDebounce = const Duration(milliseconds: 400),
     this._fileTreeMaxLatency = const Duration(seconds: 2),
-  })  : _hunkService = hunkService ?? const GitHunkService(),
-        _directoryWatch = directoryWatch ?? _defaultDirectoryWatch {
+  }) : _hunkService = hunkService ?? const GitHunkService(),
+       _directoryWatch = directoryWatch ?? _defaultDirectoryWatch {
     _activity.addListener(_onActivityChanged);
   }
 
+  bool _closed = false;
   final GitStatusReader _reader;
   final GitCommandRunner _runner;
   final WindowActivityController _activity;
@@ -243,20 +244,35 @@ class GitController extends ChangeNotifier {
   // ---- comandos -------------------------------------------------------------
 
   /// Sync = `git pull` e, se OK, `git push` no repo em [repoPath]. Stream ao vivo.
-  GitRun sync(String repoPath) => _runner.syncPullPush(repoPath);
+  GitRun sync(String repoPath) =>
+      _observeRun(repoPath, _runner.syncPullPush(repoPath));
 
   /// `git pull` no repo em [repoPath].
-  GitRun pull(String repoPath) => _runner.run(repoPath, const ['pull']);
+  GitRun pull(String repoPath) => run(repoPath, const ['pull']);
 
   /// `git push` no repo em [repoPath].
-  GitRun push(String repoPath) => _runner.run(repoPath, const ['push']);
+  GitRun push(String repoPath) => run(repoPath, const ['push']);
 
   /// Atualiza refs remotas sem alterar o working tree.
   GitRun fetch(String repoPath) =>
-      _runner.run(repoPath, const ['fetch', '--all', '--prune']);
+      run(repoPath, const ['fetch', '--all', '--prune']);
 
   /// Executa uma operação Git estruturada pela interface avançada.
-  GitRun run(String repoPath, List<String> args) => _runner.run(repoPath, args);
+  GitRun run(String repoPath, List<String> args) =>
+      _observeRun(repoPath, _runner.run(repoPath, args));
+
+  GitRun _observeRun(String root, GitRun process) {
+    // Refresh on completion, including conflicts, without waiting for the log dialog.
+    final completed = process.exitCode.then((code) async {
+      if (_closed) return code;
+      markHistoryStale();
+      for (final entry in _rootsByProject.entries.toList()) {
+        if (entry.value.contains(root)) await refresh(entry.key);
+      }
+      return code;
+    });
+    return GitRun(output: process.output, exitCode: completed);
+  }
 
   /// Roda um comando e coleta a saída para consumidores que precisam ler o
   /// resultado (por exemplo, o seletor de commits de amend).
@@ -286,7 +302,7 @@ class GitController extends ChangeNotifier {
   Future<Result<List<GitBranch>, GitBranchError>> branches(String root) async {
     final result = await output(root, const [
       'for-each-ref',
-      '--format=%(refname)\t%(HEAD)',
+      '--format=%(refname)\t%(HEAD)\t%(upstream:short)\t%(upstream:track)',
       'refs/heads',
       'refs/remotes',
     ]);
@@ -324,7 +340,13 @@ class GitController extends ChangeNotifier {
           name: name,
           isRemote: isRemote,
           isCurrent: fields.length > 1 && fields[1] == '*',
-          isUsedByWorktree: used.contains(name),
+          isUsedByWorktree: !isRemote && used.contains(name),
+          upstream: fields.length > 2 && fields[2].isNotEmpty
+              ? fields[2]
+              : null,
+          trackingStatus: fields.length > 3 && fields[3].isNotEmpty
+              ? fields[3]
+              : null,
         ),
       );
     }
@@ -342,6 +364,23 @@ class GitController extends ChangeNotifier {
     String root,
     GitBranch branch,
   ) async {
+    if (branch.isRemote) {
+      final listed = await branches(root);
+      if (listed case Failure(:final error)) return Failure(error);
+      final locals = listed.fold((value) => value, (_) => <GitBranch>[]);
+      final tracking = locals
+          .where((b) => !b.isRemote && b.upstream == branch.name)
+          .toList();
+      if (tracking.length > 1) {
+        return Failure(
+          GitBranchError(
+            GitBranchErrorKind.checkoutFailed,
+            detail: tracking.map((b) => b.name).join(', '),
+          ),
+        );
+      }
+      if (tracking.length == 1) return checkoutBranch(root, tracking.single);
+    }
     final args = branch.isRemote
         ? [
             'switch',
@@ -350,7 +389,7 @@ class GitController extends ChangeNotifier {
             branch.name.substring(branch.name.indexOf('/') + 1),
             branch.name,
           ]
-        : ['switch', branch.name];
+        : ['switch', '--', branch.name];
     final error = await collect(root, args);
     if (error == null) return const Success(null);
     return Failure(_branchError(error, create: false));
@@ -359,8 +398,9 @@ class GitController extends ChangeNotifier {
   /// Cria uma branch local a partir do HEAD e já a seleciona.
   Future<Result<void, GitBranchError>> createBranch(
     String root,
-    String name,
-  ) async {
+    String name, {
+    String? startPoint,
+  }) async {
     final normalized = name.trim();
     if (normalized.isEmpty ||
         normalized.startsWith('-') ||
@@ -368,7 +408,24 @@ class GitController extends ChangeNotifier {
         normalized.contains('..')) {
       return const Failure(GitBranchError(GitBranchErrorKind.invalidName));
     }
-    final error = await collect(root, ['switch', '-c', normalized]);
+    final validation = await output(root, [
+      'check-ref-format',
+      '--branch',
+      normalized,
+    ]);
+    if (validation.$1 != 0) {
+      return const Failure(GitBranchError(GitBranchErrorKind.invalidName));
+    }
+    if (startPoint != null &&
+        (startPoint.startsWith('-') || startPoint.isEmpty)) {
+      return const Failure(GitBranchError(GitBranchErrorKind.invalidName));
+    }
+    final error = await collect(root, [
+      'switch',
+      '-c',
+      normalized,
+      ?startPoint,
+    ]);
     if (error == null) return const Success(null);
     return Failure(_branchError(error, create: true));
   }
@@ -572,7 +629,10 @@ class GitController extends ChangeNotifier {
   }
 
   /// Remove uma tag local.
-  Future<Result<void, String>> deleteTag(String root, {required String name}) async {
+  Future<Result<void, String>> deleteTag(
+    String root, {
+    required String name,
+  }) async {
     final result = await _workService.deleteTag(root, name: name);
     if (result.isSuccess) {
       markHistoryStale();
@@ -587,14 +647,13 @@ class GitController extends ChangeNotifier {
     String? toCommit,
     List<String>? filePaths,
     bool staged = false,
-  }) =>
-      _workService.createPatch(
-        root,
-        fromCommit: fromCommit,
-        toCommit: toCommit,
-        filePaths: filePaths,
-        staged: staged,
-      );
+  }) => _workService.createPatch(
+    root,
+    fromCommit: fromCommit,
+    toCommit: toCommit,
+    filePaths: filePaths,
+    staged: staged,
+  );
 
   /// Aplica um patch unificado no repositório com suporte a verificação prévia (`checkOnly`).
   Future<Result<void, String>> applyPatch(
@@ -1009,6 +1068,7 @@ class GitController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _closed = true;
     _activity.removeListener(_onActivityChanged);
     _cancelWatch();
     _gitPoll?.cancel();

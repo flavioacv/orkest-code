@@ -634,22 +634,20 @@ class _FileViewerState extends State<FileViewer> {
 
   void _updateConflictState() {
     final text = _ctrl?.text;
-    if (text == null || !_conflictService.hasConflictMarkers(text)) {
-      if (_conflictBlocks.isNotEmpty) {
-        setState(() {
-          _conflictBlocks = const <ConflictBlock>[];
-          _currentConflictIndex = -1;
-          _ongoingGitOp = GitOngoingOperation.none;
-        });
-      }
-      return;
-    }
-
-    final blocks = _conflictService.parseConflicts(text);
+    final blocks = text == null
+        ? <ConflictBlock>[]
+        : _conflictService.parseConflicts(text);
     final repoRoot = _findRepoRoot();
-    final op = repoRoot != null
-        ? _conflictService.detectOngoingOperation(repoRoot)
-        : GitOngoingOperation.none;
+    var op = GitOngoingOperation.none;
+    try {
+      if (repoRoot != null) {
+        op = _conflictService.detectOngoingOperation(repoRoot);
+      }
+    } on FileSystemException catch (error) {
+      DiagnosticsLog.instance.warn('file-viewer', 'git operation: $error');
+    } on FormatException catch (error) {
+      DiagnosticsLog.instance.warn('file-viewer', 'git operation: $error');
+    }
 
     setState(() {
       _conflictBlocks = blocks;
@@ -667,7 +665,8 @@ class _FileViewerState extends State<FileViewer> {
     try {
       var dir = Directory(widget.session.path).parent;
       while (dir.path != dir.parent.path) {
-        if (FileSystemEntity.typeSync(p.join(dir.path, '.git')) != FileSystemEntityType.notFound) {
+        if (FileSystemEntity.typeSync(p.join(dir.path, '.git')) !=
+            FileSystemEntityType.notFound) {
           return dir.path;
         }
         dir = dir.parent;
@@ -722,11 +721,34 @@ class _FileViewerState extends State<FileViewer> {
     final snapshot = ctrl.text;
     final initialIndex = _currentConflictIndex < 0 ? 0 : _currentConflictIndex;
     final repoRoot = _findRepoRoot();
-    final blocks = repoRoot == null ? _conflictBlocks : await _conflictService.reviewBlocks(
-      text: snapshot, repoRoot: repoRoot, relativePath: p.relative(path, from: repoRoot));
-    if (!mounted || !identical(_ctrl, ctrl) || ctrl.text != snapshot || widget.session != session) return;
+    final blocks = repoRoot == null
+        ? _conflictBlocks
+        : await _conflictService.reviewBlocks(
+            text: snapshot,
+            repoRoot: repoRoot,
+            relativePath: p.relative(path, from: repoRoot),
+          );
+    if (!mounted ||
+        !identical(_ctrl, ctrl) ||
+        ctrl.text != snapshot ||
+        widget.session != session) {
+      return;
+    }
+    final stages = repoRoot == null
+        ? null
+        : (await _conflictService.readConflictStages(
+            repoRoot: repoRoot,
+            relativePath: p.relative(path, from: repoRoot),
+          )).fold((value) => value, (_) => null);
+    if (!mounted ||
+        !identical(_ctrl, ctrl) ||
+        ctrl.text != snapshot ||
+        widget.session != session) {
+      return;
+    }
     final result = await showMergeDocumentEditor(
       context,
+      stages: stages,
       text: snapshot,
       blocks: blocks,
       initialConflictIndex: initialIndex,
@@ -749,15 +771,66 @@ class _FileViewerState extends State<FileViewer> {
     _applyToBuffer(result);
   }
 
+  Future<void> _saveAndStageResolution() async {
+    final vm = _vm;
+    final ctrl = _ctrl;
+    final root = _findRepoRoot();
+    if (vm == null ||
+        ctrl == null ||
+        root == null ||
+        _saving ||
+        widget.session.hasDiskConflict ||
+        _conflictService.hasUnresolvedMarkers(ctrl.text)) {
+      return;
+    }
+    final session = widget.session;
+    if (!await _save() ||
+        !mounted ||
+        !identical(widget.session, session) ||
+        !identical(_ctrl, ctrl) ||
+        _saving ||
+        _dirty ||
+        widget.session.hasDiskConflict ||
+        _conflictService.hasUnresolvedMarkers(ctrl.text)) {
+      return;
+    }
+    final result = await _conflictService.markResolved(
+      repoRoot: root,
+      relativePath: p.relative(session.path, from: root),
+      expectedText: ctrl.text,
+    );
+    if (!mounted) return;
+    if (result case Failure(:final error)) {
+      final tr = context.t.orkest;
+      await showInfoDialog(
+        context,
+        title: tr.gitEvolution.stageResolution,
+        message: switch (error.kind) {
+          GitResolutionErrorKind.stale => tr.fileTreePanel.mergeStale,
+          GitResolutionErrorKind.markers => tr.fileTreePanel.mergeMarkers,
+          GitResolutionErrorKind.commandFailed =>
+            tr.gitEvolution.resolutionError(detail: error.detail ?? ''),
+        },
+      );
+    }
+    _updateConflictState();
+  }
+
   Future<void> _continueGitOperation() async {
     final repoRoot = _findRepoRoot();
     if (repoRoot == null) return;
+    if (_dirty || widget.session.hasDiskConflict) return;
     final res = await _conflictService.continueOperation(repoRoot: repoRoot);
     if (!mounted) return;
     if (res case Failure(:final error)) {
       DiagnosticsLog.instance.warn(
         'file-viewer',
         'git continue failed: $error',
+      );
+      await showInfoDialog(
+        context,
+        title: context.t.orkest.fileTreePanel.reviewConflict,
+        message: context.t.orkest.gitEvolution.resolutionError(detail: error),
       );
     } else {
       _updateConflictState();
@@ -767,6 +840,15 @@ class _FileViewerState extends State<FileViewer> {
   Future<void> _abortGitOperation() async {
     final repoRoot = _findRepoRoot();
     if (repoRoot == null) return;
+    final confirmed = await showConfirmDialog(
+      context,
+      title: context.t.orkest.gitEvolution.abortTitle(
+        operation: _ongoingGitOp.name,
+      ),
+      message: context.t.orkest.gitEvolution.abortMessage,
+      danger: true,
+    );
+    if (!confirmed || !mounted) return;
     final res = await _conflictService.abortOperation(repoRoot: repoRoot);
     if (!mounted) return;
     if (res case Failure(:final error)) {
@@ -1333,7 +1415,8 @@ class _FileViewerState extends State<FileViewer> {
               onToggleRegex: () => _toggleFind(() => _findRegex = !_findRegex),
             ),
           ),
-        if (_conflictBlocks.isNotEmpty)
+        if (_conflictBlocks.isNotEmpty ||
+            _ongoingGitOp != GitOngoingOperation.none)
           Positioned(
             top: widget.session.hasDiskConflict ? 42 : 8,
             left: 16,
@@ -1341,7 +1424,12 @@ class _FileViewerState extends State<FileViewer> {
             child: Align(
               alignment: Alignment.topCenter,
               child: GitConflictBanner(
-                onReviewConflict: _reviewCurrentConflict,
+                onReviewConflict: _conflictBlocks.isEmpty
+                    ? null
+                    : _reviewCurrentConflict,
+                onStageResolved: _conflictBlocks.isEmpty && !_saving
+                    ? _saveAndStageResolution
+                    : null,
                 conflictCount: _conflictBlocks.length,
                 currentIndex: _currentConflictIndex,
                 onNext: _nextConflict,
@@ -1353,7 +1441,10 @@ class _FileViewerState extends State<FileViewer> {
                 onAcceptBoth: () =>
                     _resolveCurrentConflict(ConflictResolution.both),
                 ongoingOperation: _ongoingGitOp,
-                onContinueOperation: _ongoingGitOp != GitOngoingOperation.none
+                onContinueOperation:
+                    !_dirty &&
+                        !_saving &&
+                        _ongoingGitOp != GitOngoingOperation.none
                     ? _continueGitOperation
                     : null,
                 onAbortOperation: _ongoingGitOp != GitOngoingOperation.none

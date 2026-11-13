@@ -1,6 +1,7 @@
 import 'package:orkest_code/app/core/domain/result.dart';
 import 'package:orkest_code/app/core/ui/themes/themes.dart';
 import 'package:orkest_code/app/core/ui/widgets/app_tooltip.dart';
+import 'package:orkest_code/app/core/ui/widgets/app_menu.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_branch.dart';
 import 'package:orkest_code/app/orkest/domain/exceptions/git_branch_error.dart';
 import 'package:orkest_code/app/orkest/ui/viewmodels/orkest_viewmodel.dart';
@@ -31,6 +32,8 @@ class _GitBranchPickerState extends State<_GitBranchPicker> {
   List<GitBranch> _branches = const [];
   GitBranchError? _error;
   bool _loading = true;
+  bool _busy = false;
+  String? _startPoint;
 
   OrkestViewModel get _vm => widget.vm;
 
@@ -81,6 +84,30 @@ class _GitBranchPickerState extends State<_GitBranchPicker> {
     }
   }
 
+  Future<void> _execute(
+    Future<Result<void, GitBranchError>> Function() operation,
+  ) async {
+    if (_busy) return;
+    setState(() {
+      _busy = true;
+      _error = null;
+    });
+    try {
+      await _finish(await operation());
+    } on Exception catch (error) {
+      if (mounted) {
+        setState(
+          () => _error = GitBranchError(
+            GitBranchErrorKind.checkoutFailed,
+            detail: error.toString(),
+          ),
+        );
+      }
+    } finally {
+      if (mounted) setState(() => _busy = false);
+    }
+  }
+
   String _message(BuildContext context, GitBranchError error) {
     final tr = context.t.orkest.branchPicker;
     return switch (error.kind) {
@@ -106,10 +133,23 @@ class _GitBranchPickerState extends State<_GitBranchPicker> {
         .where((b) => b.name.toLowerCase().contains(_search.text.toLowerCase()))
         .toList();
     return AlertDialog(
-      title: Text(context.t.orkest.branchPicker.title),
+      title: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(context.t.orkest.branchPicker.title),
+          Text(
+            widget.root,
+            style: context.typo.mono.copyWith(
+              fontSize: 11,
+              color: colors.text3,
+            ),
+          ),
+        ],
+      ),
       content: SizedBox(
         width: 440,
-        height: 430,
+        height:
+            MediaQuery.sizeOf(context).height.clamp(300, 750).toDouble() * .65,
         child: Column(
           children: [
             TextField(
@@ -145,10 +185,13 @@ class _GitBranchPickerState extends State<_GitBranchPicker> {
                         final branch = branches[i];
                         return GestureDetector(
                           behavior: HitTestBehavior.opaque,
-                          onTap: branch.isCurrent || branch.isUsedByWorktree
+                          onTap:
+                              _busy ||
+                                  branch.isCurrent ||
+                                  branch.isUsedByWorktree
                               ? null
-                              : () async => _finish(
-                                  await _vm.git.checkoutBranch(
+                              : () => _execute(
+                                  () => _vm.git.checkoutBranch(
                                     widget.root,
                                     branch,
                                   ),
@@ -164,7 +207,23 @@ class _GitBranchPickerState extends State<_GitBranchPicker> {
                                   size: 18,
                                 ),
                                 const SizedBox(width: 8),
-                                Expanded(child: Text(branch.name)),
+                                Expanded(
+                                  child: Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.start,
+                                    children: [
+                                      Text(branch.name),
+                                      if (branch.upstream != null)
+                                        Text(
+                                          '${branch.upstream} ${branch.trackingStatus ?? ""}',
+                                          style: context.typo.mono.copyWith(
+                                            fontSize: 11,
+                                            color: colors.text3,
+                                          ),
+                                        ),
+                                    ],
+                                  ),
+                                ),
                                 if (branch.isCurrent)
                                   Icon(Icons.check, color: colors.ok, size: 18),
                                 if (branch.isUsedByWorktree &&
@@ -189,6 +248,41 @@ class _GitBranchPickerState extends State<_GitBranchPicker> {
                     ),
             ),
             const SizedBox(height: 8),
+            OutlineButton(
+              key: const ValueKey('branch-start-point'),
+              onPressed: _busy
+                  ? null
+                  : () async {
+                      final selected = await showAppMenu(
+                        context,
+                        items: [
+                          AppMenuItem(
+                            value: 'HEAD',
+                            label: context.t.orkest.gitEvolution.createFromHead,
+                          ),
+                          for (final branch in _branches)
+                            AppMenuItem(
+                              value:
+                                  '${branch.isRemote ? 'refs/remotes' : 'refs/heads'}/${branch.name}',
+                              label: branch.name,
+                            ),
+                        ],
+                      );
+                      if (mounted && selected != null) {
+                        setState(
+                          () => _startPoint = selected == 'HEAD'
+                              ? null
+                              : selected,
+                        );
+                      }
+                    },
+              child: Text(
+                _startPoint ?? context.t.orkest.gitEvolution.createFromHead,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+              ),
+            ),
+            const SizedBox(height: 8),
             Row(
               children: [
                 Expanded(
@@ -201,9 +295,15 @@ class _GitBranchPickerState extends State<_GitBranchPicker> {
                 ),
                 const SizedBox(width: 8),
                 PrimaryButton(
-                  onPressed: () async => _finish(
-                    await _vm.git.createBranch(widget.root, _newBranch.text),
-                  ),
+                  onPressed: _busy || _loading
+                      ? null
+                      : () => _execute(
+                          () => _vm.git.createBranch(
+                            widget.root,
+                            _newBranch.text,
+                            startPoint: _startPoint,
+                          ),
+                        ),
                   child: Text(context.t.orkest.branchPicker.createBranch),
                 ),
               ],

@@ -151,6 +151,7 @@ class Translations$orkest$en {
 	final Translations _root; // ignore: unused_field
 
 	// Translations
+	late final Translations$orkest$gitEvolution$en gitEvolution = Translations$orkest$gitEvolution$en.internal(_root);
 	late final Translations$orkest$officeWorld$en officeWorld = Translations$orkest$officeWorld$en.internal(_root);
 	late final Translations$orkest$confirmDialog$en confirmDialog = Translations$orkest$confirmDialog$en.internal(_root);
 	late final Translations$orkest$neovim$en neovim = Translations$orkest$neovim$en.internal(_root);
@@ -468,6 +469,51 @@ class Translations$core$menu$en {
 
 	/// en: 'Zoom'
 	String get zoom => 'Zoom';
+}
+
+// Path: orkest.gitEvolution
+class Translations$orkest$gitEvolution$en {
+	Translations$orkest$gitEvolution$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Create from current HEAD'
+	String get createFromHead => 'Create from current HEAD';
+
+	/// en: 'Show base'
+	String get showBase => 'Show base';
+
+	/// en: 'Hide base'
+	String get hideBase => 'Hide base';
+
+	/// en: '$operation in progress'
+	String operationPending({required Object operation}) => '${operation} in progress';
+
+	/// en: '$count unresolved files'
+	String remainingFiles({required Object count}) => '${count} unresolved files';
+
+	/// en: 'Save and mark resolved'
+	String get saveAndStage => 'Save and mark resolved';
+
+	/// en: 'Mark as resolved'
+	String get stageResolution => 'Mark as resolved';
+
+	/// en: 'Could not complete the Git operation: $detail'
+	String resolutionError({required Object detail}) => 'Could not complete the Git operation: ${detail}';
+
+	/// en: 'Abort $operation?'
+	String abortTitle({required Object operation}) => 'Abort ${operation}?';
+
+	/// en: 'Git will undo the pending integration. Review and save any edits before aborting.'
+	String get abortMessage => 'Git will undo the pending integration. Review and save any edits before aborting.';
+
+	/// en: 'Pull with rebase'
+	String get pullRebase => 'Pull with rebase';
+
+	/// en: 'Pull (fast-forward only)'
+	String get pullFastForward => 'Pull (fast-forward only)';
 }
 
 // Path: orkest.officeWorld
@@ -4716,6 +4762,18 @@ extension on Translations {
 			'common.copyCode' => 'Copy code',
 			'common.search' => 'Search',
 			'common.noResults' => 'No results',
+			'orkest.gitEvolution.createFromHead' => 'Create from current HEAD',
+			'orkest.gitEvolution.showBase' => 'Show base',
+			'orkest.gitEvolution.hideBase' => 'Hide base',
+			'orkest.gitEvolution.operationPending' => ({required Object operation}) => '${operation} in progress',
+			'orkest.gitEvolution.remainingFiles' => ({required Object count}) => '${count} unresolved files',
+			'orkest.gitEvolution.saveAndStage' => 'Save and mark resolved',
+			'orkest.gitEvolution.stageResolution' => 'Mark as resolved',
+			'orkest.gitEvolution.resolutionError' => ({required Object detail}) => 'Could not complete the Git operation: ${detail}',
+			'orkest.gitEvolution.abortTitle' => ({required Object operation}) => 'Abort ${operation}?',
+			'orkest.gitEvolution.abortMessage' => 'Git will undo the pending integration. Review and save any edits before aborting.',
+			'orkest.gitEvolution.pullRebase' => 'Pull with rebase',
+			'orkest.gitEvolution.pullFastForward' => 'Pull (fast-forward only)',
 			'orkest.officeWorld.vcsPrOpened' => 'Pull request created',
 			'orkest.officeWorld.vcsPrMerged' => 'Pull request merged',
 			'orkest.officeWorld.vcsRelease' => 'Release published',
@@ -5135,6 +5193,8 @@ extension on Translations {
 			'orkest.fileTreePanel.mergeOurs' => 'Current',
 			'orkest.fileTreePanel.mergeTheirs' => 'Incoming',
 			'orkest.fileTreePanel.mergeApply' => 'Apply to editor',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.fileTreePanel.mergeStale' => 'The file changed during review. Open the conflict again to review its current contents.',
 			'orkest.fileTreePanel.mergeMarkers' => 'Remove conflict markers before applying the result.',
 			'orkest.fileTreePanel.workbenchRunTerminal' => 'Run / Test (terminal)',
@@ -5147,8 +5207,6 @@ extension on Translations {
 			'orkest.fileTreePanel.nextConflict' => 'Next',
 			'orkest.fileTreePanel.continueGitOp' => ({required Object op}) => 'Continue ${op}',
 			'orkest.fileTreePanel.abortGitOp' => ({required Object op}) => 'Abort ${op}',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.fileTreePanel.reviewDocument' => 'Review document conflicts',
 			'orkest.fileTreePanel.conflictProgress' => ({required Object current, required Object total, required Object resolved}) => 'Conflict ${current} of ${total} (${resolved} resolved)',
 			'orkest.fileTreePanel.markResolved' => 'Mark resolved',
@@ -5649,6 +5707,8 @@ extension on Translations {
 			'settings.page.general.editorEngineOrkest' => 'Orkest Code (default)',
 			'settings.page.general.editorEngineNeovim' => 'Neovim',
 			'settings.page.general.neovimChecking' => 'Looking for Neovim…',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.general.neovimNotFound' => 'Neovim was not found in your shell PATH.',
 			'settings.page.general.neovimRefresh' => 'Check again',
 			'settings.page.general.showOrkestTitle' => 'Show Orkest Code terminal',
@@ -5661,8 +5721,6 @@ extension on Translations {
 			'settings.page.general.updateFrequency.daily' => 'Daily',
 			'settings.page.general.updateFrequency.weekly' => 'Weekly',
 			'settings.page.general.updateFrequency.monthly' => 'Monthly',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.general.updateFrequency.never' => 'Never',
 			'settings.page.general.developerModeTitle' => 'Developer mode',
 			'settings.page.general.developerModeDesc' => 'Records Orkest Code’s own errors and warnings in a separate Telemetry store (the “Orkest Code” chip) and turns on performance metrics. Only useful to whoever maintains the app.',

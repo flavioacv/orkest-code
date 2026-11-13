@@ -86,6 +86,13 @@ class GitCommandRunnerImpl implements GitCommandRunner {
           return;
         }
 
+        if (await _isDirty(parentPath) || await _hasPendingMerge(parentPath)) {
+          await add(
+            'Parent repository has pending changes or a merge in progress.',
+          );
+          statusCompleter.complete(GitMergeStatus.error);
+          return;
+        }
         // 2. Merge no checkout do pai (que já está na branch dele).
         final merge = await _spawn(
           parentPath,
@@ -94,17 +101,27 @@ class GitCommandRunnerImpl implements GitCommandRunner {
           header: '\$ git merge $worktreeBranch',
         );
         if (merge != 0) {
-          // Conflito → aborta pra deixar o pai intocado.
+          // Abort only the integration started here, never an unrelated failure.
+          if (!await _hasPendingMerge(parentPath)) {
+            statusCompleter.complete(GitMergeStatus.error);
+            return;
+          }
           await add('');
-          await _spawn(
+          final abortCode = await _spawn(
             parentPath,
             const ['merge', '--abort'],
             controller,
             header: r'$ git merge --abort',
           );
           await add('');
-          await add('Merge aborted — parent branch untouched.');
-          statusCompleter.complete(GitMergeStatus.conflict);
+          await add(
+            abortCode == 0
+                ? 'Merge aborted.'
+                : 'Merge failed; abort did not complete. Inspect the repository before continuing.',
+          );
+          statusCompleter.complete(
+            abortCode == 0 ? GitMergeStatus.conflict : GitMergeStatus.error,
+          );
           return;
         }
 
@@ -137,8 +154,28 @@ class GitCommandRunnerImpl implements GitCommandRunner {
       'status',
       '--porcelain',
     ], environment: await envWithNodeOnPath());
-    if (res.exitCode != 0) return false; // não-git → nada a bloquear
+    if (res.exitCode != 0) {
+      throw ProcessException(
+        git,
+        ['status', '--porcelain'],
+        res.stderr.toString(),
+        res.exitCode,
+      );
+    }
     return (res.stdout as String).trim().isNotEmpty;
+  }
+
+  Future<bool> _hasPendingMerge(String path) async {
+    final git = await _gitBinary.resolve();
+    final result = await Process.run(git, [
+      '-C',
+      path,
+      'rev-parse',
+      '-q',
+      '--verify',
+      'MERGE_HEAD',
+    ], environment: await envWithNodeOnPath());
+    return result.exitCode == 0;
   }
 
   /// Spawna `git -C <repoPath> <args>`, encaminha stdout+stderr (por linha) para
@@ -153,11 +190,15 @@ class GitCommandRunnerImpl implements GitCommandRunner {
     if (header != null && !controller.isClosed) controller.add(header);
     try {
       final git = await _gitBinary.resolve();
-      final proc = await Process.start(git, [
-        '-C',
-        repoPath,
-        ...args,
-      ], environment: await envWithNodeOnPath());
+      final proc = await Process.start(
+        git,
+        ['-C', repoPath, ...args],
+        environment: {
+          ...await envWithNodeOnPath(),
+          'GIT_EDITOR': 'true',
+          'GIT_SEQUENCE_EDITOR': 'true',
+        },
+      );
       final done = <Future<void>>[];
       for (final stream in [proc.stdout, proc.stderr]) {
         done.add(

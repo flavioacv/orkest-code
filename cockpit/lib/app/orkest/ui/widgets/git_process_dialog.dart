@@ -18,6 +18,7 @@ Future<void> showGitProcessDialog(
   required Stream<String> output,
   required Future<bool> success,
   String Function(bool ok)? finalMessage,
+  WidgetBuilder? failureAction,
 }) {
   return showDialog<void>(
     context: context,
@@ -27,6 +28,7 @@ Future<void> showGitProcessDialog(
       output: output,
       success: success,
       finalMessage: finalMessage,
+      failureAction: failureAction,
     ),
   );
 }
@@ -37,12 +39,14 @@ class _GitProcessDialog extends StatefulWidget {
     required this.output,
     required this.success,
     this.finalMessage,
+    this.failureAction,
   });
 
   final String title;
   final Stream<String> output;
   final Future<bool> success;
   final String Function(bool ok)? finalMessage;
+  final WidgetBuilder? failureAction;
 
   @override
   State<_GitProcessDialog> createState() => _GitProcessDialogState();
@@ -167,6 +171,8 @@ class _GitProcessDialogState extends State<_GitProcessDialog> {
         ),
       ),
       actions: [
+        if (_done && !_ok && widget.failureAction != null)
+          widget.failureAction!(context),
         PrimaryButton(
           onPressed: _done ? () => Navigator.of(context).pop() : null,
           child: Text(_done ? 'Close' : 'Running…'),

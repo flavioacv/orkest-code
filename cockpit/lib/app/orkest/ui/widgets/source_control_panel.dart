@@ -19,6 +19,8 @@ class SourceControlPanel extends StatelessWidget {
     required this.onMenuRequested,
     required this.changeCount,
     this.repositoryLabel,
+    this.onCheckoutBranch,
+    this.operationBanner,
   });
   final SourceControlSection section;
   final ValueChanged<SourceControlSection> onSectionChanged;
@@ -29,6 +31,8 @@ class SourceControlPanel extends StatelessWidget {
   final ValueChanged<BuildContext> onMenuRequested;
   final int changeCount;
   final String? repositoryLabel;
+  final VoidCallback? onCheckoutBranch;
+  final Widget? operationBanner;
 
   @override
   Widget build(BuildContext context) {
@@ -50,6 +54,20 @@ class SourceControlPanel extends StatelessWidget {
                   ),
                 ),
               ),
+              if (onCheckoutBranch != null)
+                AppTooltip(
+                  message: context.t.orkest.branchPicker.title,
+                  child: HoverTap(
+                    key: const ValueKey('source-control-branches'),
+                    onTap: onCheckoutBranch,
+                    padding: const EdgeInsets.all(4),
+                    child: Icon(
+                      LucideIcons.gitBranch,
+                      size: 16,
+                      color: context.colors.text2,
+                    ),
+                  ),
+                ),
               AppTooltip(
                 message: tr.sectionSourceControl,
                 child: HoverTap(
@@ -66,6 +84,7 @@ class SourceControlPanel extends StatelessWidget {
             ],
           ),
         ),
+        ?operationBanner,
         Expanded(
           child: WorkbenchToolHost(
             showActiveTitle: true,

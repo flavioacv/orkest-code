@@ -1,4 +1,8 @@
 import 'package:orkest_code/app/orkest/domain/contracts/git_command_runner.dart';
+import 'package:orkest_code/app/core/domain/result.dart';
+import 'package:orkest_code/app/orkest/domain/entities/git_file_status.dart';
+import 'package:orkest_code/app/orkest/domain/entities/workbench_layout_state.dart';
+import 'package:path/path.dart' as p;
 import 'package:orkest_code/app/orkest/domain/entities/project.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/git_process_dialog.dart';
 import 'package:orkest_code/app/orkest/ui/viewmodels/orkest_viewmodel.dart';
@@ -170,13 +174,29 @@ Future<void> runGitProject(
   String rootPath,
   List<String> args,
   String title,
-) => _gitOpDialog(
-  context,
-  project,
-  rootPath,
-  run: (vm) => vm.git.run(rootPath, args),
-  title: (label) => '$title — $label',
-);
+) async {
+  if (args.length == 2 && args.first == 'rebase' && !args[1].startsWith('-')) {
+    final vm = _vm(context);
+    final result = await vm.git.rebase(rootPath, upstreamBranch: args[1]);
+    await vm.refreshGitProject(project.id);
+    if (!context.mounted) return;
+    if (result case Failure(:final error)) {
+      await showInfoDialog(
+        context,
+        title: title,
+        message: context.t.orkest.gitEvolution.resolutionError(detail: error),
+      );
+    }
+    return;
+  }
+  await _gitOpDialog(
+    context,
+    project,
+    rootPath,
+    run: (vm) => vm.git.run(rootPath, args),
+    title: (label) => '$title — $label',
+  );
+}
 
 /// Forma comum de sync/pull/push: roda o comando, mostra a saída ao vivo e
 /// re-lê o estado git do workspace no fim.
@@ -188,16 +208,62 @@ Future<void> _gitOpDialog(
   required String Function(String label) title,
 }) async {
   final vm = _vm(context);
+  var reviewConflicts = false;
   final process = run(vm);
-  final exitCodeFuture = process.exitCode;
+  final exitCodeFuture = process.exitCode.then((code) async {
+    await vm.refreshGitProject(project.id);
+    return code;
+  });
   await showGitProcessDialog(
     context,
     title: title(gitOpLabel(project, rootPath)),
     output: process.output,
+    failureAction: (dialogContext) {
+      final hasConflicts =
+          vm
+              .gitInfoForRoot(rootPath)
+              ?.files
+              .values
+              .contains(GitFileStatus.conflict) ??
+          false;
+      if (!hasConflicts) return const SizedBox.shrink();
+      return PrimaryButton(
+        key: const ValueKey('git-process-review-conflicts'),
+        onPressed: () {
+          reviewConflicts = true;
+          Navigator.of(dialogContext).pop();
+        },
+        child: Text(dialogContext.t.orkest.fileTreePanel.reviewConflict),
+      );
+    },
     success: exitCodeFuture.then((c) => c == 0),
   );
   await exitCodeFuture;
-  await vm.refreshGitProject(project.id);
+  if (reviewConflicts &&
+      context.mounted &&
+      vm.selectedProject?.id == project.id) {
+    vm.setWorkbenchLayout(
+      project.id,
+      vm
+          .workbenchLayout(project.id)
+          .copyWith(
+            activeTool: WorkbenchToolId.sourceControl,
+            sourceControlSection: SourceControlSection.changes,
+            isToolWindowCollapsed: false,
+          ),
+    );
+    final unresolved = vm
+        .gitInfoForRoot(rootPath)
+        ?.files
+        .entries
+        .where((entry) => entry.value == GitFileStatus.conflict);
+    if (unresolved != null && unresolved.isNotEmpty) {
+      await vm.openFile(
+        p.joinAll([rootPath, ...p.posix.split(unresolved.first.key)]),
+        isPreview: false,
+      );
+    }
+  }
 }
 
 /// "New realm…" do dropdown do footer: pede o nome e já troca pro realm novo
