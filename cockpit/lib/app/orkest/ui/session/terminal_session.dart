@@ -183,12 +183,26 @@ class TerminalSession extends PaneItem {
     // Sobe o shell e liga os dois lados. O `.cast<List<int>>()` re-vincula o
     // tipo do stream (o PTY emite Uint8List) para o `utf8.decoder` aceitar e
     // decodificar em streaming (trata multibyte partido entre chunks).
+    // O terminal interativo anuncia truecolor mesmo quando o app foi iniciado
+    // por uma ferramenta com NO_COLOR=1. Essa variável faria TUIs emitirem
+    // espaços sem os fundos coloridos que compõem seus logos. Uma escolha
+    // explícita no ambiente do workspace continua prevalecendo.
+    final disableColor =
+        (spawnEnv['NO_COLOR']?.isNotEmpty ?? false) ||
+        spawnEnv['FORCE_COLOR'] == '0' ||
+        spawnEnv['CLICOLOR'] == '0';
     _gateway.start(
       workingDirectory: workingDirectory,
       profile: profile,
       rows: 25,
       columns: 80,
-      extraEnv: {...spawnEnv, 'ORKEST_SESSION_TOKEN': hookGeneration},
+      extraEnv: {
+        'NO_COLOR': disableColor ? '1' : '',
+        'FORCE_COLOR': disableColor ? '0' : '3',
+        'CLICOLOR_FORCE': disableColor ? '0' : '1',
+        ...spawnEnv,
+        'ORKEST_SESSION_TOKEN': hookGeneration,
+      },
     );
     // A pasta do workspace pode ter sumido entre dois boots (o layout salvo
     // ainda aponta pra lá). O gateway abre no ancestral mais próximo em vez de

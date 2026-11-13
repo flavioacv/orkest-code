@@ -13,3 +13,15 @@ O cálculo compartilhado fica no pacote local flterm, já utilizado pelo app, co
 Validação final consolidada: 56 testes aprovados (39 de contraste/temas, 16 de regressão dos terminais e 1 de pixels do Ghostty real). A ampliação acrescenta casos de pixels para fundos RGB/indexados, campos, blocos de logos, bordas Unicode, meios blocos e Braille, mantendo a verificação de faint, inversão, fundos escuros, troca de tema e OSC 10. Análise estática dos 7 arquivos Dart da ampliação sem issues e diff sem erros de whitespace. São fixtures representativas dos mecanismos vistos nas capturas, não uma sessão E2E completa de cada agente. Não foi executado E2E de todos os temas por navegação na aplicação.
 
 Nenhuma dependência ou configuração de usuário adicionada. Commit local, sem push ou merge.
+
+## Logo real ainda ausente: causa reproduzida no ambiente
+
+A captura posterior do usuário mostrou o logo ausente e a interface do Antigravity sem cores, mesmo após os ajustes de contraste. Os testes genéricos anteriores não comprovavam esse caso real.
+
+O processo de debug iniciado pela ferramenta herdava `NO_COLOR=1` e o repassava aos PTYs. A reprodução com o executável Antigravity CLI 1.5.8 confirmou que essa variável faz o programa emitir somente espaços na região do logo; sem a variável, emite 16 blocos RGB de fundo. Logo, a renderização não poderia recuperar um logo que o programa deixou de emitir.
+
+`TerminalSession` agora anuncia cores para sessões interativas: `NO_COLOR=''`, `FORCE_COLOR=3` e `CLICOLOR_FORCE=1`. O ambiente explícito do workspace prevalece, inclusive `NO_COLOR`, `FORCE_COLOR=0` e `CLICOLOR=0`. Isso alcança gateways locais, sidecar e remotos sem alterar os ambientes dos executores de tarefas.
+
+Validação específica: 9 testes aprovados (4 de ambiente, 1 da captura real do logo e 4 de renderização/contraste); análise estática dos 3 arquivos Dart novos/alterados sem issues. A fixture contém apenas a região do logo real, sem conta, autenticação ou dados de projeto. O teste desenha a captura no Ghostty claro e verifica mais de 500 pixels coloridos e pelo menos 8 cores distintas. A imagem gerada foi inspecionada. Uma aba separada `Teste cores Antigravity` foi aberta pela CLI e o programa iniciou com o logo usando `env -u NO_COLOR FORCE_COLOR=3 CLICOLOR_FORCE=1 agy`, sem enviar prompts.
+
+Abas antigas conservam seu ambiente; precisam reiniciar o programa com a variável removida. A mudança de criação vale para novas sessões quando o código atualizado estiver carregado. O último app Flutter debug foi encerrado durante a revisão; a tentativa final de hot reload ficou indisponível (DTD sem conexão e daemon com diretório corrente inválido). Não afirmar atualização automática do binário em execução ou E2E completo de todos os agentes.
