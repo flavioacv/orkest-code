@@ -197,6 +197,7 @@ class GitCommandRunnerImpl implements GitCommandRunner {
           ...await envWithNodeOnPath(),
           'GIT_EDITOR': 'true',
           'GIT_SEQUENCE_EDITOR': 'true',
+          'GIT_TERMINAL_PROMPT': '0',
         },
       );
       final done = <Future<void>>[];

@@ -298,6 +298,14 @@ class GitController extends ChangeNotifier {
     return code == 0 ? null : lines.join('\n');
   }
 
+  Future<void> refreshRepository(String root) async {
+    final info = await _reader.read(root);
+    if (_closed) return;
+    _gitInfo[root] = info;
+    _gitTree[root] = _buildGitTree(info?.files);
+    markHistoryStale();
+  }
+
   /// Lista refs locais e remotas que podem ser selecionadas no checkout.
   Future<Result<List<GitBranch>, GitBranchError>> branches(String root) async {
     final result = await output(root, const [
@@ -316,11 +324,19 @@ class GitController extends ChangeNotifier {
       'worktree',
       'list',
       '--porcelain',
+      '-z',
     ]);
-    final used = <String>{};
-    for (final line in worktrees.$2.split('\n')) {
-      if (line.startsWith('branch refs/heads/')) {
-        used.add(line.substring('branch refs/heads/'.length));
+    if (worktrees.$1 != 0) {
+      return Failure(
+        GitBranchError(GitBranchErrorKind.listFailed, detail: worktrees.$2),
+      );
+    }
+    final used = <String, String>{};
+    String? worktreePath;
+    for (final line in worktrees.$2.split('\u0000')) {
+      if (line.startsWith('worktree ')) worktreePath = line.substring(9);
+      if (line.startsWith('branch refs/heads/') && worktreePath != null) {
+        used[line.substring('branch refs/heads/'.length)] = worktreePath;
       }
     }
     for (final line in result.$2.split('\n')) {
@@ -340,7 +356,8 @@ class GitController extends ChangeNotifier {
           name: name,
           isRemote: isRemote,
           isCurrent: fields.length > 1 && fields[1] == '*',
-          isUsedByWorktree: !isRemote && used.contains(name),
+          isUsedByWorktree: !isRemote && used.containsKey(name),
+          worktreePath: isRemote ? null : used[name],
           upstream: fields.length > 2 && fields[2].isNotEmpty
               ? fields[2]
               : null,
@@ -364,22 +381,42 @@ class GitController extends ChangeNotifier {
     String root,
     GitBranch branch,
   ) async {
-    if (branch.isRemote) {
-      final listed = await branches(root);
-      if (listed case Failure(:final error)) return Failure(error);
-      final locals = listed.fold((value) => value, (_) => <GitBranch>[]);
-      final tracking = locals
-          .where((b) => !b.isRemote && b.upstream == branch.name)
+    // Re-read the actual refs/worktrees instead of trusting a dialog snapshot.
+    final listed = await branches(root);
+    if (listed case Failure(:final error)) return Failure(error);
+    final refs = listed.fold((value) => value, (_) => <GitBranch>[]);
+    final selected = refs.where((ref) => ref.ref == branch.ref).firstOrNull;
+    if (selected == null) {
+      return const Failure(GitBranchError(GitBranchErrorKind.missingRef));
+    }
+    if (selected.isCurrent) return const Success(null);
+    if (selected.isUsedByWorktree) {
+      return Failure(
+        GitBranchError(GitBranchErrorKind.inUse, detail: selected.worktreePath),
+      );
+    }
+    if (selected.isRemote) {
+      final tracking = refs
+          .where((b) => !b.isRemote && b.upstream == selected.name)
           .toList();
       if (tracking.length > 1) {
         return Failure(
           GitBranchError(
-            GitBranchErrorKind.checkoutFailed,
+            GitBranchErrorKind.ambiguousTracking,
             detail: tracking.map((b) => b.name).join(', '),
           ),
         );
       }
       if (tracking.length == 1) return checkoutBranch(root, tracking.single);
+      final localName = selected.name.substring(selected.name.indexOf('/') + 1);
+      if (refs.any((b) => !b.isRemote && b.name == localName)) {
+        return Failure(
+          GitBranchError(
+            GitBranchErrorKind.localNameCollision,
+            detail: localName,
+          ),
+        );
+      }
     }
     final args = branch.isRemote
         ? [

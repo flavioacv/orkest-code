@@ -99,6 +99,22 @@
     "noResults": "Nenhum resultado"
   },
   "orkest": {
+    "gitBranches": {
+      "fetchFailed": "Não foi possível buscar as referências remotas: $detail",
+      "current": "Branch atual",
+      "local": "Branches locais",
+      "remote": "Branches remotas",
+      "all": "Todas as branches",
+      "inUse": "Em uso pela worktree: $path",
+      "missingRef": "Esta branch não existe mais. Atualize a lista e escolha outra branch.",
+      "ambiguousTracking": "Várias branches locais rastreiam esta referência. Escolha uma explicitamente: $branches",
+      "localNameCollision": "Já existe uma branch local chamada $branch sem esse rastreamento. Escolha-a em Branches locais ou crie uma branch com outro nome.",
+      "refresh": "Atualizar referências",
+      "checkout": "Fazer checkout da branch",
+      "commit": "Commit",
+      "author": "Autor",
+      "hash": "Hash"
+    },
     "gitEvolution": {
       "createFromHead": "Criar a partir do HEAD atual",
       "showBase": "Mostrar base",

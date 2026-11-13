@@ -7,6 +7,7 @@ class GitBranch {
     this.isUsedByWorktree = false,
     this.upstream,
     this.trackingStatus,
+    this.worktreePath,
   });
 
   final String name;
@@ -15,4 +16,7 @@ class GitBranch {
   final bool isUsedByWorktree;
   final String? upstream;
   final String? trackingStatus;
+  final String? worktreePath;
+
+  String get ref => "${isRemote ? 'refs/remotes' : 'refs/heads'}/$name";
 }

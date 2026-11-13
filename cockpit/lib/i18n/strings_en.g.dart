@@ -151,6 +151,7 @@ class Translations$orkest$en {
 	final Translations _root; // ignore: unused_field
 
 	// Translations
+	late final Translations$orkest$gitBranches$en gitBranches = Translations$orkest$gitBranches$en.internal(_root);
 	late final Translations$orkest$gitEvolution$en gitEvolution = Translations$orkest$gitEvolution$en.internal(_root);
 	late final Translations$orkest$officeWorld$en officeWorld = Translations$orkest$officeWorld$en.internal(_root);
 	late final Translations$orkest$confirmDialog$en confirmDialog = Translations$orkest$confirmDialog$en.internal(_root);
@@ -469,6 +470,57 @@ class Translations$core$menu$en {
 
 	/// en: 'Zoom'
 	String get zoom => 'Zoom';
+}
+
+// Path: orkest.gitBranches
+class Translations$orkest$gitBranches$en {
+	Translations$orkest$gitBranches$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Could not fetch remote references: $detail'
+	String fetchFailed({required Object detail}) => 'Could not fetch remote references: ${detail}';
+
+	/// en: 'Current branch'
+	String get current => 'Current branch';
+
+	/// en: 'Local branches'
+	String get local => 'Local branches';
+
+	/// en: 'Remote branches'
+	String get remote => 'Remote branches';
+
+	/// en: 'All branches'
+	String get all => 'All branches';
+
+	/// en: 'In use by worktree: $path'
+	String inUse({required Object path}) => 'In use by worktree: ${path}';
+
+	/// en: 'This branch no longer exists. Refresh the list and choose another branch.'
+	String get missingRef => 'This branch no longer exists. Refresh the list and choose another branch.';
+
+	/// en: 'Several local branches track this reference. Choose one explicitly: $branches'
+	String ambiguousTracking({required Object branches}) => 'Several local branches track this reference. Choose one explicitly: ${branches}';
+
+	/// en: 'A local branch named $branch already exists without this tracking. Choose it from Local branches or create a branch with a different name.'
+	String localNameCollision({required Object branch}) => 'A local branch named ${branch} already exists without this tracking. Choose it from Local branches or create a branch with a different name.';
+
+	/// en: 'Refresh references'
+	String get refresh => 'Refresh references';
+
+	/// en: 'Checkout branch'
+	String get checkout => 'Checkout branch';
+
+	/// en: 'Commit'
+	String get commit => 'Commit';
+
+	/// en: 'Author'
+	String get author => 'Author';
+
+	/// en: 'Hash'
+	String get hash => 'Hash';
 }
 
 // Path: orkest.gitEvolution
@@ -4762,6 +4814,20 @@ extension on Translations {
 			'common.copyCode' => 'Copy code',
 			'common.search' => 'Search',
 			'common.noResults' => 'No results',
+			'orkest.gitBranches.fetchFailed' => ({required Object detail}) => 'Could not fetch remote references: ${detail}',
+			'orkest.gitBranches.current' => 'Current branch',
+			'orkest.gitBranches.local' => 'Local branches',
+			'orkest.gitBranches.remote' => 'Remote branches',
+			'orkest.gitBranches.all' => 'All branches',
+			'orkest.gitBranches.inUse' => ({required Object path}) => 'In use by worktree: ${path}',
+			'orkest.gitBranches.missingRef' => 'This branch no longer exists. Refresh the list and choose another branch.',
+			'orkest.gitBranches.ambiguousTracking' => ({required Object branches}) => 'Several local branches track this reference. Choose one explicitly: ${branches}',
+			'orkest.gitBranches.localNameCollision' => ({required Object branch}) => 'A local branch named ${branch} already exists without this tracking. Choose it from Local branches or create a branch with a different name.',
+			'orkest.gitBranches.refresh' => 'Refresh references',
+			'orkest.gitBranches.checkout' => 'Checkout branch',
+			'orkest.gitBranches.commit' => 'Commit',
+			'orkest.gitBranches.author' => 'Author',
+			'orkest.gitBranches.hash' => 'Hash',
 			'orkest.gitEvolution.createFromHead' => 'Create from current HEAD',
 			'orkest.gitEvolution.showBase' => 'Show base',
 			'orkest.gitEvolution.hideBase' => 'Hide base',
@@ -5179,6 +5245,8 @@ extension on Translations {
 			'orkest.fileTreePanel.diffNextChange' => 'Next change (Alt+↓)',
 			'orkest.fileTreePanel.diffPreviousChange' => 'Previous change (Alt+↑)',
 			'orkest.fileTreePanel.diffOverview' => 'Go to start of diff',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.fileTreePanel.diffUnified' => 'Unified diff',
 			'orkest.fileTreePanel.diffSplit' => 'Side-by-side diff',
 			'orkest.fileTreePanel.diffBinaryFile' => 'Binary file - no text diff.',
@@ -5193,8 +5261,6 @@ extension on Translations {
 			'orkest.fileTreePanel.mergeOurs' => 'Current',
 			'orkest.fileTreePanel.mergeTheirs' => 'Incoming',
 			'orkest.fileTreePanel.mergeApply' => 'Apply to editor',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.fileTreePanel.mergeStale' => 'The file changed during review. Open the conflict again to review its current contents.',
 			'orkest.fileTreePanel.mergeMarkers' => 'Remove conflict markers before applying the result.',
 			'orkest.fileTreePanel.workbenchRunTerminal' => 'Run / Test (terminal)',
@@ -5693,6 +5759,8 @@ extension on Translations {
 			'settings.language.portugueseBr' => 'Português (BR)',
 			'settings.language.spanish' => 'Español',
 			'settings.page.header.back' => 'Back',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.header.title' => 'Settings',
 			'settings.page.nav.general' => 'General',
 			'settings.page.nav.appearance' => 'Appearance',
@@ -5707,8 +5775,6 @@ extension on Translations {
 			'settings.page.general.editorEngineOrkest' => 'Orkest Code (default)',
 			'settings.page.general.editorEngineNeovim' => 'Neovim',
 			'settings.page.general.neovimChecking' => 'Looking for Neovim…',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.general.neovimNotFound' => 'Neovim was not found in your shell PATH.',
 			'settings.page.general.neovimRefresh' => 'Check again',
 			'settings.page.general.showOrkestTitle' => 'Show Orkest Code terminal',

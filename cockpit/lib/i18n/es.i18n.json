@@ -99,6 +99,22 @@
     "noResults": "Sin resultados"
   },
   "orkest": {
+    "gitBranches": {
+      "fetchFailed": "No se pudieron obtener las referencias remotas: $detail",
+      "current": "Rama actual",
+      "local": "Ramas locales",
+      "remote": "Ramas remotas",
+      "all": "Todas las ramas",
+      "inUse": "En uso por worktree: $path",
+      "missingRef": "Esta rama ya no existe. Actualiza la lista y elige otra.",
+      "ambiguousTracking": "Varias ramas locales siguen esta referencia. Elige una explícitamente: $branches",
+      "localNameCollision": "Ya existe una rama local llamada $branch sin este seguimiento. Elígela en Ramas locales o crea una rama con otro nombre.",
+      "refresh": "Actualizar referencias",
+      "checkout": "Cambiar a la rama",
+      "commit": "Commit",
+      "author": "Autor",
+      "hash": "Hash"
+    },
     "gitEvolution": {
       "createFromHead": "Crear desde HEAD actual",
       "showBase": "Mostrar base",

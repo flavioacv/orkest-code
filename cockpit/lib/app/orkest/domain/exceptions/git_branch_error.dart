@@ -8,9 +8,14 @@ class GitBranchError implements Exception {
 
 enum GitBranchErrorKind {
   listFailed,
+  fetchFailed,
   invalidName,
   alreadyExists,
   dirtyWorktree,
   checkoutFailed,
   createFailed,
+  inUse,
+  missingRef,
+  ambiguousTracking,
+  localNameCollision,
 }

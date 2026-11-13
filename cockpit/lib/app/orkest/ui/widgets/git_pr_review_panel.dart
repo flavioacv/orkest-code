@@ -320,10 +320,10 @@ class _GitPrReviewPanelState extends State<GitPrReviewPanel> {
     }
 
     if (_listError != null) {
-      return Padding(
+      return SingleChildScrollView(
         padding: const EdgeInsets.all(12),
         child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
+          mainAxisSize: MainAxisSize.min,
           children: [
             Icon(sc.LucideIcons.triangleAlert, size: 24, color: colors.error),
             const SizedBox(height: 8),

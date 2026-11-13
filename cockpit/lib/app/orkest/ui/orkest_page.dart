@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/orkest/ui/widgets/git_workbench_panel.dart';
 import 'package:orkest_code/app/orkest/domain/contracts/git_diff_reader.dart';
 import 'package:orkest_code/app/orkest/ui/actions/pull_request_review_actions.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/bottom_dock_host.dart';
@@ -1070,17 +1071,16 @@ class _OrkestPageState extends State<OrkestPage> {
                           path: _vm.focusedFilePath,
                         ),
                         problemsContent: ProblemsPanel(
-                          controller:
-                              _vm.problemsForWorkspace(projectId),
-                          onNavigateToSource: (file, line, col) =>
-                              _vm.openFile(file, revealLine: line, isPreview: false),
+                          controller: _vm.problemsForWorkspace(projectId),
+                          onNavigateToSource: (file, line, col) => _vm.openFile(
+                            file,
+                            revealLine: line,
+                            isPreview: false,
+                          ),
                         ),
-                        problemsCount: _vm
-                                .problemsForWorkspace(projectId)
-                                .errorCount +
-                            _vm
-                                .problemsForWorkspace(projectId)
-                                .warningCount,
+                        problemsCount:
+                            _vm.problemsForWorkspace(projectId).errorCount +
+                            _vm.problemsForWorkspace(projectId).warningCount,
                       );
                     },
                   ),
@@ -1097,7 +1097,9 @@ class _OrkestPageState extends State<OrkestPage> {
                   else
                     MobileTerminalInputDock(
                       onTap: () {
-                        SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+                        SystemChannels.textInput.invokeMethod<void>(
+                          'TextInput.show',
+                        );
                       },
                     ),
               ],
@@ -1143,12 +1145,13 @@ class _RailPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final vm = context.watch<OrkestViewModel>();
     final projectId = vm.selectedProjectId;
-    final isDebugging = projectId != null &&
+    final isDebugging =
+        projectId != null &&
         (vm.debugForWorkspace(projectId).isRunning ||
             vm.debugForWorkspace(projectId).isStopped);
     final problemsCount = projectId != null
         ? (vm.problemsForWorkspace(projectId).errorCount +
-            vm.problemsForWorkspace(projectId).warningCount)
+              vm.problemsForWorkspace(projectId).warningCount)
         : 0;
 
     if (isMobilePlatform && !isOpen) return const SizedBox.shrink();
@@ -1227,7 +1230,8 @@ class _RailPanel extends StatelessWidget {
                   vm.selectProject(Project.orkestId);
                   onDismiss();
                 },
-                onNewWorkspace: (anchor) => newWorkspaceMenu(context, vm, anchor),
+                onNewWorkspace: (anchor) =>
+                    newWorkspaceMenu(context, vm, anchor),
                 onSelectRemote: (id) {
                   vm.selectProject(id);
                   onDismiss();
@@ -1477,7 +1481,8 @@ class _CenterPanelState extends State<_CenterPanel> {
         final clampedDockHeight = _officeDockHeight
             .clamp(160.0, math.max(160.0, maxHeight - 120.0))
             .toDouble();
-        final isDocked = widget.officeView &&
+        final isDocked =
+            widget.officeView &&
             _officeWorkspaceVisible &&
             _officeWorkspaceDocked;
 
@@ -1503,9 +1508,7 @@ class _CenterPanelState extends State<_CenterPanel> {
                     child: DecoratedBox(
                       decoration: BoxDecoration(
                         color: colors.bg,
-                        border: Border(
-                          top: BorderSide(color: colors.border),
-                        ),
+                        border: Border(top: BorderSide(color: colors.border)),
                         boxShadow: const [
                           BoxShadow(
                             color: Color(0x44000000),
@@ -1523,8 +1526,9 @@ class _CenterPanelState extends State<_CenterPanel> {
                               behavior: HitTestBehavior.opaque,
                               onPanUpdate: (details) {
                                 setState(() {
-                                  _officeDockHeight = (_officeDockHeight - details.delta.dy)
-                                      .clamp(160.0, maxHeight - 120.0);
+                                  _officeDockHeight =
+                                      (_officeDockHeight - details.delta.dy)
+                                          .clamp(160.0, maxHeight - 120.0);
                                 });
                               },
                               child: Container(
@@ -1642,12 +1646,14 @@ class _CenterPanelState extends State<_CenterPanel> {
             if (widget.officeView && office != null)
               Positioned(
                 right: 16,
-                bottom: (isDocked ? clampedDockHeight : 0.0) +
+                bottom:
+                    (isDocked ? clampedDockHeight : 0.0) +
                     (16.0 + (waitingSessions.length.clamp(0, 3) * 76.0)),
                 width: 360,
                 child: _OfficeCompletionNotifications(
-                  sessions:
-                      vm.allSessions.whereType<TerminalSession>().toList(),
+                  sessions: vm.allSessions
+                      .whereType<TerminalSession>()
+                      .toList(),
                   projectName: (session) =>
                       vm.projects
                           .where((project) => project.id == session.projectId)
@@ -2650,26 +2656,18 @@ class _WorkspaceGitHistoryPanel extends StatelessWidget {
   Widget build(BuildContext context) {
     final roots = [
       for (final r in vm.treeRoots)
-        GitHistoryRoot(
-          path: r,
-          name: r.split('/').last,
-          branch: vm.gitInfoForRoot(r)?.branch,
-        ),
+        if (vm.gitInfoForRoot(r) != null)
+          GitHistoryRoot(
+            path: r,
+            name: r.split('/').last,
+            branch: vm.gitInfoForRoot(r)?.branch,
+          ),
     ];
-
-    if (roots.isEmpty && vm.treeRootPath.isNotEmpty) {
-      roots.add(
-        GitHistoryRoot(
-          path: vm.treeRootPath,
-          name: vm.treeRootPath.split('/').last,
-        ),
-      );
-    }
 
     if (roots.isEmpty) {
       return Center(
         child: Text(
-          'Nenhum repositório Git ativo no momento',
+          context.t.orkest.fileTreePanel.historyNoRepository,
           style: context.typo.body.copyWith(
             color: context.colors.text3,
             fontSize: 12,
@@ -2678,15 +2676,25 @@ class _WorkspaceGitHistoryPanel extends StatelessWidget {
       );
     }
 
-    return GitHistoryPanel(
+    return GitWorkbenchPanel(
+      key: ValueKey('git-log-${vm.selectedProjectId}'),
       roots: roots,
-      loadHistory: vm.loadGitHistory,
+      git: vm.selectedProject?.isRemoteTerminal == true ? null : vm.git,
+      loadHistory: (root, ref) =>
+          vm.loadGitHistory(root, all: ref == null, revision: ref),
       loadFiles: vm.loadGitHistoryFiles,
       onOpenFileDiff: vm.openCommitDiff,
-      onRevertCommit: vm.revertGitCommit,
-      onUndoLastCommit: vm.undoLastGitCommit,
-      compareRefs: vm.compareGitRefs,
-      refreshToken: 0,
+      refreshToken: vm.git.revision,
+      historyBuilder: (_, root) => GitHistoryPanel(
+        roots: roots.where((candidate) => candidate.path == root).toList(),
+        loadHistory: vm.loadGitHistory,
+        loadFiles: vm.loadGitHistoryFiles,
+        onOpenFileDiff: vm.openCommitDiff,
+        onRevertCommit: vm.revertGitCommit,
+        onUndoLastCommit: vm.undoLastGitCommit,
+        compareRefs: vm.compareGitRefs,
+        refreshToken: vm.git.revision,
+      ),
     );
   }
 }

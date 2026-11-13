@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/orkest/domain/entities/git_history_query.dart';
 import 'package:path/path.dart' as p;
 import 'package:orkest_code/app/core/data/dap/debug_session_controller.dart';
 import 'package:orkest_code/app/core/domain/services/problems_controller.dart';
@@ -2586,17 +2587,17 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
 
     switch (session.target) {
       case GitDiffTarget.workingTree:
-        session.onStageHunk =
-            (hunk) => _handleHunkAction(session, hunk, _HunkActionKind.stage);
-        session.onDiscardHunk =
-            (hunk) => _handleHunkAction(session, hunk, _HunkActionKind.discard);
+        session.onStageHunk = (hunk) =>
+            _handleHunkAction(session, hunk, _HunkActionKind.stage);
+        session.onDiscardHunk = (hunk) =>
+            _handleHunkAction(session, hunk, _HunkActionKind.discard);
         session.onUnstageHunk = null;
         break;
       case GitDiffTarget.staged:
         session.onStageHunk = null;
         session.onDiscardHunk = null;
-        session.onUnstageHunk =
-            (hunk) => _handleHunkAction(session, hunk, _HunkActionKind.unstage);
+        session.onUnstageHunk = (hunk) =>
+            _handleHunkAction(session, hunk, _HunkActionKind.unstage);
         break;
       case GitDiffTarget.head:
         // Comparação combinada contra HEAD permanece estritamente somente-leitura.
@@ -2695,8 +2696,11 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
           identical(_sessions[capturedSessionId], session) &&
           session.path == capturedPath &&
           session.target == capturedTarget) {
-        final newDiff =
-            await _gitDiff.read(capturedRoot, capturedPath, target: capturedTarget);
+        final newDiff = await _gitDiff.read(
+          capturedRoot,
+          capturedPath,
+          target: capturedTarget,
+        );
 
         if (identical(_sessions[capturedSessionId], session) &&
             session.path == capturedPath &&
@@ -4400,9 +4404,21 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
   Future<Result<List<GitHistoryCommit>, GitHistoryError>> loadGitHistory(
     String root, {
     int limit = 100,
+    bool all = false,
+    String? revision,
   }) async {
+    if (revision != null && revision.startsWith('-')) {
+      return const Failure(GitHistoryError(GitHistoryErrorKind.commandFailed));
+    }
     if (_activeRemoteHost() == null) {
-      return _gitHistory.read(root, limit: limit);
+      return _gitHistory.read(
+        root,
+        query: GitHistoryQuery(
+          limit: limit,
+          all: all && revision == null,
+          revisionRange: revision,
+        ),
+      );
     }
     try {
       final r = await (await _activeRemoteGit()).run(root, [
@@ -4410,6 +4426,9 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
         '-n',
         '$limit',
         '--decorate=short',
+        '--topo-order',
+        if (all && revision == null) '--all',
+        ?revision,
         '--date=iso-strict',
         '--format=%H%x1f%P%x1f%D%x1f%an%x1f%aI%x1f%s%x1e',
       ]);

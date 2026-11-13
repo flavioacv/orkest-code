@@ -1,3 +1,4 @@
+import 'package:orkest_code/app/orkest/domain/contracts/git_command_runner.dart';
 import 'dart:async';
 
 import 'package:flutter_modular/flutter_modular.dart';
@@ -22,6 +23,19 @@ class _Git extends Fake implements GitController {
   final roots = <String>[];
   String? checkedOut;
   String? created;
+  String? createdFrom;
+  int fetchExit = 0;
+  @override
+  GitRun fetch(String root) => GitRun(
+    output: Stream.fromIterable(['remote unavailable']),
+    exitCode: Future.value(fetchExit),
+  );
+  final refreshed = <String>[];
+
+  @override
+  Future<void> refreshRepository(String root) async {
+    refreshed.add(root);
+  }
 
   @override
   Future<Result<List<GitBranch>, GitBranchError>> branches(String root) {
@@ -47,6 +61,7 @@ class _Git extends Fake implements GitController {
   }) async {
     roots.add(root);
     created = name;
+    createdFrom = startPoint;
     return const Success(null);
   }
 }
@@ -200,5 +215,96 @@ void main() {
     await tester.pump();
     expect(find.byType(AlertDialog), findsNothing);
     expect(tester.takeException(), isNull);
+  });
+  testWidgets(
+    'manual refresh sees a branch created while the dialog was open',
+    (tester) async {
+      await open(tester);
+      await tester.pumpAndSettle();
+      git.load = () async => const Success([
+        _main,
+        _feature,
+        GitBranch(name: 'added', isRemote: false, isCurrent: false),
+      ]);
+      await tester.tap(find.byKey(const ValueKey('branches-refresh')));
+      await tester.pumpAndSettle();
+      expect(find.text('added'), findsOneWidget);
+      await tester.tap(find.text('added'));
+      await tester.pumpAndSettle();
+      expect(git.refreshed, ['/repo']);
+    },
+  );
+
+  testWidgets('list follows external changes during polling', (tester) async {
+    await open(tester);
+    await tester.pumpAndSettle();
+    git.load = () async => const Success([_main]);
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pumpAndSettle();
+    expect(find.text('feature'), findsNothing);
+    expect(find.text('main'), findsOneWidget);
+  });
+
+  testWidgets(
+    'late results from another repository cannot replace the visible branches',
+    (tester) async {
+      final pending = Completer<Result<List<GitBranch>, GitBranchError>>();
+      git.load = () => git.roots.last == '/first'
+          ? pending.future
+          : Future.value(const Success([_feature]));
+      Widget panel(String root) => TranslationProvider(
+        child: ShadcnApp(
+          theme: buildTheme(brightness: Brightness.dark),
+          home: Scaffold(
+            child: SizedBox(
+              width: 500,
+              height: 550,
+              child: GitBranchesPanel(root: root, git: git),
+            ),
+          ),
+        ),
+      );
+      await tester.pumpWidget(panel('/first'));
+      await tester.pump();
+      await tester.pumpWidget(panel('/second'));
+      await tester.pumpAndSettle();
+      pending.complete(const Success([_main]));
+      await tester.pumpAndSettle();
+      expect(find.text('main'), findsNothing);
+      expect(find.text('feature'), findsOneWidget);
+    },
+  );
+  testWidgets('fetch errors stay visible while local refresh still works', (
+    tester,
+  ) async {
+    git.fetchExit = 1;
+    await open(tester);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('branches-fetch')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('remote unavailable'), findsOneWidget);
+    await tester.pump(const Duration(seconds: 6));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('remote unavailable'), findsOneWidget);
+    expect(find.text('feature'), findsOneWidget);
+    git.fetchExit = 0;
+    await tester.tap(find.byKey(const ValueKey('branches-fetch')));
+    await tester.pumpAndSettle();
+    expect(find.textContaining('remote unavailable'), findsNothing);
+  });
+
+  testWidgets('creation uses the selected starting reference', (tester) async {
+    await open(tester);
+    await tester.pumpAndSettle();
+    await tester.tap(find.byKey(const ValueKey('branch-start-point')));
+    await tester.pumpAndSettle();
+    await tester.tap(find.text('feature').last);
+    await tester.pumpAndSettle();
+    await tester.enterText(find.byType(TextField).last, 'new-topic');
+    await tester.tap(find.byKey(const ValueKey('branches-create')));
+    await tester.pumpAndSettle();
+    expect(git.createdFrom, 'refs/heads/feature');
+    expect(git.created, 'new-topic');
+    expect(git.refreshed, ['/repo']);
   });
 }

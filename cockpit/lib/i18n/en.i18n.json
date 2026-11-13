@@ -99,6 +99,22 @@
     "noResults": "No results"
   },
   "orkest": {
+    "gitBranches": {
+      "fetchFailed": "Could not fetch remote references: $detail",
+      "current": "Current branch",
+      "local": "Local branches",
+      "remote": "Remote branches",
+      "all": "All branches",
+      "inUse": "In use by worktree: $path",
+      "missingRef": "This branch no longer exists. Refresh the list and choose another branch.",
+      "ambiguousTracking": "Several local branches track this reference. Choose one explicitly: $branches",
+      "localNameCollision": "A local branch named $branch already exists without this tracking. Choose it from Local branches or create a branch with a different name.",
+      "refresh": "Refresh references",
+      "checkout": "Checkout branch",
+      "commit": "Commit",
+      "author": "Author",
+      "hash": "Hash"
+    },
     "gitEvolution": {
       "createFromHead": "Create from current HEAD",
       "showBase": "Show base",

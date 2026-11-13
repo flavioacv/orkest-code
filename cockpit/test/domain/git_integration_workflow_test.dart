@@ -1,3 +1,5 @@
+import 'package:orkest_code/app/orkest/domain/entities/git_branch.dart';
+import 'package:orkest_code/app/orkest/domain/exceptions/git_branch_error.dart';
 import 'dart:io';
 
 import 'package:flutter_test/flutter_test.dart';
@@ -202,6 +204,78 @@ void main() {
       expect(
         await File(p.join(worktree, 'file.txt')).readAsString(),
         'feature\n',
+      );
+    },
+  );
+  test(
+    'checkout ignores stale isCurrent metadata from an old dialog',
+    () async {
+      await git(['branch', 'topic']);
+      final result = await controller.checkoutBranch(
+        root,
+        const GitBranch(name: 'topic', isRemote: false, isCurrent: true),
+      );
+      expect(result.isSuccess, isTrue);
+      expect(
+        (await git(['branch', '--show-current'])).stdout.toString().trim(),
+        'topic',
+      );
+    },
+  );
+
+  test(
+    'occupied worktree reports a path instead of silently disabling checkout',
+    () async {
+      final linked = p.join(temporary.path, 'occupied');
+      await git(['worktree', 'add', '-b', 'occupied', linked]);
+      final branches = (await controller.branches(
+        root,
+      )).fold((value) => value, (error) => throw error);
+      final branch = branches.singleWhere(
+        (branch) => branch.name == 'occupied',
+      );
+      expect(branch.worktreePath, Directory(linked).resolveSymbolicLinksSync());
+      final result = await controller.checkoutBranch(root, branch);
+      final error = result.fold((_) => null, (error) => error);
+      expect(error?.kind, GitBranchErrorKind.inUse);
+      expect(error?.detail, Directory(linked).resolveSymbolicLinksSync());
+      expect(
+        (await git(['branch', '--show-current'])).stdout.toString().trim(),
+        'trunk',
+      );
+    },
+  );
+
+  test('a branch deleted since listing returns missingRef', () async {
+    await git(['branch', 'removed']);
+    final branch = (await controller.branches(root))
+        .fold((value) => value, (error) => throw error)
+        .singleWhere((branch) => branch.name == 'removed');
+    await git(['branch', '-D', 'removed']);
+    final result = await controller.checkoutBranch(root, branch);
+    expect(
+      result.fold((_) => null, (error) => error.kind),
+      GitBranchErrorKind.missingRef,
+    );
+  });
+
+  test(
+    'remote checkout reports a local name collision without changing tracking',
+    () async {
+      await git(['remote', 'add', 'origin', p.join(temporary.path, 'remote')]);
+      await git(['update-ref', 'refs/remotes/origin/topic', 'HEAD']);
+      await git(['branch', 'topic']);
+      final result = await controller.checkoutBranch(
+        root,
+        const GitBranch(name: 'origin/topic', isRemote: true, isCurrent: false),
+      );
+      expect(
+        result.fold((_) => null, (error) => error.kind),
+        GitBranchErrorKind.localNameCollision,
+      );
+      expect(
+        (await git(['branch', '--show-current'])).stdout.toString().trim(),
+        'trunk',
       );
     },
   );

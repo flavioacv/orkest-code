@@ -103,6 +103,7 @@ class _Translations$orkest$pt_BR extends Translations$orkest$en {
 	final TranslationsPtBr _root; // ignore: unused_field
 
 	// Translations
+	@override late final _Translations$orkest$gitBranches$pt_BR gitBranches = _Translations$orkest$gitBranches$pt_BR._(_root);
 	@override late final _Translations$orkest$gitEvolution$pt_BR gitEvolution = _Translations$orkest$gitEvolution$pt_BR._(_root);
 	@override late final _Translations$orkest$officeWorld$pt_BR officeWorld = _Translations$orkest$officeWorld$pt_BR._(_root);
 	@override late final _Translations$orkest$confirmDialog$pt_BR confirmDialog = _Translations$orkest$confirmDialog$pt_BR._(_root);
@@ -305,6 +306,29 @@ class _Translations$core$menu$pt_BR extends Translations$core$menu$en {
 	@override String get quit => 'Sair';
 	@override String get minimize => 'Minimizar';
 	@override String get zoom => 'Zoom';
+}
+
+// Path: orkest.gitBranches
+class _Translations$orkest$gitBranches$pt_BR extends Translations$orkest$gitBranches$en {
+	_Translations$orkest$gitBranches$pt_BR._(TranslationsPtBr root) : this._root = root, super.internal(root);
+
+	final TranslationsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String fetchFailed({required Object detail}) => 'Não foi possível buscar as referências remotas: ${detail}';
+	@override String get current => 'Branch atual';
+	@override String get local => 'Branches locais';
+	@override String get remote => 'Branches remotas';
+	@override String get all => 'Todas as branches';
+	@override String inUse({required Object path}) => 'Em uso pela worktree: ${path}';
+	@override String get missingRef => 'Esta branch não existe mais. Atualize a lista e escolha outra branch.';
+	@override String ambiguousTracking({required Object branches}) => 'Várias branches locais rastreiam esta referência. Escolha uma explicitamente: ${branches}';
+	@override String localNameCollision({required Object branch}) => 'Já existe uma branch local chamada ${branch} sem esse rastreamento. Escolha-a em Branches locais ou crie uma branch com outro nome.';
+	@override String get refresh => 'Atualizar referências';
+	@override String get checkout => 'Fazer checkout da branch';
+	@override String get commit => 'Commit';
+	@override String get author => 'Autor';
+	@override String get hash => 'Hash';
 }
 
 // Path: orkest.gitEvolution
@@ -2243,6 +2267,20 @@ extension on TranslationsPtBr {
 			'common.copyCode' => 'Copiar código',
 			'common.search' => 'Buscar',
 			'common.noResults' => 'Nenhum resultado',
+			'orkest.gitBranches.fetchFailed' => ({required Object detail}) => 'Não foi possível buscar as referências remotas: ${detail}',
+			'orkest.gitBranches.current' => 'Branch atual',
+			'orkest.gitBranches.local' => 'Branches locais',
+			'orkest.gitBranches.remote' => 'Branches remotas',
+			'orkest.gitBranches.all' => 'Todas as branches',
+			'orkest.gitBranches.inUse' => ({required Object path}) => 'Em uso pela worktree: ${path}',
+			'orkest.gitBranches.missingRef' => 'Esta branch não existe mais. Atualize a lista e escolha outra branch.',
+			'orkest.gitBranches.ambiguousTracking' => ({required Object branches}) => 'Várias branches locais rastreiam esta referência. Escolha uma explicitamente: ${branches}',
+			'orkest.gitBranches.localNameCollision' => ({required Object branch}) => 'Já existe uma branch local chamada ${branch} sem esse rastreamento. Escolha-a em Branches locais ou crie uma branch com outro nome.',
+			'orkest.gitBranches.refresh' => 'Atualizar referências',
+			'orkest.gitBranches.checkout' => 'Fazer checkout da branch',
+			'orkest.gitBranches.commit' => 'Commit',
+			'orkest.gitBranches.author' => 'Autor',
+			'orkest.gitBranches.hash' => 'Hash',
 			'orkest.gitEvolution.createFromHead' => 'Criar a partir do HEAD atual',
 			'orkest.gitEvolution.showBase' => 'Mostrar base',
 			'orkest.gitEvolution.hideBase' => 'Ocultar base',
@@ -2660,6 +2698,8 @@ extension on TranslationsPtBr {
 			'orkest.fileTreePanel.diffNextChange' => 'Próxima alteração (Alt+↓)',
 			'orkest.fileTreePanel.diffPreviousChange' => 'Alteração anterior (Alt+↑)',
 			'orkest.fileTreePanel.diffOverview' => 'Ir ao início do diff',
+			_ => null,
+		} ?? switch (path) {
 			'orkest.fileTreePanel.diffUnified' => 'Diff unificado',
 			'orkest.fileTreePanel.diffSplit' => 'Diff lado a lado',
 			'orkest.fileTreePanel.diffBinaryFile' => 'Arquivo binario - sem diff de texto.',
@@ -2674,8 +2714,6 @@ extension on TranslationsPtBr {
 			'orkest.fileTreePanel.mergeOurs' => 'Atual',
 			'orkest.fileTreePanel.mergeTheirs' => 'Entrante',
 			'orkest.fileTreePanel.mergeApply' => 'Aplicar no editor',
-			_ => null,
-		} ?? switch (path) {
 			'orkest.fileTreePanel.mergeStale' => 'O arquivo mudou durante a revisão. Abra o conflito novamente para revisar o conteúdo atual.',
 			'orkest.fileTreePanel.mergeMarkers' => 'Remova os marcadores de conflito antes de aplicar o resultado.',
 			'orkest.fileTreePanel.workbenchRunTerminal' => 'Executar / Testar (terminal)',
@@ -3174,6 +3212,8 @@ extension on TranslationsPtBr {
 			'settings.language.portugueseBr' => 'Português (BR)',
 			'settings.language.spanish' => 'Espanhol',
 			'settings.page.header.back' => 'Voltar',
+			_ => null,
+		} ?? switch (path) {
 			'settings.page.header.title' => 'Configurações',
 			'settings.page.nav.general' => 'Geral',
 			'settings.page.nav.appearance' => 'Aparência',
@@ -3188,8 +3228,6 @@ extension on TranslationsPtBr {
 			'settings.page.general.editorEngineOrkest' => 'Orkest Code (padrão)',
 			'settings.page.general.editorEngineNeovim' => 'Neovim',
 			'settings.page.general.neovimChecking' => 'Procurando o Neovim…',
-			_ => null,
-		} ?? switch (path) {
 			'settings.page.general.neovimNotFound' => 'O Neovim não foi encontrado na PATH do seu shell.',
 			'settings.page.general.neovimRefresh' => 'Verificar novamente',
 			'settings.page.general.showOrkestTitle' => 'Mostrar terminal do Orkest Code',
