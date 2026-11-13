@@ -243,7 +243,9 @@ class _GhosttyPaneState extends State<_GhosttyPane>
                         if (!widget.focusNode.hasFocus) {
                           widget.focusNode.requestFocus();
                         }
-                        SystemChannels.textInput.invokeMethod<void>('TextInput.show');
+                        SystemChannels.textInput.invokeMethod<void>(
+                          'TextInput.show',
+                        );
                       },
                       child: view,
                     )
@@ -294,6 +296,7 @@ ghost.TerminalTheme _ghosttyTheme(
   double uiScale,
   FontWeight fontWeight,
 ) => ghost.TerminalTheme(
+  minimumContrast: source.background.computeLuminance() > .5 ? 4.5 : 1,
   palette: ghost.ColorPalette(
     ansiColors: [
       source.black,

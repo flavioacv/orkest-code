@@ -1,3 +1,4 @@
+import 'package:flterm/terminal_contrast.dart';
 import 'dart:typed_data';
 import 'dart:ui';
 
@@ -16,6 +17,9 @@ import 'atlas/atlas.dart';
 /// colors, cursor state, IME preedit state, and faint text opacity.
 final class PaintState {
   TerminalTheme theme;
+  late var foregroundContrast = TerminalForegroundContrast(
+    minimumRatio: theme.minimumContrast,
+  );
   CellMetrics metrics;
 
   var rows = 0;
@@ -57,6 +61,9 @@ final class PaintState {
 
   void updateTheme(TerminalTheme newTheme) {
     theme = newTheme;
+    foregroundContrast = TerminalForegroundContrast(
+      minimumRatio: newTheme.minimumContrast,
+    );
     faintAlpha = (newTheme.faintOpacity * 255).ceil();
     _updateThemePalette();
   }

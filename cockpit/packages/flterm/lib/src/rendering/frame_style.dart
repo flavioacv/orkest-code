@@ -40,6 +40,9 @@ int _resolveColorArgb(CellColor color, Uint32List palette, int defaultArgb) {
     foreground = (state.faintAlpha << 24) | (foreground & 0x00FFFFFF);
   }
 
+  foreground = state.foregroundContrast
+      .resolve(Color(foreground), Color(background))
+      .toARGB32();
   return (foreground, background);
 }
 
@@ -81,7 +84,12 @@ final class _StyleCache {
     final id = cell.styleId;
     if (!cell.hasStyling && backgroundArgb == null) {
       return (
-        _state.terminalForegroundArgb,
+        _state.foregroundContrast
+            .resolve(
+              Color(_state.terminalForegroundArgb),
+              Color(_state.terminalBackgroundArgb),
+            )
+            .toARGB32(),
         _state.terminalBackgroundArgb,
         const Style(),
         false,

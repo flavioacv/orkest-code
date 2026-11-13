@@ -1,5 +1,6 @@
 import 'dart:ui';
 import 'package:flutter/painting.dart';
+import 'package:flterm/terminal_contrast.dart';
 
 import 'package:orkest_code/app/core/terminal/xterm/src/ui/builtin_glyphs.dart';
 import 'package:orkest_code/app/core/terminal/xterm/src/ui/palette_builder.dart';
@@ -16,6 +17,9 @@ class TerminalPainter {
 
   /// A lookup table from terminal colors to Flutter colors.
   late var _colorPalette = PaletteBuilder(_theme).build();
+  late var _foregroundContrast = TerminalForegroundContrast(
+    minimumRatio: _theme.background.computeLuminance() > .5 ? 4.5 : 1,
+  );
 
   /// Size of each character in the terminal.
   late var _cellSize = _measureCharSize();
@@ -48,6 +52,9 @@ class TerminalPainter {
   set theme(TerminalTheme value) {
     if (value == _theme) return;
     _theme = value;
+    _foregroundContrast = TerminalForegroundContrast(
+      minimumRatio: value.background.computeLuminance() > .5 ? 4.5 : 1,
+    );
     _colorPalette = PaletteBuilder(value).build();
     _paragraphCache.clear();
   }
@@ -226,7 +233,10 @@ class TerminalPainter {
     if (cellFlags & CellFlags.faint != 0) {
       color = color.withValues(alpha: 0.5);
     }
-    return color;
+    final background = cellFlags & CellFlags.inverse == 0
+        ? resolveBackgroundColor(cellData.background)
+        : resolveForegroundColor(cellData.foreground);
+    return _foregroundContrast.resolve(color, background);
   }
 
   /// Paints the background of a cell represented by [cellData] to [canvas] at
