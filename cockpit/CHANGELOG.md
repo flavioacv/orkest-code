@@ -1,5 +1,15 @@
 # Changelog — Orkest Code
 
+## 0.2.1 (build 20) — 2026-11-14
+
+- Git: melhorias na criação e troca de branches, atualização das referências e resolução visual de conflitos de merge.
+- Git: painel de histórico e branches reorganizado para desktop, com preferências de visualização persistidas.
+- Debug: seletor de configuração funcional, ações separadas de executar/depurar, variáveis expansíveis, watches, threads, pilha e console de avaliação.
+- Debug: suporte a transporte DAP stdio/TCP, breakpoints condicionais, logpoints, filtros de exceção do adaptador e proteção contra respostas atrasadas.
+- Debug: persistência por workspace e integração da saída das sessões com a telemetria existente. Linguagens adicionais dependem de adaptadores instalados ou configurados.
+- Terminal: contraste mais forte no tema claro, considerando o fundo efetivo das células e dos campos de entrada, com preservação das cores e dos elementos gráficos dos agentes.
+- Terminal: correção do ambiente de cores das sessões interativas para impedir que `NO_COLOR` herdado oculte logos, respeitando as configurações explícitas do workspace.
+
 ## 0.1.14 (build 18) — 2026-10-30
 
 - Ativado sistema de atualização contínua e auto-update Sparkle / WinSparkle na nuvem via Cloudflare Pages (`orkest-updates.pages.dev`).
