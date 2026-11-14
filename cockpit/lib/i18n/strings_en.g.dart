@@ -192,6 +192,7 @@ class Translations$orkest$en {
 	late final Translations$orkest$layoutPreview$en layoutPreview = Translations$orkest$layoutPreview$en.internal(_root);
 	late final Translations$orkest$telemetry$en telemetry = Translations$orkest$telemetry$en.internal(_root);
 	late final Translations$orkest$panelView$en panelView = Translations$orkest$panelView$en.internal(_root);
+	late final Translations$orkest$debugWorkbench$en debugWorkbench = Translations$orkest$debugWorkbench$en.internal(_root);
 }
 
 // Path: settings
@@ -3606,6 +3607,210 @@ class Translations$orkest$panelView$en {
 	String get openAsHtml => 'Open as HTML';
 }
 
+// Path: orkest.debugWorkbench
+class Translations$orkest$debugWorkbench$en {
+	Translations$orkest$debugWorkbench$en.internal(this._root);
+
+	final Translations _root; // ignore: unused_field
+
+	// Translations
+
+	/// en: 'Run and Debug'
+	String get title => 'Run and Debug';
+
+	/// en: 'Configuration'
+	String get configuration => 'Configuration';
+
+	/// en: 'No launch configuration'
+	String get noConfiguration => 'No launch configuration';
+
+	/// en: 'Start Debugging (F5)'
+	String get start => 'Start Debugging (F5)';
+
+	/// en: 'Run Without Debugging (Ctrl+F5)'
+	String get run => 'Run Without Debugging (Ctrl+F5)';
+
+	/// en: 'Open launch.json'
+	String get configure => 'Open launch.json';
+
+	/// en: 'Reload configurations'
+	String get reload => 'Reload configurations';
+
+	/// en: 'Inspector'
+	String get inspector => 'Inspector';
+
+	/// en: 'Debug Console'
+	String get console => 'Debug Console';
+
+	/// en: 'Variables'
+	String get variables => 'Variables';
+
+	/// en: 'Watch'
+	String get watches => 'Watch';
+
+	/// en: 'Call Stack'
+	String get callStack => 'Call Stack';
+
+	/// en: 'Breakpoints'
+	String get breakpoints => 'Breakpoints';
+
+	/// en: 'Exception Breakpoints'
+	String get exceptions => 'Exception Breakpoints';
+
+	/// en: 'Ready'
+	String get idle => 'Ready';
+
+	/// en: 'Starting'
+	String get initializing => 'Starting';
+
+	/// en: 'Running'
+	String get running => 'Running';
+
+	/// en: 'Paused'
+	String get stopped => 'Paused';
+
+	/// en: 'Stopping'
+	String get terminating => 'Stopping';
+
+	/// en: 'Continue (F5)'
+	String get resume => 'Continue (F5)';
+
+	/// en: 'Pause (F6)'
+	String get pause => 'Pause (F6)';
+
+	/// en: 'Step Over (F10)'
+	String get stepOver => 'Step Over (F10)';
+
+	/// en: 'Step Into (F11)'
+	String get stepIn => 'Step Into (F11)';
+
+	/// en: 'Step Out (Shift+F11)'
+	String get stepOut => 'Step Out (Shift+F11)';
+
+	/// en: 'Stop (Shift+F5)'
+	String get stop => 'Stop (Shift+F5)';
+
+	/// en: 'Restart Session'
+	String get restart => 'Restart Session';
+
+	/// en: 'Restart Frame'
+	String get restartFrame => 'Restart Frame';
+
+	/// en: 'Hot Reload'
+	String get hotReload => 'Hot Reload';
+
+	/// en: 'Hot Restart'
+	String get hotRestart => 'Hot Restart';
+
+	/// en: 'Select a configuration and start debugging. Use the editor gutter to add breakpoints.'
+	String get startHint => 'Select a configuration and start debugging. Use the editor gutter to add breakpoints.';
+
+	/// en: 'Pause execution to inspect variables and evaluate expressions.'
+	String get pausedHint => 'Pause execution to inspect variables and evaluate expressions.';
+
+	/// en: 'No stack frames available'
+	String get noFrames => 'No stack frames available';
+
+	/// en: 'No variables in this scope'
+	String get noVariables => 'No variables in this scope';
+
+	/// en: 'Click the editor gutter to add a breakpoint.'
+	String get noBreakpoints => 'Click the editor gutter to add a breakpoint.';
+
+	/// en: 'Add an expression to inspect its value when paused.'
+	String get noWatches => 'Add an expression to inspect its value when paused.';
+
+	/// en: 'Expression to watch'
+	String get watchPlaceholder => 'Expression to watch';
+
+	/// en: 'Evaluate in selected frame'
+	String get evaluatePlaceholder => 'Evaluate in selected frame';
+
+	/// en: 'Filter output'
+	String get filterConsole => 'Filter output';
+
+	/// en: 'Program output and expression results appear here.'
+	String get emptyConsole => 'Program output and expression results appear here.';
+
+	/// en: 'Add'
+	String get add => 'Add';
+
+	/// en: 'Remove'
+	String get remove => 'Remove';
+
+	/// en: 'Edit breakpoint'
+	String get edit => 'Edit breakpoint';
+
+	/// en: 'Clear'
+	String get clear => 'Clear';
+
+	/// en: 'Copy output'
+	String get copy => 'Copy output';
+
+	/// en: 'Apply'
+	String get apply => 'Apply';
+
+	/// en: 'Cancel'
+	String get cancel => 'Cancel';
+
+	/// en: 'Condition'
+	String get condition => 'Condition';
+
+	/// en: 'Hit count condition'
+	String get hitCondition => 'Hit count condition';
+
+	/// en: 'Log message (logpoint)'
+	String get logMessage => 'Log message (logpoint)';
+
+	/// en: 'Enable breakpoints'
+	String get enabled => 'Enable breakpoints';
+
+	/// en: 'Remove all breakpoints'
+	String get removeAll => 'Remove all breakpoints';
+
+	/// en: 'Pending verification'
+	String get pending => 'Pending verification';
+
+	/// en: 'Verified'
+	String get verified => 'Verified';
+
+	/// en: 'Unverified'
+	String get unverified => 'Unverified';
+
+	/// en: 'Disabled'
+	String get disabled => 'Disabled';
+
+	/// en: 'Debug operation failed: ${detail}'
+	String failure({required Object detail}) => 'Debug operation failed: ${detail}';
+
+	/// en: 'Open launch.json to configure a DAP adapter for your project.'
+	String get emptyConfiguration => 'Open launch.json to configure a DAP adapter for your project.';
+
+	/// en: 'Adapter: ${name}'
+	String adapter({required Object name}) => 'Adapter: ${name}';
+
+	/// en: 'Scope'
+	String get scope => 'Scope';
+
+	/// en: 'Select thread'
+	String get selectThread => 'Select thread';
+
+	/// en: 'Loading…'
+	String get loading => 'Loading…';
+
+	/// en: 'Configure an adapter command or debugServer in launch.json.'
+	String get configureAdapter => 'Configure an adapter command or debugServer in launch.json.';
+
+	/// en: 'Workspace'
+	String get workspace => 'Workspace';
+
+	/// en: 'Not supported by the connected adapter'
+	String get unsupported => 'Not supported by the connected adapter';
+
+	/// en: 'Edit value'
+	String get editValue => 'Edit value';
+}
+
 // Path: settings.language
 class Translations$settings$language$en {
 	Translations$settings$language$en.internal(this._root);
@@ -5845,6 +6050,71 @@ extension on Translations {
 			'orkest.panelView.unavailable' => 'Panels need the embedded web view, which is not available on Linux yet.',
 			'orkest.panelView.openInBrowser' => 'Open in browser',
 			'orkest.panelView.openAsHtml' => 'Open as HTML',
+			'orkest.debugWorkbench.title' => 'Run and Debug',
+			'orkest.debugWorkbench.configuration' => 'Configuration',
+			'orkest.debugWorkbench.noConfiguration' => 'No launch configuration',
+			'orkest.debugWorkbench.start' => 'Start Debugging (F5)',
+			'orkest.debugWorkbench.run' => 'Run Without Debugging (Ctrl+F5)',
+			'orkest.debugWorkbench.configure' => 'Open launch.json',
+			'orkest.debugWorkbench.reload' => 'Reload configurations',
+			'orkest.debugWorkbench.inspector' => 'Inspector',
+			'orkest.debugWorkbench.console' => 'Debug Console',
+			'orkest.debugWorkbench.variables' => 'Variables',
+			'orkest.debugWorkbench.watches' => 'Watch',
+			'orkest.debugWorkbench.callStack' => 'Call Stack',
+			'orkest.debugWorkbench.breakpoints' => 'Breakpoints',
+			'orkest.debugWorkbench.exceptions' => 'Exception Breakpoints',
+			'orkest.debugWorkbench.idle' => 'Ready',
+			'orkest.debugWorkbench.initializing' => 'Starting',
+			'orkest.debugWorkbench.running' => 'Running',
+			'orkest.debugWorkbench.stopped' => 'Paused',
+			'orkest.debugWorkbench.terminating' => 'Stopping',
+			'orkest.debugWorkbench.resume' => 'Continue (F5)',
+			'orkest.debugWorkbench.pause' => 'Pause (F6)',
+			'orkest.debugWorkbench.stepOver' => 'Step Over (F10)',
+			'orkest.debugWorkbench.stepIn' => 'Step Into (F11)',
+			'orkest.debugWorkbench.stepOut' => 'Step Out (Shift+F11)',
+			'orkest.debugWorkbench.stop' => 'Stop (Shift+F5)',
+			'orkest.debugWorkbench.restart' => 'Restart Session',
+			'orkest.debugWorkbench.restartFrame' => 'Restart Frame',
+			'orkest.debugWorkbench.hotReload' => 'Hot Reload',
+			'orkest.debugWorkbench.hotRestart' => 'Hot Restart',
+			'orkest.debugWorkbench.startHint' => 'Select a configuration and start debugging. Use the editor gutter to add breakpoints.',
+			'orkest.debugWorkbench.pausedHint' => 'Pause execution to inspect variables and evaluate expressions.',
+			'orkest.debugWorkbench.noFrames' => 'No stack frames available',
+			'orkest.debugWorkbench.noVariables' => 'No variables in this scope',
+			'orkest.debugWorkbench.noBreakpoints' => 'Click the editor gutter to add a breakpoint.',
+			'orkest.debugWorkbench.noWatches' => 'Add an expression to inspect its value when paused.',
+			'orkest.debugWorkbench.watchPlaceholder' => 'Expression to watch',
+			'orkest.debugWorkbench.evaluatePlaceholder' => 'Evaluate in selected frame',
+			'orkest.debugWorkbench.filterConsole' => 'Filter output',
+			'orkest.debugWorkbench.emptyConsole' => 'Program output and expression results appear here.',
+			'orkest.debugWorkbench.add' => 'Add',
+			'orkest.debugWorkbench.remove' => 'Remove',
+			'orkest.debugWorkbench.edit' => 'Edit breakpoint',
+			'orkest.debugWorkbench.clear' => 'Clear',
+			'orkest.debugWorkbench.copy' => 'Copy output',
+			'orkest.debugWorkbench.apply' => 'Apply',
+			'orkest.debugWorkbench.cancel' => 'Cancel',
+			'orkest.debugWorkbench.condition' => 'Condition',
+			'orkest.debugWorkbench.hitCondition' => 'Hit count condition',
+			'orkest.debugWorkbench.logMessage' => 'Log message (logpoint)',
+			'orkest.debugWorkbench.enabled' => 'Enable breakpoints',
+			'orkest.debugWorkbench.removeAll' => 'Remove all breakpoints',
+			'orkest.debugWorkbench.pending' => 'Pending verification',
+			'orkest.debugWorkbench.verified' => 'Verified',
+			'orkest.debugWorkbench.unverified' => 'Unverified',
+			'orkest.debugWorkbench.disabled' => 'Disabled',
+			'orkest.debugWorkbench.failure' => ({required Object detail}) => 'Debug operation failed: ${detail}',
+			'orkest.debugWorkbench.emptyConfiguration' => 'Open launch.json to configure a DAP adapter for your project.',
+			'orkest.debugWorkbench.adapter' => ({required Object name}) => 'Adapter: ${name}',
+			'orkest.debugWorkbench.scope' => 'Scope',
+			'orkest.debugWorkbench.selectThread' => 'Select thread',
+			'orkest.debugWorkbench.loading' => 'Loading…',
+			'orkest.debugWorkbench.configureAdapter' => 'Configure an adapter command or debugServer in launch.json.',
+			'orkest.debugWorkbench.workspace' => 'Workspace',
+			'orkest.debugWorkbench.unsupported' => 'Not supported by the connected adapter',
+			'orkest.debugWorkbench.editValue' => 'Edit value',
 			'settings.language.title' => 'Language',
 			'settings.language.system' => 'System',
 			'settings.language.english' => 'English',

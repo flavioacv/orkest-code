@@ -37,6 +37,10 @@ class _MockDartDapServer {
       case 'initialize':
         body['supportsConfigurationDoneRequest'] = true;
         body['supportsTerminateRequest'] = true;
+        body['exceptionBreakpointFilters'] = [
+          {'filter': 'All', 'label': 'All Exceptions'},
+          {'filter': 'Unhandled', 'label': 'Unhandled Exceptions', 'default': true},
+        ];
         break;
       case 'setExceptionBreakpoints':
         break;

@@ -1,3 +1,6 @@
+import 'package:orkest_code/app/core/data/dap/debug_failure.dart';
+import 'package:orkest_code/app/orkest/domain/entities/run_configuration.dart';
+import 'package:orkest_code/app/orkest/domain/entities/telemetry_event.dart';
 import 'package:orkest_code/app/orkest/domain/entities/git_history_query.dart';
 import 'package:path/path.dart' as p;
 import 'package:orkest_code/app/core/data/dap/debug_session_controller.dart';
@@ -347,6 +350,111 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
   final LspServerPool _lsp;
   StreamSubscription<LspDiagnosticsBatch>? _problemsSubscription;
   final Map<String, DebugSessionController> _debugSessions = {};
+  final Map<String, TelemetryIngestSession> _debugTelemetry = {};
+  final Set<String> _debugStarting = {};
+  final _debugLaunchRequests =
+      StreamController<({String workspaceId, bool noDebug})>.broadcast();
+  Stream<({String workspaceId, bool noDebug})> get debugLaunchRequests =>
+      _debugLaunchRequests.stream;
+  void requestDebugLaunch(String workspaceId, {bool noDebug = false}) {
+    if (!_debugLaunchRequests.isClosed) {
+      _debugLaunchRequests.add((workspaceId: workspaceId, noDebug: noDebug));
+    }
+  }
+
+  Map<String, dynamic> _debugSavedState(String workspaceId) {
+    final state = _savedLayouts[workspaceId]?['debug'];
+    return state is Map ? state.cast<String, dynamic>() : <String, dynamic>{};
+  }
+
+  String? debugConfigurationId(String workspaceId) {
+    final value = _debugSavedState(workspaceId)['configurationId'];
+    return value is String ? value : null;
+  }
+
+  void selectDebugConfiguration(String workspaceId, String configurationId) =>
+      _saveDebugState(workspaceId, configurationId: configurationId);
+  void _saveDebugState(String workspaceId, {String? configurationId}) {
+    final previous = _debugSavedState(workspaceId);
+    _savedLayouts[workspaceId] = {
+      ...?_savedLayouts[workspaceId],
+      'debug': {
+        ...previous,
+        ...?_debugSessions[workspaceId]?.exportState(),
+        'configurationId': ?configurationId,
+      },
+    };
+    _scheduleSave(workspaceId);
+  }
+
+  Future<void> _closeDebugTelemetry(String workspaceId, int? exitCode) async {
+    final run = _debugTelemetry.remove(workspaceId);
+    if (run == null) return;
+    try {
+      await run.close(exitCode: exitCode);
+    } on Exception catch (error) {
+      DiagnosticsLog.instance.warn(
+        'debug-telemetry',
+        'close failed',
+        error: error,
+      );
+    }
+  }
+
+  Future<void> startDebugConfiguration(
+    String workspaceId,
+    RunConfiguration configuration, {
+    Future<Map<String, dynamic>> Function(String, Map<String, dynamic>)?
+    onReverseRequest,
+  }) async {
+    if (!_debugStarting.add(workspaceId)) return;
+    final controller = debugForWorkspace(workspaceId);
+    try {
+      final project = _projectList
+          .where((p) => p.id == workspaceId)
+          .firstOrNull;
+      if (project?.isRemoteTerminal == true &&
+          configuration.launchArguments['debugServer'] is! int) {
+        throw const DebugFailure(
+          DebugFailureKind.configuration,
+          'Remote debugging requires an explicit forwarded DAP debugServer endpoint',
+        );
+      }
+      await controller.stop();
+      await _closeDebugTelemetry(workspaceId, null);
+      try {
+        final run = await _telemetryIngest.openTaskRun(
+          configuration.toTaskDefinition(),
+          command: 'debug ${configuration.type} ${configuration.program}',
+        );
+        if (run != null) _debugTelemetry[workspaceId] = run;
+      } on Exception catch (error) {
+        DiagnosticsLog.instance.warn(
+          'debug-telemetry',
+          'open failed',
+          error: error,
+        );
+      }
+      controller.onReverseRequest = onReverseRequest;
+      selectDebugConfiguration(workspaceId, configuration.id);
+      await controller.startFromRunConfiguration(
+        config: configuration,
+        extraEnv: _debugTelemetry[workspaceId]?.childEnvironment ?? const {},
+      );
+      if (!controller.isActive) {
+        await _closeDebugTelemetry(
+          workspaceId,
+          controller.lastError == null ? null : -1,
+        );
+      }
+    } on Exception {
+      await _closeDebugTelemetry(workspaceId, -1);
+      rethrow;
+    } finally {
+      _debugStarting.remove(workspaceId);
+    }
+  }
+
   final Map<String, ProblemsController> _workspaceProblems = {};
 
   bool _bottomDockOpen = false;
@@ -385,7 +493,25 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
 
   DebugSessionController debugForWorkspace(String workspaceId) =>
       _debugSessions.putIfAbsent(workspaceId, () {
-        final controller = DebugSessionController();
+        final controller = DebugSessionController(
+          onStateEdited: () => _saveDebugState(workspaceId),
+          onOutput: (_, event) {
+            if (event.category == 'stdout' ||
+                event.category == 'stderr' ||
+                event.category == 'console' ||
+                event.category == 'important') {
+              _debugTelemetry[workspaceId]?.add(
+                event.output,
+                stream: event.category == 'stderr'
+                    ? TelemetryStream.err
+                    : TelemetryStream.out,
+              );
+            }
+          },
+          onSessionEnded: (_, exitCode) =>
+              unawaited(_closeDebugTelemetry(workspaceId, exitCode)),
+        );
+        controller.restoreState(_debugSavedState(workspaceId));
         Object? lastFrame;
         controller.addListener(() {
           final frame = controller.isStopped ? controller.currentFrame : null;
@@ -7337,6 +7463,7 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
       // sobrevive à sessão sem inventar outro store.
       kWorktreesExpandedKey: worktreesExpanded(projectId),
       'workbench': workbenchLayout(projectId).toJson(),
+      'debug': _debugSavedState(projectId),
     };
   }
 
@@ -7757,6 +7884,7 @@ class OrkestViewModel extends ChangeNotifier implements DocumentHost {
   @override
   void dispose() {
     unawaited(_documentChanges.close());
+    unawaited(_debugLaunchRequests.close());
     unawaited(_problemsSubscription?.cancel());
     for (final controller in _debugSessions.values) {
       controller.dispose();

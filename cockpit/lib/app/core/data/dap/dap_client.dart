@@ -1,5 +1,7 @@
 import 'dart:async';
 import 'dart:io';
+import 'dart:convert';
+import 'debug_failure.dart';
 
 import 'package:orkest_code/app/core/data/dap/dap_codec.dart';
 import 'package:orkest_code/app/core/data/dap/dap_models.dart';
@@ -11,12 +13,25 @@ class DapClient {
     required this._stdin,
     this._process,
     this.sessionId = 'default-session',
+    this.onReverseRequest,
+    Stream<String>? diagnostics,
   }) {
-    _subscription = _codec.decodeStream(stdout).listen(
-          _handleMessage,
-          onError: _handleError,
-          onDone: _handleDone,
-        );
+    final process = _process;
+    if (process != null || diagnostics != null) {
+      _stderrSubscription =
+          (diagnostics ?? process!.stderr.transform(utf8.decoder)).listen((
+            text,
+          ) {
+            if (!_isClosed) {
+              _outputController.add(
+                DapOutputEvent(category: 'adapter', output: text),
+              );
+            }
+          }, onError: _handleError);
+    }
+    _subscription = _codec
+        .decodeStream(stdout)
+        .listen(_handleMessage, onError: _handleError, onDone: _handleDone);
   }
 
   /// Cria uma instância conectando-se a um subprocesso adaptador DAP nativo.
@@ -55,6 +70,34 @@ class DapClient {
     );
   }
 
+  static Future<DapClient> connectSocket({
+    required String host,
+    required int port,
+    String sessionId = 'socket-session',
+    Process? process,
+    Stream<String>? diagnostics,
+  }) async {
+    final socket = await Socket.connect(
+      host,
+      port,
+      timeout: const Duration(seconds: 5),
+    );
+    return DapClient(
+      stdout: socket,
+      stdin: socket,
+      process: process,
+      sessionId: sessionId,
+      diagnostics: diagnostics,
+    );
+  }
+
+  Future<Map<String, dynamic>> Function(
+    String command,
+    Map<String, dynamic> arguments,
+  )?
+  onReverseRequest;
+  StreamSubscription<String>? _stderrSubscription;
+  Object? lastTransportError;
   final StreamSink<List<int>> _stdin;
   final Process? _process;
   final String sessionId;
@@ -102,7 +145,19 @@ class DapClient {
     final bytes = DapCodec.encode(request.toJson());
     _stdin.add(bytes);
 
-    return completer.future;
+    return completer.future.timeout(
+      command == 'launch' || command == 'attach'
+          ? const Duration(minutes: 5)
+          : const Duration(seconds: 15),
+      onTimeout: () {
+        _pendingRequests.remove(seq);
+        throw DebugFailure(
+          DebugFailureKind.transport,
+          'DAP response timeout',
+          command: command,
+        );
+      },
+    );
   }
 
   /// 1. Handshake `initialize`
@@ -118,10 +173,17 @@ class DapClient {
       'linesStartAt1': true,
       'columnsStartAt1': true,
       'supportsVariableType': true,
-      'supportsRunInTerminalRequest': false,
+      'supportsRunInTerminalRequest': onReverseRequest != null,
     });
 
-    if (response.success && response.body != null) {
+    if (!response.success) {
+      throw DebugFailure(
+        DebugFailureKind.request,
+        response.message ?? '',
+        command: 'initialize',
+      );
+    }
+    if (response.body != null) {
       capabilities = DapCapabilities.fromJson(response.body);
     }
     return capabilities;
@@ -159,6 +221,13 @@ class DapClient {
       'breakpoints': breakpoints.map((b) => b.toJson()).toList(),
     });
 
+    if (!response.success) {
+      throw DebugFailure(
+        DebugFailureKind.request,
+        response.message ?? '',
+        command: response.command,
+      );
+    }
     if (response.success && response.body != null) {
       final rawList = response.body!['breakpoints'];
       if (rawList is List) {
@@ -203,6 +272,13 @@ class DapClient {
   /// Threads
   Future<List<DapThread>> threads() async {
     final response = await sendRequest('threads');
+    if (!response.success) {
+      throw DebugFailure(
+        DebugFailureKind.request,
+        response.message ?? '',
+        command: response.command,
+      );
+    }
     if (response.success && response.body != null) {
       final rawList = response.body!['threads'];
       if (rawList is List) {
@@ -226,6 +302,13 @@ class DapClient {
       'levels': levels,
     });
 
+    if (!response.success) {
+      throw DebugFailure(
+        DebugFailureKind.request,
+        response.message ?? '',
+        command: response.command,
+      );
+    }
     if (response.success && response.body != null) {
       final rawList = response.body!['stackFrames'];
       if (rawList is List) {
@@ -240,6 +323,13 @@ class DapClient {
   /// Scopes
   Future<List<DapScope>> scopes(int frameId) async {
     final response = await sendRequest('scopes', {'frameId': frameId});
+    if (!response.success) {
+      throw DebugFailure(
+        DebugFailureKind.request,
+        response.message ?? '',
+        command: response.command,
+      );
+    }
     if (response.success && response.body != null) {
       final rawList = response.body!['scopes'];
       if (rawList is List) {
@@ -253,8 +343,16 @@ class DapClient {
 
   /// Variables
   Future<List<DapVariable>> variables(int variablesReference) async {
-    final response =
-        await sendRequest('variables', {'variablesReference': variablesReference});
+    final response = await sendRequest('variables', {
+      'variablesReference': variablesReference,
+    });
+    if (!response.success) {
+      throw DebugFailure(
+        DebugFailureKind.request,
+        response.message ?? '',
+        command: response.command,
+      );
+    }
     if (response.success && response.body != null) {
       final rawList = response.body!['variables'];
       if (rawList is List) {
@@ -278,6 +376,13 @@ class DapClient {
       'context': ?context,
     });
 
+    if (!response.success) {
+      throw DebugFailure(
+        DebugFailureKind.request,
+        response.message ?? '',
+        command: response.command,
+      );
+    }
     if (response.success && response.body != null) {
       return DapEvaluateResult.fromJson(response.body!);
     }
@@ -300,15 +405,35 @@ class DapClient {
   }
 
   /// Disconnect / Terminate
-  Future<void> disconnect({bool restart = false}) async {
+  Future<void> disconnect({
+    bool restart = false,
+    bool terminateDebuggee = true,
+  }) async {
     try {
       if (!_isClosed) {
-        if (capabilities.supportsTerminateRequest) {
-          await sendRequest('terminate', {'restart': restart})
-              .timeout(const Duration(milliseconds: 1500), onTimeout: () => const DapResponse(seq: 0, requestSeq: 0, success: false, command: 'terminate'));
+        if (terminateDebuggee && capabilities.supportsTerminateRequest) {
+          await sendRequest('terminate', {'restart': restart}).timeout(
+            const Duration(milliseconds: 1500),
+            onTimeout: () => const DapResponse(
+              seq: 0,
+              requestSeq: 0,
+              success: false,
+              command: 'terminate',
+            ),
+          );
         }
-        await sendRequest('disconnect', {'restart': restart})
-            .timeout(const Duration(milliseconds: 1500), onTimeout: () => const DapResponse(seq: 0, requestSeq: 0, success: false, command: 'disconnect'));
+        await sendRequest('disconnect', {
+          'restart': restart,
+          'terminateDebuggee': terminateDebuggee,
+        }).timeout(
+          const Duration(milliseconds: 1500),
+          onTimeout: () => const DapResponse(
+            seq: 0,
+            requestSeq: 0,
+            success: false,
+            command: 'disconnect',
+          ),
+        );
       }
     } catch (_) {}
     await close();
@@ -321,14 +446,18 @@ class DapClient {
 
     for (final completer in _pendingRequests.values) {
       if (!completer.isCompleted) {
-        completer.completeError(
-          StateError('Sessão DAP encerrada.'),
-        );
+        completer.completeError(StateError('Sessão DAP encerrada.'));
       }
     }
     _pendingRequests.clear();
 
     await _subscription.cancel();
+    await _stderrSubscription?.cancel();
+    try {
+      await _stdin.close().timeout(const Duration(seconds: 1));
+    } on Object catch (error) {
+      lastTransportError = error;
+    }
     await _eventsController.close();
     await _stoppedController.close();
     await _outputController.close();
@@ -341,7 +470,9 @@ class DapClient {
   void _handleMessage(Map<String, dynamic> json) {
     final type = json['type'] as String?;
 
-    if (type == 'response') {
+    if (type == 'request') {
+      unawaited(_handleReverseRequest(json));
+    } else if (type == 'response') {
       final response = DapResponse.fromJson(json);
       final completer = _pendingRequests.remove(response.requestSeq);
       if (completer != null && !completer.isCompleted) {
@@ -349,6 +480,12 @@ class DapClient {
       }
     } else if (type == 'event') {
       final event = DapEvent.fromJson(json);
+      if (event.event == 'capabilities' && event.body?['capabilities'] is Map) {
+        capabilities = DapCapabilities.fromJson({
+          ...capabilities.toJson(),
+          ...(event.body!['capabilities'] as Map).cast<String, dynamic>(),
+        });
+      }
       _eventsController.add(event);
 
       if (event.event == 'stopped' && event.body != null) {
@@ -359,7 +496,49 @@ class DapClient {
     }
   }
 
+  Future<void> _handleReverseRequest(Map<String, dynamic> json) async {
+    final command = json['command'] as String? ?? '';
+    final handler = onReverseRequest;
+    var success = false;
+    Map<String, dynamic>? body;
+    String? message;
+    try {
+      if (handler == null) throw UnsupportedError(command);
+      body = await handler(
+        command,
+        (json['arguments'] as Map? ?? const {}).cast<String, dynamic>(),
+      ).timeout(const Duration(seconds: 30));
+      success = true;
+    } on Object catch (error) {
+      message = error.toString();
+    }
+    if (!_isClosed) {
+      _stdin.add(
+        DapCodec.encode({
+          'seq': _sequence++,
+          'type': 'response',
+          'request_seq': json['seq'],
+          'command': command,
+          'success': success,
+          'body': ?body,
+          'message': ?message,
+        }),
+      );
+    }
+  }
+
+  Future<DapResponse> restartFrame(int frameId) =>
+      sendRequest('restartFrame', {'frameId': frameId});
+  Future<DapResponse> restart() => sendRequest('restart');
+  Future<DapResponse> setVariable(int reference, String name, String value) =>
+      sendRequest('setVariable', {
+        'variablesReference': reference,
+        'name': name,
+        'value': value,
+      });
+
   void _handleError(Object error) {
+    lastTransportError = error;
     for (final completer in _pendingRequests.values) {
       if (!completer.isCompleted) completer.completeError(error);
     }

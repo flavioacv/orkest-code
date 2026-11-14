@@ -826,9 +826,36 @@ class _OrkestPageState extends State<OrkestPage> {
     _searchFocusSignal.value++;
   }
 
+  void _debugKeyAction(String action) {
+    final id = _vm.selectedProjectId;
+    if (id == null) return;
+    final controller = _vm.debugForWorkspace(id);
+    switch (action) {
+      case 'start' || 'run':
+        if (action == 'start' && controller.isStopped) { unawaited(controller.resume()); return; }
+        if (controller.isActive) return;
+        _vm.openBottomDock(BottomDockTab.debug);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted && _vm.selectedProjectId == id) _vm.requestDebugLaunch(id, noDebug: action == 'run');
+        });
+      case 'stop': unawaited(controller.stop());
+      case 'pause': unawaited(controller.pause());
+      case 'next': unawaited(controller.stepOver());
+      case 'in': unawaited(controller.stepIn());
+      case 'out': unawaited(controller.stepOut());
+    }
+  }
+
   /// Atalhos do shell que valem quando o foco está dentro dele.
   Map<ShortcutActivator, VoidCallback>
   _shellBindings() => <ShortcutActivator, VoidCallback>{
+    const SingleActivator(LogicalKeyboardKey.f5): () => _debugKeyAction('start'),
+    const SingleActivator(LogicalKeyboardKey.f5, control: true): () => _debugKeyAction('run'),
+    const SingleActivator(LogicalKeyboardKey.f5, shift: true): () => _debugKeyAction('stop'),
+    const SingleActivator(LogicalKeyboardKey.f6): () => _debugKeyAction('pause'),
+    const SingleActivator(LogicalKeyboardKey.f10): () => _debugKeyAction('next'),
+    const SingleActivator(LogicalKeyboardKey.f11): () => _debugKeyAction('in'),
+    const SingleActivator(LogicalKeyboardKey.f11, shift: true): () => _debugKeyAction('out'),
     const SingleActivator(LogicalKeyboardKey.keyP, meta: true): _openFileFinder,
     const SingleActivator(LogicalKeyboardKey.keyP, control: true):
         _openFileFinder,

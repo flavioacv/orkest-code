@@ -38,15 +38,15 @@ class DebugAdapterCapabilities {
   final bool supportsEvaluateForHovers;
 
   Map<String, dynamic> toJson() => {
-        'supports_restart_frame': supportsRestartFrame,
-        'supports_smart_step': supportsSmartStep,
-        'supports_hot_swap': supportsHotSwap,
-        'supports_watchpoints': supportsWatchpoints,
-        'supports_conditional_breakpoints': supportsConditionalBreakpoints,
-        'supports_hit_conditional_breakpoints': supportsHitConditionalBreakpoints,
-        'supports_log_points': supportsLogPoints,
-        'supports_evaluate_for_hovers': supportsEvaluateForHovers,
-      };
+    'supports_restart_frame': supportsRestartFrame,
+    'supports_smart_step': supportsSmartStep,
+    'supports_hot_swap': supportsHotSwap,
+    'supports_watchpoints': supportsWatchpoints,
+    'supports_conditional_breakpoints': supportsConditionalBreakpoints,
+    'supports_hit_conditional_breakpoints': supportsHitConditionalBreakpoints,
+    'supports_log_points': supportsLogPoints,
+    'supports_evaluate_for_hovers': supportsEvaluateForHovers,
+  };
 }
 
 /// Definição declarativa de um adaptador de depuração DAP suportado (R04).
@@ -91,16 +91,16 @@ class DebugAdapterDefinition {
   final Map<String, dynamic> sampleLaunchConfig;
 
   Map<String, dynamic> toJson() => {
-        'adapter_id': adapterId,
-        'name': name,
-        'default_executable': defaultExecutable,
-        'default_args': defaultArgs,
-        'supported_languages': supportedLanguages,
-        'license': license,
-        'install_hint': installHint,
-        'capabilities': capabilities.toJson(),
-        'sample_launch_config': sampleLaunchConfig,
-      };
+    'adapter_id': adapterId,
+    'name': name,
+    'default_executable': defaultExecutable,
+    'default_args': defaultArgs,
+    'supported_languages': supportedLanguages,
+    'license': license,
+    'install_hint': installHint,
+    'capabilities': capabilities.toJson(),
+    'sample_launch_config': sampleLaunchConfig,
+  };
 
   @override
   String toString() => 'DebugAdapterDefinition($adapterId: $name [$license])';
@@ -139,11 +139,12 @@ class MultiLanguageDebugRegistry {
     DebugAdapterDefinition(
       adapterId: 'pwa-node',
       name: 'Node.js / TypeScript Debug Adapter (js-debug)',
-      defaultExecutable: 'node',
-      defaultArgs: ['--inspect-brk'],
+      defaultExecutable: 'js-debug-adapter',
+      defaultArgs: [],
       supportedLanguages: ['typescript', 'javascript'],
       license: 'MIT',
-      installHint: 'Instalar via npm: npm install -g @vscode/js-debug',
+      installHint:
+          'Configure adapter.command/adapter.args for a js-debug DAP server, or debugServer for an existing endpoint.',
       capabilities: DebugAdapterCapabilities(
         supportsRestartFrame: true,
         supportsSmartStep: true,
@@ -190,7 +191,8 @@ class MultiLanguageDebugRegistry {
       defaultArgs: [],
       supportedLanguages: ['rust', 'c', 'cpp'],
       license: 'GPL-2.0',
-      installHint: 'Baixar binário oficial CodeLLDB no GitHub ou via gerenciador de pacotes.',
+      installHint:
+          'Baixar binário oficial CodeLLDB no GitHub ou via gerenciador de pacotes.',
       capabilities: DebugAdapterCapabilities(
         supportsRestartFrame: false,
         supportsSmartStep: false,
@@ -213,7 +215,8 @@ class MultiLanguageDebugRegistry {
       defaultArgs: ['dap'],
       supportedLanguages: ['go'],
       license: 'MIT',
-      installHint: 'Instalar via Go: go install github.com/go-delve/delve/cmd/dlv@latest',
+      installHint:
+          'Instalar via Go: go install github.com/go-delve/delve/cmd/dlv@latest',
       capabilities: DebugAdapterCapabilities(
         supportsRestartFrame: false,
         supportsSmartStep: false,
@@ -236,7 +239,8 @@ class MultiLanguageDebugRegistry {
       defaultArgs: [],
       supportedLanguages: ['java', 'kotlin'],
       license: 'EPL-1.0',
-      installHint: 'Instalar extensão Eclipse JDT Language Server / java-debug.',
+      installHint:
+          'Instalar extensão Eclipse JDT Language Server / java-debug.',
       capabilities: DebugAdapterCapabilities(
         supportsRestartFrame: true, // Drop to frame
         supportsSmartStep: true,

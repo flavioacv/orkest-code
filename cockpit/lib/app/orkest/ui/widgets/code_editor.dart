@@ -69,6 +69,8 @@ class CodeEditor extends StatefulWidget {
     this.onCancelLspRequest,
     this.filePath,
     this.breakpoints,
+    this.disabledBreakpoints = const {},
+    this.unverifiedBreakpoints = const {},
     this.activeDebugLine,
     this.onToggleBreakpoint,
   });
@@ -118,6 +120,8 @@ class CodeEditor extends StatefulWidget {
 
   /// Linhas (base 1) com breakpoints de depuração registrados.
   final Set<int>? breakpoints;
+  final Set<int> disabledBreakpoints;
+  final Set<int> unverifiedBreakpoints;
 
   /// Linha (base 1) ativa onde a execução está pausada no depurador, ou `null`.
   final int? activeDebugLine;
@@ -891,6 +895,12 @@ class _CodeEditorState extends State<CodeEditor> {
     final cmd =
         (Platform.isMacOS && keys.isMetaPressed) || keys.isControlPressed;
     final key = event.logicalKey;
+    if (key == LogicalKeyboardKey.f9 && !cmd && !keys.isShiftPressed && !keys.isAltPressed && widget.onToggleBreakpoint != null) {
+      final selection = widget.controller.selection;
+      final position = widget.controller.offsetToLineChar(selection.isValid ? selection.extentOffset : 0);
+      widget.onToggleBreakpoint!(position.line + 1);
+      return KeyEventResult.handled;
+    }
     if (key == LogicalKeyboardKey.escape && _completionActive) {
       _cancelChord();
       _dismissCompletions();
@@ -1097,6 +1107,9 @@ class _CodeEditorState extends State<CodeEditor> {
   /// cabe na altura da linha de texto, mantendo o alinhamento 1:1 com o código.
   Widget _gutterLine(int oneBased, TextStyle numStyle) {
     final severity = widget.controller.severityForLine(oneBased - 1);
+    final disabledBreakpoint = widget.disabledBreakpoints.contains(oneBased);
+    final breakpointColor = disabledBreakpoint ? context.colors.text4
+        : widget.unverifiedBreakpoints.contains(oneBased) ? context.colors.warn : context.colors.error;
     final hasBreakpoint = widget.breakpoints?.contains(oneBased) ?? false;
     final isActiveDebug = widget.activeDebugLine == oneBased;
 
@@ -1112,7 +1125,8 @@ class _CodeEditorState extends State<CodeEditor> {
               width: 10,
               height: 10,
               decoration: BoxDecoration(
-                color: context.colors.error,
+                color: disabledBreakpoint ? breakpointColor.withValues(alpha: 0) : breakpointColor,
+                border: disabledBreakpoint ? Border.all(color: breakpointColor) : null,
                 shape: BoxShape.circle,
               ),
             ),
@@ -1144,7 +1158,8 @@ class _CodeEditorState extends State<CodeEditor> {
             width: 10,
             height: 10,
             decoration: BoxDecoration(
-              color: context.colors.error,
+              color: disabledBreakpoint ? breakpointColor.withValues(alpha: 0) : breakpointColor,
+                border: disabledBreakpoint ? Border.all(color: breakpointColor) : null,
               shape: BoxShape.circle,
             ),
           ),

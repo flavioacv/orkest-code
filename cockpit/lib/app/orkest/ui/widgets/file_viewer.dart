@@ -1342,11 +1342,9 @@ class _FileViewerState extends State<FileViewer> {
             revealSelect: widget.session.revealSelect,
             revealTick: widget.session.revealTick,
             scmDecorations: widget.session.scmDecorations,
-            breakpoints: widget
-                .debugController
-                ?.breakpointsByPath[widget.session.path]
-                ?.map((b) => b.line)
-                .toSet(),
+            breakpoints: widget.debugController?.breakpointLines(widget.session.path),
+            disabledBreakpoints: widget.debugController?.breakpointLines(widget.session.path, disabled: true) ?? const {},
+            unverifiedBreakpoints: widget.debugController?.breakpointLines(widget.session.path, unverified: true) ?? const {},
             activeDebugLine:
                 (widget.debugController?.isStopped == true &&
                     widget.debugController?.currentFrame?.sourcePath ==

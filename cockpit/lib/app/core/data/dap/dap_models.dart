@@ -17,15 +17,7 @@ enum DapSessionState {
 }
 
 /// Razão pela qual a execução foi interrompida no evento `stopped`.
-enum DapStopReason {
-  breakpoint,
-  step,
-  pause,
-  exception,
-  entry,
-  goto,
-  unknown,
-}
+enum DapStopReason { breakpoint, step, pause, exception, entry, goto, unknown }
 
 /// Mensagem base do protocolo Debug Adapter Protocol (DAP).
 sealed class DapMessage {
@@ -39,22 +31,19 @@ sealed class DapMessage {
 
 /// Mensagem de requisição enviada do cliente para o adaptador DAP.
 class DapRequest extends DapMessage {
-  const DapRequest({
-    required super.seq,
-    required this.command,
-    this.arguments,
-  }) : super(type: 'request');
+  const DapRequest({required super.seq, required this.command, this.arguments})
+    : super(type: 'request');
 
   final String command;
   final Map<String, dynamic>? arguments;
 
   @override
   Map<String, dynamic> toJson() => {
-        'seq': seq,
-        'type': type,
-        'command': command,
-        if (arguments != null) 'arguments': arguments,
-      };
+    'seq': seq,
+    'type': type,
+    'command': command,
+    if (arguments != null) 'arguments': arguments,
+  };
 }
 
 /// Mensagem de resposta enviada do adaptador DAP para o cliente.
@@ -87,23 +76,20 @@ class DapResponse extends DapMessage {
 
   @override
   Map<String, dynamic> toJson() => {
-        'seq': seq,
-        'type': type,
-        'request_seq': requestSeq,
-        'success': success,
-        'command': command,
-        if (message != null) 'message': message,
-        if (body != null) 'body': body,
-      };
+    'seq': seq,
+    'type': type,
+    'request_seq': requestSeq,
+    'success': success,
+    'command': command,
+    if (message != null) 'message': message,
+    if (body != null) 'body': body,
+  };
 }
 
 /// Evento assíncrono emitido pelo adaptador DAP.
 class DapEvent extends DapMessage {
-  const DapEvent({
-    required super.seq,
-    required this.event,
-    this.body,
-  }) : super(type: 'event');
+  const DapEvent({required super.seq, required this.event, this.body})
+    : super(type: 'event');
 
   final String event;
   final Map<String, dynamic>? body;
@@ -118,11 +104,11 @@ class DapEvent extends DapMessage {
 
   @override
   Map<String, dynamic> toJson() => {
-        'seq': seq,
-        'type': type,
-        'event': event,
-        if (body != null) 'body': body,
-      };
+    'seq': seq,
+    'type': type,
+    'event': event,
+    if (body != null) 'body': body,
+  };
 }
 
 /// Capacidades retornadas pelo adaptador no handshake `initialize`.
@@ -137,6 +123,9 @@ class DapCapabilities {
     this.supportsRestartFrame = false,
     this.supportsTerminateRequest = false,
     this.supportsRestartRequest = false,
+    this.supportsLogPoints = false,
+    this.supportsSetVariable = false,
+    this.exceptionBreakpointFilters = const [],
   });
 
   final bool supportsConfigurationDoneRequest;
@@ -148,6 +137,32 @@ class DapCapabilities {
   final bool supportsRestartFrame;
   final bool supportsTerminateRequest;
   final bool supportsRestartRequest;
+  final bool supportsLogPoints;
+  final bool supportsSetVariable;
+  final List<DapExceptionFilter> exceptionBreakpointFilters;
+
+  Map<String, dynamic> toJson() => {
+    'supportsConfigurationDoneRequest': supportsConfigurationDoneRequest,
+    'supportsFunctionBreakpoints': supportsFunctionBreakpoints,
+    'supportsConditionalBreakpoints': supportsConditionalBreakpoints,
+    'supportsHitConditionalBreakpoints': supportsHitConditionalBreakpoints,
+    'supportsEvaluateForHovers': supportsEvaluateForHovers,
+    'supportsStepBack': supportsStepBack,
+    'supportsRestartFrame': supportsRestartFrame,
+    'supportsTerminateRequest': supportsTerminateRequest,
+    'supportsRestartRequest': supportsRestartRequest,
+    'supportsLogPoints': supportsLogPoints,
+    'supportsSetVariable': supportsSetVariable,
+    'exceptionBreakpointFilters': [
+      for (final f in exceptionBreakpointFilters)
+        {
+          'filter': f.id,
+          'label': f.label,
+          'default': f.defaultEnabled,
+          if (f.description != null) 'description': f.description,
+        },
+    ],
+  };
 
   factory DapCapabilities.fromJson(Map<String, dynamic>? json) {
     if (json == null) return const DapCapabilities();
@@ -167,6 +182,16 @@ class DapCapabilities {
       supportsTerminateRequest:
           json['supportsTerminateRequest'] as bool? ?? false,
       supportsRestartRequest: json['supportsRestartRequest'] as bool? ?? false,
+      supportsLogPoints: json['supportsLogPoints'] as bool? ?? false,
+      supportsSetVariable: json['supportsSetVariable'] as bool? ?? false,
+      exceptionBreakpointFilters:
+          (json['exceptionBreakpointFilters'] as List? ?? const [])
+              .whereType<Map>()
+              .map(
+                (raw) =>
+                    DapExceptionFilter.fromJson(raw.cast<String, dynamic>()),
+              )
+              .toList(),
     );
   }
 }
@@ -179,6 +204,7 @@ class SourceBreakpoint {
     this.condition,
     this.hitCondition,
     this.logMessage,
+    this.enabled = true,
   });
 
   final int line;
@@ -186,14 +212,43 @@ class SourceBreakpoint {
   final String? condition;
   final String? hitCondition;
   final String? logMessage;
+  final bool enabled;
+  SourceBreakpoint copyWith({bool? enabled}) => SourceBreakpoint(
+    line: line,
+    column: column,
+    condition: condition,
+    hitCondition: hitCondition,
+    logMessage: logMessage,
+    enabled: enabled ?? this.enabled,
+  );
+  Map<String, dynamic> toState() => {...toJson(), 'enabled': enabled};
+  static SourceBreakpoint? fromState(Object? value) {
+    if (value is! Map || value['line'] is! int || (value['line'] as int) < 1) {
+      return null;
+    }
+    return SourceBreakpoint(
+      line: value['line'] as int,
+      column: value['column'] is int ? value['column'] as int : null,
+      condition: value['condition'] is String
+          ? value['condition'] as String
+          : null,
+      hitCondition: value['hitCondition'] is String
+          ? value['hitCondition'] as String
+          : null,
+      logMessage: value['logMessage'] is String
+          ? value['logMessage'] as String
+          : null,
+      enabled: value['enabled'] != false,
+    );
+  }
 
   Map<String, dynamic> toJson() => {
-        'line': line,
-        if (column != null) 'column': column,
-        if (condition != null) 'condition': condition,
-        if (hitCondition != null) 'hitCondition': hitCondition,
-        if (logMessage != null) 'logMessage': logMessage,
-      };
+    'line': line,
+    if (column != null) 'column': column,
+    if (condition != null) 'condition': condition,
+    if (hitCondition != null) 'hitCondition': hitCondition,
+    if (logMessage != null) 'logMessage': logMessage,
+  };
 }
 
 /// Breakpoint verificado ou rejeitado retornado pelo adaptador DAP.
@@ -394,4 +449,24 @@ class DapEvaluateResult {
       variablesReference: json['variablesReference'] as int? ?? 0,
     );
   }
+}
+
+class DapExceptionFilter {
+  const DapExceptionFilter({
+    required this.id,
+    required this.label,
+    this.defaultEnabled = false,
+    this.description,
+  });
+  final String id;
+  final String label;
+  final bool defaultEnabled;
+  final String? description;
+  factory DapExceptionFilter.fromJson(Map<String, dynamic> json) =>
+      DapExceptionFilter(
+        id: json['filter'] as String? ?? '',
+        label: json['label'] as String? ?? '',
+        defaultEnabled: json['default'] == true,
+        description: json['description'] as String?,
+      );
 }

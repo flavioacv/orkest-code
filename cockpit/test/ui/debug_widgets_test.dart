@@ -161,8 +161,8 @@ void main() {
         });
         await tester.pump();
 
-        expect(find.text('RODANDO'), findsOneWidget);
-        expect(find.byIcon(Icons.pause), findsNothing);
+        expect(find.byKey(const ValueKey('debug-pause')), findsOneWidget);
+        expect(controller.isRunning, isTrue);
 
         // Simula interrupção em breakpoint
         await tester.runAsync(() async {
@@ -171,7 +171,7 @@ void main() {
         });
         await tester.pump();
 
-        expect(find.text('PAUSADO'), findsOneWidget);
+        expect(find.byKey(const ValueKey('debug-resume')), findsOneWidget);
       },
     );
 
@@ -196,11 +196,11 @@ void main() {
       );
 
       // Breakpoint presente
-      expect(find.text('BREAKPOINTS (1)'), findsOneWidget);
-      expect(find.text('/project/lib/main.dart:42'), findsOneWidget);
+      expect(find.text('Breakpoints'), findsOneWidget);
+      expect(find.text('42'), findsOneWidget);
 
       // Clica no breakpoint para navegar
-      await tester.tap(find.text('/project/lib/main.dart:42'));
+      await tester.tap(find.text('42'));
       await tester.pump();
       expect(navigatedPath, equals('/project/lib/main.dart'));
       expect(navigatedLine, equals(42));
@@ -217,11 +217,17 @@ void main() {
       await tester.pump();
 
       // Call Stack e Variáveis carregadas
-      expect(find.text('CALL STACK (1)'), findsOneWidget);
+      await tester.runAsync(() async {
+        for (final scope in controller.scopes) {
+          await controller.variablesFor(scope.variablesReference);
+        }
+      });
+      await tester.pumpAndSettle();
+      expect(find.text('Call Stack'), findsOneWidget);
       expect(find.textContaining('doSomething'), findsOneWidget);
-      expect(find.text('VARIÁVEIS (1)'), findsOneWidget);
-      expect(find.text('status'), findsOneWidget);
-      expect(find.text('"ok"'), findsOneWidget);
+      expect(find.text('Variables'), findsOneWidget);
+      expect(find.textContaining('status', findRichText: true), findsWidgets);
+      expect(find.textContaining('"ok"', findRichText: true), findsWidgets);
     });
 
     testWidgets(
@@ -255,26 +261,24 @@ void main() {
         expect(startedConfig?.name, equals('Executar Servidor'));
 
         // Watches
-        expect(find.text('WATCHES (0)'), findsOneWidget);
-        await tester.tap(find.byKey(const ValueKey('run-config-add-watch')));
+        expect(find.text('Watch'), findsOneWidget);
+        await tester.tap(find.byKey(const ValueKey('debug-add-watch')));
         await tester.pump();
 
-        expect(
-          find.byKey(const ValueKey('run-config-watch-input')),
-          findsOneWidget,
-        );
+        expect(find.byKey(const ValueKey('debug-watch-input')), findsOneWidget);
         await tester.enterText(
-          find.byKey(const ValueKey('run-config-watch-input')),
+          find.byKey(const ValueKey('debug-watch-input')),
           'myCounter',
         );
-        await tester.tap(
-          find.byKey(const ValueKey('run-config-watch-confirm')),
-        );
+        await tester.tap(find.byKey(const ValueKey('debug-add-watch')));
         await tester.pump();
 
         expect(controller.watchExpressions, contains('myCounter'));
-        expect(find.text('WATCHES (1)'), findsOneWidget);
-        expect(find.text('myCounter'), findsOneWidget);
+        expect(find.text('Watch'), findsOneWidget);
+        expect(
+          find.textContaining('myCounter', findRichText: true),
+          findsWidgets,
+        );
       },
     );
 

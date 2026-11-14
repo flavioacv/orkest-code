@@ -1,4 +1,5 @@
 import 'dart:io';
+import 'package:path/path.dart' as p;
 
 import 'package:orkest_code/app/core/data/dap/dap_client.dart';
 
@@ -104,7 +105,11 @@ class DartDebugAdapter {
 
     if (isFlutter) {
       final flutterExe = sdkPath != null && sdkPath.isNotEmpty
-          ? '$sdkPath/bin/flutter'
+          ? p.join(
+              sdkPath,
+              'bin',
+              Platform.isWindows ? 'flutter.bat' : 'flutter',
+            )
           : 'flutter';
       return (
         flutterExe,
@@ -113,7 +118,7 @@ class DartDebugAdapter {
     }
 
     final dartExe = sdkPath != null && sdkPath.isNotEmpty
-        ? '$sdkPath/bin/dart'
+        ? p.join(sdkPath, 'bin', Platform.isWindows ? 'dart.exe' : 'dart')
         : 'dart';
     return (
       dartExe,

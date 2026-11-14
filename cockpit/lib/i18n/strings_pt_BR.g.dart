@@ -144,6 +144,7 @@ class _Translations$orkest$pt_BR extends Translations$orkest$en {
 	@override late final _Translations$orkest$layoutPreview$pt_BR layoutPreview = _Translations$orkest$layoutPreview$pt_BR._(_root);
 	@override late final _Translations$orkest$telemetry$pt_BR telemetry = _Translations$orkest$telemetry$pt_BR._(_root);
 	@override late final _Translations$orkest$panelView$pt_BR panelView = _Translations$orkest$panelView$pt_BR._(_root);
+	@override late final _Translations$orkest$debugWorkbench$pt_BR debugWorkbench = _Translations$orkest$debugWorkbench$pt_BR._(_root);
 }
 
 // Path: settings
@@ -1622,6 +1623,80 @@ class _Translations$orkest$panelView$pt_BR extends Translations$orkest$panelView
 	@override String get unavailable => 'Painéis precisam da web view embutida, que ainda não existe no Linux.';
 	@override String get openInBrowser => 'Abrir no navegador';
 	@override String get openAsHtml => 'Abrir como HTML';
+}
+
+// Path: orkest.debugWorkbench
+class _Translations$orkest$debugWorkbench$pt_BR extends Translations$orkest$debugWorkbench$en {
+	_Translations$orkest$debugWorkbench$pt_BR._(TranslationsPtBr root) : this._root = root, super.internal(root);
+
+	final TranslationsPtBr _root; // ignore: unused_field
+
+	// Translations
+	@override String get title => 'Executar e Depurar';
+	@override String get configuration => 'Configuração';
+	@override String get noConfiguration => 'Nenhuma configuração de execução';
+	@override String get start => 'Iniciar depuração (F5)';
+	@override String get run => 'Executar sem depurar (Ctrl+F5)';
+	@override String get configure => 'Abrir launch.json';
+	@override String get reload => 'Recarregar configurações';
+	@override String get inspector => 'Inspeção';
+	@override String get console => 'Console de Debug';
+	@override String get variables => 'Variáveis';
+	@override String get watches => 'Expressões';
+	@override String get callStack => 'Pilha de chamadas';
+	@override String get breakpoints => 'Breakpoints';
+	@override String get exceptions => 'Pausar em exceções';
+	@override String get idle => 'Pronto';
+	@override String get initializing => 'Iniciando';
+	@override String get running => 'Executando';
+	@override String get stopped => 'Pausado';
+	@override String get terminating => 'Encerrando';
+	@override String get resume => 'Continuar (F5)';
+	@override String get pause => 'Pausar (F6)';
+	@override String get stepOver => 'Passar sobre (F10)';
+	@override String get stepIn => 'Entrar (F11)';
+	@override String get stepOut => 'Sair (Shift+F11)';
+	@override String get stop => 'Parar (Shift+F5)';
+	@override String get restart => 'Reiniciar sessão';
+	@override String get restartFrame => 'Reiniciar frame';
+	@override String get hotReload => 'Hot Reload';
+	@override String get hotRestart => 'Hot Restart';
+	@override String get startHint => 'Selecione uma configuração e inicie a depuração. Use a margem do editor para adicionar breakpoints.';
+	@override String get pausedHint => 'Pause a execução para inspecionar variáveis e avaliar expressões.';
+	@override String get noFrames => 'Nenhum frame disponível';
+	@override String get noVariables => 'Nenhuma variável neste escopo';
+	@override String get noBreakpoints => 'Clique na margem do editor para adicionar um breakpoint.';
+	@override String get noWatches => 'Adicione uma expressão para observar seu valor quando a execução pausar.';
+	@override String get watchPlaceholder => 'Expressão para observar';
+	@override String get evaluatePlaceholder => 'Avaliar no frame selecionado';
+	@override String get filterConsole => 'Filtrar saída';
+	@override String get emptyConsole => 'A saída do programa e os resultados das expressões aparecem aqui.';
+	@override String get add => 'Adicionar';
+	@override String get remove => 'Remover';
+	@override String get edit => 'Editar breakpoint';
+	@override String get clear => 'Limpar';
+	@override String get copy => 'Copiar saída';
+	@override String get apply => 'Aplicar';
+	@override String get cancel => 'Cancelar';
+	@override String get condition => 'Condição';
+	@override String get hitCondition => 'Condição de contagem';
+	@override String get logMessage => 'Mensagem de log (logpoint)';
+	@override String get enabled => 'Habilitar breakpoints';
+	@override String get removeAll => 'Remover todos os breakpoints';
+	@override String get pending => 'Aguardando verificação';
+	@override String get verified => 'Verificado';
+	@override String get unverified => 'Não verificado';
+	@override String get disabled => 'Desabilitado';
+	@override String failure({required Object detail}) => 'Falha na depuração: ${detail}';
+	@override String get emptyConfiguration => 'Abra launch.json para configurar um adaptador DAP para seu projeto.';
+	@override String adapter({required Object name}) => 'Adaptador: ${name}';
+	@override String get scope => 'Escopo';
+	@override String get selectThread => 'Selecionar thread';
+	@override String get loading => 'Carregando…';
+	@override String get configureAdapter => 'Configure o comando do adaptador ou debugServer no launch.json.';
+	@override String get workspace => 'Workspace';
+	@override String get unsupported => 'Não suportado pelo adaptador conectado';
+	@override String get editValue => 'Editar valor';
 }
 
 // Path: settings.language
@@ -3258,6 +3333,71 @@ extension on TranslationsPtBr {
 			'orkest.panelView.unavailable' => 'Painéis precisam da web view embutida, que ainda não existe no Linux.',
 			'orkest.panelView.openInBrowser' => 'Abrir no navegador',
 			'orkest.panelView.openAsHtml' => 'Abrir como HTML',
+			'orkest.debugWorkbench.title' => 'Executar e Depurar',
+			'orkest.debugWorkbench.configuration' => 'Configuração',
+			'orkest.debugWorkbench.noConfiguration' => 'Nenhuma configuração de execução',
+			'orkest.debugWorkbench.start' => 'Iniciar depuração (F5)',
+			'orkest.debugWorkbench.run' => 'Executar sem depurar (Ctrl+F5)',
+			'orkest.debugWorkbench.configure' => 'Abrir launch.json',
+			'orkest.debugWorkbench.reload' => 'Recarregar configurações',
+			'orkest.debugWorkbench.inspector' => 'Inspeção',
+			'orkest.debugWorkbench.console' => 'Console de Debug',
+			'orkest.debugWorkbench.variables' => 'Variáveis',
+			'orkest.debugWorkbench.watches' => 'Expressões',
+			'orkest.debugWorkbench.callStack' => 'Pilha de chamadas',
+			'orkest.debugWorkbench.breakpoints' => 'Breakpoints',
+			'orkest.debugWorkbench.exceptions' => 'Pausar em exceções',
+			'orkest.debugWorkbench.idle' => 'Pronto',
+			'orkest.debugWorkbench.initializing' => 'Iniciando',
+			'orkest.debugWorkbench.running' => 'Executando',
+			'orkest.debugWorkbench.stopped' => 'Pausado',
+			'orkest.debugWorkbench.terminating' => 'Encerrando',
+			'orkest.debugWorkbench.resume' => 'Continuar (F5)',
+			'orkest.debugWorkbench.pause' => 'Pausar (F6)',
+			'orkest.debugWorkbench.stepOver' => 'Passar sobre (F10)',
+			'orkest.debugWorkbench.stepIn' => 'Entrar (F11)',
+			'orkest.debugWorkbench.stepOut' => 'Sair (Shift+F11)',
+			'orkest.debugWorkbench.stop' => 'Parar (Shift+F5)',
+			'orkest.debugWorkbench.restart' => 'Reiniciar sessão',
+			'orkest.debugWorkbench.restartFrame' => 'Reiniciar frame',
+			'orkest.debugWorkbench.hotReload' => 'Hot Reload',
+			'orkest.debugWorkbench.hotRestart' => 'Hot Restart',
+			'orkest.debugWorkbench.startHint' => 'Selecione uma configuração e inicie a depuração. Use a margem do editor para adicionar breakpoints.',
+			'orkest.debugWorkbench.pausedHint' => 'Pause a execução para inspecionar variáveis e avaliar expressões.',
+			'orkest.debugWorkbench.noFrames' => 'Nenhum frame disponível',
+			'orkest.debugWorkbench.noVariables' => 'Nenhuma variável neste escopo',
+			'orkest.debugWorkbench.noBreakpoints' => 'Clique na margem do editor para adicionar um breakpoint.',
+			'orkest.debugWorkbench.noWatches' => 'Adicione uma expressão para observar seu valor quando a execução pausar.',
+			'orkest.debugWorkbench.watchPlaceholder' => 'Expressão para observar',
+			'orkest.debugWorkbench.evaluatePlaceholder' => 'Avaliar no frame selecionado',
+			'orkest.debugWorkbench.filterConsole' => 'Filtrar saída',
+			'orkest.debugWorkbench.emptyConsole' => 'A saída do programa e os resultados das expressões aparecem aqui.',
+			'orkest.debugWorkbench.add' => 'Adicionar',
+			'orkest.debugWorkbench.remove' => 'Remover',
+			'orkest.debugWorkbench.edit' => 'Editar breakpoint',
+			'orkest.debugWorkbench.clear' => 'Limpar',
+			'orkest.debugWorkbench.copy' => 'Copiar saída',
+			'orkest.debugWorkbench.apply' => 'Aplicar',
+			'orkest.debugWorkbench.cancel' => 'Cancelar',
+			'orkest.debugWorkbench.condition' => 'Condição',
+			'orkest.debugWorkbench.hitCondition' => 'Condição de contagem',
+			'orkest.debugWorkbench.logMessage' => 'Mensagem de log (logpoint)',
+			'orkest.debugWorkbench.enabled' => 'Habilitar breakpoints',
+			'orkest.debugWorkbench.removeAll' => 'Remover todos os breakpoints',
+			'orkest.debugWorkbench.pending' => 'Aguardando verificação',
+			'orkest.debugWorkbench.verified' => 'Verificado',
+			'orkest.debugWorkbench.unverified' => 'Não verificado',
+			'orkest.debugWorkbench.disabled' => 'Desabilitado',
+			'orkest.debugWorkbench.failure' => ({required Object detail}) => 'Falha na depuração: ${detail}',
+			'orkest.debugWorkbench.emptyConfiguration' => 'Abra launch.json para configurar um adaptador DAP para seu projeto.',
+			'orkest.debugWorkbench.adapter' => ({required Object name}) => 'Adaptador: ${name}',
+			'orkest.debugWorkbench.scope' => 'Escopo',
+			'orkest.debugWorkbench.selectThread' => 'Selecionar thread',
+			'orkest.debugWorkbench.loading' => 'Carregando…',
+			'orkest.debugWorkbench.configureAdapter' => 'Configure o comando do adaptador ou debugServer no launch.json.',
+			'orkest.debugWorkbench.workspace' => 'Workspace',
+			'orkest.debugWorkbench.unsupported' => 'Não suportado pelo adaptador conectado',
+			'orkest.debugWorkbench.editValue' => 'Editar valor',
 			'settings.language.title' => 'Idioma',
 			'settings.language.system' => 'Sistema',
 			'settings.language.english' => 'Inglês',

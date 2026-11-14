@@ -1,5 +1,5 @@
+import 'dart:convert';
 import 'dart:async';
-import 'package:orkest_code/i18n/strings.g.dart';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
@@ -10,7 +10,9 @@ import 'package:orkest_code/app/orkest/domain/services/run_configuration_loader.
 import 'package:orkest_code/app/orkest/ui/viewmodels/orkest_viewmodel.dart';
 import 'package:orkest_code/app/orkest/ui/viewmodels/tasks_viewmodel.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/debug_panel.dart';
-import 'package:orkest_code/app/orkest/ui/widgets/debug_toolbar.dart';
+import 'package:orkest_code/app/orkest/domain/entities/task_definition.dart';
+import 'package:path/path.dart' as p;
+import 'dart:io';
 import 'package:orkest_code/app/orkest/ui/widgets/outline_panel.dart';
 import 'package:orkest_code/app/orkest/ui/widgets/workbench_tool_host.dart';
 import 'package:flutter_modular/flutter_modular.dart';
@@ -38,11 +40,17 @@ class _WorkspaceDebugPanelState extends State<WorkspaceDebugPanel> {
   RunConfiguration? _selected;
   String? _error;
   bool _starting = false;
+  StreamSubscription<({String workspaceId, bool noDebug})>? _launchRequests;
 
   @override
   void initState() {
     super.initState();
     _load();
+    _launchRequests = widget.vm.debugLaunchRequests.listen((request) {
+      if (request.workspaceId == widget.workspaceId) {
+        unawaited(_startPreferred(noDebug: request.noDebug));
+      }
+    });
   }
 
   void _load() {
@@ -51,7 +59,7 @@ class _WorkspaceDebugPanelState extends State<WorkspaceDebugPanel> {
       widget.path,
       workspaceRoots: widget.workspaceRoots,
     );
-    _selected = null;
+    // Preserve the selected configuration while discovery refreshes.
   }
 
   @override
@@ -64,6 +72,27 @@ class _WorkspaceDebugPanelState extends State<WorkspaceDebugPanel> {
     }
   }
 
+  @override
+  void dispose() {
+    unawaited(_launchRequests?.cancel());
+    super.dispose();
+  }
+
+  Future<void> _startPreferred({bool noDebug = false}) async {
+    try {
+      final configs = await _configurations;
+      if (!mounted || widget.vm.selectedProjectId != widget.workspaceId) return;
+      final id = widget.vm.debugConfigurationId(widget.workspaceId);
+      final config =
+          configs.where((c) => c.id == _selected?.id).firstOrNull ??
+          configs.where((c) => c.id == id).firstOrNull ??
+          configs.firstOrNull;
+      if (config != null) await _start(config, debug: !noDebug);
+    } on Exception catch (error) {
+      if (mounted) setState(() => _error = error.toString());
+    }
+  }
+
   Future<void> _start(RunConfiguration config, {bool debug = true}) async {
     if (_starting) return;
     setState(() {
@@ -72,9 +101,11 @@ class _WorkspaceDebugPanelState extends State<WorkspaceDebugPanel> {
     });
     try {
       if (debug) {
-        await widget.vm
-            .debugForWorkspace(widget.workspaceId)
-            .startFromRunConfiguration(config: config);
+        await widget.vm.startDebugConfiguration(
+          widget.workspaceId,
+          config,
+          onReverseRequest: _runInTerminal,
+        );
       } else {
         final tasks = context.read<TasksViewModel>();
         final task = config.toTaskDefinition();
@@ -88,6 +119,83 @@ class _WorkspaceDebugPanelState extends State<WorkspaceDebugPanel> {
     }
   }
 
+  Future<Map<String, dynamic>> _runInTerminal(
+    String command,
+    Map<String, dynamic> arguments,
+  ) async {
+    if (command != 'runInTerminal' ||
+        !mounted ||
+        widget.vm.selectedProjectId != widget.workspaceId) {
+      throw UnsupportedError(command);
+    }
+    final argv = (arguments['args'] as List? ?? const []).cast<String>();
+    if (argv.isEmpty || arguments['argsCanBeInterpretedByShell'] == true) {
+      throw const FormatException('DAP terminal requires literal arguments');
+    }
+    final tasks = context.read<TasksViewModel>();
+    final id = 'dap-terminal-${DateTime.now().microsecondsSinceEpoch}';
+    final rawEnv = (arguments['env'] as Map? ?? const {})
+        .cast<String, dynamic>();
+    final def = TaskDefinition(
+      id: id,
+      label: arguments['title'] as String? ?? id,
+      cwd: arguments['cwd'] as String? ?? widget.root,
+      command: argv.first,
+      args: argv.skip(1).toList(),
+      kind: TaskKind.watch,
+      profiles: [
+        TaskProfile(
+          name: 'dap',
+          args: const [],
+          env: rawEnv.map((k, v) => MapEntry(k, v?.toString() ?? '')),
+        ),
+      ],
+    );
+    await tasks.start(def);
+    await tasks.attachOutput(id);
+    final pid = tasks.stateOf(id).pid;
+    return {'shellProcessId': ?pid};
+  }
+
+  Future<void> _configure() async {
+    try {
+      await _openConfiguration();
+    } on Exception catch (error) {
+      if (mounted) setState(() => _error = error.toString());
+    }
+  }
+
+  Future<void> _openConfiguration() async {
+    final path = p.join(widget.root, '.vscode', 'launch.json');
+    final file = File(path);
+    if (!await file.exists()) {
+      await file.parent.create(recursive: true);
+      final configurations = await _configurations;
+      final selected =
+          configurations.where((c) => c.id == _selected?.id).firstOrNull ??
+          configurations.firstOrNull;
+      await file.writeAsString(
+        const JsonEncoder.withIndent('  ').convert({
+          'version': '0.2.0',
+          'configurations': [
+            if (selected != null)
+              {
+                'name': selected.name,
+                'type': selected.type == 'flutter' ? 'dart' : selected.type,
+                'request': selected.request,
+                'program': selected.program,
+                'cwd': selected.cwd,
+                if (selected.args.isNotEmpty) 'args': selected.args,
+                ...selected.launchArguments,
+              },
+          ],
+        }),
+      );
+    }
+    if (!mounted) return;
+    await widget.vm.openFile(path);
+  }
+
   @override
   Widget build(BuildContext context) {
     final controller = widget.vm.debugForWorkspace(widget.workspaceId);
@@ -97,43 +205,34 @@ class _WorkspaceDebugPanelState extends State<WorkspaceDebugPanel> {
         final configs = snapshot.connectionState == ConnectionState.done
             ? snapshot.data ?? const <RunConfiguration>[]
             : const <RunConfiguration>[];
-        final selected = _selected ?? configs.firstOrNull;
-        return Column(
-          children: [
-            SingleChildScrollView(
-              scrollDirection: Axis.horizontal,
-              child: DebugToolbar(controller: controller),
-            ),
-            if (snapshot.hasError || _error != null)
-              Padding(
-                padding: const EdgeInsets.all(8),
-                child: SelectableText('${_error ?? snapshot.error}'),
-              ),
-            if (snapshot.connectionState != ConnectionState.done)
-              const LinearProgressIndicator(),
-            if (selected != null)
-              sc.GhostButton(
-                onPressed: _starting
-                    ? null
-                    : () => _start(selected, debug: false),
-                child: Text(
-                  context.t.orkest.fileTreePanel.workbenchRunTerminal,
-                ),
-              ),
-            Expanded(
-              child: DebugPanel(
-                controller: controller,
-                configurations: configs,
-                selectedConfiguration: selected,
-                onSelectConfiguration: (config) =>
-                    setState(() => _selected = config),
-                onStartConfiguration: _starting
-                    ? null
-                    : (config) => _start(config),
-                onNavigateToSource: widget.vm.navigateToSource,
-              ),
-            ),
-          ],
+        final restoredId = widget.vm.debugConfigurationId(widget.workspaceId);
+        final selected =
+            configs.where((c) => c.id == _selected?.id).firstOrNull ??
+            configs.where((c) => c.id == restoredId).firstOrNull ??
+            configs.firstOrNull;
+        return DebugPanel(
+          controller: controller,
+          configurations: configs,
+          selectedConfiguration: selected,
+          isStarting:
+              _starting || snapshot.connectionState != ConnectionState.done,
+          configurationError: snapshot.hasError
+              ? snapshot.error.toString()
+              : _error,
+          onSelectConfiguration: (configuration) {
+            setState(() => _selected = configuration);
+            widget.vm.selectDebugConfiguration(
+              widget.workspaceId,
+              configuration.id,
+            );
+          },
+          onStartConfiguration: (configuration) => _start(configuration),
+          onRunConfiguration: (configuration) =>
+              _start(configuration, debug: false),
+          onRestart: selected == null ? null : () => _start(selected),
+          onConfigure: _configure,
+          onReload: () => setState(_load),
+          onNavigateToSource: widget.vm.navigateToSource,
         );
       },
     );

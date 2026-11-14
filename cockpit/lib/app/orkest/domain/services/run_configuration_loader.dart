@@ -51,7 +51,9 @@ class RunConfigurationLoader {
           if (fileRoot == boundary) break;
           fileRoot = p.dirname(fileRoot);
         }
-        if (foundSubproject && fileRoot != boundary && !roots.contains(fileRoot)) {
+        if (foundSubproject &&
+            fileRoot != boundary &&
+            !roots.contains(fileRoot)) {
           final subConfigs = await _loadFolder(
             fileRoot,
             file,
@@ -115,7 +117,7 @@ class RunConfigurationLoader {
         if (!['launch', 'attach'].contains(request)) continue;
         result.add(
           RunConfiguration(
-            id: '${source.path}:${result.length}',
+            id: '${source.path}:${config['name'] ?? type}',
             name: qualifyNames
                 ? '${config['name'] as String? ?? type} · $root'
                 : config['name'] as String? ?? type,
@@ -123,6 +125,12 @@ class RunConfigurationLoader {
             program: config['program'] as String? ?? '',
             cwd: config['cwd'] as String? ?? root,
             request: request,
+            sdkPath:
+                (config['sdkPath'] ??
+                        config[type == 'flutter'
+                            ? 'flutterSdkPath'
+                            : 'dartSdkPath'])
+                    as String?,
             launchArguments: config,
             args: (config['args'] as List?)?.cast<String>() ?? const [],
             env: (config['env'] as Map?)?.cast<String, String>() ?? const {},
@@ -146,6 +154,25 @@ class RunConfigurationLoader {
             .replaceAll(r'${workspaceRoot}', root)
             .replaceAll(r'${file}', file ?? '')
             .replaceAll(
+              r'${fileBasename}',
+              file == null ? '' : p.basename(file),
+            )
+            .replaceAll(
+              r'${fileBasenameNoExtension}',
+              file == null ? '' : p.basenameWithoutExtension(file),
+            )
+            .replaceAll(
+              r'${fileExtname}',
+              file == null ? '' : p.extension(file),
+            )
+            .replaceAll(
+              r'${relativeFile}',
+              file == null ? '' : p.relative(file, from: root),
+            )
+            .replaceAll(r'${workspaceFolderBasename}', p.basename(root))
+            .replaceAll(r'${pathSeparator}', p.separator)
+            .replaceAll(r'${cwd}', root)
+            .replaceAll(
               r'${fileDirname}',
               file == null ? root : p.dirname(file),
             );
@@ -155,8 +182,18 @@ class RunConfigurationLoader {
               .replaceAll('\${workspaceFolder:$folderName}', wr)
               .replaceAll('\${workspaceRoot:$folderName}', wr);
         }
-        if (expanded.contains(r'${')) {
-          throw FormatException('Unsupported launch variable in $expanded');
+        expanded = expanded.replaceAllMapped(RegExp(r'\$\{env:([^}]+)\}'), (
+          match,
+        ) {
+          final name = match[1]!;
+          final environment = Platform.environment[name];
+          if (environment == null) throw FormatException('env:$name');
+          return environment;
+        });
+        if (expanded.replaceAll(r'${port}', '').contains(r'${')) {
+          throw FormatException(
+            'Unsupported launch variable: ${RegExp(r'\$\{[^}]+\}').firstMatch(expanded)?.group(0)}',
+          );
         }
         return expanded;
       }

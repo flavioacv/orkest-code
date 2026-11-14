@@ -1,4 +1,7 @@
 import 'dart:io';
+import 'dart:async';
+import 'dart:convert';
+import 'debug_failure.dart';
 
 import 'package:orkest_code/app/core/data/dap/dap_client.dart';
 import 'package:orkest_code/app/core/domain/entities/multi_language_debug_adapter.dart';
@@ -38,15 +41,15 @@ class DebugAdapterAuditReport {
   final List<String> limitations;
 
   Map<String, dynamic> toJson() => {
-        'adapter_id': adapterId,
-        'name': name,
-        'status': status.name,
-        'license': license,
-        'install_hint': installHint,
-        'capabilities': capabilities?.toJson(),
-        'executable_command': executableCommand,
-        'limitations': limitations,
-      };
+    'adapter_id': adapterId,
+    'name': name,
+    'status': status.name,
+    'license': license,
+    'install_hint': installHint,
+    'capabilities': capabilities?.toJson(),
+    'executable_command': executableCommand,
+    'limitations': limitations,
+  };
 
   @override
   String toString() =>
@@ -96,7 +99,9 @@ class MultiLanguageDebugAdapter {
     if (adapter != null) {
       // Mescla com as chaves específicas do template do adaptador
       for (final entry in adapter.sampleLaunchConfig.entries) {
-        if (entry.key != 'program' && entry.key != 'cwd' && entry.key != 'noDebug') {
+        if (entry.key != 'program' &&
+            entry.key != 'cwd' &&
+            entry.key != 'noDebug') {
           baseConfig[entry.key] = entry.value;
         }
       }
@@ -130,19 +135,26 @@ class MultiLanguageDebugAdapter {
 
     final limitations = <String>[];
     if (!adapter.capabilities.supportsRestartFrame) {
-      limitations.add('Restart Frame (drop to frame) não suportado pelo runtime.');
+      limitations.add(
+        'Restart Frame (drop to frame) não suportado pelo runtime.',
+      );
     }
     if (!adapter.capabilities.supportsSmartStep) {
       limitations.add('Smart Step não disponível para este runtime.');
     }
     if (!adapter.capabilities.supportsHotSwap) {
-      limitations.add('HotSwap / Hot Reload de código em execução indisponível.');
+      limitations.add(
+        'HotSwap / Hot Reload de código em execução indisponível.',
+      );
     }
     if (!adapter.capabilities.supportsWatchpoints) {
       limitations.add('Data Watchpoints de hardware/variável não suportados.');
     }
 
-    final fullCmd = [adapter.defaultExecutable, ...adapter.defaultArgs].join(' ');
+    final fullCmd = [
+      adapter.defaultExecutable,
+      ...adapter.defaultArgs,
+    ].join(' ');
 
     return DebugAdapterAuditReport(
       adapterId: adapter.adapterId,
@@ -158,33 +170,165 @@ class MultiLanguageDebugAdapter {
     );
   }
 
-  /// Inicia o processo do adaptador DAP multilinguagem e retorna o cliente conectado.
+  /// Starts a real DAP transport. Runtime inspector protocols are not DAP.
   static Future<DapClient?> spawnClient({
     required String languageId,
     required String cwd,
     String? customExecutable,
     List<String>? customArgs,
     String? sessionId,
+    Map<String, dynamic> configuration = const {},
   }) async {
+    final id =
+        sessionId ?? '$languageId-${DateTime.now().microsecondsSinceEpoch}';
+    final server = configuration['debugServer'];
+    if (server != null && (server is! int || server <= 0 || server > 65535)) {
+      throw const DebugFailure(DebugFailureKind.configuration, 'debugServer');
+    }
+    if (server is int && server > 0 && server <= 65535) {
+      return DapClient.connectSocket(
+        host: '127.0.0.1',
+        port: server,
+        sessionId: id,
+      );
+    }
+    final raw = configuration['adapter'];
+    final adapter = raw is Map
+        ? raw.cast<String, dynamic>()
+        : <String, dynamic>{};
+    if (adapter['command'] != null && adapter['command'] is! String) {
+      throw const DebugFailure(
+        DebugFailureKind.configuration,
+        'adapter.command',
+      );
+    }
+    if (adapter['args'] != null &&
+        (adapter['args'] is! List ||
+            !(adapter['args'] as List).every((arg) => arg is String))) {
+      throw const DebugFailure(DebugFailureKind.configuration, 'adapter.args');
+    }
+    if (adapter['transport'] != null &&
+        !['stdio', 'tcp'].contains(adapter['transport'])) {
+      throw const DebugFailure(
+        DebugFailureKind.configuration,
+        'adapter.transport',
+      );
+    }
+    final configuredCommand = adapter['command'];
+    customExecutable ??= configuredCommand is String ? configuredCommand : null;
+    if (adapter['args'] is List) {
+      customArgs ??= (adapter['args'] as List).cast<String>();
+    }
+    final python = configuration['python'] ?? configuration['pythonPath'];
+    if (languageId == 'python' &&
+        customExecutable == null &&
+        python is String &&
+        python.isNotEmpty) {
+      customExecutable = python;
+    }
     final resolved = resolveAdapterCommand(
       languageId: languageId,
       customExecutable: customExecutable,
       customArgs: customArgs,
     );
-    if (resolved == null) return null;
-
-    final (executable, args) = resolved;
-
-    final process = await Process.start(
-      executable,
-      args,
-      workingDirectory: cwd,
-      runInShell: Platform.isWindows,
-    );
-
-    return DapClient.fromProcess(
-      process: process,
-      sessionId: sessionId ?? '$languageId-debug-${DateTime.now().millisecondsSinceEpoch}',
-    );
+    if (resolved == null && customExecutable == null) return null;
+    final executable = customExecutable ?? resolved!.$1;
+    final baseArgs = customArgs ?? resolved?.$2 ?? const <String>[];
+    final tcp =
+        adapter['transport'] == 'tcp' ||
+        (adapter['transport'] != 'stdio' &&
+            [
+              'javascript',
+              'typescript',
+              'go',
+              'rust',
+              'c',
+              'cpp',
+            ].contains(languageId));
+    if (languageId == 'java' && customExecutable == null) {
+      throw const DebugFailure(
+        DebugFailureKind.adapter,
+        'Java: configure adapter.command or debugServer from the language server DAP endpoint',
+      );
+    }
+    try {
+      if (!tcp) {
+        return await DapClient.startProcess(
+          executable: executable,
+          args: baseArgs,
+          workingDirectory: cwd,
+          sessionId: id,
+        );
+      }
+      final reservation = await ServerSocket.bind(
+        InternetAddress.loopbackIPv4,
+        0,
+      );
+      final port = reservation.port;
+      await reservation.close();
+      final args = [
+        for (final arg in baseArgs) arg.replaceAll(r'${port}', '$port'),
+      ];
+      if (!baseArgs.any((arg) => arg.contains(r'${port}'))) {
+        switch (languageId) {
+          case 'go':
+            args.add('--listen=127.0.0.1:$port');
+          case 'rust' || 'c' || 'cpp':
+            args.addAll(['--port', '$port']);
+          default:
+            args.add('$port');
+        }
+      }
+      final process = await Process.start(
+        executable,
+        args,
+        workingDirectory: cwd,
+        runInShell: Platform.isWindows,
+      );
+      final diagnostics = process.stderr
+          .transform(utf8.decoder)
+          .asBroadcastStream();
+      final detail = StringBuffer();
+      final stderr = diagnostics.listen((line) {
+        if (detail.length < 8192) detail.write(line);
+      });
+      final stdout = process.stdout.listen((_) {});
+      int? exited;
+      unawaited(process.exitCode.then((value) => exited = value));
+      final deadline = DateTime.now().add(const Duration(seconds: 8));
+      try {
+        while (DateTime.now().isBefore(deadline) && exited == null) {
+          try {
+            final client = await DapClient.connectSocket(
+              host: '127.0.0.1',
+              port: port,
+              process: process,
+              sessionId: id,
+              diagnostics: diagnostics,
+            );
+            await stderr.cancel();
+            // Server stdout is diagnostic, never DAP. Drain until process exit.
+            unawaited(process.exitCode.then((_) => stdout.cancel()));
+            return client;
+          } on SocketException {
+            await Future<void>.delayed(const Duration(milliseconds: 80));
+          }
+        }
+        throw DebugFailure(
+          DebugFailureKind.transport,
+          '$executable: ${detail.toString()} (exit: $exited, port: $port)',
+        );
+      } on Object {
+        process.kill();
+        await stderr.cancel();
+        await stdout.cancel();
+        rethrow;
+      }
+    } on ProcessException catch (error) {
+      throw DebugFailure(
+        DebugFailureKind.adapter,
+        '$executable: ${error.message}',
+      );
+    }
   }
 }
