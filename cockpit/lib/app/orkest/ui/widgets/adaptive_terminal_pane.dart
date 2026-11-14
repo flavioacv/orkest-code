@@ -11,6 +11,7 @@ import 'package:orkest_code/app/core/utils/platform_kind.dart';
 import 'package:orkest_code/app/core/terminal/xterm/xterm.dart' as xterm;
 import 'package:orkest_code/app/core/ui/settings_controller.dart';
 import 'package:flterm/flterm.dart' as ghost;
+import 'package:flterm/terminal_contrast.dart';
 import 'package:flutter/services.dart';
 import 'package:flutter/widgets.dart';
 import 'package:flutter_modular/flutter_modular.dart';
@@ -296,7 +297,9 @@ ghost.TerminalTheme _ghosttyTheme(
   double uiScale,
   FontWeight fontWeight,
 ) => ghost.TerminalTheme(
-  minimumContrast: source.background.computeLuminance() > .5 ? 4.5 : 1,
+  minimumContrast: source.background.computeLuminance() > .5
+      ? terminalLightTextMinimumContrast
+      : 1,
   palette: ghost.ColorPalette(
     ansiColors: [
       source.black,

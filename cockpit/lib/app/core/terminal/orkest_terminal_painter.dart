@@ -33,7 +33,9 @@ class OrkestTerminalPainter {
   /// A lookup table from terminal colors to Flutter colors.
   late var _colorPalette = PaletteBuilder(_theme).build();
   late var _foregroundContrast = TerminalForegroundContrast(
-    minimumRatio: _theme.background.computeLuminance() > .5 ? 4.5 : 1,
+    minimumRatio: _theme.background.computeLuminance() > .5
+        ? terminalLightTextMinimumContrast
+        : 1,
   );
   late var _backgroundContrast = TerminalForegroundContrast(
     minimumRatio: _theme.background.computeLuminance() > .5 ? 1.5 : 1,
@@ -71,7 +73,9 @@ class OrkestTerminalPainter {
     if (value == _theme) return;
     _theme = value;
     _foregroundContrast = TerminalForegroundContrast(
-      minimumRatio: value.background.computeLuminance() > .5 ? 4.5 : 1,
+      minimumRatio: value.background.computeLuminance() > .5
+          ? terminalLightTextMinimumContrast
+          : 1,
     );
     _backgroundContrast = TerminalForegroundContrast(
       minimumRatio: value.background.computeLuminance() > .5 ? 1.5 : 1,

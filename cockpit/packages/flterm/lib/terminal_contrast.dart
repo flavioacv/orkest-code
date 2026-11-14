@@ -1,5 +1,9 @@
 import 'dart:ui';
 
+/// Strong text contrast for light terminal surfaces, including agent TUIs.
+/// Graphics/background blocks keep their separate, lower separation threshold.
+const terminalLightTextMinimumContrast = 7.0;
+
 /// Keeps terminal colors distinguishable against their effective backgrounds.
 ///
 /// Colors are resolved after inverse and faint attributes. The bounded cache

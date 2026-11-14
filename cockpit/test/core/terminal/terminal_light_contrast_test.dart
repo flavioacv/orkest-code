@@ -13,7 +13,9 @@ void main() {
   TestWidgetsFlutterBinding.ensureInitialized();
 
   test('light backgrounds retain readable RGB, grayscale and faint text', () {
-    final contrast = TerminalForegroundContrast();
+    final contrast = TerminalForegroundContrast(
+      minimumRatio: terminalLightTextMinimumContrast,
+    );
     for (final background in [
       const Color(0xFFFFFFFF),
       const Color(0xFFF0EBDD),
@@ -28,7 +30,7 @@ void main() {
         final result = contrast.resolve(foreground, background);
         expect(
           contrastRatio(Color.alphaBlend(result, background), background),
-          greaterThanOrEqualTo(4.5),
+          greaterThanOrEqualTo(terminalLightTextMinimumContrast),
         );
       }
     }
@@ -118,7 +120,7 @@ void main() {
           final color = await render(foreground);
           expect(
             contrastRatio(color, orkestTerminalThemeLight.background),
-            greaterThanOrEqualTo(4.5),
+            greaterThanOrEqualTo(terminalLightTextMinimumContrast),
           );
         }
         for (final codepoint in [
@@ -144,7 +146,7 @@ void main() {
         final faint = await render(CellColor.normal, flags: CellFlags.faint);
         expect(
           contrastRatio(faint, orkestTerminalThemeLight.background),
-          greaterThanOrEqualTo(4.5),
+          greaterThanOrEqualTo(terminalLightTextMinimumContrast),
         );
         for (final background in [
           CellColor.rgb | 0xFFFFFF,
@@ -164,7 +166,10 @@ void main() {
             CellColor.rgb | 0xEEEEEE,
             background: background,
           );
-          expect(contrastRatio(ink, field), greaterThanOrEqualTo(4.5));
+          expect(
+            contrastRatio(ink, field),
+            greaterThanOrEqualTo(terminalLightTextMinimumContrast),
+          );
         }
         expect(
           await render(CellColor.normal, codepoint: 0x20),
@@ -203,7 +208,7 @@ void main() {
             await render(CellColor.palette | 255),
             orkestTerminalThemeLight.background,
           ),
-          greaterThanOrEqualTo(4.5),
+          greaterThanOrEqualTo(terminalLightTextMinimumContrast),
         );
       },
     );

@@ -10,8 +10,9 @@ int _resolveColorArgb(CellColor color, Uint32List palette, int defaultArgb) {
 
 (int foreground, int background) _resolveStyleColors(
   PaintState state,
-  Style style,
-) {
+  Style style, {
+  int? contentBackgroundArgb,
+}) {
   var foreground = _resolveColorArgb(
     style.foreground,
     state.terminalPaletteArgb,
@@ -22,6 +23,9 @@ int _resolveColorArgb(CellColor color, Uint32List palette, int defaultArgb) {
     state.terminalPaletteArgb,
     state.terminalBackgroundArgb,
   );
+  if (style.background is DefaultColor && contentBackgroundArgb != null) {
+    background = contentBackgroundArgb;
+  }
 
   if (style.bold) {
     final boldColor = state.theme.boldColor;
@@ -40,7 +44,9 @@ int _resolveColorArgb(CellColor color, Uint32List palette, int defaultArgb) {
     foreground = (state.faintAlpha << 24) | (foreground & 0x00FFFFFF);
   }
 
-  if (style.inverse || style.background is! DefaultColor) {
+  if (style.inverse ||
+      style.background is! DefaultColor ||
+      contentBackgroundArgb != null) {
     background = state.backgroundContrast
         .resolve(Color(background), Color(state.terminalBackgroundArgb))
         .toARGB32();
@@ -106,13 +112,24 @@ final class _StyleCache {
         ? backgroundArgb
         : null;
     if (contentBackground != null) {
-      final (foreground, background) = _resolveStyleColors(_state, style);
-      return (
-        foreground,
-        style.inverse ? background : contentBackground,
+      if (_state.theme.minimumContrast <= 1) {
+        final (foreground, background) = _resolveStyleColors(_state, style);
+        return (
+          foreground,
+          style.inverse ? background : contentBackground,
+          style,
+          true,
+        );
+      }
+      // Resolve both colors against the same effective cell background.
+      // Replacing the background after contrast resolution can leave dark
+      // default text unreadable on a background carried by blank cells.
+      final (foreground, background) = _resolveStyleColors(
+        _state,
         style,
-        true,
+        contentBackgroundArgb: contentBackground,
       );
+      return (foreground, background, style, true);
     }
 
     if (id < _maxEntries && _gen[id] == _generation) {
